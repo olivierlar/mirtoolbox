@@ -1,0 +1,16 @@
+function mirplay(e,varargin)
+
+e = mirenvelope(e,'Normal');
+d = get(e,'Data');
+t = get(e,'Time');
+f = get(e,'Sampling');
+for i = 1:length(d)
+    for j = 1:length(d{i})
+        di = resample(d{i}{j},11025,round(f{i}));
+        t{i}{j} = (0:size(di,1)-1)'/11025;
+        d{i}{j} = rand(size(di)).*di;
+    end
+    f{i} = 11025;
+end
+e = set(e,'Data',d,'Time',t,'Sampling',f);
+mirplay(mirtemporal(e));
