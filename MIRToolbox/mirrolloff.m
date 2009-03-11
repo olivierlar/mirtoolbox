@@ -40,7 +40,6 @@ f = get(s,'Frequency');
 if option.p>1
     option.p = option.p/100;
 end
-option.p
 v = mircompute(@algo,m,f,option.p);
 r = mirscalar(s,'Data',v,'Title','Rolloff','Unit','Hz.');
 
