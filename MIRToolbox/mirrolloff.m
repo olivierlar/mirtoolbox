@@ -3,13 +3,15 @@ function varargout = mirrolloff(x,varargin)
 %   Optional arguments:
 %   r = mirrolloff(s,'Threshold',p) specifies the energy threshold in 
 %       percentage. (Default: .85)
-%           In other words, r is the frequency under which 100*p percent
+%           p can be either a value between 0 and 1. But if p exceeds 1, it
+%               is understood as a percentage, i.e. between 1 and 100.  
+%           In other words, r is the frequency under which p percents
 %               of the spectral energy is distributed.
 %
 % Typical values for the energy threshold:
-%       85 in G. Tzanetakis, P. Cook. Musical genre classification of audio
+%       85% in G. Tzanetakis, P. Cook. Musical genre classification of audio
 %           signals. IEEE Tr. Speech and Audio Processing, 10(5),293-302, 2002.
-%       95 in T. Pohle, E. Pampalk, G. Widmer. Evaluation of Frequently
+%       95% in T. Pohle, E. Pampalk, G. Widmer. Evaluation of Frequently
 %           Used Audio Features for Classification of Music Into Perceptual
 %           Categories, ?
 
@@ -35,13 +37,17 @@ if iscell(s)
 end
 m = get(s,'Magnitude');
 f = get(s,'Frequency');
+if option.p>1
+    option.p = option.p/100;
+end
+option.p
 v = mircompute(@algo,m,f,option.p);
 r = mirscalar(s,'Data',v,'Title','Rolloff','Unit','Hz.');
 
 
 function v = algo(m,f,p)
 cs = cumsum(m);          % accumulation of spectrum energy
-thr = cs(end,:,:)*p/100;   % threshold corresponding to the rolloff point
+thr = cs(end,:,:)*p;   % threshold corresponding to the rolloff point
 v = zeros(1,size(cs,2),size(cs,3));
 for l = 1:size(cs,3)
     for k = 1:size(cs,2)
