@@ -368,7 +368,7 @@ end
 
 
 function a = post(a,option)
-debug = 0;
+debug = 1;
 coeff = get(a,'Coeff');
 lags = get(a,'Delay');
 wind = get(a,'Window');

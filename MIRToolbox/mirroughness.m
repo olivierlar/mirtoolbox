@@ -13,9 +13,11 @@ function varargout = mirroughness(x,varargin)
 %           mirroughness(...,'Sethares'): based on the summation of roughness
 %               between all pairs of sines (obtained through spectral
 %               peak-picking).
+%           mirroughness(...,'Vassilakis'): variant of 'Sethares' model
+%               with a more complex weighting (Vassilakis, 2001, Eq. 6.23).
 
         meth.type = 'String';
-        meth.choice = {'Sethares'};
+        meth.choice = {'Sethares','Vassilakis'};
         meth.default = 'Sethares';
     option.meth = meth;
     
@@ -53,7 +55,7 @@ function r = main(p,option,postoption)
 if iscell(p)
     p = p{1};
 end
-if strcmpi(option.meth,'Sethares')
+if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
     pf = get(p,'PeakPosUnit');
     pv = get(p,'PeakVal');
     rg = cell(1,length(pf));
@@ -71,7 +73,12 @@ if strcmpi(option.meth,'Sethares')
                     f2 = repmat(pfj',[length(pfj) 1]);
                     v1 = repmat(pvj,[1 length(pvj)]);
                     v2 = repmat(pvj',[length(pvj) 1]);
-                    rj = v1.*v2.*plomp(f1,f2);
+                    rj = plomp(f1,f2);
+                    if strcmpi(option.meth,'Sethares')
+                        rj = v1.*v2.*rj;
+                    elseif strcmpi(option.meth,'Vassilakis')
+                        rj = (v1.*v2).^.1.*.5.*(2*v2./(v1+v2)).^3.11.*rj;
+                    end
                     rg{h}{i}(1,j,k) = sum(sum(rj));
                 end
             end
@@ -86,11 +93,11 @@ r = {r,p};
 function pd = plomp(f1, f2)
 % returns the dissonance of two pure tones at frequencies f1 & f2 Hz
 % according to the Plomp-Levelt curve (see Sethares)
-    b1 = 3.5;
+    b1 = 3.51;
     b2 = 5.75;
     xstar = .24;
-    s1 = .021;
-    s2 = 19;
+    s1 = .0207;
+    s2 = 18.96;
     s = tril(xstar ./ (s1 * min(f1,f2) + s2 ));
     pd = exp(-b1*s.*abs(f2-f1)) - exp(-b2*s.*abs(f2-f1));
 return
