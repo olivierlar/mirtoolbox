@@ -1,13 +1,14 @@
 function varargout = mirstat(f,varargin)
 % stat = mirstat(f) returns basic statistics of the feature f as a
 %   structure array stat such that:
-%       stat.Mean is the mean of the feature
-%       stat.Std is the standard deviation
-%       stat.Slope is the slope
-%       stat.PeriodFreq is the frequency (in Hz) of the main periodicity
-%       stat.PeriodAmp is the amplitude of the main periodicity
-%       stat.PeriodEntropy is the entropy of the periodicity curve (which 
-%           is identified to the autocorrelation function of f)
+%       stat.Mean is the mean of the feature;
+%       stat.Std is the standard deviation;
+%       stat.Slope is the linear slope of the curve;
+%       stat.PeriodFreq is the frequency (in Hz) of the main periodicity;
+%       stat.PeriodAmp is the normalized amplitude of the main periodicity;
+%       stat.PeriodEntropy is the entropy of the periodicity curve.
+%   The main periodicity and periodicity curve are evaluated through the
+%       computation of the autocorrelation sequence related to f.
 %
 %   f can be itself a structure array composed of features. In this case,
 %       stat will be structured the same way.
