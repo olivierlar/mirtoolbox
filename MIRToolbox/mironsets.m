@@ -232,7 +232,7 @@ function varargout = mironsets(x,varargin)
     
         cthr.key = 'Contrast';      %%%%% CHECK
         cthr.type = 'Integer';
-        cthr.default = 0;
+        cthr.default = NaN;
         cthr.when = 'After';
     option.cthr = cthr;
     
@@ -366,13 +366,13 @@ if isfield(postoption,'ds') && isnan(postoption.ds)
     end
 end
 if isfield(postoption,'cthr')
-    if postoption.cthr 
-        if not(ischar(postoption.detect) || postoption.detect)
-            postoption.detect = 'Peaks';
-        end
-    else
+    if isnan(postoption.cthr)
         if ischar(postoption.detect) || postoption.detect
             postoption.cthr = .05;
+        end
+    else
+        if not(ischar(postoption.detect) || postoption.detect)
+            postoption.detect = 'Peaks';
         end
     end
     if isa(o,'mirenvelope')
