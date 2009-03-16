@@ -368,7 +368,7 @@ end
 
 
 function a = post(a,option)
-debug = 1;
+debug = 0;
 coeff = get(a,'Coeff');
 lags = get(a,'Delay');
 wind = get(a,'Window');
@@ -457,6 +457,12 @@ for k = 1:length(coeff)
                         tcoef = tgh2(2)-tgh2(1);
                         deter = 0;
                         inter = 0;
+                        
+                        repet = find(not(diff(tgh2)));  % Avoid bug if repeated x-values
+                        if repet
+                            warning('WARNING in MIRAUTOCOR: Two successive samples have exactly same temporal position.');
+                            tgh2(repet+1) = tgh2(repet)+1e-12;
+                        end
                         
                         if coef < 0
                             % initial descending slope removed
