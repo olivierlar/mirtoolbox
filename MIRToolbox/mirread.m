@@ -28,16 +28,19 @@ try
     [d,f,b,tp,fp,n] = audioread(extract,@wavread,orig,load,verbose,folder);
 catch
     le = lasterror;
-    le.message
     try
        [d,f,b,tp,fp,n] = audioread(extract,@auread,orig,load,verbose,folder);
     catch
         try
             [d,f,b,tp,fp,n] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
-            errmsg = lasterr;
-            if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
-                error(['ERROR: Cannot open file ',orig]);
+            try
+               [d,f,b,tp,fp,n] = audioread(extract,@bdfread,orig,load,verbose,folder);
+            catch
+                errmsg = lasterr;
+                if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
+                    error(['ERROR: Cannot open file ',orig]);
+                end
             end
         end
     end
@@ -88,3 +91,31 @@ else
     tp = {};
     fp = {};
 end
+
+
+function [y,fs,nbits] = bdfread(file,check)
+DAT = openbdf(file);
+NRec = DAT.Head.NRec;
+if not(length(check)==2)
+    b = readbdf(DAT,1);
+    y = length(b.Record(43,:)) * NRec;
+else
+    y = [];
+    if mirwaitbar
+        handle = waitbar(0,'Loading BDF channel...');
+    else
+        handle = 0;
+    end
+    for i = 1:NRec
+        b = readbdf(DAT,i);
+        y = [y;b.Record(43,:)'];
+        if handle
+            waitbar(i/NRec,handle);
+        end
+    end
+    if handle
+        delete(handle)
+    end
+end
+fs = DAT.Head.SampleRate(43);
+nbits = NaN;
