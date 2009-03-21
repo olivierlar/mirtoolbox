@@ -104,6 +104,7 @@ if not(isempty(order))
                 end
                 di = dk{i};
                 for j = 1:size(di,2)
+                    tic
                     sound(di(:,j,l),f{k});
                     idealtime = size(di,1)/f{k};
                     practime = toc;
