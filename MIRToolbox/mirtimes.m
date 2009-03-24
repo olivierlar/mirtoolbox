@@ -19,12 +19,11 @@ for i = 1:length(d)
             % operand.
         dij = d{i}{j}; %interp1(pij,d{i}{j},pq);
         eij = interp1(qij,e{i}{j},pq);
-        eij = (eij-repmat(min(eij),[size(eij,1),1,1,1])) ...
-                ./repmat(max(eij)-min(eij)+1e-16,[size(eij,1),1,1,1]);
-            % The second operand of mirtimes is scaled from 0 to 1.
-            % In this way, the range of value of the first operand is kept.
         dij = max(dij,0);
         eij = max(eij,0);
+        eij = eij./repmat(max(eij)+1e-16,[size(eij,1),1,1,1]);
+            % The second operand of mirtimes is scaled from 0 to 1.
+            % In this way, the range of value of the first operand is kept.
         f{i}{j} = dij.*eij;
         [x y] = find(isnan(f{i}{j}));
         x = unique(x);
