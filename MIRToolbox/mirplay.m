@@ -65,16 +65,3 @@ type = '';
 function p = main(a,option,postoption)
 mirplay(a);
 p = {};
-
-%p = mirplay(miraudio('Design'),varargin);
-%varargout = mireval(p,a);
-
-
-if 0
-    vout = '';
-    for i = 1:max(1,nargout)
-        vout = [vout,'y',num2str(i),' '];
-    end
-    eval(['[ ',vout,'] = mirplay(miraudio(a),varargin{:});'])
-    eval(['varargout = { ',vout,'};'])
-end

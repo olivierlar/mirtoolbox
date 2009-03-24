@@ -112,11 +112,11 @@ end
         sampling.when = 'After';
     option.sampling = sampling;
         
-        segment.key = 'Segment';
-        segment.type = 'Integer';
-        segment.default = [];
-        segment.when = 'After';
-    option.segment = segment;
+   %     segment.key = 'Segment';
+   %     segment.type = 'Integer';
+   %     segment.default = [];
+   %     segment.when = 'After';
+   % option.segment = segment;
 
         reverse.key = 'Reverse';
         reverse.type = 'Boolean';
@@ -189,11 +189,11 @@ ac = get(a,'AcrossChunks');
 f = get(a,'Sampling');
 cl = get(a,'Clusters');
 for h = 1:length(d)
-    if isfield(para,'segment') && not(isempty(para.segment)) && para.segment
-        t{h} = {t{h}{para.segment}};
-        d{h} = {d{h}{para.segment}};
-        cl{h} = cl{h}(para.segment);
-    end
+    %if isfield(para,'segment') && not(isempty(para.segment)) && para.segment
+    %    t{h} = {t{h}{para.segment}};
+    %    d{h} = {d{h}{para.segment}};
+    %    cl{h} = cl{h}(para.segment);
+    %end
     for k = 1:length(d{h})
         tk = t{h}{k};
         dk = d{h}{k};
