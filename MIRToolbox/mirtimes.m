@@ -23,6 +23,8 @@ for i = 1:length(d)
                 ./repmat(max(eij)-min(eij)+1e-16,[size(eij,1),1,1,1]);
             % The second operand of mirtimes is scaled from 0 to 1.
             % In this way, the range of value of the first operand is kept.
+        dij = max(dij,0);
+        eij = max(eij,0);
         f{i}{j} = dij.*eij;
         [x y] = find(isnan(f{i}{j}));
         x = unique(x);
