@@ -24,7 +24,7 @@ function varargout = mirenvelope(orig,varargin)
 %               Default value: t = 0.02 s.
 %       mirenvelope(...,'PostDecim',N) downsamples  by a factor N>1, where 
 %           N is an integer, after the low-pass filtering.
-%           Default value: N = 16.
+%           Default value: N = 16 if 'PreDecim' is not used, else N = 1.
 %       mirenvelope(...,'Trim'): trims the initial ascending phase of the
 %           curves related to the transitory state.
 %
@@ -62,8 +62,8 @@ function varargout = mirenvelope(orig,varargin)
 %           fixing the maximum value to 1.
 %       mirenvelope(...,'Lambda',l): sums the half-wave rectified envelope
 %           with the non-differentiated envelope, using the respective
-%           weight 0?l?1 and (1-l). (Klapuri et al., 2006)
-%       mirenvelope(...,'Smooth',o): smooths the envelope using a movering
+%           weight 0<l<1 and (1-l). (Klapuri et al., 2006)
+%       mirenvelope(...,'Smooth',o): smooths the envelope using a moving
 %           average of order o.
 %           Default value when the option is toggled on: o=30
 %       mirenvelope(...,'Gauss',o): smooths the envelope using a gaussian

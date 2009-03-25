@@ -7,6 +7,8 @@ switch propName
         val = get(mirdata(a),'Data');
     case 'Delay'
         val = get(mirdata(a),'Pos');
+    case 'Lag'
+        val = get(mirdata(a),'Pos');
     case 'FreqDomain'
         val = a.freq;
     case 'OfSpectrum'
