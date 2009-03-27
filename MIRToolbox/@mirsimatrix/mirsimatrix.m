@@ -1,5 +1,4 @@
 function varargout = mirsimatrix(orig,varargin)
-% CURRENTLY DOES NOT WORK WITH MEL... (DISPLAY AT LEAST)
 %   m = mirsimatrix(x) computes the similarity matrix resulting from the 
 %       mutual comparison between each possible frame analysis in x.
 %           By default, x is the spectrum of the frame decomposition.
@@ -140,6 +139,11 @@ else
             ll = size(vk,1);
             l = size(vk,2);
             nc = size(vk,3);
+            if ll==1 && nc>1
+                vk = squeeze(vk)';
+                ll = nc;
+                nc = 1;
+            end
             nd = size(vk,4);
             dk = NaN(l,l,nc);
             for g = 1:nc

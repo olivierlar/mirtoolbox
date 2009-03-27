@@ -6,8 +6,7 @@ function varargout = mirkeystrength(orig,varargin)
 %           length l (in seconds) and hop factor h, expressed relatively to
 %           the window length. For instance h = 1 indicates no overlap.
 %           Default values: l = 1 seconds and h = .5
-%       The optional parameter 'Weight' related to the chromagram function
-%           can be specified here (see help chromagram).
+%       The mirchromagram options 'Weight' and 'Triangle' can be specified.
 %   [ks,c] = mirkeystrength(...) also displays the chromagram used for the key 
 %       strength estimation.
 %

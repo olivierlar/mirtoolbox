@@ -8,8 +8,7 @@ function res = mirquery(varargin)
 %   r = mirquery(d), where
 %           d is the distance between one audio file and a folder of audio
 %           file, according to a mirtoolbox feature,
-%       returns the name of the audio files in the database b in an
-%           increasing distance d.
+%       returns the name of the audio files in an increasing distance d.
 %
 %   Optional argument:
 %       mirquery(...,'Best',n) returns the name of the n closest audio
