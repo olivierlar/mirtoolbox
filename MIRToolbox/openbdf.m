@@ -39,7 +39,8 @@ if cname(1:2)=='PC' SLASH=BSLASH; end;
 
 fid=fopen(FILENAME,'r','ieee-le');          
 if fid<0 
-	fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);  
+	% fprintf(2,['Error LOADEDF: File ' FILENAME ' not found\n']);  
+    % Warning desactivated in MIRtoolbox
 	return;
 end;
 

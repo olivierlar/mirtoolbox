@@ -1,5 +1,5 @@
 function v = get(a,varargin)
-% GET Get properties from the MIRdesign object and return the value
+% GET Get properties from the MIRstruct object and return the value
 
 switch varargin{1}
     case 'Fields'

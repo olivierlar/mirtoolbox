@@ -24,13 +24,15 @@ function varargout = mirsimatrix(orig,varargin)
 %       mirsimatrix(...,'Horizontal') rotates the matrix 45 degrees in order to
 %           make the first diagonal horizontal, and to restrict on the
 %           diagonal bandwith only.
-%       mirsimatrix(...,'Filter',10) filter along the diagonal of the matrix,
-%           using a uniform moving average filter of size f. The result is
-%           represented in a time-lag matrix.
 %
 %   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
 % Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
 % Databases, Vol. 5021, pp. 167-75.
+
+%       mirsimatrix(...,'Filter',10) filter along the diagonal of the matrix,
+%           using a uniform moving average filter of size f. The result is
+%           represented in a time-lag matrix.
+
 
         distance.key = 'Distance';
         distance.type = 'String';

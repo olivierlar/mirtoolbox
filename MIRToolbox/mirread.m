@@ -27,19 +27,24 @@ n = {};
 try
     [d,f,b,tp,fp,n] = audioread(extract,@wavread,orig,load,verbose,folder);
 catch
-    le = lasterror;
+    errmsg = lasterr;
     try
        [d,f,b,tp,fp,n] = audioread(extract,@auread,orig,load,verbose,folder);
     catch
         try
             [d,f,b,tp,fp,n] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
-            try
-               [d,f,b,tp,fp,n] = audioread(extract,@bdfread,orig,load,verbose,folder);
-            catch
-                errmsg = lasterr;
+            if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
+                try
+                   [d,f,b,tp,fp,n] = audioread(extract,@bdfread,orig,load,verbose,folder);
+                catch
+                    if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
+                        error(['ERROR: Cannot open file ',orig]);
+                    end
+                end
+            else
                 if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
-                    error(['ERROR: Cannot open file ',orig]);
+                     error(['ERROR: Cannot open file ',orig]);
                 end
             end
         end

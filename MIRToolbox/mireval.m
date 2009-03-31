@@ -107,7 +107,7 @@ if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     if isfield(op,'every')
         order = order(1:op.every:end);
     end
-    order = order';
+    order = order(:)';
 end
 for f = order
     if l > 1

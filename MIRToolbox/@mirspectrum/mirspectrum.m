@@ -53,7 +53,9 @@ function varargout = mirspectrum(orig,varargin)
 %           located at multiples of range(s) m of the signal's fundamental 
 %           frequency. Computed by compressing the signal by the list of
 %           factors m, and by multiplying all the results with the original 
-%           signal.
+%           signa (Alonso et al, 2003).
+%       mirspectrum(...,'Sum',s): Similar option using summation instead of
+%           product.
 %       mirspectrum(...,'MinRes',mr): Indicates a minimal accepted
 %           frequency resolution, in Hz. The audio signal is zero-padded in
 %           order to reach the desired resolution.
@@ -189,12 +191,12 @@ function varargout = mirspectrum(orig,varargin)
         mask.when = 'After';
     option.mask = mask;
 
-        e.key = 'Enhanced';
-        e.type = 'Integer';
-        e.default = [];
-        e.keydefault = 2:10;
-        e.when = 'After';
-    option.e = e;
+    %    e.key = 'Enhanced';
+    %    e.type = 'Integer';
+    %    e.default = [];
+    %    e.keydefault = 2:10;
+    %    e.when = 'After';
+    %option.e = e;
 
         collapsed.key = 'Collapsed';
         collapsed.type = 'Boolean';
@@ -491,34 +493,34 @@ if any(option.msum)
     end
     s = set(s,'Title','Spectral sum');
 end
-for i = option.e  % Enhancing procedure %%%% TO CHECK, t IS NOT DEFINED!
-    for h = 1:length(m)
-        for l = 1:length(m{k})
-            c = m{h}{l};
-            % option.e is the list of scaling factors
-            % i is the scaling factor
-            if i
-                ic = zeros(size(c));
-                for g = 1:size(c,2)
-                    for h2 = 1:size(c,3)
-                        beg = find(t(:,g,h2)/i >= t(1,g,h2))
-                        if not(isempty(beg))
-                            ic(:,g,h2) = interp1(t(:,g,h2),c(:,g,h2),t(:,g,h2)/i); %,'cubic'); 
+%for i = option.e  % Enhancing procedure %%%% TO CHECK, t IS NOT DEFINED!
+%    for h = 1:length(m)
+%        for l = 1:length(m{k})
+%            c = m{h}{l};
+%            % option.e is the list of scaling factors
+%            % i is the scaling factor
+%            if i
+%                ic = zeros(size(c));
+%                for g = 1:size(c,2)
+%                    for h2 = 1:size(c,3)
+%                        beg = find(t(:,g,h2)/i >= t(1,g,h2))
+%                        if not(isempty(beg))
+%                            ic(:,g,h2) = interp1(t(:,g,h2),c(:,g,h2),t(:,g,h2)/i); %,'cubic'); 
                                 % The scaled autocorrelation
-                            ic(1:beg(1)-1,g,h2) = 0;
-                        end
-                    end
-                end
-                ic(find(isnan(ic))) = Inf;    % All the NaN values are changed into 0 in the resulting curve
-                ic = max(ic,0);
-                c = c - ic;       % The scaled autocorrelation is substracted to the initial one
-                c = max(c,0);               % Half-wave rectification
+%                            ic(1:beg(1)-1,g,h2) = 0;
+%                        end
+%                    end
+%                end
+%                ic(find(isnan(ic))) = Inf;    % All the NaN values are changed into 0 in the resulting curve
+%                ic = max(ic,0);
+%                c = c - ic;       % The scaled autocorrelation is substracted to the initial one
+%                c = max(c,0);               % Half-wave rectification
                 %figure
                 %plot(c)
-            end
-        end
-    end
-end
+%            end
+%        end
+%    end
+%end
 if option.norm
     for k = 1:length(m)
         for l = 1:length(m{k})
@@ -710,7 +712,7 @@ if strcmp(s.xscale,'Freq')
                     % Now the cent range is expressed in midicent
             end
         end
-        s = set(s,'Abs','pitch (in midicents)');
+        s = set(s,'Abs','pitch (in midicents)','XScale','Cents');
     end
 end
 if option.mask
@@ -751,7 +753,7 @@ if option.collapsed
             f{h}{i} = repmat((0:1199)',[1,size(fi,2),size(fi,3)]);
         end
     end
-    s = set(s,'Abs','Cents');
+    s = set(s,'Abs','Cents','XScale','Cents(Collapsed)');
 end
 if option.log || option.db
     if not(isa(s,'mirspectrum') && s.log)
