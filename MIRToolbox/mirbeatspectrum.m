@@ -7,17 +7,7 @@ function varargout = mirbeatspectrum(orig,varargin)
 %               (help pdist).
 %           default value: f = 'cosine'
 
-%       mirbeatspectrum(...,'Measure',f) specifies the name of a similarity
-%           measure function. This function is applied to the result of the
-%           distance function. 
-%           default value: f = 'exponential'
-%               corresponding to f(x) = exp(-x)
-%       mirbeatspectrum(...,'Normal',0) does not normalize the novelty curve
-%           between the values 0 and 1.
-%
-%   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
-% Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
-% Databases, Vol. 5021, pp. 167-75.
+% ref?
 
         dist.key = 'Distance';
         dist.type = 'String';

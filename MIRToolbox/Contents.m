@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.1.22 13-March-2009
+% Version 1.1.23 31-March-2009
 %
 % A complete documentation is available in the downloaded folder and online.
 %			http://www.jyu.fi/music/coe/materials/mirtoolbox
@@ -34,7 +34,6 @@
 %                       certain amount of energy)
 %
 %AUDITORY MODELLING
-% mirauditory      - Auditory image
 % mirfilterbank    - Decomposes audio signals through a bank of filters
 % mirenvelope      - Signal envelope (global shape of the waveform)
 % mirsum           - Sums the envelopes of a filterbank

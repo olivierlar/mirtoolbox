@@ -35,7 +35,7 @@ function varargout = mironsets(x,varargin)
 %           (By default toggled on.)
 %           Option associated to the mirpeaks function can be specified as
 %               well:
-%               'Contrast' with default value c = .001
+%               'Contrast' with default value c = .05
 %       mironsets(...,'Attack',o) (or 'Attacks') detects attack phases,
 %           using a gaussian envelope smoothing of order o.
 %               Default value when 'Attack' is called: o = 20;
@@ -230,7 +230,7 @@ function varargout = mironsets(x,varargin)
         detect.when = 'After';
     option.detect = detect;
     
-        cthr.key = 'Contrast';      %%%%% CHECK
+        cthr.key = 'Contrast';
         cthr.type = 'Integer';
         cthr.default = NaN;
         cthr.when = 'After';
