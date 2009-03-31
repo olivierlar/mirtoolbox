@@ -65,11 +65,11 @@ for i = 1:length(fields)
         if isamir(orig,func2str(method))
             after.(field) = 0;
         elseif strcmp(field,'detect')
-           if haspeaks(orig)
-               after.(field) = 0;
-           else
+           %if haspeaks(orig)
+           %    after.(field) = 0;
+           %else
                after.(field) = 'Peaks';
-           end
+           %end
         elseif isfield(specif,'title')
             title = get(orig,'Title');
             if (length(title) > length(specif.title) && ...

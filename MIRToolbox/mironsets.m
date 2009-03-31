@@ -366,11 +366,11 @@ if isfield(postoption,'ds') && isnan(postoption.ds)
     end
 end
 if isfield(postoption,'cthr')
-    if isnan(postoption.cthr)
+    if isnan(postoption.cthr) || not(postoption.cthr)
         if ischar(postoption.detect) || postoption.detect
             postoption.cthr = .05;
         end
-    else
+    elseif postoption.cthr
         if not(ischar(postoption.detect) || postoption.detect)
             postoption.detect = 'Peaks';
         end
