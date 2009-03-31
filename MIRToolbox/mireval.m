@@ -100,19 +100,26 @@ order = 1:l;
 if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     op = get(d,'Option');
     if isfield(op,'inc')
-        [unused order] = sort(mirgetdata(op.inc));
+        if not(isnumeric(op.inc))
+            op.inc = mirgetdata(op.inc);
+        end
+        [unused order] = sort(op.inc);
     elseif isfield(op,'dec')
-        [unused order] = sort(mirgetdata(op.dec),'descend');
+        if not(isnumeric(op.inc))
+            op.inc = mirgetdata(op.inc);
+        end
+        [unused order] = sort(op.dec,'descend');
     end
     if isfield(op,'every')
         order = order(1:op.every:end);
     end
     order = order(:)';
 end
-for f = order
+for i = 1:length(order)
+    f = order(i);
     if l > 1
         fprintf('\n')
-        display(['*** File # ',num2str(f),'/',num2str(l),': ',a{f}]);
+        display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
     end
     tic
     yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single); %% y = ...

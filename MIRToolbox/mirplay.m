@@ -11,9 +11,9 @@ function varargout = mirplay(a,varargin)
 %       mirplay(...,'Sequence',l) plays the sequence(s) of rank(s) indicated
 %           by the array l.
 %       mirplay(...,'Increasing',d) plays the sequences in increasing order
-%           of the scalar data d.
+%           of d, which could be either an array or a mirscalar data.
 %       mirplay(...,'Decreasing',d) plays the sequences in decreasing order
-%           of the scalar data d.
+%           of d, which could be either an array or a mirscalar data.
 %       mirplay(...,'Every',s) plays every s sequence, where s is a number
 %           indicating the step between sequences.
 %       Example: mirplay(mirenvelope('Folder'),...
