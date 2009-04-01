@@ -1,23 +1,28 @@
 function varargout = mirfilterbank(orig,varargin)
-%   GET FILTER CENTERS..., AND SPECIFY CENTER FREQUENCY
 %   b = mirfilterbank(x) performs a filterbank decomposition.
 %   x can be either an audio signal (or the name of an audio file) or a
 %       spectrogram.
 %   Optional arguments:
-%       mirfilterbank(...,t) specifies the type of filterbank.
+%       mirfilterbank(...,t) selects a type of filterbank.
 %           Possible values:
 %               t = 'Gammatone' (default for audio files).
 %                   Requires the Auditory Toolbox.
 %                   mirfilterbank(...,'Lowest',f): lowest frequency in Hz
 %                       (default: 50)
 %               t = '2Channels' proposed in (Tolonen & Karjalainen, 2000)
-%               t = 'Manual' using a user-defined set of non-overlapping 
+%           mirfilterbank(...,'NbChannels',N), or simply filterbank(x,N):
+%               specifies the number of channels in the bank.
+%               (default: N = 10)
+%           mirfilterbank(...,'Channel',c) only output the channels whose
+%               ranks are indicated in the array c.
+%               (default: c = (1:N))
+%       mirfilterbank(...,'Manual',f) specifies a set of non-overlapping 
 %                   low-pass, band-pass and high-pass filters (Scheirer,
 %                   1998).  The series of cut-off frequencies as to be
-%                   specified as next parameter.
-%                       If this series of frequencies begins with -Inf,
+%                   specified as next parameter f.
+%                       If this series of frequencies f begins with -Inf,
 %                           the first filter is low-pass.
-%                       If this series of frequencies ends with Inf,
+%                       If this series of frequencies f ends with Inf,
 %                           the last filter is high-pass.
 %       mirfilterbank(...,p) specifies predefined filterbanks:
 %           Possible values:
@@ -25,10 +30,6 @@ function varargout = mirfilterbank(orig,varargin)
 %                   'Manual',[-Inf 200 400 800 1600 3200 Inf]
 %               p = 'Klapuri' proposed in (Klapuri, 1999) corresponds to
 %                   'Manual',44*[2.^ ([ 0:2, ( 9+(0:17) )/3 ]) ]
-%       mirfilterbank(...,'NbChannels',N), or simply filterbank(x,N): specifies
-%           the number of channels in the bank. (default: N = 10)
-%       mirfilterbank(...,'Channel',c) only output the channels whose ranks are
-%           indicated in the array c. (default: c = (1:N))
 
         nCh.key = 'NbChannels';
         nCh.type = 'Integer';

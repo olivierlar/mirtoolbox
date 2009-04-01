@@ -4,9 +4,9 @@ function r = mirfeatures(x,varargin)
 %       'Folder' keyword.
 %   mirfeatures(...,'Stat') returns the statistics of the features instead
 %       of the complete features themselves.
-%   mirfeatures(...,'Segment') segments the audio sequence and analyzes
+%   mirfeatures(...,'Segment',t) segments the audio sequence at the 
+%       temporal positions indicated in the array t (in s.), and analyzes
 %       each segment separately.
-
 
 %(not available yet)
 %   mirfeatures(...,'Filterbank',nc) computes the analysis on each channel
@@ -15,13 +15,7 @@ function r = mirfeatures(x,varargin)
 %   mirfeatures(...,'Frame',...) 
 %   mirfeatures(...,'Normal')
 %   mirfeatures(...,'Sampling',s)
-
-
-
-%RESAMPLING (22050)
-%MIRAUDIO OPTIONS (Extract)
-
-% CHECK BEHAVIOR WITH SHORT FILES
+%   miraudio options (Extract, ...)
 
 [stat,nchan,segm,feat] = scanargin(varargin);
 

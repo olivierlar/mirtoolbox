@@ -156,7 +156,7 @@ if isa(x,'mirdesign')
         if iscell(e)
             e = e{1};
         end
-        f = e; %mirsegment(e,varargin{:});
+        f = mirsegment(e,varargin{:});
         p = x;
     end
 elseif isa(x,'mirdata')
