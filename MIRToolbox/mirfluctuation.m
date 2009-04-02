@@ -4,8 +4,6 @@ function varargout = mirfluctuation(orig,varargin)
 %   Optional arguments:
 %       mirfluctuation(...,'Summary') returns the summary of the fluctuation,
 %           i.e., the summation along the critical bands.
-% To be added: gradient and Gaussian filtering, 6-second superframes,
-% median
 %
 % E. Pampalk, A. Rauber, D. Merkl, "Content-based Organization and 
 % Visualization of Music Archives", 
@@ -27,7 +25,7 @@ end
 if isamir(x,'miraudio') && not(isframed(x))
     x = mirframe(x,.023,.5);
 end
-m = mirspectrum(x,'Power','Mel','dB');
+m = mirspectrum(x,'Power','Terhardt','Bark','dB','Mask');
 f = mirspectrum(m,'AlongBands','Max',10,'Window',0,...
                   'Resonance','Fluctuation','MinRes',.01);
 if option.sum
