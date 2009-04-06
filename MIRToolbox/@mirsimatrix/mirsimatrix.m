@@ -25,6 +25,12 @@ function varargout = mirsimatrix(orig,varargin)
 %           make the first diagonal horizontal, and to restrict on the
 %           diagonal bandwith only.
 %
+%       mirsimatrix(M,r) creates a mirsimatrix similarity matrix based on
+%           the Matlab square matrix M, of frame rate r (in Hz.)
+%               By default r = 20 Hz.
+%           mirsimatrix(M,r,'Dissimilarity') creates instead a mirsimatrix
+%               dissimilarity matrix.
+%
 %   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
 % Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
 % Databases, Vol. 5021, pp. 167-75.
@@ -68,18 +74,34 @@ function varargout = mirsimatrix(orig,varargin)
         view.when = 'After';
     option.view = view;
     
+        rate.type = 'Integer';
+        rate.position = 2;
+        rate.default = 20;
+    option.rate = rate;
+    
 specif.option = option;
 specif.nochunk = 1;
 varargout = mirfunction(@mirsimatrix,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-if not(isamir(x,'mirsimatrix'))
-    if (isamir(x,'miraudio'))
-        if isframed(x)
-            x = mirspectrum(x);
-        else
-            x = mirspectrum(x,'Frame',0.05,1);
+if isnumeric(x)
+    m.diagwidth = Inf;
+    m.view = 's';
+    m.similarity = NaN;
+    m = class(m,'mirsimatrix',mirdata);
+    m = set(m,'Title','Dissimilarity matrix');
+    fp = repmat(((1:size(x,1))-.5)/option.rate,[2,1]);
+    x = set(m,'Data',{x},'Pos',[],...
+              'FramePos',{{fp}},'Name',{inputname(1)});
+else
+    if not(isamir(x,'mirsimatrix'))
+        if (isamir(x,'miraudio'))
+            if isframed(x)
+                x = mirspectrum(x);
+            else
+                x = mirspectrum(x,'Frame',0.05,1);
+            end
         end
     end
 end
@@ -233,7 +255,9 @@ if not(isempty(postoption))
     end
     if ischar(postoption.simf)
         if strcmpi(postoption.simf,'Similarity')
-            option.dissim = 0;
+            if not(isequal(m.similarity,NaN))
+                option.dissim = 0;
+            end
             postoption.simf = 'oneminus';
         end
         if isequal(m.similarity,0) && isstruct(option) ...
@@ -244,6 +268,9 @@ if not(isempty(postoption))
             end
             m.similarity = postoption.simf;
             m = set(m,'Title','Similarity matrix','Data',d);
+        elseif length(m.similarity) == 1 && isnan(m.similarity) ...
+                && option.dissim
+            m.similarity = 0;
         end
     end
     if postoption.filt

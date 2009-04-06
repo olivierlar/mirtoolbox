@@ -48,6 +48,7 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
     
 
 function [x type] = init(x,option)
+type = 'mirscalar';
 if not(isamir(x,'mirscalar'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
                       'Width',option.K);
@@ -57,7 +58,6 @@ end
 if isa(x,'mirdesign')
     x = set(x,'Overlap',ceil(option.K));
 end
-type = 'mirscalar';
 
 
 function y = main(orig,option,postoption)

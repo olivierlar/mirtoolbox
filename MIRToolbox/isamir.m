@@ -1,6 +1,6 @@
 function b = isamir(x,class)
 
-if isempty(x)
+if isempty(x) || isnumeric(x)
     b = 0;
     return
 end

@@ -148,7 +148,7 @@ if not(isempty(during)) && mirverbose
         disp(['Computing ',func2str(method),' for all audio files ...'])
     end
 end
-if not(iscell(orig))
+if not(iscell(orig) || isnumeric(x))
     orig = set(orig,'Index',get(x,'Index'));
 end
 o = main(orig,during,after);
