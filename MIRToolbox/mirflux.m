@@ -228,7 +228,7 @@ f = set(f,'Data',fl);
 
 
 function y = Euclidian(mi,mj,inc)
-nl = size(mi,1);
+%nl = size(mi,1);
 if inc
     y = sqrt(sum(max(0,(mj-mi)).^2));%/nl;
 else

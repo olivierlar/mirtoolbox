@@ -1,8 +1,6 @@
 function varargout = mirhcdf(orig,varargin)
 %   df = mirhcdf(x) calculates the Harmonic Change Detection Function
 %       related to x.
-%   [df tc] = mirhcdf(x) also returns the tonal centroid vectors.
-%   [df tc ch] = mirhcdf(x) also returns the intermediate chromagrams.
 %
 % C. A. Harte and M. B. Sandler, Detecting harmonic change in musical
 %   audio, in Proceedings of Audio and Music Computing for Multimedia

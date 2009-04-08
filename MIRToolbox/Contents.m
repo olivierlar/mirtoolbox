@@ -95,7 +95,6 @@
 %CLUSTERING
 % mirclassify      - Classifies audio sequences
 % mircluster       - Clusters segments in audio sequences
-% mirhmm           - Sequence of states of a Hidden Markov Model
 %
 %MATLAB FUNCTIONS generalized to the MIRtoolbox data
 % +                - Superposes audio files

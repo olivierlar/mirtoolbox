@@ -16,10 +16,6 @@ function varargout = mirlowenergy(x,varargin)
 %           corresponds in fact to mirlowenergy(...,'Root',0,'Threshold',t)
 %           where t is fixed here by default to t = .5
 %   [p,e] = mirlowenergy(...) also returns the RMS energy curve.
-
-%        nbframes.type = 'Boolean';
-%        nbframes.default = 0;
-%    option.nbframes = nbframes;
     
         asr.key = 'ASR';
         asr.type = 'Boolean';
@@ -44,9 +40,6 @@ function varargout = mirlowenergy(x,varargin)
 
 specif.option = option;
 specif.nochunk = 1;
-%specif.eachchunk = @eachchunk;
-%specif.combineframes = @combineframes;
-%specif.afterchunk = @afterchunk;
 
 varargout = mirfunction(@mirlowenergy,x,varargin,nargout,specif,@init,@main);
 
@@ -86,31 +79,8 @@ e = {e,r};
 
 function v = algo(d,thr)
 v = sum(d < repmat(thr*mean(d,2),[1 size(d,2) 1]));
-%if not(option.nbframes)
-    v = v / size(d,2);
-%end
+v = v / size(d,2);
 
 
 function fp = noframe(fp)
 fp = [fp(1);fp(end)];
-
-
-%function y = eachchunk(orig,option,missing)
-%option.nbframes = 1;
-%y = mirlowenergy(orig,option);
-
-
-%function y = combineframes(old,new)  %% not good: last chunk may have different size
-%do = mirgetdata(old);
-%dn = mirgetdata(new);
-%y = set(old,'ChunkData',do+dn);
-
-
-%function y = afterchunk(orig,frames,postoption)
-%d = get(orig,'Data');
-%v = mircompute(@afternorm,d,size(frames,2));
-%y = set(orig,'Data',v);
-
-
-%function e = afternorm(d,length)
-%e = d/length;

@@ -34,7 +34,7 @@ for h = 1:length(d)
         di = d{h}{i};
         v{h}{i} = size(d{h}{i},1);
         if strcmp(option.unit,'Second')
-            v{h}{i} = v{h}{i}/f{i};
+            v{h}{i} = v{h}{i}/f{h};
         end
     end
 end

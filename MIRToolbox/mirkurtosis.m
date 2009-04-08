@@ -37,4 +37,3 @@ k = mirscalar(x,'Data',y,'Title',t,'Unit','');
 
 function k = kurtosis(d,p,c,s)
 k = sum((p-c).^4.*d) ./ sum(d) ./ s.^4;
-%k(find(isnan(k))) = 0;

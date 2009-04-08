@@ -1,5 +1,6 @@
 function res = mirmap(predics_ref,ratings_ref,dist,alpha,delta)
 
+%%
 if nargin<3
     dist = 'lse';
 end
@@ -17,8 +18,6 @@ dist = str2func(dist);
 predics = import(predics_ref);
 ratings = import(ratings_ref);
 
-%res.nonorm.cor = map(predics,ratings,crosscor_thres);
-
 predics  = normalize(predics,dist,alpha,delta,'predictions',predics_ref);
 if isempty(predics.data)
     res = [];
@@ -30,6 +29,7 @@ ratings = normalize(ratings,dist,alpha,delta,'ratings',ratings_ref);
 res = map(predics,ratings,crosscor_thres);
 
 
+%%
 function output = import(ref)
 output.data = [];
 output.fields = {};
@@ -86,6 +86,7 @@ for i = 1:ndata
 end
 
 
+%%
 function res = map(predics,ratings,crosscor_thres)
 nbrates = size(ratings.data,2);
 nbpreds = size(predics.data,2);
@@ -177,7 +178,6 @@ for j = 1:nbrates
     end
 end
 
-
 function x = standardize(x)
 %mx = mean(x);
 %x = x-repmat(mx,[size(x,1) 1]);
@@ -186,6 +186,7 @@ function x = standardize(x)
 %x = x./repmat(sx,[size(x,1) 1]);
 
 
+%%
 function output = normalize(input,dist,alpha,delta,txt,filename)
 fields = input.fields;
 nbfields = length(fields);
@@ -215,6 +216,9 @@ display('..')
 output.data(:,~output.normal) = [];
 output.fields(~output.normal) = [];
 output.normal(~output.normal) = [];
+if 
+output.alpha(~output.normal) = [];
+output.lambda(~output.normal) = [];
  %if strcmpi(filename(end-3:end),'.txt')
  %    filename = filename(1:end-4);
  %end

@@ -8,7 +8,6 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %           (by default)
 %       'HCDF': using the Harmonic Change Detection Function (Harte &
 %           Sandler, 2006)
-%       'HMM' : using a Hidden Markov Model
 %       The options available for the chosen strategies can be specified
 %           directly as options of the segment function.
 %           Example: mirsegment(a,'Novelty','KernelSize',10)
@@ -209,9 +208,6 @@ elseif isa(x,'mirdata')
                 [df m fe] = mirhcdf(fe);
                 p = mirpeaks(df);
             end
-        elseif strcmpi(option.strat,'HMM')
-            fe = x;
-            [p,m] = mirhmm(x);
         else
             error('ERROR IN MIRSEGMENT: Syntax error. See help mirsegment.');
         end

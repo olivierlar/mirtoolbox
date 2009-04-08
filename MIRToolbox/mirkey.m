@@ -3,16 +3,15 @@ function varargout = mirkey(orig,varargin)
 %   Optional argument:
 %       mirkey(...,'Total',m) selects not only the most probable key, but
 %           the m most probable keys.
-%       The optional parameters 'Weight' related to the chromagram function
-%           can be specified here (see help mirchromagram).
+%       The other parameter 'Contrast' related to mirpeaks can be specified 
+%           here (see help mirchromagram).
+%       The optional parameters 'Weight' and 'Triangle' related to
+%           mirchromagram can be specified here (see help mirchromagram).
 %   [k,ks] = mirkey(...) also returns the key clarity, corresponding here 
 %       to the key strength associated to the best candidate.
 %   [k,ks,ksc] = mirkey(...) also displays the key strength curve used for
 %       the key estimation and shows in particular the peaks corresponding 
 %       to the selected key(s).
-
-%   [k,ks,ksc,ch] = mirkey(...) also displays the chromagram used for the key 
-%       strength estimation.
 
         tot.key = 'Total';
         tot.type = 'Integer';
