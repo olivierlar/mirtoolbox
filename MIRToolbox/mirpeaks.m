@@ -56,6 +56,10 @@ function varargout = mirpeaks(orig,varargin)
 %                   2^(1/12)
 %               a numerical value : difference between the two peak
 %                   positions equal to that value
+%           When two peaks are distant by an interval lower than the
+%               resolution, the highest of them is selected by default.
+%           mirpeaks(...,'Reso',r,'First') specifies on the contrary that
+%               the first of them is selected by default.
 %       mirpeaks(...,'Nearest',t,s): takes the peak nearest a given abscisse
 %           values t. The distance is computed either on a linear scale
 %           (s = 'Lin') or logarithmic scale (s = 'Log'). In this case,
@@ -164,6 +168,11 @@ function varargout = mirpeaks(orig,varargin)
         %reso.choice = {0,'SemiTone'};
         reso.default = 0;
     option.reso = reso;
+    
+        resofirst.key = 'First';
+        resofirst.type = 'Boolean';
+        resofirst.default = 0;
+    option.resofirst = resofirst;
         
         interpol.key = 'Interpol';
         interpol.type = 'String';
@@ -187,7 +196,7 @@ function varargout = mirpeaks(orig,varargin)
         delta.default = 0;
     option.delta = delta;
 
-    only.key = 'Only';
+        only.key = 'Only';
         only.type = 'Boolean';
         only.default = 0;
     option.only = only;
@@ -195,7 +204,7 @@ function varargout = mirpeaks(orig,varargin)
         scan.key = 'ScanForward';
         scan.default = [];
     option.scan = scan;
-
+    
 specif.option = option;
 
 varargout = mirfunction(@mirpeaks,orig,varargin,nargout,specif,@init,@main);
@@ -476,6 +485,7 @@ for i = 1:length(d) % For each audio file,...
                         end
                         if bufmax - oldbufmin >= option.cthr && ...
                                 bufmax - min(dh(mxk(j)+1:end,k,l)) >= option.cthr
+                            % The last peak candidate is OK and stored
                             finalmxk(end+1) = mxk(j);
                         end
                         if wait
@@ -525,7 +535,8 @@ for i = 1:length(d) % For each audio file,...
                     j = 1;
                     while j < length(mxlk)-1
                         if compar(th(mxlk(j+1),k,l),th(mxlk(j),k,l),option.reso)
-                            decreas = dh(mxlk(j+1),k,l)<dh(mxlk(j),k,l);
+                            decreas = option.resofirst || ...
+                                dh(mxlk(j+1),k,l)<dh(mxlk(j),k,l);
                             mxlk(j + decreas) = [];
                         else
                             j = j+1;
