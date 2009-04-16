@@ -5,6 +5,9 @@ function v = mireval(d,file,single,export)
 %       output when several output are returned for a given mirdesign
 %       object.
 
+% mireval performs the actual evaluation of the design flowchart.
+%   It starts by a top-down traversal of the design flowchart (evaleach).
+
 if nargin<3
     single = [];
 end
@@ -185,6 +188,8 @@ elseif iscell(d)
 else
     d = set(d,'File',file,'Sampling',sampling,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
+    % For that particular file or this particular feature, let's begin the
+    % actual evaluation process.
     res = evaleach(d);    
     v = res;
 end

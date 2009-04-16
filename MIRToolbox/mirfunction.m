@@ -1,11 +1,24 @@
 function o = mirfunction(method,x,varg,nout,specif,init,main)
+% Meta function called by all MIRtoolbox functions.
+% Integrates the function into the general flowchart
+%   and eventually launches the "mireval" evaluation process.
+% Here are the successive steps in the following code:
+%   - If the input is an audio filename, instantiates a new design flowchart.
+%   - Reads all the options specified by the user.
+%   - Performs the 'init' part of the MIRtoolbox function:
+%       - If the input is a design flowchart,
+%           add the 'init' part in the flowchart.
+%       - If the input is some MIRtoolbox data,
+%           execute the 'init' part on that data.
+%   - Performs the 'main' part of the MIRtoolbox function.
 
 if isempty(x)
     o = {{},{},{}};
     return
 end
 
-if ischar(x) % Starting point of the design process
+if ischar(x) % The input is a file name.
+    % Starting point of the design process
     design_init = 1;
     filename = x;
     orig = mirdesign(@miraudio,'Design',{varg},{},struct,'miraudio'); 
@@ -15,11 +28,13 @@ else
     orig = x;
 end
 
+% Reads all the options specified by the user.
 [orig during after] = miroptions(method,orig,specif,varg);
 
+% Performs the 'init' part of the MIRtoolbox function.
 if isa(orig,'mirdesign')
     if not(get(orig,'Eval'))
-        % Bottom-up construction of the general design
+        % Top-down construction of the general design flowchart
         
         if isstruct(during) && isfield(during,'frame') && ...
                 isstruct(during.frame) && during.frame.auto
@@ -31,8 +46,11 @@ if isa(orig,'mirdesign')
                                  during.frame.hop.unit);   
         end
         
+        % The 'init' part of the function can be integrated into the design
+        % flowchart. This leads to a top-down construction of the
+        % flowchart.
         % Automatic development of the implicit prerequisites,
-        % with management of the data types throughout in the design process
+        % with management of the data types throughout the design process.
         [orig type] = init(orig,during);
         
         if iscell(type)
@@ -41,17 +59,18 @@ if isa(orig,'mirdesign')
         
         o = mirdesign(method,orig,during,after,specif,type,nout);
         
-        %if isstruct(during) && during.frame.auto
-        %    % Now that the mirframe step has been integrated in the
-        %    % flowchart, the 'Frame' option can be removed from the
-        %    % flowchart's terminal node.
-        %    opt = get(o,'Option');
-        %    opt.frame = [];
-        %    o = set(o,'Option',opt,'Frame',[]);
-        %end
+                %if isstruct(during) && during.frame.auto
+                %    % Now that the mirframe step has been integrated in the
+                %    % flowchart, the 'Frame' option can be removed from the
+                %    % flowchart's terminal node.
+                %    opt = get(o,'Option');
+                %    opt.frame = [];
+                %    o = set(o,'Option',opt,'Frame',[]);
+                %end
             
         if design_init && not(strcmpi(filename,'Design'))
-            % When 'Design' keyword not used,
+            % Now the design flowchart has been completed created.
+            % If the 'Design' keyword not used,
             % the function is immediately evaluated
             o = mireval(o,filename);
         else
@@ -62,8 +81,8 @@ if isa(orig,'mirdesign')
         end
         return
     else
-        % Evaluation of the design.
-        % First top-down initiation, then bottom-up process.
+        % During the top-down traversal of the flowchart (evaleach), at the
+        % beginning of the evaluation process.
         
         if not(isempty(get(orig,'TmpFile'))) && get(orig,'ChunkDecomposed')
             %ch = get(orig,'Chunk');
@@ -107,7 +126,8 @@ else
             o = returndesign(o,nout);
             return
         else
-            % Progressive evaluation of the design
+            % Evaluation of the design.
+            % First top-down initiation (evaleach), then bottom-up process.
             for io = 1:length(orig)
                 if isa(orig{io},'mirdesign')
                     o = evaleach(orig{io});
@@ -123,11 +143,16 @@ else
                 isstruct(during.frame) && during.frame.auto
             orig = mirframe(orig,during.frame.length,during.frame.hop);        
         end
+        % The input of the function is not a design flowchart, which
+        % the 'init' part of the function could be integrated into.
+            % (cf. previous call of 'init' in this script). 
+        % For that reason, the 'init' part of the function needs to be
+        % evaluated now.
         orig = init(orig,during);
     end
 end
 
-% Actual computation
+% Performs the 'main' part of the MIRtoolbox function.
 if not(iscell(orig) && not(ischar(orig{1}))) && ...
         not(isa(orig,'mirdesign') || isa(orig,'mirdata'))
     o = {orig};

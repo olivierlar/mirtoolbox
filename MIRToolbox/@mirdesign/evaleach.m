@@ -1,5 +1,9 @@
 function [y d2] = evaleach(d)
-% Top-down initiation of the evaluation process
+% Top-down traversal of the design flowchart, at the beginning of the
+% evaluation phase.
+% Called by mirfunction, mireval, mirframe and mirsegment.
+% This is during that traversal that we check whether a chunk decomposition
+% needs to be performed or not, and carry out that chunk decomposition.
 
 CHUNKLIM = mirchunklim;
 f = d.file;
@@ -28,8 +32,8 @@ if isfield(specif,'combinechunk') && ...
 end
 
 if ischar(a)
-    % The top-down initiation now reaches the lowest layer of the process
-    % design, i.e., audio file loading.
+    % The top-down traversal of the design flowchart now reaches the lowest
+    % layer, i.e., audio file loading.
     % Now the actual evaluation will be carried out bottom-up.
     
     if isempty(ch)
@@ -58,11 +62,12 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
     [y d2] = evalnow(d);  
     
 elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
-    % No frame-decomposition
+    % No frame or segment decomposition in the design to evaluate
 
     if lsz > CHUNKLIM && isfield(specif,'eachchunk') ...
             && not(d.nochunk)
-        % Chunk decomposition
+        % The required memory exceed the max memory threshold.
+        % The chunk decomposition is therefore performed.
 
         if isempty(sg)
             nch = ceil(lsz/CHUNKLIM); 
@@ -258,7 +263,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     end    
 else
 
-    % Frame decomposition
+    % No frame or segment decomposition in the design to be evaluated.
 
     if strcmpi(d.frame.length.unit,'s')
         fl = ceil(d.frame.length.val*sr);
@@ -300,7 +305,8 @@ else
     end
     fpsz = (fp(2,1)-fp(1,1)) * n;      % Total number of samples
     if fpsz > CHUNKLIM && not(d.nochunk)
-        % Chunk decomposition
+        % The required memory exceed the max memory threshold.
+        % The chunk decomposition is therefore performed.
 
         if mirwaitbar
             h = waitbar(0,['Computing ' func2str(d.method)]);

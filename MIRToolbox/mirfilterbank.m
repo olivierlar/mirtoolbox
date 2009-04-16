@@ -15,17 +15,24 @@ function varargout = mirfilterbank(orig,varargin)
 %           mirfilterbank(...,'Channel',c) only output the channels whose
 %               ranks are indicated in the array c.
 %               (default: c = (1:N))
-%       mirfilterbank(...,'Manual',f) specifies a set of non-overlapping 
-%                   low-pass, band-pass and high-pass filters (Scheirer,
-%                   1998).  The series of cut-off frequencies as to be
-%                   specified as next parameter f.
+%       mirfilterbank(...,'Manual',f) specifies a set of low-pass, band-
+%                   pass and high-pass eliptic filters (Scheirer, 1998). 
+%                   The series of cut-off frequencies as to be specified
+%                   as next parameter f.
 %                       If this series of frequencies f begins with -Inf,
 %                           the first filter is low-pass.
 %                       If this series of frequencies f ends with Inf,
 %                           the last filter is high-pass.
 %           mirfilterbank(...,'Order',o) specifies the order of the filter.
 %               (Default: o = 4) (Scheirer, 1998)
-%       mirfilterbank(...,p) specifies predefined filterbanks:
+%           mirfilterbank(...,'Hop',h) specifies the degree of spectral
+%               overlapping between successive channels.
+%               If h = 1 (default value), the filters are non-overlapping.
+%               If h = 2, the filters are half-overlapping.
+%               If h = 3, the spectral hop factor between successive
+%                   filters is a third of the whole frequency region, etc.
+%       mirfilterbank(...,p) specifies predefined filterbanks, all
+%           implemented using elliptic filters, by default of order 4.
 %           Possible values:
 %               p = 'Mel' (mel-scale)
 %               p = 'Bark' (bark-scale)
@@ -54,9 +61,9 @@ function varargout = mirfilterbank(orig,varargin)
         freq.default = NaN;
     option.freq = freq;
     
-        overlap.key = 'Overlap';
+        overlap.key = 'Hop';
         overlap.type = 'Boolean';
-        overlap.default = 0;
+        overlap.default = 1;
     option.overlap = overlap;
 
         filtertype.type = 'String';
@@ -108,7 +115,7 @@ elseif strcmpi(option.presel,'Mel')
     option.freq(linearFilters+1:totalFilters+2) = ...
         option.freq(linearFilters) * logSpacing.^(1:logFilters+2);
 
-    option.overlap = 1;
+    option.hop = 2;
 elseif strcmpi(option.presel,'Bark')
     option.freq = [10 20 30 40 51 63 77 92 108 127 148 172 200 232 ...
                     270 315 370 440 530 640 770 950 1200 1550]*10; %% Hz
@@ -231,7 +238,7 @@ else
                 j = j+1;
             end
             output{i} = cell(1,length(d{i}));
-            step = option.overlap+1;
+            step = option.hop;
             for j = 1:length(freqi)-step
                 if isinf(freqi(j))
                     [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
