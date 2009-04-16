@@ -584,7 +584,6 @@ if strcmp(s.xscale,'Freq')
         end  
 
         %disp('Computing Mel-frequency spectral representation...')
-        %	Filter bank optionmeters
         lowestFrequency = 133.3333;
         linearFilters = 13;
         linearSpacing = 66.66666666;

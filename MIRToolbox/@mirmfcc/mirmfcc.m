@@ -24,7 +24,7 @@ function varargout = mirmfcc(orig,varargin)
         rank.key = 'Rank';
         rank.type = 'Integer';
         rank.default = 1:13;
-    option.rank = rank;
+    option.rank = rank; 
         
         delta.key = 'Delta';
         delta.type = 'Integer';

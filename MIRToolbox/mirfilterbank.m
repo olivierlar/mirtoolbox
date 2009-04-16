@@ -1,7 +1,6 @@
 function varargout = mirfilterbank(orig,varargin)
-%   b = mirfilterbank(x) performs a filterbank decomposition.
-%   x can be either an audio signal (or the name of an audio file) or a
-%       spectrogram.
+%   b = mirfilterbank(x) performs a filterbank decomposition of an audio
+%       waveform.
 %   Optional arguments:
 %       mirfilterbank(...,t) selects a type of filterbank.
 %           Possible values:
@@ -24,8 +23,12 @@ function varargout = mirfilterbank(orig,varargin)
 %                           the first filter is low-pass.
 %                       If this series of frequencies f ends with Inf,
 %                           the last filter is high-pass.
+%           mirfilterbank(...,'Order',o) specifies the order of the filter.
+%               (Default: o = 4) (Scheirer, 1998)
 %       mirfilterbank(...,p) specifies predefined filterbanks:
 %           Possible values:
+%               p = 'Mel' (mel-scale)
+%               p = 'Bark' (bark-scale)
 %               p = 'Scheirer' proposed in (Scheirer, 1998) corresponds to
 %                   'Manual',[-Inf 200 400 800 1600 3200 Inf]
 %               p = 'Klapuri' proposed in (Klapuri, 1999) corresponds to
@@ -51,13 +54,23 @@ function varargout = mirfilterbank(orig,varargin)
         freq.default = NaN;
     option.freq = freq;
     
+        overlap.key = 'Overlap';
+        overlap.type = 'Boolean';
+        overlap.default = 0;
+    option.overlap = overlap;
+
         filtertype.type = 'String';
         filtertype.choice = {'Gammatone','2Channels',0};
         filtertype.default = 'Gammatone';
     option.filtertype = filtertype;
-    
+
+        filterorder.key = 'Order';
+        filterorder.type = 'Integer';
+        filterorder.default = 4;
+    option.filterorder = filterorder;
+
         presel.type = 'String';
-        presel.choice = {'Scheirer','Klapuri'};
+        presel.choice = {'Scheirer','Klapuri','Mel','Bark'};
         presel.default = '';
     option.presel = presel;
 
@@ -83,6 +96,22 @@ if strcmpi(option.presel,'Scheirer')
     option.freq = [-Inf 200 400 800 1600 3200 Inf];
 elseif strcmpi(option.presel,'Klapuri')
     option.freq = 44*[2.^([0:2,(9+(0:17))/3])];
+elseif strcmpi(option.presel,'Mel')
+    lowestFrequency = 133.3333;
+    linearFilters = 13;
+    linearSpacing = 66.66666666;
+    logFilters = 27;
+    logSpacing = 1.0711703;
+    totalFilters = linearFilters + logFilters;
+    cepstralCoefficients = 13;
+    option.freq = lowestFrequency + (0:linearFilters-1)*linearSpacing;
+    option.freq(linearFilters+1:totalFilters+2) = ...
+        option.freq(linearFilters) * logSpacing.^(1:logFilters+2);
+
+    option.overlap = 1;
+elseif strcmpi(option.presel,'Bark')
+    option.freq = [10 20 30 40 51 63 77 92 108 127 148 172 200 232 ...
+                    270 315 370 440 530 640 770 950 1200 1550]*10; %% Hz
 end
 if not(isnan(option.freq))
     option.filtertype = 'Manual';
@@ -185,7 +214,7 @@ else
             warning(['WARNING IN MIRFILTERBANK: Signal Processing Toolbox (version 6.2.1, or higher) not installed: no filterbank decomposition.']);
             b = x;
         end
-    elseif strcmpi(option.filtertype, 'Manual');
+    elseif strcmpi(option.filtertype,'Manual');
         output = cell(1,length(d));
         for i = 1:length(d)
             freqi = option.freq;
@@ -202,16 +231,17 @@ else
                 j = j+1;
             end
             output{i} = cell(1,length(d{i}));
-            for j = 1:length(freqi)-1
+            step = option.overlap+1;
+            for j = 1:length(freqi)-step
                 if isinf(freqi(j))
-                    [z{j},p{j},k{j}] = ellip(6,3,40,...
-                                    freqi(j+1)/f{i}*2);
-                elseif isinf(freqi(j+1))
-                    [z{j},p{j},k{j}] = ellip(6,3,40,...
+                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
+                                    freqi(j+step)/f{i}*2);
+                elseif isinf(freqi(j+step))
+                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
                                     freqi(j)/f{i}*2,'high');
                 else
-                    [z{j},p{j},k{j}] = ellip(6,3,40,...
-                                    freqi([j j+1])/f{i}*2);
+                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
+                                    freqi([j j+step])/f{i}*2);
                 end
             end
             for j = 1:length(z)
@@ -222,7 +252,7 @@ else
                     output{i}{h}(:,:,j) = filter(Hd,d{i}{h});
                 end
             end
-            nch{i} = 1:length(freqi)-1;
+            nch{i} = 1:length(freqi)-step;
         end
         b = set(x,'Data',output,'Channels',nch);
     end

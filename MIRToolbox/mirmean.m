@@ -1,5 +1,5 @@
 function varargout = mirmean(f,varargin)
-% m = mirmean(f) returns the mean of the feature f
+% m = mirmean(f) returns the mean along frames of the feature f
 %
 %   f can be a structure array composed of features. In this case,
 %       m will be structured the same way.
@@ -50,7 +50,6 @@ else
     d = get(f,'Data');
 end
 l = length(d);
-anyframe = 0;
 for i = 1:l
     if iscell(d{i})
         if length(d{i}) > 1
@@ -79,7 +78,6 @@ for i = 1:l
         end
     end
     if iscell(dd)
-        anyframe = 1;
         m{i} = {zeros(1,length(dd))};
         for j = 1:length(dd)
             m{i}{1}(j) = mean(dd{j});
@@ -89,22 +87,23 @@ for i = 1:l
         dn = dd(nonan);
         m{i}{1} = mean(dn,2);
     else
-        diffp = fp{i}{1}(1,2:end) - fp{i}{1}(1,1:end-1);
-        if round((diffp(2:end)-diffp(1:end-1))*1000)
+        %diffp = fp{i}{1}(1,2:end) - fp{i}{1}(1,1:end-1);
+        %if round((diffp(2:end)-diffp(1:end-1))*1000)
             % Not regular sampling (in mirattacktime for instance)
-            framesampling = NaN;
-        else
-            framesampling = fp{i}{1}(1,2)-fp{i}{1}(1,1);
-        end
-        anyframe = 1;
-        dd = mean(mean(dd,3),4);
-        m{i} = {NaN(size(dd,1),1)};
+        %    framesampling = NaN;
+        %else
+        %    framesampling = fp{i}{1}(1,2)-fp{i}{1}(1,1);
+        %end
+        dd = mean(dd,4);
+        m{i} = {NaN(size(dd,1),1,size(dd,3))};
         for k = 1:size(dd,1)
-            dk = dd(k,:);
-            nonan = find(not(isnan(dk)));
-            if not(isempty(nonan))
-                dn = dk(nonan);
-                m{i}{1}(k) = mean(dn,2);
+            for l = 1:size(dd,3)
+                dk = dd(k,:,l);
+                nonan = find(not(isnan(dk)));
+                if not(isempty(nonan))
+                    dn = dk(nonan);
+                    m{i}{1}(k,1,l) = mean(dn,2);
+                end
             end
         end
     end

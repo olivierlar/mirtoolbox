@@ -90,64 +90,66 @@ end
 function res = map(predics,ratings,crosscor_thres)
 nbrates = size(ratings.data,2);
 nbpreds = size(predics.data,2);
-res.cor = NaN(nbpreds,nbrates);
-res.pval = NaN(nbpreds,nbrates);
+res.normal.cor = NaN(nbpreds,nbrates);
+res.normal.pval = NaN(nbpreds,nbrates);
 
-res.best = cell(nbrates,1);
+res.significant = cell(nbrates,1);
 for j = 1:nbrates
     figure
     set(gca,'YDir','reverse')
     hold on
-    select = [];
+    select = []; % list of selected features
     for i = 1:nbpreds
         if ~predics.normal(i)
-            res.cor(i,j) = NaN;
+            res.normal.cor(i,j) = NaN;
             continue
         end
         [R P] = corrcoef(predics.data(:,i),ratings.data(:,j),...
                             'rows','pairwise');
-        res.pval(i,j) = P(2);
-        if P(2)<.05
-            select(end+1) = i;
-            res.cor(i,j) = R(2);
+        res.normal.pval(i,j) = P(2);
+        if P(2)<.05 % statistically significant
+            select(end+1) = i; % included into the list of selected features
+            res.normal.cor(i,j) = R(2);
         else
-            res.cor(i,j) = NaN;
+            res.normal.cor(i,j) = NaN;
         end
     end
     %res.inter(:,:,j) = corrcoef(predics.data,'rows','pairwise');
     
-    [unused index] = sort(abs(res.cor(select,j)),'descend');
+    [unused index] = sort(abs(res.normal.cor(select,j)),'descend');
     index = select(index);
-    res.best{j}.cor = res.cor(index,j);
-    res.best{j}.pval = res.pval(index,j);
-    res.best{j}.inter = corrcoef(predics.data(:,index),'rows','pairwise');
+    res.significant{j}.cor = res.normal.cor(index,j);
+    res.significant{j}.pval = res.normal.pval(index,j);
+    res.significant{j}.inter = corrcoef(predics.data(:,index),'rows','pairwise');
                 %res.inter(index,index,j);
-    res.best{j}.fields = {predics.fields{index}};
-    res.best{j}.alpha = predics.alpha(index);
-    res.best{j}.lambda = predics.lambda(index);
+    res.significant{j}.fields = {predics.fields{index}};
+    res.significant{j}.alpha = predics.alpha(index);
+    res.significant{j}.lambda = predics.lambda(index);
     k = 0;
     corfields = {};
     corbest = [];
     for i = 1:length(select)
-        inter = max(abs(res.best{j}.inter(1:i-1,i)));
+        inter = max(abs(res.significant{j}.inter(1:i-1,i)));
         if i == 1 || inter < crosscor_thres
+            % Features sufficiently independent to the better scoring ones
+            % are selected
             k = k+1;
             if i == 1
                 own = 1;
             else
                 own = 1-inter;
             end
-            col = res.best{j}.pval(i);
-            x1 = min(0,res.best{j}.cor(i));
+            col = res.significant{j}.pval(i);
+            x1 = min(0,res.significant{j}.cor(i));
             y1 = k-own/2;
-            x2 = x1+abs(res.best{j}.cor(i));
+            x2 = x1+abs(res.significant{j}.cor(i));
             y2 = k+own/2;
             pcolor([x1 x1;x2 x2],[y1 y2;y1 y2],[col col;col col])
             corbest = [corbest i];
-            corfields = [corfields res.best{j}.fields{i}];
+            corfields = [corfields res.significant{j}.fields{i}];
             i
-            res.best{j}.fields{i}
-            res.best{j}.cor(i)
+            res.significant{j}.fields{i}
+            res.significant{j}.cor(i)
             inter
         end
     end
@@ -159,10 +161,10 @@ for j = 1:nbrates
     title(['Correlation with rating ',ratings.fields{j}])
     
     predata = standardize(predics.data(:,index(corbest))); %% to be put out of the loop
-    res.corbest.index = corbest;
-    res.corbest.fields = {res.best{j}.fields{corbest}};
-    res.corbest.alpha = res.best{j}.alpha(corbest);
-    res.corbest.lambda = res.best{j}.lambda(corbest);
+    res.best{j}.index = corbest;
+    res.best{j}.fields = {res.significant{j}.fields{corbest}};
+    res.best{j}.alpha = res.significant{j}.alpha(corbest);
+    res.best{j}.lambda = res.significant{j}.lambda(corbest);
     if isempty(select)
         close
     elseif length(corbest)>1
@@ -172,7 +174,7 @@ for j = 1:nbrates
         stepwisefit(predata,ratej,'maxiter',10);
         [b,se,pval,inmodel,stats,nextstep,history] ...
             = stepwisefit(predata,ratej,'maxiter',10,'scale','on');
-        res.corbest.fields{find(inmodel)}
+        res.best{j}.fields{find(inmodel)}
         %stepwise(predata,ratej,[]);%,.001,.001);
         pause
     end
@@ -216,9 +218,10 @@ display('..')
 output.data(:,~output.normal) = [];
 output.fields(~output.normal) = [];
 output.normal(~output.normal) = [];
-if 
-output.alpha(~output.normal) = [];
-output.lambda(~output.normal) = [];
+if max(~output.normal)
+    output.alpha(~output.normal) = [];
+    output.lambda(~output.normal) = [];
+end
  %if strcmpi(filename(end-3:end),'.txt')
  %    filename = filename(1:end-4);
  %end
