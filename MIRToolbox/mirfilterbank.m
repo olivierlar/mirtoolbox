@@ -115,7 +115,7 @@ elseif strcmpi(option.presel,'Mel')
     option.freq(linearFilters+1:totalFilters+2) = ...
         option.freq(linearFilters) * logSpacing.^(1:logFilters+2);
 
-    option.hop = 2;
+    option.overlap = 2;
 elseif strcmpi(option.presel,'Bark')
     option.freq = [10 20 30 40 51 63 77 92 108 127 148 172 200 232 ...
                     270 315 370 440 530 640 770 950 1200 1550]*10; %% Hz
@@ -238,7 +238,7 @@ else
                 j = j+1;
             end
             output{i} = cell(1,length(d{i}));
-            step = option.hop;
+            step = option.overlap;
             for j = 1:length(freqi)-step
                 if isinf(freqi(j))
                     [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
