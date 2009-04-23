@@ -1,7 +1,7 @@
 function varargout = mirmode(x,varargin)
 %   m = mirmode(a) estimates the mode. A value of 0 indicates a complete
 %       incertainty, whereas a positive value indicates a dominance of
-%       major mode and reversely for minor mode.
+%       major mode and a negative value indicates a dominance of minor mode.
 %   Optional arguments:
 %   mirmode(a,s) specifies a strategy. 
 %       Possible values for s: 'Sum', 'Best'(default)

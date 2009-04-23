@@ -1,6 +1,9 @@
 function res = mirmap(predics_ref,ratings_ref,dist,alpha,delta)
+% mirmap(predictors_file, ratings_file) performs a statistical mapping
+%   between ratings associated to a set of audio recordings, and a set of
+%   variables computed for the same set of audio recordings. It might be
+%   useful in particular when the set of predictors is large and diverse.
 
-%%
 if nargin<3
     dist = 'lse';
 end
@@ -34,7 +37,7 @@ function output = import(ref)
 output.data = [];
 output.fields = {};
 output.normal = [];
-if ischar(ref)
+if not(iscell(ref))
     ref = {ref};
 end
 for i = 1:length(ref)
@@ -48,7 +51,9 @@ for i = 1:length(ref)
                 imp = importj;
                 importj = struct;
                 importj.data = imp;
-                importj.textdata = {ref{i}{j}};
+                for k = 1:size(imp,2)
+                    importj.textdata{k} = [ref{i}{j},'_',num2str(k)];
+                end
             end
             if j == 1
                 import = importj;
@@ -81,7 +86,7 @@ for i = 1:ndata
     if length(data) < 4
         output.normal(i) = 0;
     else
-        output.normal(i) = ~jbtest(data,.01);
+        output.normal(i) = ~lillietest(data);
     end
 end
 

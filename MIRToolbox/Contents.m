@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.1.24 6-April-2009
+% Version 1.1.25 22-April-2009
 %
 % A complete documentation is available in the downloaded folder and online.
 %			http://www.jyu.fi/music/coe/materials/mirtoolbox

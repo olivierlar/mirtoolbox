@@ -56,7 +56,8 @@ function varargout = mironsets(x,varargin)
         env.default = NaN;
     option.env = env;
 
-        envmeth.key = 'Method';
+        envmethod.key = 'Method'; % optional
+    option.envmethod = envmethod;
         envmeth.type = 'String';
         envmeth.choice = {'Filter','Spectro'};
         envmeth.default = 'Filter';
@@ -82,7 +83,7 @@ function varargout = mironsets(x,varargin)
 
             filtertype.key = 'FilterbankType';
             filtertype.type = 'String';
-            filtertype.choice = {'Gammatone','2Channels','Scheirer','Klapuri'};
+            %filtertype.choice = {'Gammatone','2Channels','Scheirer','Klapuri'};
             filtertype.default = 'Gammatone';
         option.filtertype = filtertype;
 
@@ -218,8 +219,6 @@ function varargout = mironsets(x,varargin)
         pitch.type = 'Boolean';
         pitch.default = 0;
     option.pitch = pitch;
-    
-    % try spectral entropy also
 
 %% options related to event detection
         detect.key = 'Detect';

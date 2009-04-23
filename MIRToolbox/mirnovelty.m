@@ -6,9 +6,9 @@ function varargout = mirnovelty(orig,varargin)
 %           distance function, from those proposed in the Statistics Toolbox
 %               (help pdist).
 %           default value: f = 'cosine'
-%       mirnovelty(...,'Measure',f) specifies the name of a similarity
+%       mirnovelty(...,'Similarity',f) specifies the name of a similarity
 %           measure function. This function is applied to the result of the
-%           distance function. 
+%           distance function. cf. mirsimatrix 
 %           default value: f = 'exponential'
 %               corresponding to f(x) = exp(-x)
 %       mirnovelty(...,'KernelSize',s) or more simply mirnovelty(...,s) 
@@ -52,7 +52,6 @@ type = 'mirscalar';
 if not(isamir(x,'mirscalar'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
                       'Width',option.K);
-                    % bug here: not same between novelty() and segment()
     x = mirsimatrix(x,'Horizontal');  
 end
 if isa(x,'mirdesign')

@@ -1,12 +1,19 @@
 function v = mireval(d,file,single,export)
 %   mireval(d,filename) applies the mirdesign object d to the audio file
-%       named filname.
-%   Optional argument: mireval(d,filename,'Single') only keeps the first
+%       named filename.
+%   mireval(d,'Folder') applied the mirdesign object to each audio files in
+%       the current directory.
+%   Optional argument: mireval(...,'Single') only keeps the first
 %       output when several output are returned for a given mirdesign
 %       object.
 
 % mireval performs the actual evaluation of the design flowchart.
-%   It starts by a top-down traversal of the design flowchart (evaleach).
+%   If 'Folder' is used, the evaluation is carried out for each audio file
+%       successively.
+%   If d is a structure or a cell array, evaluate each component
+%       separately.
+%   The evaluation starts with a top-down traversal of the design flowchart
+%       (evaleach).
 
 if nargin<3
     single = [];
@@ -118,6 +125,8 @@ if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     end
     order = order(:)';
 end
+
+%   The evaluation is carried out for each audio file successively.
 for i = 1:length(order)
     f = order(i);
     if l > 1
@@ -139,6 +148,7 @@ for i = 1:length(order)
     end
     clear yf
 end
+
 if isempty(export)
     v = combineaudiofile(y{:});
 else
@@ -148,6 +158,8 @@ end
 
 function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single)
 % Now let's perform the analysis (or analyses) on the different files.
+%   If d is a structure or a cell array, evaluate each component
+%       separately.
 if isa(d,'mirstruct')
     display('Computing temporary variables:');
     v.tmp = evalaudiofile(get(d,'Tmp'),file,sampling,size,{},1,index,single);
@@ -191,6 +203,7 @@ else
     % For that particular file or this particular feature, let's begin the
     % actual evaluation process.
     res = evaleach(d);    
+    % evaleach performs a top-down traversal of the design flowchart.
     v = res;
 end
 

@@ -15,8 +15,11 @@ function varargout = mirsimatrix(orig,varargin)
 %       mirsimatrix(...,'Similarity',f) indicates the function f specifying
 %           the way the distance values in the dissimilarity matrix are
 %           transformed into similarity values.
-%           default value: f = 'oneminus'
-%               corresponding to f(x) = 1-x
+%           Possible values:
+%               f = 'oneminus' (default value) 
+%                   corresponding to f(x) = 1-x
+%               f = 'exponential'
+%                   corresponding to f(x)= exp(-x)
 %       mirsimatrix(...,'Width',w) or more simply dissimatrix(...,w) 
 %           specifies the size of the diagonal bandwidth, in samples,
 %           outside which the dissimilarity will not be computed.
