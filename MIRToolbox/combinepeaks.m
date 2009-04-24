@@ -1,4 +1,6 @@
 function c = combinepeaks(p,v,thr)
+% dedicated function for (Klapuri, 99) that creates a curve made of burst
+% at position of peaks p and with amplitude related to peaks p2.
 
 d = get(v,'Data');
 pp = get(p,'PeakPos');

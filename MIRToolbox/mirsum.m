@@ -15,6 +15,11 @@ function varargout = mirsum(orig,varargin)
         adj.default = 1;
     option.adj = adj;
 
+        weights.key = 'Weights';
+        weights.type = 'Integer';
+        weights.default = [];
+    option.weights = weights;    
+    
 specif.option = option;
 
 if isamir(orig,'mirtemporal')
@@ -52,6 +57,10 @@ for h = 1:length(d)
     spmh = cell(1,length(dh));
     for i = 1:length(dh)
         % Summation of signal
+        if not(isempty(option.weights))
+            weights = reshape(option.weights,1,1,length(option.weights));
+            dh{i} = dh{i}.*repmat(weights,[size(dh{i},1),size(dh{i},2),1]);
+        end
         if option.adj < 2
             sch{i} = sum(dh{i},3);
         else

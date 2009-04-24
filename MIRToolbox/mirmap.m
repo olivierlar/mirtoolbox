@@ -79,7 +79,7 @@ for i = 1:length(ref)
 end
 ndata = size(output.data,2);
 output.normal = NaN(1,ndata);
-warning('off','stats:jbtest:OutOfRangeP');
+warning('off','stats:lillietest:OutOfRangeP');
 for i = 1:ndata
     data = output.data(:,i);
     data = data(~isnan(data));
@@ -212,7 +212,7 @@ for i = 1:nbfields
                                         boxcox_search(d,dist,alpha,delta);
         %figure(3)
         %hist(output.data(:,i),round(7.5*log(size(d,1))));
-        output.normal(i) = ~jbtest(output.data(:,i),.01);
+        output.normal(i) = ~lillietest(output.data(:,i),.01);
         %figure(4)
         %normplot(data(:,i))
     end
@@ -252,7 +252,7 @@ end
 y = boxcox_transf(x,lambda);
 [y lambda d] = optimize(y,lambda,dist,x);
 %y = y(~isnan(y));
-while jbtest(y,.01) && alpha > delta
+while lillietest(y,.01) && alpha > delta
     yp = boxcox_transf(x+alpha,lambda);
     %plot(alpha,lse(yp,lambda,x))
     if dist(yp,lambda,x)<d

@@ -5,23 +5,30 @@ function varargout = mironsets(x,varargin)
 %   Optional arguments:
 %       mironsets(...,f) selects the strategy for the computation of the
 %           onset detection function.
-%           f = 'Envelope': Envelope of the audio signal. (Default choice)
-%               mironsets(...,'Filterbank',nc) specifies a preliminary
-%                   filterbank decomposition into nc channels. If nc = 0,
-%                   no decomposition is performed.
-%                   Default value: 40.
-%               mironsets(...,'FilterbankType',ft) specifies the type of
-%                   filterbank (see mirfilterbank).
-%                   Default value: 'Gammatone';
+%           f = 'Envelope': Envelope of the audio signal. (Default choice).
+%           With two methods for envelope extraction:
+%               mironsets(...,'Filter') (Default)
+%                   mironsets(...,'Filterbank',nc) specifies a preliminary
+%                       filterbank decomposition into nc channels. If nc = 0,
+%                       no decomposition is performed.
+%                       Default value: 40.
+%                   mironsets(...,'FilterbankType',ft) specifies the type of
+%                       filterbank (see mirfilterbank).
+%                       Default value: 'Gammatone';
+%                   Options associated to the mirenvelope function can be
+%                       passed here as well (see help mirenvelope):
+%                      'FilterType','Tau','PreDecim'
+%               mironsets(...,'Spectro'):
+%                    the frequency reassigment method can be specified: ?Freq?
+%                    (default), ?Mel?, ?Bark? or ?Cents? (cf. mirspectrum).
 %               mironsets(...,'Sum','no') does not sum back the channels at
 %                   then end of the computation. The resulting onset curve
 %                   remains therefore decomposed into several channels.
 %               Options associated to the mirenvelope function can be
-%               passed here as well (see help mirenvelope):
-%                   'FilterType',
+%                   passed here as well (see help mirenvelope):
 %                   'HalfwaveCenter','Diff','HalfwaveDiff','Center',
-%                   'Smooth', 'Sampling', 'Tau', 'Log',
-%                   'PreDecim','PostDecim'
+%                   'Smooth', 'Sampling','Log','Power','Lambda',
+%                  ,'PostDecim','UpSample'
 %           f = 'SpectralFlux': Spectral flux of the audio signal.
 %               Options associated to the mirflux function can be
 %               passed here as well (see help mirflux):
@@ -29,7 +36,11 @@ function varargout = mironsets(x,varargin)
 %                   'Halfwave' (toggled on by default here),
 %                   'Complex' (toggled off by default),
 %                   'Median' (toggled on by default here)
-%           f = 'Pitch'
+%           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
+%                of same default characteristics than those returned
+%                 by mirpitch ? with however a range of frequencies not exceeding 1000 Hz ?
+%                 and subsequently computes the novelty curve of the resulting similatrix matrix, 
+%                   with a ?KernelSize? of 32 samples.
 %       mironsets(...,'Detect',d) toggles on or off the onset detection, 
 %           which is based on the onset detection function.
 %           (By default toggled on.)
@@ -42,11 +53,13 @@ function varargout = mironsets(x,varargin)
 %       mironsets(...,'Release',o) (or 'Releases') detects release phases,
 %           using a gaussian envelope smoothing of order o.
 %               Default value when 'Release' is called: o = 20;
+%       mironsets(...,'Frame',...) decomposes into frames, with default frame
+%           length 3 seconds and hop factor .1
 %   Preselected onset detection models:
 %       mironsets(...,'Scheirer') corresponds to (Scheirer, 1998):
 %           mironsets(...,'FilterBankType','Scheirer',...
 %                         'FilterType','HalfHann','Sampling',200,...
-%                         'HalfWaveDiff','Sum',0)
+%                         'HalfWaveDiff','Sum',0,'Detect',0)
 %       mironsets(...,'Klapuri99') corresponds to most of (Klapuri, 1999).
         
 %% options related to 'Envelope':
@@ -416,12 +429,16 @@ if isfield(postoption,'cthr')
 end
 if isfield(option,'presel') && ...
         ischar(option.presel) && strcmpi(option.presel,'Klapuri99')
+    % o, already computed, corresponds to mirenvelope(o,'Log','HalfwaveDiff');
+    % o is the relative distance function W in (Klapuri, 99);
     o2 = mirenvelope(o2,'HalfwaveDiff');
+    % o2 is the absolute distance function D in (Klapuri, 99);
     p = mirpeaks(o,'Contrast',.2,'Chrono');
     p2 = mirpeaks(o2,'ScanForward',p,'Chrono');
     o = combinepeaks(p,p2,.05);
     clear o2 p p2
-    o = mirsum(o);
+    filtfreq = 44*[2.^ ([ 0:2, ( 9+(0:17) )/3 ]) ];% Center frequencies of bands
+    o = mirsum(o,'Weights',(filtfreq(1:end-1)+filtfreq(2:end))/2);
     o = mirenvelope(o,'Smooth',12);
 end
 if not(isa(o,'mirscalar'))
