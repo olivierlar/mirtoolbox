@@ -1,18 +1,29 @@
 function varargout = mirpitch(x,varargin)
 %   p = mirpitch(x) evaluates the pitch frequencies (in Hz).
-%   Optional argument:
+%   Specification of the method(s) for pitch estimation (these methods can
+%       be combined):
+%       mirpitch(...,'Autocor') computes an autocorrelation function
+%           (Default method)
+%           mirpitch(...'Enhanced',a) computes enhanced autocorrelation
+%               (see help mirautocor)
+%              toggled on by default
+%           mirpitch(...,'Compress',k) performs magnitude compression
+%               (see help mirautocor)
+%           mirpitch(...,fb) specifies a type of filterbank.
+%               Possible values:
+%                   fb = 'NoFilterBank': no filterbank decomposition
+%                   fb = '2Channels' (default value)
+%                   fb = 'Gammatone' 
+%       mirpitch(...,'AutocorSpectrum') computes the autocorrelation of
+%           the FFT spectrum
+%       mirpitch(...,'Cepstrum') computes the cepstrum
+%       Alternatively, an autocorrelation or a cepstrum can be directly
+%           given as first argument of the mirpitch function.
+%   Peak picking options:
 %       mirpitch(...,'Total',m) selects the m best pitches.
 %           Default value: m = Inf, no limit is set concerning the number
 %           of pitches to be detected.
-%       mirpitch(...'Mono') corresponds to morpitch(...,'Total',1)
-%       mirpitch(...,'Median') performs a median filtering of the pitch
-%           curve. When several pitches are extracted in each frame, the
-%           pitch curve contains the best peak of each successive frame.
-%       mirpitch(...,'Frame',l,h) orders a frame decomposition of window
-%           length l (in seconds) and hop factor h, expressed relatively to
-%           the window length. For instance h = 1 indicates no overlap.
-%           Default values: l = 46.4 ms and h = 10 ms (Tolonen and
-%           Karjalainen, 2000)
+%       mirpitch(...,'Mono') corresponds to morpitch(...,'Total',1)
 %       mirpitch(...,'Min',mi) indicates the lowest frequency taken into
 %           consideration.
 %           Default value: 75 Hz. (Praat)
@@ -22,28 +33,15 @@ function varargout = mirpitch(x,varargin)
 %           with higher frequency, due probably to the absence of 
 %           pre-whitening in our implementation of Tolonen and Karjalainen
 %           approach (used by default, cf. below).
-%       Specification of the method(s) for pitch estimation (these methods
-%           can be combined):
-%           mirpitch(...,'Autocor') computes an autocorrelation function
-%               (Default method)
-%               mirpitch(...'Enhanced',a) computes enhanced autocorrelation
-%                   (see help mirautocor)
-%                   by default set to a = 1:10
-%               mirpitch(...,'Compress',k) performs magnitude compression
-%                   (see help mirautocor)
-%               mirpitch(...,fb) specifies a type of filterbank.
-%                   Possible values:
-%                       fb = 'NoFilterBank': no filterbank decomposition
-%                       fb = '2Channels' (default value)
-%                       fb = 'Gammatone' 
-%           mirpitch(...,'AutocorSpectrum') computes the autocorrelation of
-%               the FFT spectrum
-%           mirpitch(...,'Cepstrum') computes the cepstrum
-%           Alternatively, an autocorrelation or a cepstrum can be directly
-%               given as first argument of the mirpitch function.
 %       mirpitch(...,'Contrast',thr) specifies a threshold value.
 %           (see help peaks)
 %           Default value: thr = .1
+%       mirpitch(...,'Order',o) specifies the ordering for the peak picking.
+%            Default value: o = ?Amplitude?.
+%   Post-processing options:
+%       mirpitch(...,'Median') performs a median filtering of the pitch
+%           curve. When several pitches are extracted in each frame, the
+%           pitch curve contains the best peak of each successive frame.
 %       mirpitch(...,'Stable',th,n) remove pitch values when the difference 
 %           (or more precisely absolute logarithmic quotient) with the
 %           n precedent frames exceeds the threshold th. 
@@ -54,6 +52,12 @@ function varargout = mirpitch(x,varargin)
 %           Possible value for the threshold r:
 %               'SemiTone': ratio between the two peak positions equal to
 %                   2^(1/12)
+%       mirpitch(...,'Frame',l,h) orders a frame decomposition of window
+%           length l (in seconds) and hop factor h, expressed relatively to
+%           the window length. For instance h = 1 indicates no overlap.
+%           Default values: l = 46.4 ms and h = 10 ms (Tolonen and
+%           Karjalainen, 2000)
+%   Preset model:
 %       mirpitch(...,'Tolonen') implements (part of) the model proposed in
 %           (Tolonen & Karjalainen, 2000). It is equivalent to
 %           mirpitch(...,'Enhanced',2:10,'Generalized',.67,'2Channels')
@@ -72,7 +76,22 @@ function varargout = mirpitch(x,varargin)
         ac.type = 'Boolean';
         ac.default = 0;
     option.ac = ac;
-        
+    
+            enh.key = 'Enhanced';
+            enh.type = 'Integer';
+            enh.default = 2:10;
+        option.enh = enh;
+
+            filtertype.type = 'String';
+            filtertype.choice = {'NoFilterBank','2Channels','Gammatone'};
+            filtertype.default = '2Channels';
+        option.filtertype = filtertype;
+
+            gener.key = {'Generalized','Compress'};
+            gener.type = 'Integer';
+            gener.default = .5;
+        option.gener = gener;
+
         as.key = 'AutocorSpectrum';
         as.type = 'Boolean';
         as.default = 0;
@@ -88,16 +107,8 @@ function varargout = mirpitch(x,varargin)
         ce.default = 0;
     option.ce = ce;
         
-        mi.key = 'Min';
-        mi.type = 'Integer';
-        mi.default = 75;
-    option.mi = mi;
-        
-        ma.key = 'Max';
-        ma.type = 'Integer';
-        ma.default = 2400;
-    option.ma = ma;
-        
+%% peak picking options
+
         m.key = 'Total';
         m.type = 'Integer';
         m.default = Inf;
@@ -113,25 +124,28 @@ function varargout = mirpitch(x,varargin)
         mono.default = 0;
     option.mono = mono;
 
+        mi.key = 'Min';
+        mi.type = 'Integer';
+        mi.default = 75;
+    option.mi = mi;
+        
+        ma.key = 'Max';
+        ma.type = 'Integer';
+        ma.default = 2400;
+    option.ma = ma;
+        
         thr.key = 'Contrast';
         thr.type = 'Integer';
         thr.default = .1;
     option.thr = thr;
+    
+        order.key = 'Order';
+        order.type = 'String';
+        order.choice = {'Amplitude','Abscissa'};
+        order.default = 'Amplitude';
+    option.order = order;    
         
-        enh.key = 'Enhanced';
-        enh.type = 'Integer';
-        enh.default = 2:10;
-    option.enh = enh;
-        
-        filtertype.type = 'String';
-        filtertype.choice = {'NoFilterBank','2Channels','Gammatone'};
-        filtertype.default = '2Channels';
-    option.filtertype = filtertype;
-        
-        gener.key = {'Generalized','Compress'};
-        gener.type = 'Integer';
-        gener.default = .5;
-    option.gener = gener;
+%% post-processing options
         
         stable.key = 'Stable';
         stable.type = 'Integer';
@@ -158,18 +172,14 @@ function varargout = mirpitch(x,varargin)
         frame.default = [0 0];
         frame.keydefault = [NaN NaN];
     option.frame = frame;
+    
+%% preset model
 
         tolo.key = 'Tolonen';
         tolo.type = 'Boolean';
         tolo.default = 0;
     option.tolo = tolo;
     
-        order.key = 'Order';
-        order.type = 'String';
-        order.choice = {'Amplitude','Abscissa'};
-        order.default = 'Amplitude';
-    option.order = order;    
-
 specif.option = option;
 
 varargout = mirfunction(@mirpitch,x,varargin,nargout,specif,@init,@main);

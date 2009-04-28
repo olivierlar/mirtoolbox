@@ -33,20 +33,11 @@ function varargout = mirpeaks(orig,varargin)
 %               of the signal in each frame) and 1 (the maximum in each 
 %               frame).
 %           Default value: thr=0 for peaks thr = 1 for valleys
-%       mirpeaks(...,'InverseThreshold',thr): a threshold value.
-%           A given local maximum will be considered as a peak if its
-%               normalized amplitude is LOWER than this threshold. 
-%           A given local minimum will be considered as a valley if its
-%               normalized amplitude is HIGHER than this threshold. 
-%           The normalized amplitude can have value between 0 (the minimum 
-%               of the signal in each frame) and 1 (the maximum in each 
-%               frame).
-%           Default value: thr=1 for peaks thr = 0 for valleys
 %       mirpeaks(...,'Interpol',i): estimates more precisely the peak
 %           position and amplitude using interpolation. Performed only on
 %           data with numerical abscissae axis.
 %           Possible value for i:
-%               '': no interpolation
+%               '', 'no', 'off', 0: no interpolation
 %               'Quadratic': quadratic interpolation. (default value).
 %       mirpeaks(...,'Valleys'): detect valleys instead of peaks.
 %       mirpeaks(...,'Reso',r): removes peaks whose distance to one or
@@ -70,7 +61,7 @@ function varargout = mirpeaks(orig,varargin)
 %       mirpeaks(...,'NoBegin'): does not consider the first sample as a
 %           possible peak candidate.
 %       mirpeaks(...,'NoEnd'): does not consider the last sample as a possible
-%           peak candidate. = data(x);
+%           peak candidate.
 %       mirpeaks(...,'Normalize',n): specifies whether frames are
 %           normalized globally or individually.
 %           Possible value for n:
@@ -80,9 +71,9 @@ function varargout = mirpeaks(orig,varargin)
 %       mirpeaks(...,'Extract'): extracts from the initial curves all the 
 %           positive continuous segments (or "curve portions") where peaks
 %           are located.
-%       mirpeaks(...,'Track'): tracks partials.
 %       mirpeaks(...,'Only'): keeps from the original curve only the data
-%           corresponding to the peaks.
+%           corresponding to the peaks, and zeroes the remaining data.
+%       mirpeaks(...,'Track'): tracks partials.
 
 
         m.key = 'Total';
@@ -90,47 +81,15 @@ function varargout = mirpeaks(orig,varargin)
         m.default = Inf;
     option.m = m;
         
-        thr.key = 'Threshold';
-        thr.type = 'Integer';
-        thr.default = NaN;
-    option.thr = thr;
+        nobegin.key = 'NoBegin';
+        nobegin.type = 'Boolean';
+        nobegin.default = 0;
+    option.nobegin = nobegin;
         
-        cthr.key = 'Contrast';
-        cthr.type = 'Integer';
-        cthr.default = .1;
-    option.cthr = cthr;
-        
-        first.key = 'SelectFirst';
-        first.type = 'Integer';
-        first.default = 0;
-        first.keydefault = NaN;
-    option.first = first;
-    
-        lthr.key = 'InverseThreshold';
-        lthr.type = 'Integer';
-        lthr.default = NaN;
-    option.lthr = lthr;
-    
-        smthr.key = 'MatrixThreshold';
-        smthr.type = 'Integer';
-        smthr.default = NaN;
-    option.smthr = smthr;
-        
-        c.key = 'Pref';
-        c.type = 'Integer';
-        c.number = 2;
-        c.default = [0 0];
-    option.c = c;
-        
-        near.key = 'Nearest';
-        near.type = 'Integer';
-        near.default = NaN;
-    option.near = near;
-        
-        logsc.type = 'String';
-        logsc.choice = {'Lin','Log',0};
-        logsc.default = 'Lin';
-    option.logsc = logsc;
+        noend.key = 'NoEnd';
+        noend.type = 'Boolean';
+        noend.default = 0;
+    option.noend = noend;
         
         order.key = 'Order';
         order.type = 'String';
@@ -148,20 +107,42 @@ function varargout = mirpeaks(orig,varargin)
         ranked.default = 0;
     option.ranked = ranked;
         
-        nobegin.key = 'NoBegin';
-        nobegin.type = 'Boolean';
-        nobegin.default = 0;
-    option.nobegin = nobegin;
-        
-        noend.key = 'NoEnd';
-        noend.type = 'Boolean';
-        noend.default = 0;
-    option.noend = noend;
-        
         vall.key = 'Valleys';
         vall.type = 'Boolean';
         vall.default = 0;
     option.vall = vall;
+    
+        cthr.key = 'Contrast';
+        cthr.type = 'Integer';
+        cthr.default = .1;
+    option.cthr = cthr;
+        
+        first.key = 'SelectFirst';
+        first.type = 'Integer';
+        first.default = 0;
+        first.keydefault = NaN;
+    option.first = first;
+    
+        thr.key = 'Threshold';
+        thr.type = 'Integer';
+        thr.default = NaN;
+    option.thr = thr;
+        
+    %    lthr.key = 'InverseThreshold';
+    %    lthr.type = 'Integer';
+    %    lthr.default = NaN;
+    %option.lthr = lthr;
+    
+        smthr.key = 'MatrixThreshold'; % to be documented in version 1.3
+        smthr.type = 'Integer';
+        smthr.default = NaN;
+    option.smthr = smthr;
+        
+        interpol.key = 'Interpol';
+        interpol.type = 'String';
+        interpol.default = 'Quadratic';
+        interpol.keydefault = 'Quadratic';
+    option.interpol = interpol;
     
         reso.key = 'Reso';
         %reso.type = 'String';
@@ -174,12 +155,22 @@ function varargout = mirpeaks(orig,varargin)
         resofirst.default = 0;
     option.resofirst = resofirst;
         
-        interpol.key = 'Interpol';
-        interpol.type = 'String';
-        interpol.default = 'Quadratic';
-        interpol.keydefault = 'Quadratic';
-    option.interpol = interpol;
-    
+        c.key = 'Pref';
+        c.type = 'Integer';
+        c.number = 2;
+        c.default = [0 0];
+    option.c = c;
+        
+        near.key = 'Nearest';
+        near.type = 'Integer';
+        near.default = NaN;
+    option.near = near;
+        
+        logsc.type = 'String';
+        logsc.choice = {'Lin','Log',0};
+        logsc.default = 'Lin';
+    option.logsc = logsc;
+        
         normal.key = 'Normalize';
         normal.type = 'String';
         normal.choice = {'Local','Global'};
@@ -190,18 +181,18 @@ function varargout = mirpeaks(orig,varargin)
         extract.type = 'Boolean';
         extract.default = 0;
     option.extract = extract;
+    
+        only.key = 'Only';
+        only.type = 'Boolean';
+        only.default = 0;
+    option.only = only;
 
         delta.key = 'Track';
         delta.type = 'Integer';
         delta.default = 0;
     option.delta = delta;
 
-        only.key = 'Only';
-        only.type = 'Boolean';
-        only.default = 0;
-    option.only = only;
-
-        scan.key = 'ScanForward';
+        scan.key = 'ScanForward'; % specific to mironsets(..., 'Klapuri99')
         scan.default = [];
     option.scan = scan;
     
@@ -231,7 +222,7 @@ end
 d = get(x,'Data');
 sr = get(x,'Sampling');
 cha = 0; % Indicates when it is possible to represent as a curve along the 
-         % Z-axis (channels) insteaad of the X-axis (initial abscissa).
+         % Z-axis (channels) instead of the X-axis (initial abscissa).
 if isnan(option.first)
     option.first = option.cthr / 2;
 end
@@ -298,13 +289,13 @@ else
         option.thr = 1-option.thr;
     end
 end
-if isnan(option.lthr)
-    option.lthr = 1;
-else
-    if option.vall
-        option.lthr = 1-option.lthr;
-    end
-end
+%if isnan(option.lthr)
+%    option.lthr = 1;
+%else
+%    if option.vall
+%        option.lthr = 1-option.lthr;
+%    end
+%end
 if isnan(option.smthr)
     option.smthr = option.thr - .2;
 end
@@ -414,7 +405,7 @@ for i = 1:length(d) % For each audio file,...
             for k = 1:nc
                 dk = dl(:,k);
                 mx{1,k,l} = find(and(and(dk >= option.cthr, ...
-                         and(dk >= option.thr, dk <= option.lthr)), ...
+                         dk >= option.thr),...     , dk <= option.lthr)), ...
                          and(ddh(1:(end-1),k,l) > 0, ...
                              ddh(2:end,k,l) <= 0)))+1;
             end

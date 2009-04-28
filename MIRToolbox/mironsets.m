@@ -20,7 +20,7 @@ function varargout = mironsets(x,varargin)
 %                      'FilterType','Tau','PreDecim'
 %               mironsets(...,'Spectro'):
 %                    the frequency reassigment method can be specified: ?Freq?
-%                    (default), ?Mel?, ?Bark? or ?Cents? (cf. mirspectrum).
+%                    (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
 %               mironsets(...,'Sum','no') does not sum back the channels at
 %                   then end of the computation. The resulting onset curve
 %                   remains therefore decomposed into several channels.
@@ -40,7 +40,7 @@ function varargout = mironsets(x,varargin)
 %                of same default characteristics than those returned
 %                 by mirpitch ? with however a range of frequencies not exceeding 1000 Hz ?
 %                 and subsequently computes the novelty curve of the resulting similatrix matrix, 
-%                   with a ?KernelSize? of 32 samples.
+%                   with a 'KernelSize' of 32 samples.
 %       mironsets(...,'Detect',d) toggles on or off the onset detection, 
 %           which is based on the onset detection function.
 %           (By default toggled on.)
