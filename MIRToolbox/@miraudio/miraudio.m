@@ -10,6 +10,9 @@ function varargout = miraudio(orig,varargin)
 %       operations on b specified by the optional arguments (see below).
 %
 %   Transformation options:
+%       miraudio(...,'Mono',0) does not perform the default summing of
+%           channels into one single mono track, but instead stores each 
+%           channel of the initial soundfile separately.       
 %       miraudio(...,'Center') centers the signals.
 %       miraudio(...,'Sampling',r) resamples at sampling rate r (in Hz).
 %           (Requires the Signal Processing Toolbox.)
@@ -123,6 +126,12 @@ end
         reverse.default = 0;
         reverse.when = 'After';
     option.reverse = reverse;
+
+        mono.key = 'Mono';
+        mono.type = 'Boolean';
+        mono.default = 1;
+        mono.when = 'After';
+    option.mono = mono;    
     
 specif.option = option;
 
@@ -157,11 +166,11 @@ if ischar(orig)
     if nargin < 5
         extract = [];
     end
-    [d{1},tp{1},fp{1},f{1},b{1},n{1}] = mirread(extract,orig,1,0);
+    [d{1},tp{1},fp{1},f{1},b{1},n{1},ch{1}] = mirread(extract,orig,1,0);
     t = mirtemporal([],'Time',tp,'Data',d,'FramePos',fp,'Sampling',f,...
                        'Name',n,'Label',cell(1,length(d)),...
                        'Clusters',cell(1,length(d)),...
-                       'Channels',cell(1,length(d)),'Centered',0,'NBits',b);
+                       'Channels',ch,'Centered',0,'NBits',b);
     t = set(t,'Title','Audio waveform');
     a = class(struct,'miraudio',t);
 else
@@ -183,6 +192,9 @@ end
 
 
 function a = post(a,para)
+if para.mono
+    a = mirsum(a);
+end
 d = get(a,'Data');
 t = get(a,'Time');
 ac = get(a,'AcrossChunks');

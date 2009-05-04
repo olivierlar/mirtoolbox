@@ -62,7 +62,8 @@ for i = 1:length(fields)
     if isfield(option.(field),'when') && ...
             (strcmpi(option.(field).when,'After') || ...
              strcmpi(option.(field).when,'Both'))
-        if isamir(orig,func2str(method))
+        if isamir(orig,func2str(method)) ...
+                && not(strcmp(func2str(method),'miraudio'))
             after.(field) = 0;
         elseif strcmp(field,'detect')
            %if haspeaks(orig)

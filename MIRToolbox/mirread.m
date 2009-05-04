@@ -1,4 +1,4 @@
-function [d,tp,fp,f,b,n] = mirread(extract,orig,load,folder,verbose)
+function [d,tp,fp,f,b,n,ch] = mirread(extract,orig,load,folder,verbose)
 % Read the audio file ORIG, at temporal position indicated by EXTRACT. If
 % EXTRACT is empty, all the audio file is loaded.
 %   If LOAD is set to 0, just the meta-data is collected, and the actual
@@ -14,6 +14,7 @@ function [d,tp,fp,f,b,n] = mirread(extract,orig,load,folder,verbose)
 %   F is the sampling rate,
 %   B is the resolution in number of bits,
 %   N is the file name.
+%   CH are the channel index.
 
 if nargin < 5
     verbose = 0;
@@ -24,19 +25,20 @@ b = {};
 tp = {};
 fp = {};
 n = {};
+ch = {};
 try
-    [d,f,b,tp,fp,n] = audioread(extract,@wavread,orig,load,verbose,folder);
+    [d,f,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
 catch
     errmsg = lasterr;
     try
-       [d,f,b,tp,fp,n] = audioread(extract,@auread,orig,load,verbose,folder);
+       [d,f,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
     catch
         try
-            [d,f,b,tp,fp,n] = audioread(extract,@mp3read,orig,load,verbose,folder);
+            [d,f,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
             if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
                 try
-                   [d,f,b,tp,fp,n] = audioread(extract,@bdfread,orig,load,verbose,folder);
+                   [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
                 catch
                     if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
                         error(['ERROR: Cannot open file ',orig]);
@@ -52,7 +54,7 @@ catch
 end
 
         
-function [d,f,b,tp,fp,n] = audioread(extract,reader,file,load,verbose,folder)
+function [d,f,b,tp,fp,n,ch] = audioread(extract,reader,file,load,verbose,folder)
 n = file;
 if folder
     file = ['./',file];
@@ -82,7 +84,8 @@ if load
     if verbose
         disp([file,' loaded.']);
     end
-    d{1} = mean(s,2); % make it mono
+    d{1} = reshape(s,size(s,1),1,2); %mean(s,2); % make it mono
+    ch = 1:size(s,2);
     if isempty(extract) || extract(3)
         tp{1} = (0:size(s,1)-1)'/f;
     else
@@ -95,6 +98,7 @@ else
     d = d(1);
     tp = {};
     fp = {};
+    ch = [];
 end
 
 
