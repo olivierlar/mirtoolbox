@@ -84,7 +84,7 @@ if load
     if verbose
         disp([file,' loaded.']);
     end
-    d{1} = reshape(s,size(s,1),1,2); %mean(s,2); % make it mono
+    d{1} = reshape(s,size(s,1),1,size(s,2)); %channels along dim 3
     ch = 1:size(s,2);
     if isempty(extract) || extract(3)
         tp{1} = (0:size(s,1)-1)'/f;

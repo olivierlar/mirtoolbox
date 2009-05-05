@@ -70,7 +70,11 @@ if iscell(p)
 end
 m = get(s,'Magnitude');
 f = get(s,'Frequency');
-pf = get(p,'Data');
+if isnumeric(p)
+    pf = {{{p}}};
+else
+    pf = get(p,'Data');
+end
 v = cell(1,length(m));
 for h = 1:length(m)
     v{h} = cell(1,length(m{h}));
@@ -103,4 +107,8 @@ for h = 1:length(m)
     end
 end
 ih = mirscalar(s,'Data',v,'Title','Inharmonicity');
-ih = {ih s p};
+if isamir(p)
+    ih = {ih s p};
+else
+    ih = {ih s};
+end

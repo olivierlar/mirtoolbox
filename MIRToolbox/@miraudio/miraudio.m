@@ -145,7 +145,8 @@ if nargin > 1 && ischar(varargin{1}) && strcmp(varargin{1},'Now')
     else
         extract = [];
     end
-    varargout = {main(orig,[],[],[],extract)};
+    para.mono = 1;  % Turn by default the sequence into mono.
+    varargout = {main(orig,[],para,[],extract)};
 else
     varargout = mirfunction(@miraudio,orig,varargin,nargout,specif,@init,@main);
 end
@@ -235,8 +236,8 @@ for h = 1:length(d)
                 end
                 ft = t1:t2;
             end
-            tk = tk(ft);
-            dk = dk(ft);
+            tk = tk(ft,:,:);
+            dk = dk(ft,:,:);
         end
         if isfield(para,'center') && para.center
             dk = center(dk);
