@@ -28,13 +28,13 @@ for i = 1:nf
     
     maxd = 0;
     for j = 1:length(di)
-        maxd = max(max(max(abs(di{j}),[],1),[],2),maxd);
+        maxd = max(max(max(max(abs(di{j}),[],1),[],2),[],3),maxd);
     end
 
     out = [];
     for j = 1:length(di)
-        di{j} = di{j}./repmat(maxd,[size(di{j},1),size(di{j},2)])*.9999;
-        out = [out;reshape(di{j},[],1)];
+        di{j} = di{j}./repmat(maxd,size(di{j}))*.9999;
+        out = [out;reshape(di{j},[],size(di{j},3),1)];
         if length(di)>1
             out = [out;rand(100,1)]*.9;
         end

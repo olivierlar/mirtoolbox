@@ -145,7 +145,8 @@ if nargin > 1 && ischar(varargin{1}) && strcmp(varargin{1},'Now')
     else
         extract = [];
     end
-    para.mono = 1;  % Turn by default the sequence into mono.
+    %para.mono = 1;  % Turn by default the sequence into mono.
+    para = [];
     varargout = {main(orig,[],para,[],extract)};
 else
     varargout = mirfunction(@miraudio,orig,varargin,nargout,specif,@init,@main);
@@ -245,16 +246,17 @@ for h = 1:length(d)
         end
         if isfield(para,'normal') && para.normal
             nl = size(dk,1);
-            nc = size(dk,2);
+            nc = size(dk,3);
             if isempty(ac)
-                ee = zeros(1,nc);
+                ee = 0;
                 for j = 1:nc
-                    ee(j) = norm(dk(:,j))/sqrt(nl);
+                    ee = ee+sum(dk(:,:,j).^2);
                 end
+                ee = sqrt(ee)/sqrt(nl*nc);
             else
                 ee = sqrt(ac.sqrsum/ac.samples);
             end
-            dk = dk./repmat(ee,[nl,1,size(dk,3),size(dk,4)]);
+            dk = dk./repmat(ee,[nl,1,nc]);
         end
         if isfield(para,'trim') && not(isequal(para.trim,0)) ...
                 && not(strcmpi(para.trim,'NoTrim'))
