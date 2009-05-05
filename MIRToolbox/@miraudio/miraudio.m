@@ -269,13 +269,16 @@ for h = 1:length(d)
             rms = zeros(1,nframes);
             for j = 1:nframes
                 st = floor((j-1)*trimhop)+1;
-                rms(j) = norm(dk(st:st+trimframe-1))/sqrt(trimframe);
+                for z = 1:size(dk,3)
+                    rms(1,j,z) = norm(dk(st:st+trimframe-1,1,z))/sqrt(trimframe);
+                end
             end
-            rms = (rms-min(rms))/(max(rms)-min(rms));
-            nosil = find(rms>para.trimthreshold);
+            rms = (rms-repmat(min(rms),[1,size(rms,2),1]))...
+                     ./repmat(max(rms)-min(rms),[1,size(rms,2),1]);
+            [nosil col] = find(squeeze(rms)>para.trimthreshold);
             if strcmpi(para.trim,'Trim') || strcmpi(para.trim,'TrimStart') ...
                                          || strcmpi(para.trim,'TrimBegin')
-                nosil1 = nosil(1);
+                nosil1 = min(nosil);
                 if nosil1 > 1
                     nosil1 = nosil1-1;
                 end
@@ -284,7 +287,7 @@ for h = 1:length(d)
                 n1 = 1;
             end
             if strcmpi(para.trim,'Trim') || strcmpi(para.trim,'TrimEnd')
-                nosil2 = nosil(end);
+                nosil2 = max(nosil);
                 if nosil2 < length(rms)
                     nosil2 = nosil2+1;
                 end
@@ -293,7 +296,7 @@ for h = 1:length(d)
                 n2 = length(tk);
             end
             tk = tk(n1:n2);
-            dk = dk(n1:n2);
+            dk = dk(n1:n2,1,:);
         end
         if isfield(para,'sampling') && para.sampling
             if and(f{k}, not(f{k} == para.sampling))
