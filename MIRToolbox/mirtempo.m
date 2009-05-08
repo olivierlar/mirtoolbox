@@ -65,6 +65,12 @@ function varargout = mirtempo(x,varargin)
 %       leading to the tempo estimation, and shows in particular the
 %       peaks corresponding to the tempo values.
         
+        sum.key = 'Sum';
+        sum.type = 'String';
+        sum.choice = {'Before','After','Adjacent'};
+        sum.default = 'Before';
+    option.sum = sum;
+
         aut.key = 'Autocor';
         aut.type = 'Integer';
         aut.default = 0;
@@ -140,12 +146,6 @@ function varargout = mirtempo(x,varargin)
             ftype.choice = {'IIR','HalfHann'};
             ftype.default = 'IIR';
         option.ftype = ftype;
-
-            sum.key = 'Sum';
-            sum.type = 'String';
-            sum.choice = {'Before','After','Adjacent'}; % Different use in mirtempo
-            sum.default = 'Before';
-        option.sum = sum;
 
             chwr.key = 'HalfwaveCenter';
             chwr.type = 'Boolean';

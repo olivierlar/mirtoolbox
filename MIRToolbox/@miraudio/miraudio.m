@@ -252,9 +252,9 @@ for h = 1:length(d)
                 for j = 1:nc
                     ee = ee+sum(dk(:,:,j).^2);
                 end
-                ee = sqrt(ee)/sqrt(nl*nc);
+                ee = sqrt(ee/nl/nc);
             else
-                ee = sqrt(ac.sqrsum/ac.samples);
+                ee = sqrt(sum(ac.sqrsum.^2)/ac.samples);
             end
             dk = dk./repmat(ee,[nl,1,nc]);
         end

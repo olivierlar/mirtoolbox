@@ -107,7 +107,7 @@ for h = 1:length(m)
     end
 end
 ih = mirscalar(s,'Data',v,'Title','Inharmonicity');
-if isamir(p)
+if isa(p,'mirdata')
     ih = {ih s p};
 else
     ih = {ih s};

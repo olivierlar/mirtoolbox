@@ -76,7 +76,7 @@ function varargout = mironsets(x,varargin)
         envmeth.default = 'Filter';
     option.envmeth = envmeth;
  
-%% options related to 'Filter':
+%%      options related to 'Filter':
 
             filter.key = 'FilterType';
             filter.type = 'String';
@@ -105,7 +105,7 @@ function varargout = mironsets(x,varargin)
             decim.default = 0;
         option.decim = decim;
     
-%% options related to 'Spectro':
+%%      options related to 'Spectro':
 
             band.type = 'String';
             band.choice = {'Freq','Mel','Bark','Cents'};

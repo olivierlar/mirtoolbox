@@ -31,7 +31,7 @@ function varargout = mirpulseclarity(orig,varargin)
         stratg.choice = {'MaxAutocor','MinAutocor','MeanPeaksAutocor',...
                          'KurtosisAutocor','EntropyAutocor',...
                          'InterfAutocor','TempoAutocor','ExtremEnvelop',...
-                         'Attack','AttackDiff','Articulation'};
+                         'Attack','Articulation'};    ...,'AttackDiff'
         stratg.default = 'MinAutocor';
     option.stratg = stratg;
 
@@ -52,37 +52,6 @@ function varargout = mirpulseclarity(orig,varargin)
         fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
         fbtype.default = 'Scheirer';
     option.fbtype = fbtype;
-
-    
-%% options related to mirautocor:    
-    
-        enh.key = 'Enhanced';
-        enh.type = 'Integers';
-        enh.default = [];
-        enh.keydefault = 2:10;
-    option.enh = enh;
-    
-        r.key = 'Resonance';
-        r.type = 'String';
-        r.choice = {'ToiviainenSnyder','vonNoorden',0};
-        r.default = 'ToiviainenSnyder';
-    option.r = r;
-    
-        sum.key = 'Sum';
-        sum.type = 'String';
-        sum.choice = {'Before','After','Adjacent'}; % Same use as in mirtempo
-        sum.default = 'Before';
-    option.sum = sum;
-    
-        mi.key = 'Min';
-        mi.type = 'Integer';
-        mi.default = 40;
-    option.mi = mi;
-        
-        ma.key = 'Max';
-        ma.type = 'Integer';
-        ma.default = 200;
-    option.ma = ma;
     
 %% options related to mironsets:  
 
@@ -150,7 +119,44 @@ function varargout = mirpulseclarity(orig,varargin)
         hw.default = 0; %NaN; %0; % Not same default as in mirtempo
     option.hw = hw;     
     
-%% options related to the peak detection
+%% options related to mirattackslope
+        slope.type = 'String';
+        slope.choice = {'Diff','Gauss'};
+        slope.default = 'Diff';
+    option.slope = slope;
+    
+%% options related to mirautocor:    
+    
+        enh.key = 'Enhanced';
+        enh.type = 'Integers';
+        enh.default = [];
+        enh.keydefault = 2:10;
+    option.enh = enh;
+    
+        r.key = 'Resonance';
+        r.type = 'String';
+        r.choice = {'ToiviainenSnyder','vonNoorden',0,'off','no'};
+        r.default = 'ToiviainenSnyder';
+    option.r = r;
+        
+        mi.key = 'Min';
+        mi.type = 'Integer';
+        mi.default = 40;
+    option.mi = mi;
+        
+        ma.key = 'Max';
+        ma.type = 'Integer';
+        ma.default = 200;
+    option.ma = ma;    
+
+%% options related to mirtempo:
+
+        sum.key = 'Sum';
+        sum.type = 'String';
+        sum.choice = {'Before','After','Adjacent'};
+        sum.default = 'Before';
+    option.sum = sum;
+    
         m.key = 'Total';
         m.type = 'Integer';
         m.default = 1;
@@ -160,12 +166,6 @@ function varargout = mirpulseclarity(orig,varargin)
         thr.type = 'Integer';
         thr.default = 0.01; % Not same default as in mirtempo
     option.thr = thr;
-    
-%% options related to mirattackslope
-        slope.type = 'String';
-        slope.choice = {'Diff','Gauss'};
-        slope.default = 'Diff';
-    option.slope = slope;
 
 specif.option = option;
 
@@ -262,8 +262,8 @@ else
     elseif strcmpi(option.stratg,'Attack')
         x = mirattackslope(x,option.slope);
         type = {'mirscalar','mirenvelope'};
-    elseif strcmpi(option.stratg,'AttackDiff')
-        type = {'mirscalar','mirenvelope'};
+%    elseif strcmpi(option.stratg,'AttackDiff')
+%        type = {'mirscalar','mirenvelope'};
     elseif strcmpi(option.stratg,'Articulation')
         x = mirlowenergy(x,'ASR');
         type = {'mirscalar','mirscalar'};
@@ -327,10 +327,10 @@ elseif strcmpi(option.stratg,'ExtremEnvelop')
     rc = mircompute(@shape,p,n);
 elseif strcmpi(option.stratg,'Attack')
     rc = mirmean(a);
-elseif strcmpi(option.stratg,'AttackDiff')
-    a = mirpeaks(a);
-    m = get(a,'PeakVal');
-    rc = mircompute(@meanpeaks,m);    
+%elseif strcmpi(option.stratg,'AttackDiff')
+%    a = mirpeaks(a);
+%    m = get(a,'PeakVal');
+%    rc = mircompute(@meanpeaks,m);    
 elseif strcmpi(option.stratg,'Articulation')
     rc = a;
 end

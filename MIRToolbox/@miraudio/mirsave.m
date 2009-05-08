@@ -20,17 +20,17 @@ nf = length(d);
 fs = get(a,'Sampling');
 nb = get(a,'NBits');
 nm = get(a,'Name');
+maxd = 0;
+for i = 1:nf
+    for j = 1:length(d{i})
+        maxd = max(max(max(max(abs(d{i}{j}),[],1),[],2),[],3),maxd);
+    end
+end
 for i = 1:nf
     nbi = nb{i};
     di = d{i};
     fsi = fs{i};
     nmi = nm{i};
-    
-    maxd = 0;
-    for j = 1:length(di)
-        maxd = max(max(max(max(abs(di{j}),[],1),[],2),[],3),maxd);
-    end
-
     out = [];
     for j = 1:length(di)
         di{j} = di{j}./repmat(maxd,size(di{j}))*.9999;

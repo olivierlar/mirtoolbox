@@ -68,9 +68,6 @@ function varargout = mirpitch(x,varargin)
 %   T. Tolonen, M. Karjalainen, "A Computationally Efficient Multipitch 
 %       Analysis Model", IEEE TRANSACTIONS ON SPEECH AND AUDIO PROCESSING,
 %       VOL. 8, NO. 6, NOVEMBER 2000
-%   G. Peeters, "Music Pitch Representation by Periodicity Measures Based 
-%       on Combined Temporal and Spectral Representations", Acoustics, 
-%       Speech and Signal Processing, 2006. ICASSP 2006 Proceedings.
 
         ac.key = 'Autocor';
         ac.type = 'Boolean';
