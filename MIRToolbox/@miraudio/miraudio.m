@@ -145,8 +145,8 @@ if nargin > 1 && ischar(varargin{1}) && strcmp(varargin{1},'Now')
     else
         extract = [];
     end
-    %para.mono = 1;  % Turn by default the sequence into mono.
-    para = [];
+    para.mono = 1;  % Turn by default the sequence into mono.
+    %para = [];
     varargout = {main(orig,[],para,[],extract)};
 else
     varargout = mirfunction(@miraudio,orig,varargin,nargout,specif,@init,@main);
