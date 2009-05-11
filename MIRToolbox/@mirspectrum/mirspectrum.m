@@ -730,7 +730,7 @@ if option.mask
             for i = 1:length(m{h})
                 for j = 1:size(m{h}{i},2)
                     mj = m{h}{i}(1,j,:);
-                    mj = spread*mj(:);
+                    mj = spread(1:length(mj),1:length(mj))*mj(:);
                     m{h}{i}(1,j,:) = reshape(mj,1,1,length(mj));
                 end
             end

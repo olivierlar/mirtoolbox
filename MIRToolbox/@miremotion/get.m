@@ -7,6 +7,10 @@ switch propName
         val = a.activity;
     case 'Valence'
         val = a.valence;
+    case 'ActivityFactors'
+        val = a.activity_fact;
+    case 'ValenceFactors'
+        val = a.valence_fact;
     otherwise
         val = get(mirdata(a),propName);
 end

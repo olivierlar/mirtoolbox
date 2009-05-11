@@ -55,36 +55,45 @@ d2 = {};
 
 if isa(x,'mirclassify')
     d = get(x,'Data');
+    return
+end
+
+if isa(x,'miremotion')
+    d = uncell(get(x,'Activity'));
+    d2 = uncell(get(x,'Valence'));
+    return
+end
+
+if isa(x,'mirsimatrix')
+    pt = [];
 else
-    if isa(x,'mirsimatrix')
-        pt = [];
-    else
-        pt = get(x,'PeakPrecisePos');
-    end
-    pv = get(x,'PeakPreciseVal');
-    if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
-        d = uncell(pt);
-        d2 = uncell(pv);
-    else
-        if isa(x,'mirsimatrix')
-            pt = [];
-        else
-            pt = get(x,'PeakPosUnit');
-        end
-        pv = get(x,'PeakVal');
-        if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
-            d = uncell(pt);
-            d2 = uncell(pv);
-        else
-            d = uncell(v,isa(x,'mirscalar'));
-            if iscell(d) && not(isempty(d))
-                disp('The result is an array of cell.')
-                disp(['If d is the name of the output variable, ',...
-                    'the successive cells can be accessed by typing d{1}, d{2}, etc.']);
-            end
-            if exist('m')==1 && not(isempty(m)) && not(isempty(m{1}))
-                d2 = uncell(m);
-            end
-        end
-    end
+    pt = get(x,'PeakPrecisePos');
+end
+pv = get(x,'PeakPreciseVal');
+if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
+    d = uncell(pt);
+    d2 = uncell(pv);
+    return
+end
+
+if isa(x,'mirsimatrix')
+    pt = [];
+else
+    pt = get(x,'PeakPosUnit');
+end
+pv = get(x,'PeakVal');
+if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
+    d = uncell(pt);
+    d2 = uncell(pv);
+    return
+end
+
+d = uncell(v,isa(x,'mirscalar'));
+if iscell(d) && not(isempty(d))
+    disp('The result is an array of cell.')
+    disp(['If d is the name of the output variable, ',...
+        'the successive cells can be accessed by typing d{1}, d{2}, etc.']);
+end
+if exist('m')==1 && not(isempty(m)) && not(isempty(m{1}))
+    d2 = uncell(m);
 end

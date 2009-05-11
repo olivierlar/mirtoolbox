@@ -59,6 +59,10 @@ for h = 1:length(d)
         % Summation of signal
         if not(isempty(option.weights))
             weights = reshape(option.weights,1,1,length(option.weights));
+            if length(weights)~=size(dh{i},1)
+                warning('WARNING in MIRSUM..');
+                weights = weights(1,1,1:size(dh{i},3));
+            end
             dh{i} = dh{i}.*repmat(weights,[size(dh{i},1),size(dh{i},2),1]);
         end
         if option.adj < 2

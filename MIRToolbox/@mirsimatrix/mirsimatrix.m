@@ -143,12 +143,12 @@ else
         else
             handle = 0;
         end
-        if iscell(vk)
+        if 0 %iscell(vk)
             try
                 vk = cell2mat(vk);
             end
         end
-        if iscell(vk) %&& length(vk) > 1
+        if 0 %iscell(vk) %&& length(vk) > 1 %%% ATTENTION KL!!<<<<<<<<<<<<
             l = length(vk);
             dk = NaN(l,l);
             for i = 1:l
@@ -160,64 +160,67 @@ else
                 end
             end
         else
-            if iscell(vk)
-                vk = vk{1};
+            if not(iscell(vk))
+                vk = {vk};
             end    
-            ll = size(vk,1);
-            l = size(vk,2);
-            nc = size(vk,3);
-            if ll==1 && nc>1
-                vk = squeeze(vk)';
-                ll = nc;
-                nc = 1;
-            end
-            nd = size(vk,4);
-            dk = NaN(l,l,nc);
-            for g = 1:nc
-                vv = zeros(ll*nd,l);
-                for h = 1:nd
-                    if iscell(vk)
-                        for i = 1:ll
-                            for j = 1:l
-                                vj = vk{i,j,g,h};
-                                if isempty(vj)
-                                    vv((h-1)*ll+i,j) = NaN;
-                                else
-                                    vv((h-1)*ll+i,j) = vj;
+            for z = 1:length(vk)
+                vz = vk{z};
+                ll = size(vz,1);
+                l = size(vz,2);
+                nc = size(vz,3);
+                if ll==1 && nc>1
+                    vz = squeeze(vz)';
+                    ll = nc;
+                    nc = 1;
+                end
+                nd = size(vz,4);
+                dk{z} = NaN(l,l,nc);
+                for g = 1:nc
+                    vv = zeros(ll*nd,l);
+                    for h = 1:nd
+                        if iscell(vz)
+                            for i = 1:ll
+                                for j = 1:l
+                                    vj = vz{i,j,g,h};
+                                    if isempty(vj)
+                                        vv((h-1)*ll+i,j) = NaN;
+                                    else
+                                        vv((h-1)*ll+i,j) = vj;
+                                    end
                                 end
                             end
+                        else
+                            vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
+                        end
+                    end
+                    if isinf(option.K)  
+                        try
+                            manually = 0;
+                            dk{z}(:,:,g) = squareform(pdist(vv',option.distance));
+                            if option.K < Inf
+                                [spA,spd] = spdiags(dk{z},...
+                                    -ceil(option.K/2):ceil(option.K/2));
+                                dk{z}(:,:,g) = full(spdiags(spA,spd,size(dk,1),size(dk{z},2)));
+                            end
+                        catch
+                            %err = lasterror;
+                            %warning(err.message)
+                            %disp('Statistics Toolbox does not seem to be
+                            %installed. Recompute the distance matrix manually.');
+                            manually = 1;
                         end
                     else
-                        vv((h-1)*ll+1:h*ll,:) = vk(:,:,g,h);
-                    end
-                end
-                if isinf(option.K)  
-                    try
-                        manually = 0;
-                        dk(:,:,g) = squareform(pdist(vv',option.distance));
-                        if option.K < Inf
-                            [spA,spd] = spdiags(dk,...
-                                -ceil(option.K/2):ceil(option.K/2));
-                            dk(:,:,g) = full(spdiags(spA,spd,size(dk,1),size(dk,2)));
-                        end
-                    catch
-                        %err = lasterror;
-                        %warning(err.message)
-                        %disp('Statistics Toolbox does not seem to be
-                        %installed. Recompute the distance matrix manually.');
                         manually = 1;
                     end
-                else
-                    manually = 1;
-                end
-                if manually
-                    disf = str2func(option.distance);
-                    for i = 1:l
-                        if mirwaitbar
-                            waitbar(i/l,handle);
-                        end
-                        for j = max(1,i-hK):min(l,i+hK)
-                            dk(i,j,g) = disf(vv(:,i),vv(:,j));
+                    if manually
+                        disf = str2func(option.distance);
+                        for i = 1:l
+                            if mirwaitbar
+                                waitbar(i/l,handle);
+                            end
+                            for j = max(1,i-hK):min(l,i+hK)
+                                dk{z}(i,j,g) = disf(vv(:,i),vv(:,j));
+                            end
                         end
                     end
                 end
@@ -240,17 +243,21 @@ if not(isempty(postoption))
     if strcmpi(m.view,'s')
         if strcmpi(postoption.view,'Horizontal')
             for k = 1:length(d)
-                d{k} = rotatesim(d{k},m.diagwidth);
+                for z = 1:length(d{k})
+                    d{k}{z} = rotatesim(d{k}{z},m.diagwidth);
+                end
             end
             m = set(m,'Data',d);
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
             for k = 1:length(d)
-                dk = NaN(size(d{k}));
-                for l = 1:size(dk,1)
-                    dk(1:end-l+1,l) = diag(d{k},l-1);
+                for z = 1:length(d{k})
+                    dz = NaN(size(d{k}{z}));
+                    for l = 1:size(dk,1)
+                        dz(1:end-l+1,l) = diag(d{k}{z},l-1);
+                    end
+                    d{k}{z}= dz;
                 end
-                d{k} = dk;
             end
             m = set(m,'Data',d);
             m.view = 'l';
@@ -267,7 +274,9 @@ if not(isempty(postoption))
                 && isfield(option,'dissim') && not(option.dissim)
             simf = str2func(postoption.simf);
             for k = 1:length(d)
-                d{k} = simf(d{k});
+                for z = 1:length(d{k})
+                     d{k}{z} = simf(d{k}{z});
+                end
             end
             m.similarity = postoption.simf;
             m = set(m,'Title','Similarity matrix','Data',d);
@@ -279,10 +288,12 @@ if not(isempty(postoption))
     if postoption.filt
         fp = get(m,'FramePos');
         for k = 1:length(d)
-            dk = filter(ones(postoption.filt,1),1,d{k});
-            d{k} = dk(postoption.filt:end,1:end-postoption.filt+1);
-            fp{k}{1} = [fp{k}{1}(1,1:end-postoption.filt+1);...
-                        fp{k}{1}(1,postoption.filt:end)];
+            for z = 1:length(d{k})
+                dz = filter(ones(postoption.filt,1),1,d{k}{z});
+                d{k}{z} = dz(postoption.filt:end,1:end-postoption.filt+1);
+                fp{k}{z} = [fp{k}{z}(1,1:end-postoption.filt+1);...
+                            fp{k}{z}(1,postoption.filt:end)];
+            end
         end
         m = set(m,'Data',d,'FramePos',fp);
     end
@@ -290,13 +301,17 @@ end
 
 
 function S = rotatesim(d,K)
-K = min(K,size(d,1)*2);
-lK = floor(K/2);
-S = NaN(K,size(d,2),size(d,3));
-for k = 1:size(d,3)
-    for j = -lK:lK
-        S(lK+1+j,:,k) = [NaN(1,floor(abs(j)/2)) diag(d(:,:,k),j)' ...
-                                                NaN(1,ceil(abs(j)/2))];
+if length(d) == 1;
+    S = d;
+else
+    K = min(K,size(d,1)*2);
+    lK = floor(K/2);
+    S = NaN(K,size(d,2),size(d,3));
+    for k = 1:size(d,3)
+        for j = -lK:lK
+            S(lK+1+j,:,k) = [NaN(1,floor(abs(j)/2)) diag(d(:,:,k),j)' ...
+                                                    NaN(1,ceil(abs(j)/2))];
+        end
     end
 end
 

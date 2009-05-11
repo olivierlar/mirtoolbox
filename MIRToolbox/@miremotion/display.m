@@ -3,32 +3,92 @@ function display(e)
 disp(' ');
 a = get(e,'Activity');
 v = get(e,'Valence');
+af = get(e,'ActivityFactors');
+vf = get(e,'ValenceFactors');
 n = get(e,'Name');
 t = get(e,'Title');
-space = imread('space.png','png');
 for i = 1:length(a)
-    for j = 1:length(a{i})
-        figure
-        image([0 1],[1 0],space)
-        set(gca,'YDir','normal')
-        hold on    
-        %nframes = length(a{i}{j});
-        %for k = 1:length(a{i}{j})
-        %    siz = 1-(k-1)/nframes;
-        %    plot(a{i}{j}(k),v{i}{j}(k),'o','MarkerSize',12*(siz).^(1/3),...
-        %            'MarkerEdgeColor','k','MarkerFaceColor',[siz siz siz])
-        %end
-        plot(v{i}{j}(1),a{i}{j}(1),'o','MarkerSize',12,...
-                        'MarkerEdgeColor','k','MarkerFaceColor','k')
-        plot(v{i}{j},a{i}{j},'o-k')
-        plot(v{i}{j}(end),a{i}{j}(end),'o','MarkerSize',12,...
-                        'MarkerEdgeColor','k','MarkerFaceColor','w')
-        xlabel('Valence')
-        ylabel('Activity')
-        title(t)
-        fig = get(0,'CurrentFigure');
-        disp(['The ',t,' related to file ',n{i},' is displayed in Figure ',num2str(fig),'.']);
+    seq = NaN;
+    if length(a{i})>1
+        try
+            seq = mirsegment(n{i},0:5:1000);
+        end
     end
+    [f1 f2] = displayeach(1,v{i},a{i},vf{i},af{i},seq);
+    for j = 2:length(a{i})
+        displayeach(j,v{i},a{i},vf{i},af{i},seq,f1,f2)
+    end
+    fig = get(0,'CurrentFigure');
+    disp(['The ',t,' related to file ',n{i},' is displayed in Figure ',num2str(fig),'.']);
 end
 disp(' ');
 drawnow
+
+
+function [f1 f2] = displayeach(j,v,a,vf,af,seq,f1,f2)
+if nargin<7
+    f1 = figure;
+    space = imread('space.png','png');
+    image([.4 1.1],[1.7 1.1],space)
+    axis([.4 1.1 1.1 1.7])
+    set(gca,'YDir','normal')
+    hold on 
+    xlabel('Valence')
+    ylabel('Activity')
+    title('Emotion')
+    if 1
+        f2 = figure;
+    else
+        f2 = 0;
+    end
+end
+
+figure(f1)
+if j == 1
+    plot(v{j},a{j},'o','MarkerSize',12,...
+                     'MarkerEdgeColor','k','MarkerFaceColor','k')
+else
+    plot([v{j-1} v{j}],[a{j-1} a{j}],'o-k')
+end
+
+if 1
+    figure(f2)
+    subplot(1,1,1)
+
+    subplot(2,1,1)
+    hold on
+    set(gca,'YDir','reverse')
+    for k = 1:length(vf{j})
+        x1 = 0;% min(0,vf{j}(k));
+        y1 = k -.3;
+        x2 = x1+abs(vf{j}(k));
+        y2 = k +.3;
+        pcolor([x1 x1;x2 x2],[y1 y2;y1 y2],[1 1; 1 1])
+    end
+    set(gca,'YTick',1:7,'YTickLabel',...
+        {'Key clarity','Mode','Event density','Repetitiveness',...
+         'Tempo','Brightness','Roughness'});
+    grid on
+    title('Valence factors')
+
+    subplot(2,1,2)
+    set(gca,'YDir','reverse')
+    hold on
+    for k = 1:length(af{j})
+        x1 = 0; %min(0,af{j}(k));
+        y1 = k -.3;
+        x2 = x1+abs(af{j}(k));
+        y2 = k +.3;
+        pcolor([x1 x1;x2 x2],[y1 y2;y1 y2],[1 1; 1 1])
+    end
+    set(gca,'YTick',1:7,'YTickLabel',...
+        {'Spectral flux','Spectral entropy','(Collapsed version)',...
+         'Articulation','Repetitiveness','Fluctuation','Pulse clarity'});
+    grid on
+    title('Activity factors')
+end
+
+drawnow
+if isa(seq,'miraudio')
+    mirplay(seq,'Segment',j);
+end

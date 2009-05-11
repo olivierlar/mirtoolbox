@@ -105,17 +105,21 @@ for i = 1:l
             pe{i}{k} = NaN;
         else
             anyframe = 1;
-            dd = mean(mean(dd,3),4);
-            m{i}{k} = NaN(size(dd,1),1);
-            s{i}{k} = NaN(size(dd,1),1);
-            sl{i}{k} = NaN(size(dd,1),1);
-            pa{i}{k} = NaN(size(dd,1),1);
-            pf{i}{k} = NaN(size(dd,1),1);
-            pe{i}{k} = NaN(size(dd,1),1);
-            for j = 1:size(dd,1)
-                [m{i}{k}(j),s{i}{k}(j),sl{i}{k}(j),...
-                 pa{i}{k}(j),pf{i}{k}(j),pe{i}{k}(j)] = ...
-                    computestat(dd(j,:),fp{i}{k});
+            s1 = size(dd,1);
+            s3 = size(dd,3);
+            dd = mean(dd,4); %mean(dd,3),4);
+            m{i}{k} = NaN(s1,1,s3);
+            s{i}{k} = NaN(s1,1,s3);
+            sl{i}{k} = NaN(s1,1,s3);
+            pa{i}{k} = NaN(s1,1,s3);
+            pf{i}{k} = NaN(s1,1,s3);
+            pe{i}{k} = NaN(s1,1,s3);
+            for h = 1:s3
+                for j = 1:s1
+                    [m{i}{k}(j,1,h),s{i}{k}(j,1,h),sl{i}{k}(j,1,h),...
+                     pa{i}{k}(j,1,h),pf{i}{k}(j,1,h),pe{i}{k}(j,1,h)] = ...
+                        computestat(dd(j,:,h),fp{i}{k});
+                end
             end
         end
     end

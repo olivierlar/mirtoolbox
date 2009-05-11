@@ -9,7 +9,7 @@ varargout = mirfunction(@mirentropy,x,varargin,nargout,struct,@init,@main);
 
 
 function [x type] = init(x,option)
-if not(isamir(x,'mirdata'))
+if isamir(x,'miraudio')
     x = mirspectrum(x);
 end
 type = 'mirscalar';
