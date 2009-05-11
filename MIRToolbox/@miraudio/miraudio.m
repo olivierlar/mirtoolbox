@@ -275,10 +275,7 @@ for h = 1:length(d)
             end
             rms = (rms-repmat(min(rms),[1,size(rms,2),1]))...
                      ./repmat(max(rms)-min(rms),[1,size(rms,2),1]);
-            %[unused nosil] = find(squeeze(rms)>para.trimthreshold); <<<<<
-            %CHECK
-            
-            [nosil col] = find(squeeze(rms)>para.trimthreshold);
+            nosil = find(rms>para.trimthreshold);
             if strcmpi(para.trim,'Trim') || strcmpi(para.trim,'TrimStart') ...
                                          || strcmpi(para.trim,'TrimBegin')
                 nosil1 = min(nosil);

@@ -255,6 +255,10 @@ varargout = mirfunction(@mirenvelope,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
+type = 'mirenvelope';
+if isamir(x,'mirscalar')
+    return
+end
 if ischar(option.presel) && strcmpi(option.presel,'Klapuri06')
     option.method = 'Spectro';
 end
@@ -276,12 +280,32 @@ if not(isamir(x,'mirenvelope'))
                            option.band,'Power');
     end
 end
-type = 'mirenvelope';
 
 
 function e = main(orig,option,postoption)
 if iscell(orig)
     orig = orig{1};
+end
+if isamir(orig,'mirscalar')
+    d = get(orig,'Data');
+    fp = get(orig,'FramePos');
+    for i = 1:length(d)
+        for j = 1:length(d{i})
+            d{i}{j} = reshape(d{i}{j},size(d{i}{j},2),1,size(d{i}{j},3));
+            p{i}{j} = mean(fp{i}{j})';
+        end
+    end
+    e.downsampl = 0;
+    e.hwr = 0;
+    e.diff = 0;
+    e.method = 'Spectro';
+    e.phase = {{}};
+    e = class(e,'mirenvelope',mirtemporal(orig));
+    e = set(e,'Title','Envelope','Data',d,'Pos',p,'FramePos',{{}});
+    postoption.trim = 0;
+    postoption.ds = 0;
+    e = post(e,postoption);
+    return
 end
 if isfield(option,'presel') && ischar(option.presel) && ...
         strcmpi(option.presel,'Klapuri06')
