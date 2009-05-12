@@ -70,10 +70,12 @@ function varargout = mironsets(x,varargin)
     option.env = env;
 
         envmethod.key = 'Method'; % optional
+        envmethod.type = 'Boolean';
     option.envmethod = envmethod;
+    
         envmeth.type = 'String';
         envmeth.choice = {'Filter','Spectro'};
-        envmeth.default = 'Filter';
+        envmeth.default = 'Spectro';
     option.envmeth = envmeth;
  
 %%      options related to 'Filter':
@@ -364,7 +366,7 @@ end
 if iscell(o)
     o = o{1};
 end
-if isfield(option,'sum') && option.sum
+if isfield(option,'sum') && option.sum && 0
     o = mirsum(o,'Adjacent',option.sum);
 end
 if not(isempty(option)) && option.diffenv
@@ -426,6 +428,9 @@ if isfield(postoption,'cthr')
             o = mirflux(o,'Halfwave',postoption.hw);
         end
     end
+end
+if isfield(option,'sum') && option.sum
+    o = mirsum(o,'Adjacent',option.sum);
 end
 if isfield(option,'presel') && ...
         ischar(option.presel) && strcmpi(option.presel,'Klapuri99')

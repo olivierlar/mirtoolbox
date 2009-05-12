@@ -195,7 +195,7 @@ end
 
 function a = post(a,para)
 if para.mono
-    a = mirsum(a);
+    a = mirsum(a,'Mean');
 end
 d = get(a,'Data');
 t = get(a,'Time');
@@ -295,8 +295,13 @@ for h = 1:length(d)
             else
                 n2 = length(tk);
             end
+            wh = ones(n2-n1+1,1);
+            dt = round(.02*f{k});
+            ha = hann(dt*2);
+            wh(1:dt) = ha(1:dt);
+            wh(end-dt+1:end) = ha(dt+1:end);
             tk = tk(n1:n2);
-            dk = dk(n1:n2,1,:);
+            dk = dk(n1:n2,1,:);%.*repmat(wh,[1 1 size(dk,3)]);
         end
         if isfield(para,'sampling') && para.sampling
             if and(f{k}, not(f{k} == para.sampling))

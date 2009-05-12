@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.1.28 11-May-2009
+% Version 1.1.29 12-May-2009
 %
 % A complete documentation is available in the downloaded folder and online.
 %			http://www.jyu.fi/music/coe/materials/mirtoolbox
@@ -55,6 +55,7 @@
 %RHYTHM
 % mirtempo         - Tempo (in beats per minute)
 % mirfluctuation   - Fluctuation strength (periodicities in each channel)
+% mirpulseclarity  - Rhythmic clarity, i.e., beat strength
 %
 %TIMBRE
 % mirmfcc          - Mel-frequency cepstrum coefficients

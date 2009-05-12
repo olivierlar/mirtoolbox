@@ -276,8 +276,9 @@ if not(isamir(x,'mirenvelope'))
                               'Tau',option.tau,'PreDecim',option.decim);
         end
     elseif strcmpi(option.method,'Spectro')
-        x = mirspectrum(x,'Frame',.023,'s',.5,'/1','Window','hanning',...
+        x = mirspectrum(x,'Frame',.1,'s',.05,'/1','Window','hanning',...
                            option.band,'Power');
+           %    .023,'s',.5,'/1'
     end
 end
 

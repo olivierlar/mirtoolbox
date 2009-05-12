@@ -3,12 +3,19 @@ function varargout = mirsum(orig,varargin)
 %
 %   Optional arguments:
 %       mirsum(f,'Centered') centers the resulting envelope.
+%       mirsum(f,'Mean') ...
 
         c.key = 'Centered';
         c.type = 'Boolean';
         c.default = 0;
         c.when = 'After';
     option.c = c;
+
+        m.key = 'Mean';
+        m.type = 'Boolean';
+        m.default = 0;
+        m.when = 'After';
+    option.m = m;
 
         adj.key = 'Adjacent';
         adj.type = 'Integer';
@@ -57,11 +64,12 @@ for h = 1:length(d)
     spmh = cell(1,length(dh));
     for i = 1:length(dh)
         % Summation of signal
+        s3 = size(dh{i},3);
         if not(isempty(option.weights))
             weights = reshape(option.weights,1,1,length(option.weights));
             if length(weights)~=size(dh{i},1)
                 warning('WARNING in MIRSUM..');
-                weights = weights(1,1,1:size(dh{i},3));
+                weights = weights(1,1,1:s3);
             end
             dh{i} = dh{i}.*repmat(weights,[size(dh{i},1),size(dh{i},2),1]);
         end
@@ -118,7 +126,7 @@ for h = 1:length(d)
             spvh{i} = [];
             spmh{i} = [];
         end
-        if not(isempty(p))
+        if not(isempty(p)) && not(isempty(p{h}))
             p{h}{i} = p{h}{i}(:,:,1);
         end
     end
@@ -142,6 +150,17 @@ if option.c
         end
     end
     s = set(s,'Data',d);
+end
+if option.m
+    d = get(s,'Data');
+    ch = get(s,'Channels');
+    for k = 1:length(d)
+        for i = 1:length(d{k})
+            d{k}{i} = d{k}{i}/length(ch{k});
+        end
+        ch{k} = [1];
+    end
+    s = set(s,'Data',d,'Channels',ch);
 end
 
 

@@ -1,25 +1,24 @@
 function varargout = mirpulseclarity(orig,varargin)
 %   r = mirpulseclarity(x) estimates the rhythmic clarity, indicating the
-%       strength of the beats estimated by the mirtempo function. Values are
-%       between 0 (low pulse clarity) and 1 (high pulse clarity).
+%       strength of the beats estimated by the mirtempo function.
 %   Optional arguments:
 %       mirpulseclarity(...,s): specifies a strategy for pulse clarity
 %           estimation.
 %           Possible values: 'MaxAutocor' (default), 'MinAutocor',
 %               'KurtosisAutocor', MeanPeaksAutocor', 'EntropyAutocor', 
 %               'InterfAutocor', 'TempoAutocor', 'ExtremEnvelop', 
-%               'Attack', 'AttackDiff', 'Articulation'
+%               'Attack', 'Articulation'
 %       mirpulseclarity(...,'Frame',l,h): orders a frame decomposition of
 %           the audio input of window length l (in seconds) and hop factor
 %           h, expressed relatively to the window length.
-%           For instance, h = 1 indicates no overlap.
 %           Default values: l = 5 seconds and h = .1
+%       Onset detection strategies: 'Envelope' (default), 'DiffEnvelope', 
+%           'SpectralFlux', 'Pitch'.
+%       Options related to the autocorrelation computation can be specified
+%           as well: 'Min', 'Max', 'Resonance', 'Enhanced'
 %       Options related to the tempo estimation can be specified here
-%           as well (see help mirtempo): 'Min', 'Max', 'Resonance',
-%           'Filterbank', 'Sum', 'Enhanced', 'Total', 'Contrast'
-%       Onset detection strategies: 'Envelope', 'DiffEnvelope', 
-%           'SpectralFlux', 'Pitch'.....
-%....
+%           as well: 'Sum', 'Total', 'Contrast'.
+%       cf. User's Manual for more details.
 %   [r,a] = mirpulseclarity(x) also returns the beat autocorrelation.
         
         model.key = 'Model';
@@ -32,7 +31,7 @@ function varargout = mirpulseclarity(orig,varargin)
                          'KurtosisAutocor','EntropyAutocor',...
                          'InterfAutocor','TempoAutocor','ExtremEnvelop',...
                          'Attack','Articulation'};    ...,'AttackDiff'
-        stratg.default = 'MinAutocor';
+        stratg.default = 'MaxAutocor';
     option.stratg = stratg;
 
         frame.key = 'Frame';
@@ -41,18 +40,7 @@ function varargout = mirpulseclarity(orig,varargin)
         frame.keydefault = [5 .1];
         frame.default = [0 0];
     option.frame = frame;
-    
-        fb.key = 'Filterbank';
-        fb.type = 'Integer';
-        fb.default = 20;
-    option.fb = fb;
-
-        fbtype.key = 'FilterbankType';
-        fbtype.type = 'String';
-        fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
-        fbtype.default = 'Scheirer';
-    option.fbtype = fbtype;
-    
+        
 %% options related to mironsets:  
 
         fea.type = 'String';
@@ -60,25 +48,42 @@ function varargout = mirpulseclarity(orig,varargin)
         fea.default = 'Envelope';
     option.fea = fea;
     
+    
     %% options related to 'Envelope':
     
         envmeth.key = 'Method';
         envmeth.type = 'String';
         envmeth.choice = {'Filter','Spectro'};
-        envmeth.default = 'Filter';
+        envmeth.default = 'Spectro';
     option.envmeth = envmeth;
     
-        ftype.key = 'FilterType';
-        ftype.type = 'String';
-        ftype.choice = {'IIR','HalfHann'};
-        ftype.default = 'IIR';
-    option.ftype = ftype;
+        %% options related to 'Filter':
+    
+            ftype.key = 'FilterType';
+            ftype.type = 'String';
+            ftype.choice = {'IIR','HalfHann'};
+            ftype.default = 'IIR';
+        option.ftype = ftype;
+        
+            fb.key = 'Filterbank';
+            fb.type = 'Integer';
+            fb.default = 20;
+        option.fb = fb;
 
-        band.type = 'String';
-        band.choice = {'Freq','Mel','Bark','Cents'};
-        band.default = 'Freq';
-    option.band = band;
+            fbtype.key = 'FilterbankType';
+            fbtype.type = 'String';
+            fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
+            fbtype.default = 'Scheirer';
+        option.fbtype = fbtype;
 
+        %% options related to 'Spectro':
+    
+            band.type = 'String';
+            band.choice = {'Freq','Mel','Bark','Cents'};
+            band.default = 'Freq';
+        option.band = band;
+
+        
         diffhwr.key = 'HalfwaveDiff';
         diffhwr.type = 'Integer';
         diffhwr.default = 0;
@@ -105,7 +110,7 @@ function varargout = mirpulseclarity(orig,varargin)
     
         inc.key = 'Inc';
         inc.type = 'Boolean';
-        inc.default = 1; %NaN; %1;
+        inc.default = 1;
     option.inc = inc;
 
         median.key = 'Median';
@@ -206,6 +211,7 @@ else
         switch option.model
             case 1
             case 2
+                option.envmeth = 'Filter';
                 option.fbtype = 'Gammatone';
                 option.log = 0;
                 option.r = 0;

@@ -84,6 +84,7 @@ function varargout = mirautocor(orig,varargin)
     option.max = max;
         
         scaleoptbw.key = 'Normal'; %'Normal' keyword optional
+        scaleoptbw.key = 'Boolean';
     option.scaleoptbw = scaleoptbw;
         scaleopt.type = 'String';
         scaleopt.choice = {'biased','unbiased','coeff','none'};
