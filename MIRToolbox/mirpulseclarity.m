@@ -51,78 +51,79 @@ function varargout = mirpulseclarity(orig,varargin)
     
     %% options related to 'Envelope':
     
-        envmeth.key = 'Method';
-        envmeth.type = 'String';
-        envmeth.choice = {'Filter','Spectro'};
-        envmeth.default = 'Spectro';
-    option.envmeth = envmeth;
-    
-        %% options related to 'Filter':
-    
-            ftype.key = 'FilterType';
-            ftype.type = 'String';
-            ftype.choice = {'IIR','HalfHann'};
-            ftype.default = 'IIR';
-        option.ftype = ftype;
-        
-            fb.key = 'Filterbank';
-            fb.type = 'Integer';
-            fb.default = 20;
-        option.fb = fb;
+            envmeth.key = 'Method';
+            envmeth.type = 'String';
+            envmeth.choice = {'Filter','Spectro'};
+            envmeth.default = 'Spectro';
+        option.envmeth = envmeth;
 
-            fbtype.key = 'FilterbankType';
-            fbtype.type = 'String';
-            fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
-            fbtype.default = 'Scheirer';
-        option.fbtype = fbtype;
+            %% options related to 'Filter':
 
-        %% options related to 'Spectro':
-    
-            band.type = 'String';
-            band.choice = {'Freq','Mel','Bark','Cents'};
-            band.default = 'Freq';
-        option.band = band;
+                ftype.key = 'FilterType';
+                ftype.type = 'String';
+                ftype.choice = {'IIR','HalfHann'};
+                ftype.default = 'IIR';
+            option.ftype = ftype;
 
-        
-        diffhwr.key = 'HalfwaveDiff';
-        diffhwr.type = 'Integer';
-        diffhwr.default = 0;
-        diffhwr.keydefault = 1;
-    option.diffhwr = diffhwr;
+                fb.key = 'Filterbank';
+                fb.type = 'Integer';
+                fb.default = 20;
+            option.fb = fb;
 
-        lambda.key = 'Lambda';
-        lambda.type = 'Integer';
-        lambda.default = 1;
-    option.lambda = lambda;
+                fbtype.key = 'FilterbankType';
+                fbtype.type = 'String';
+                fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
+                fbtype.default = 'Scheirer';
+            option.fbtype = fbtype;
 
-        aver.key = 'Smooth';
-        aver.type = 'Integer';
-        aver.default = 0;
-        aver.keydefault = 30;
-    option.aver = aver;
-    
-        oplog.key = 'Log';
-        oplog.type = 'Boolean';
-        oplog.default = 1;
-    option.log = oplog;
+            %% options related to 'Spectro':
+
+                band.type = 'String';
+                band.choice = {'Freq','Mel','Bark','Cents'};
+                band.default = 'Freq';
+            option.band = band;
+
+
+            diffhwr.key = 'HalfwaveDiff';
+            diffhwr.type = 'Integer';
+            diffhwr.default = 0;
+            diffhwr.keydefault = 1;
+        option.diffhwr = diffhwr;
+
+            lambda.key = 'Lambda';
+            lambda.type = 'Integer';
+            lambda.default = 1;
+        option.lambda = lambda;
+
+            aver.key = 'Smooth';
+            aver.type = 'Integer';
+            aver.default = 0;
+            aver.keydefault = 30;
+        option.aver = aver;
+
+            oplog.key = 'Log';
+            oplog.type = 'Boolean';
+            oplog.default = 1;
+        option.log = oplog;
 
     %% options related to 'SpectralFlux'
     
-        inc.key = 'Inc';
-        inc.type = 'Boolean';
-        inc.default = 1;
-    option.inc = inc;
+            inc.key = 'Inc';
+            inc.type = 'Boolean';
+            inc.default = 1;
+        option.inc = inc;
 
-        median.key = 'Median';
-        median.type = 'Integer';
-        median.number = 2;
-        median.default = [0 0]; % Not same default as in mirtempo
-    option.median = median;
+            median.key = 'Median';
+            median.type = 'Integer';
+            median.number = 2;
+            median.default = [0 0]; % Not same default as in mirtempo
+        option.median = median;
 
-        hw.key = 'Halfwave';
-        hw.type = 'Boolean';
-        hw.default = 0; %NaN; %0; % Not same default as in mirtempo
-    option.hw = hw;     
+            hw.key = 'Halfwave';
+            hw.type = 'Boolean';
+            hw.default = 0; %NaN; %0; % Not same default as in mirtempo
+        option.hw = hw;    
+        
     
 %% options related to mirattackslope
         slope.type = 'String';

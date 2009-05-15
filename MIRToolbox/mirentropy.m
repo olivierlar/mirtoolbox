@@ -1,11 +1,17 @@
 function varargout = mirentropy(x,varargin)
 %   h = mirentropy(a) calculates the relative entropy of a.
-% 
-%© Part of the MIDI Toolbox, Copyright © 2004, University of Jyvaskyla, Finland
-% Reworked for MIR toolbox
+%   (Cf. User's Manual.)
+%   mirentropy(..., ?Center?) centers the input data before
+%       half-wave rectification.
 
+        center.key = 'Center';
+        center.type = 'Boolean';
+        center.default = 0;
+    option.center = center;
+    
+specif.option = option;
 
-varargout = mirfunction(@mirentropy,x,varargin,nargout,struct,@init,@main);
+varargout = mirfunction(@mirentropy,x,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
@@ -29,16 +35,22 @@ for h = 1:length(m)
         if isa(x,'mirhisto') || isa(x,'mirscalar')
             mn = mn';
         end
-        mn = center(mn);
+        
+        if option.center
+            mn = center(mn);
+        end
+        
+        % Negative data is trimmed:
         mn(mn<0) = 0;
-        %if min(min(min(mn)))<0
-        %    mn = mn-repmat(min(mn),[size(mn,1) 1 1]);
-        %end
+        
+        % Data is normalized such that the sum is equal to 1.
         mn = mn./repmat(sum(mn)+repmat(1e-12,...
                             [1 size(mn,2) size(mn,3) size(mn,4)]),...
                        [size(mn,1) 1 1 1]);
-        lgn = log(mn + 1e-12);
-        v{h}{k} = -sum(mn.*lgn)./log(size(mn,1));
+                   
+        % Actual computation of entropy
+        v{h}{k} = -sum(mn.*log(mn + 1e-12))./log(size(mn,1));
+        
         if isa(x,'mirhisto') || isa(x,'mirscalar')
             v{h}{k} = v{h}{k}';
         end

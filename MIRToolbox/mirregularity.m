@@ -15,7 +15,7 @@ function varargout = mirregularity(orig,varargin)
 %       modified, and is set by default to .1.
 %
 %   [Krimphoff et al. 1994] J. Krimphoff, S. McAdams, S. Winsberg, 
-%       Caracte?risation du timbre des sons complexes. II Analyses
+%       Caracterisation du timbre des sons complexes. II Analyses
 %       acoustiques et quantification psychophysique. Journal de Physique 
 %       IV, Colloque C5, Vol. 4. 1994. 
 %   [Jensen, 1999] K. Jensen, Timbre Models of Musical Sounds, Ph.D.

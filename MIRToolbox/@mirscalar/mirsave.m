@@ -41,7 +41,7 @@ for k = 1:length(d)
 end
 
 
-function oldmirsave
+function oldmirsave % not used anymore
 d = get(a,'Data');
 nf = length(d);
 fp = get(a,'FramePos');

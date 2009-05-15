@@ -3,7 +3,9 @@ function varargout = mirsum(orig,varargin)
 %
 %   Optional arguments:
 %       mirsum(f,'Centered') centers the resulting envelope.
-%       mirsum(f,'Mean') ...
+%       mirsum(f,'Mean') divides the summation by the number of channels.
+
+%       mirsum(f,'Weights')...
 
         c.key = 'Centered';
         c.type = 'Boolean';

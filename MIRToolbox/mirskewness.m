@@ -37,7 +37,3 @@ s = mirscalar(x,'Data',y,'Title',t,'Unit','');
 
 function s = skewness(d,p,c,sp)
 s = sum((p-c).^3.*d) ./ sum(d) ./ sp.^3;
-%if isnan(s)
-%    error
-%end
-%s(find(isnan(s))) = 0;

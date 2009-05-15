@@ -44,7 +44,6 @@ function varargout = mirtempo(x,varargin)
 %                           spectrum computation.
 %                       w = 'After': autocorrelation or spectrum computed
 %                           for each band, and summed into a "summary".
-%%%%%%%%%%%%%%%%%%%%%%% w = 'Adjacent'.
 %               mirenvelope options: 'HalfwaveCenter','Diff' (toggled on by
 %                   default here),'HalfwaveDiff','Center','Smooth',
 %                   'Sampling'
@@ -64,54 +63,23 @@ function varargout = mirtempo(x,varargin)
 %   [t,p] = mirtempo(...) also displays the result of the signal analysis
 %       leading to the tempo estimation, and shows in particular the
 %       peaks corresponding to the tempo values.
-        
+            
+    
         sum.key = 'Sum';
         sum.type = 'String';
         sum.choice = {'Before','After','Adjacent'};
         sum.default = 'Before';
     option.sum = sum;
-
-        aut.key = 'Autocor';
-        aut.type = 'Integer';
-        aut.default = 0;
-        aut.keydefault = 1;
-    option.aut = aut;
-            
-        enh.key = 'Enhanced';
-        enh.type = 'Integers';
-        enh.default = 2:10;
-        enh.keydefault = 2:10;
-    option.enh = enh;
-    
-        nw.key = 'NormalWindow';
-        nw.default = 0;
-    option.nw = nw;
-    
-        spe.key = 'Spectrum';
-        spe.type = 'Integer';
-        spe.default = 0;
-        spe.keydefault = 1;
-    option.spe = spe;
-
-        zp.key = 'ZeroPad';
-        zp.type = 'Integer';
-        zp.default = 10000;
-        zp.keydefault = Inf;
-    option.zp = zp;
-    
-        prod.key = 'Prod';
-        prod.type = 'Integers';
-        prod.default = 2:6;
-        prod.keydefault = 2:6;
-    option.prod = prod;
-
-        r.key = 'Resonance';
-        r.type = 'String';
-        r.choice = {'ToiviainenSnyder','vanNoorden',0,'off','no'};
-        r.default = 'ToiviainenSnyder';
-    option.r = r;
         
 %% options related to mironsets:    
+
+        frame.key = 'Frame';
+        frame.type = 'Integer';
+        frame.number = 2;
+        frame.default = [0 0];
+        frame.keydefault = [3 .1];
+    option.frame = frame;
+    
         fea.type = 'String';
         fea.choice = {'Envelope','DiffEnvelope','SpectralFlux','Pitch'};
         fea.default = 'Envelope';
@@ -125,28 +93,33 @@ function varargout = mirtempo(x,varargin)
             envmeth.default = 'Filter';
         option.envmeth = envmeth;
     
-            band.type = 'String';
-            band.choice = {'Freq','Mel','Bark','Cents'};
-            band.default = 'Freq';
-        option.band = band;
+        %% options related to 'Filter':
 
-            fb.key = 'Filterbank';
-            fb.type = 'Integer';
-            fb.default = 10;
-        option.fb = fb;
-        
-            fbtype.key = 'FilterbankType';
-            fbtype.type = 'String';
-            fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
-            fbtype.default = 'Gammatone';
-        option.fbtype = fbtype;
-        
-            ftype.key = 'FilterType';
-            ftype.type = 'String';
-            ftype.choice = {'IIR','HalfHann'};
-            ftype.default = 'IIR';
-        option.ftype = ftype;
+                fb.key = 'Filterbank';
+                fb.type = 'Integer';
+                fb.default = 10;
+            option.fb = fb;
 
+                fbtype.key = 'FilterbankType';
+                fbtype.type = 'String';
+                fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
+                fbtype.default = 'Gammatone';
+            option.fbtype = fbtype;
+
+                ftype.key = 'FilterType';
+                ftype.type = 'String';
+                ftype.choice = {'IIR','HalfHann'};
+                ftype.default = 'IIR';
+            option.ftype = ftype;
+
+        %% options related to 'Spectro':
+        
+                band.type = 'String';
+                band.choice = {'Freq','Mel','Bark','Cents'};
+                band.default = 'Freq';
+            option.band = band;
+
+        
             chwr.key = 'HalfwaveCenter';
             chwr.type = 'Boolean';
             chwr.default = 0;
@@ -190,6 +163,7 @@ function varargout = mirtempo(x,varargin)
         option.sampling = sampling;
 
     %% options related to 'SpectralFlux'
+    
             complex.key = 'Complex';
             complex.type = 'Boolean';
             complex.default = 0;
@@ -211,7 +185,55 @@ function varargout = mirtempo(x,varargin)
             hw.default = 1;
         option.hw = hw;                
         
+        
+%% options related to mirautocor:    
+
+        aut.key = 'Autocor';
+        aut.type = 'Integer';
+        aut.default = 0;
+        aut.keydefault = 1;
+    option.aut = aut;            
+    
+        nw.key = 'NormalWindow';
+        nw.default = 0;
+    option.nw = nw;
+
+        enh.key = 'Enhanced';
+        enh.type = 'Integers';
+        enh.default = 2:10;
+        enh.keydefault = 2:10;
+    option.enh = enh;
+
+        r.key = 'Resonance';
+        r.type = 'String';
+        r.choice = {'ToiviainenSnyder','vanNoorden',0,'off','no'};
+        r.default = 'ToiviainenSnyder';
+    option.r = r;
+
+
+%% options related to mirspectrum:
+    
+        spe.key = 'Spectrum';
+        spe.type = 'Integer';
+        spe.default = 0;
+        spe.keydefault = 1;
+    option.spe = spe;
+
+        zp.key = 'ZeroPad';
+        zp.type = 'Integer';
+        zp.default = 10000;
+        zp.keydefault = Inf;
+    option.zp = zp;
+    
+        prod.key = 'Prod';
+        prod.type = 'Integers';
+        prod.default = 2:6;
+        prod.keydefault = 2:6;
+    option.prod = prod;
+
+    
 %% options related to the peak detection
+
         m.key = 'Total';
         m.type = 'Integer';
         m.default = 1;
@@ -243,13 +265,6 @@ function varargout = mirtempo(x,varargin)
         perio.default = 0;
     option.perio = perio;
     
-        frame.key = 'Frame';
-        frame.type = 'Integer';
-        frame.number = 2;
-        frame.default = [0 0];
-        frame.keydefault = [3 .1];
-    option.frame = frame;
-
 specif.option = option;
 
 varargout = mirfunction(@mirtempo,x,varargin,nargout,specif,@init,@main);

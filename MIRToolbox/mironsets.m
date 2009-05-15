@@ -19,8 +19,8 @@ function varargout = mironsets(x,varargin)
 %                       passed here as well (see help mirenvelope):
 %                      'FilterType','Tau','PreDecim'
 %               mironsets(...,'Spectro'):
-%                    the frequency reassigment method can be specified: ?Freq?
-%                    (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
+%                    the frequency reassigment method can be specified:
+%                    'Freq' (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
 %               mironsets(...,'Sum','no') does not sum back the channels at
 %                   then end of the computation. The resulting onset curve
 %                   remains therefore decomposed into several channels.
@@ -38,7 +38,8 @@ function varargout = mironsets(x,varargin)
 %                   'Median' (toggled on by default here)
 %           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
 %                of same default characteristics than those returned
-%                 by mirpitch ? with however a range of frequencies not exceeding 1000 Hz ?
+%                 by mirpitch ? with however a range of frequencies not
+%                 exceeding 1000 Hz ?
 %                 and subsequently computes the novelty curve of the resulting similatrix matrix, 
 %                   with a 'KernelSize' of 32 samples.
 %       mironsets(...,'Detect',d) toggles on or off the onset detection, 
@@ -47,12 +48,11 @@ function varargout = mironsets(x,varargin)
 %           Option associated to the mirpeaks function can be specified as
 %               well:
 %               'Contrast' with default value c = .05
-%       mironsets(...,'Attack',o) (or 'Attacks') detects attack phases,
-%           using a gaussian envelope smoothing of order o.
-%               Default value when 'Attack' is called: o = 20;
-%       mironsets(...,'Release',o) (or 'Releases') detects release phases,
-%           using a gaussian envelope smoothing of order o.
-%               Default value when 'Release' is called: o = 20;
+%       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
+%       mironsets(...,'Release') (or 'Releases') detects release phases.
+%           mironsets(...,'Gauss',o) estimate the attack and/or release
+%               points using a gaussian envelope smoothing of order o of the
+%               onset curve.
 %       mironsets(...,'Frame',...) decomposes into frames, with default frame
 %           length 3 seconds and hop factor .1
 %   Preselected onset detection models:
@@ -251,18 +251,22 @@ function varargout = mironsets(x,varargin)
     option.cthr = cthr;
     
         attack.key = {'Attack','Attacks'};
-        attack.type = 'Integer';
+        attack.type = 'Boolean';
         attack.default = 0;
-        attack.keydefault = 20;
         attack.when = 'After';
     option.attack = attack;
         
         release.key = {'Release','Releases'};
-        release.type = 'Integer';
+        release.type = 'Boolean';
         release.default = 0;
-        release.keydefault = 20;
         release.when = 'After';
     option.release = release;
+
+        gauss.key = 'Gauss';
+        gauss.type = 'Integer';
+        gauss.default = 0;
+        gauss.when = 'After';
+    option.gauss = gauss;
     
 %% preselection
         presel.choice = {'Scheirer','Klapuri99'};
@@ -462,7 +466,7 @@ if isfield(postoption,'attack') && postoption.attack
     p = get(o,'PeakPos');
     pm = get(o,'PeakMode');
     d = get(o,'Data');
-    do = mirenvelope(o,'Diff','Gauss',postoption.attack);
+    do = mirenvelope(o,'Diff','Gauss',postoption.gauss);
     dd = get(do,'Data');
     [st p pm] = mircompute(@startattack,d,dd,p,pm);
     o = set(o,'AttackPos',st,'PeakPos',p,'PeakMode',pm);
@@ -473,7 +477,7 @@ if isfield(postoption,'release') && postoption.release
     p = get(o,'PeakPos');
     pm = get(o,'PeakMode');
     d = get(o,'Data');
-    do = mirenvelope(o,'Diff','Gauss',postoption.release);
+    do = mirenvelope(o,'Diff','Gauss',postoption.gauss);
     dd = get(do,'Data');
     [rl p pm st] = mircompute(@endrelease,d,dd,p,pm,st);
     o = set(o,'ReleasePos',rl,'AttackPos',st,'PeakPos',p,'PeakMode',pm);

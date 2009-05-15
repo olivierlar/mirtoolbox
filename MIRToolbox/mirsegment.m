@@ -33,6 +33,14 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %   f = mirsegment(a,v) where v is an array of numbers, segments a using
 %       the temporal positions specified in v (in s.)
 %
+%   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
+%       Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
+%       Databases, Vol. 5021, pp. 167-75.
+%   Harte, C. A. & Sandler, M. B. (2006). Detecting harmonic change in
+%       musical audio, in Proceedings of Audio and Music Computing for 
+%       Multimedia Workshop, Santa Barbara, CA.
+
+
 %   [f,p] = mirsegment(...) also displays the analysis produced by the chosen
 %       strategy.
 %           For 'Novelty', p is the novelty curve.
@@ -43,13 +51,6 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %           For 'HCDF', m is the tonal centroid.
 %   [f,p,m,fe] = mirsegment(...) also displays the temporal evolution of the
 %       feature used for the analysis.
-%
-%   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
-%       Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
-%       Databases, Vol. 5021, pp. 167-75.
-%   Harte, C. A. & Sandler, M. B. (2006). Detecting harmonic change in
-%       musical audio, in Proceedings of Audio and Music Computing for 
-%       Multimedia Workshop, Santa Barbara, CA.
  
         ana.type = 'String';
         ana.choice = {'Spectrum','Keystrength','Pitch'};
@@ -123,8 +124,6 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         frame.default = [0 0];
         frame.keydefault = [3 .1];
     option.frame = frame;
-%defaultframelength = 0.05;   %.5 for keystrength, .743 for HCDF
-%defaultframehop = 1;         %.2 for keystrength, .01 for pitch, 1/8 for hcdf
    
 specif.option = option;
 
@@ -205,7 +204,8 @@ elseif isa(x,'mirdata')
                                 'Contrast',option.cthr,...
                                 'Chrono','NoBegin','NoEnd');
             elseif strcmpi(option.strat,'HCDF')
-                [df m fe] = mirhcdf(fe);
+                %[df m fe] = mirhcdf(fe);
+                df = mirhcdf(fe);
                 p = mirpeaks(df);
             end
         else
