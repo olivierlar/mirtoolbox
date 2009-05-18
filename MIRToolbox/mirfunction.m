@@ -21,7 +21,12 @@ if ischar(x) % The input is a file name.
     % Starting point of the design process
     design_init = 1;
     filename = x;
-    orig = mirdesign(@miraudio,'Design',{varg},{},struct,'miraudio'); 
+    if strcmpi(func2str(method),'miraudio')
+        postoption = {};
+    else
+        postoption.mono = 1;
+    end
+    orig = mirdesign(@miraudio,'Design',{varg},postoption,struct,'miraudio'); 
     % Implicitly, the audio file needs to be loaded first.
 else
     design_init = 0;

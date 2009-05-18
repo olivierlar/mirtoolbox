@@ -5,4 +5,5 @@ function aa = set(a,varargin)
 t = mirtemporal(a);
 t = set(t,'Title',get(a,'Title'),'Abs',get(a,'Abs'),'Ord',get(a,'Ord'),...
         varargin{:});
-aa = class(struct,'miraudio',t);
+aa.fresh = a.fresh;
+aa = class(aa,'miraudio',t);

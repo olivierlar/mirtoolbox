@@ -73,6 +73,7 @@ function varargout = mirspectrum(orig,varargin)
 %       mirspectrum(...,'Gauss',o): smooths the envelope using a gaussian
 %           of standard deviation o samples.
 %           Default value when the option is toggled on: o=10
+%       mirspectrum(...,'Phase',0): do not compute the FFT phase.
     
         win.key = 'Window';
         win.type = 'String';
@@ -223,6 +224,11 @@ function varargout = mirspectrum(orig,varargin)
         rapid.default = 0;
     option.rapid = rapid;
 
+        phase.key = 'Phase';
+        phase.type = 'Boolean';
+        phase.default = 1;
+    option.phase = phase;
+
 specif.option = option;
 
 specif.defaultframelength = 0.05;
@@ -250,6 +256,12 @@ if isstruct(option)
     if isnan(option.res) && strcmpi(option.band,'Cents') && option.min
         option.res = option.min *(2^(1/1200)-1)*.9;
     end    
+end
+if not(strcmpi(postoption.band,'Freq') && isempty(postoption.msum) && ...
+        isempty(postoption.mprod)) || postoption.log || postoption.db ...
+        || postoption.pow || postoption.mask || postoption.collapsed ...
+        || postoption.aver || postoption.gauss
+    option.phase = 0;
 end
 if iscell(orig)
     orig = orig{1};
@@ -400,7 +412,9 @@ else
             else
                 ft = fft(dj,N);
                 z0 = abs(ft);
-                p0 = angle(ft);
+                if option.phase
+                    p0 = angle(ft);
+                end
             end
 
             f0=(0:size(z0,1))'*fsi/size(z0,1);
@@ -416,7 +430,9 @@ else
                 minf = 1;
             end
             mi{j} = z0(minf:maxf,:,:);
-            phi{j} = p0(minf:maxf,:,:);
+            if option.phase
+                phi{j} = p0(minf:maxf,:,:);
+            end
             fi{j} = repmat(f0(minf:maxf),[1,size(z0,2),size(z0,3)]);
         end
         if iscell(sig{i})
@@ -657,13 +673,13 @@ if strcmp(s.xscale,'Freq')
             cb = min(min([find(bark_upper>sr{h}/2),length(bark_upper)]),length(bark_upper));
             e{h} = cell(1,length(m{h}));
             for i = 1:length(m{h})
-                mi = m{h}{i};
+                mi = sum(m{h}{i},3);
                 e{h}{i} = zeros(1,size(mi,2),cb);
                 k = 1;
                 for j=1:cb, %% group into bark bands
                     idx = find(f{h}{i}(k:end,1,1)<=bark_upper(j));
                     idx = idx + k-1;
-                    e{h}{i}(1,:,j) = sum(m{h}{i}(idx,:,:),1);
+                    e{h}{i}(1,:,j) = sum(mi(idx,:,:),1);
                     k = max(idx)+1;
                 end
                 f{h}{i} = zeros(1,size(mi,2),cb);

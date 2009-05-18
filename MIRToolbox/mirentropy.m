@@ -2,7 +2,7 @@ function varargout = mirentropy(x,varargin)
 %   h = mirentropy(a) calculates the relative entropy of a.
 %   (Cf. User's Manual.)
 %   mirentropy(..., ?Center?) centers the input data before
-%       half-wave rectification.
+%       transforming it into a probability distribution.
 
         center.key = 'Center';
         center.type = 'Boolean';

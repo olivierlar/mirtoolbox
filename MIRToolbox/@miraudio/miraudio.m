@@ -129,7 +129,7 @@ end
 
         mono.key = 'Mono';
         mono.type = 'Boolean';
-        mono.default = 1;
+        mono.default = NaN;
         mono.when = 'After';
     option.mono = mono;    
     
@@ -145,8 +145,8 @@ if nargin > 1 && ischar(varargin{1}) && strcmp(varargin{1},'Now')
     else
         extract = [];
     end
-    para.mono = 1;  % Turn by default the sequence into mono.
-    %para = [];
+    %para.mono = 1;  % Turn by default the sequence into mono.
+    para = [];
     varargout = {main(orig,[],para,[],extract)};
 else
     varargout = mirfunction(@miraudio,orig,varargin,nargout,specif,@init,@main);
@@ -174,7 +174,8 @@ if ischar(orig)
                        'Clusters',cell(1,length(d)),...
                        'Channels',ch,'Centered',0,'NBits',b);
     t = set(t,'Title','Audio waveform');
-    a = class(struct,'miraudio',t);
+    a.fresh = 1;
+    a = class(a,'miraudio',t);
 else
     if not(isempty(option)) && not(isempty(option.extract))
         if not(isstruct(after))
@@ -185,7 +186,8 @@ else
     if isa(orig,'miraudio')
         a = orig;
     else
-        a = class(struct,'miraudio',orig);
+        a.fresh = 1;
+        a = class(a,'miraudio',orig);
     end
 end      
 if not(isempty(after))
@@ -194,7 +196,13 @@ end
 
 
 function a = post(a,para)
-if para.mono
+if a.fresh
+    a.fresh = 0;
+    if isnan(para.mono)
+        para.mono = 1;
+    end
+end
+if para.mono == 1
     a = mirsum(a,'Mean');
 end
 d = get(a,'Data');

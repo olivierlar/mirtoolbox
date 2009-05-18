@@ -180,7 +180,7 @@ if not(isempty(nonan))
                 pf = 1/(pfk-1)/framesampling;
             end
         end
-        cor = cor-min(cor);
+        cor = abs(cor);
         cor = cor/sum(cor);
         pe = -sum(cor.*log(cor+1e-12))./log(length(cor));
     end

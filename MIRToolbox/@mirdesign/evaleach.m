@@ -50,6 +50,9 @@ if ischar(a)
             y = miraudio(f,'Now',[ch(1),ch(2) 0]);
         end
     end
+    if not(isempty(d.postoption)) && d.postoption.mono
+        y = miraudio(y,'Mono',1);
+    end
     y = set(y,'AcrossChunks',get(d,'AcrossChunks'));
     if not(d.ascending)
         y = miraudio(y,'Reverse');
