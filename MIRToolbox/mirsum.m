@@ -69,7 +69,7 @@ for h = 1:length(d)
         s3 = size(dh{i},3);
         if not(isempty(option.weights))
             weights = reshape(option.weights,1,1,length(option.weights));
-            if length(weights)~=size(dh{i},1)
+            if length(weights)~=s3
                 warning('WARNING in MIRSUM..');
                 weights = weights(1,1,1:s3);
             end

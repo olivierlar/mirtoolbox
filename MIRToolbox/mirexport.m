@@ -44,7 +44,7 @@ else
     format = 'Matrix';
 end
 title = 'MIRtoolbox';
-if not(isempty(varargin)) && strcmp(varargin{end},'#add')
+if not(isempty(varargin)) && ischar(varargin{end}) && strcmp(varargin{end},'#add')
     add = 1;
     varargin(end) = [];
     narg = narg-1;
@@ -198,7 +198,7 @@ elseif size(data,3)>1
         newdata = {newdata{:} n.data{:}};
         newtextdata = {newtextdata{:} n.textdata{:}};
     end
-elseif size(data,1)>1 %%&& size(data,1)<=24
+elseif size(data,1)>1 && size(data,1)<=50
     % Input is vector
     for w = 1:size(data,1)
         % Bin information
@@ -217,10 +217,10 @@ elseif size(data,1)>1 %%&& size(data,1)<=24
         newtextdata = {newtextdata{:} n.textdata{:}};
     end
 else 
-    %if size(data,1)>1
-    %    data = mean(data);
-    %end
-    newdata = {data};%'};
+    if size(data,1)>1
+        data = mean(data);
+    end
+    newdata = {data};
     newtextdata = {textdata};
     newname = {};
 end

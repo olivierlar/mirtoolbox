@@ -27,13 +27,15 @@ varargout = mirfunction(@mireventdensity,x,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option) %% INTEGRATION INTO FLOWCHART.... @subfolders...
-if option.frame.length.val
-    x = mironsets(x,'Klapuri99', 'Frame',option.frame.length.val,...
-                                          option.frame.length.unit,...
-                                          option.frame.hop.val,...
-                                          option.frame.hop.unit);
-else
-    x = mironsets(x,'Klapuri99');
+if not(isamir(x,'mirenvelope'))
+    if option.frame.length.val
+        x = mironsets(x,'Klapuri99', 'Frame',option.frame.length.val,...
+                                              option.frame.length.unit,...
+                                              option.frame.hop.val,...
+                                              option.frame.hop.unit);
+    else
+        x = mironsets(x,'Klapuri99');
+    end
 end
 type = 'mirscalar';
 
@@ -82,7 +84,7 @@ end
 
 
 
-function y = eachchunk(orig,option,missing,postchunk)
+function [y orig] = eachchunk(orig,option,missing,postchunk)
 y = mireventdensity(orig,option);
 
 

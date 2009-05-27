@@ -7,7 +7,10 @@ function varargout = mironsets(x,varargin)
 %           onset detection function.
 %           f = 'Envelope': Envelope of the audio signal. (Default choice).
 %           With two methods for envelope extraction:
-%               mironsets(...,'Filter') (Default)
+%               mironsets(...,'Spectro') (Default):
+%                    the frequency reassigment method can be specified:
+%                    'Freq' (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
+%               mironsets(...,'Filter'):
 %                   mironsets(...,'Filterbank',nc) specifies a preliminary
 %                       filterbank decomposition into nc channels. If nc = 0,
 %                       no decomposition is performed.
@@ -18,9 +21,6 @@ function varargout = mironsets(x,varargin)
 %                   Options associated to the mirenvelope function can be
 %                       passed here as well (see help mirenvelope):
 %                      'FilterType','Tau','PreDecim'
-%               mironsets(...,'Spectro'):
-%                    the frequency reassigment method can be specified:
-%                    'Freq' (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
 %               mironsets(...,'Sum','no') does not sum back the channels at
 %                   then end of the computation. The resulting onset curve
 %                   remains therefore decomposed into several channels.
@@ -47,7 +47,7 @@ function varargout = mironsets(x,varargin)
 %           (By default toggled on.)
 %           Option associated to the mirpeaks function can be specified as
 %               well:
-%               'Contrast' with default value c = .05
+%               'Contrast' with default value c = .01
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
 %       mironsets(...,'Release') (or 'Releases') detects release phases.
 %           mironsets(...,'Gauss',o) estimate the attack and/or release
@@ -302,6 +302,7 @@ if ischar(option.presel)
     elseif strcmpi(option.presel,'Klapuri99')
         option.filtertype = 'Klapuri';
         option.filter = 'HalfHann';
+        option.envmeth = 'Filter';
         option.decim = 180;
     end
 end
@@ -386,7 +387,7 @@ end
 if isfield(postoption,'cthr')
     if isnan(postoption.cthr) || not(postoption.cthr)
         if ischar(postoption.detect) || postoption.detect
-            postoption.cthr = .05;
+            postoption.cthr = .01;
         end
     elseif postoption.cthr
         if not(ischar(postoption.detect) || postoption.detect)

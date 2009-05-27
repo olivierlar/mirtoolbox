@@ -25,10 +25,10 @@ for i = 1:l
                 vk{j} = vk{j}{k};
             end
         end
-        if 1 % nargout == 1
+        if nargout == 1
             res = algo(vk{:});
-        else
-            [res res2] = algo(vk{:});
+        else 
+            [res res2] = algo(vk{:}); 
         end
         if iscell(res)
             lr = length(res);
@@ -37,9 +37,9 @@ for i = 1:l
             end
         else
             varargout{1}{i}{k} = res;
-            %if nargout == 2
-            %    varargout{2}{i}{k} = res2;
-            %end
+            if nargout == 2
+                varargout{2}{i}{k} = res2;
+            end
         end
     end
 end
