@@ -55,6 +55,7 @@ if isempty(clx{1})
         end
     end
 else
+    % Earth Mover's Distance to compare clustered data.
     cly = get(y,'Clusters');
     dt = cell(1,length(cly));
     for h = 1:length(cly)

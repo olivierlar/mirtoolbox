@@ -25,7 +25,7 @@ for i = 1:l
                 vk{j} = vk{j}{k};
             end
         end
-        if nargout == 1
+        if 1 %nargout == 1 %% used for miremotion, provokes bug else...
             res = algo(vk{:});
         else 
             [res res2] = algo(vk{:}); 

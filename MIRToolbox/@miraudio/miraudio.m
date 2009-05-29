@@ -65,7 +65,8 @@ if isnumeric(orig)
                     'Channels',[],'Centered',0,'NBits',{b},...
                     'Title','Audio signal',...
                     'PeakPos',{{{}}},'PeakVal',{{{}}},'PeakMode',{{{}}});
-    varargout = {class(struct,'miraudio',t)};
+    aa.fresh = 1;
+    varargout = {class(aa,'miraudio',t)};
     return
 end
 

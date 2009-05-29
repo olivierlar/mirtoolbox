@@ -125,8 +125,8 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         for i = order
             if isempty(sg)
                 disp(['Chunk ',num2str(i),'/',num2str(nch),'...'])
-                chbeg = max(0,lsz-(CHUNKLIM*(nch-i+1))-1);
-                chend = lsz-(CHUNKLIM*(nch-i))-1;
+                chbeg = max(0,lsz-CHUNKLIM*(nch-i+1)-1);
+                chend = lsz-CHUNKLIM*(nch-i)-1;
                 chrend = chend;
             else
                 disp(['Segment ',num2str(i),'/',num2str(nch),'...'])
@@ -138,7 +138,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             d2 = set(d2,'Chunk',[chbeg+w(1) chrend+w(1) (i == order(end))]);
             if not(ischar(specif.eachchunk) && ...
                     strcmpi(specif.eachchunk,'Normal'))
-                d2.postoption = {max(0,chend-lsz)};
+                d2.postoption = {max(0,CHUNKLIM*(nch-i+1)-lsz+1)};
             end
             d2 = set(d2,'Tmp',tmp);
             d2.chunkdecomposed = 1;

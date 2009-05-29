@@ -65,7 +65,7 @@ if iscell(x)
                 x = NaN([l*s(1) s(2) nf*s(3:end)]);
                 for j = 1:nf
                     for i = 1:l
-                        zi = z{1,i,j};
+                        zi = z{i,1,j};
                         if ischar(zi) && length(zi) == 1 && zi>='A' && zi <= 'G'
                             %zi
                             zi = zi-'A';

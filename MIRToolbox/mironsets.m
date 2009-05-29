@@ -462,6 +462,8 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
             'Contrast',postoption.cthr,'Valleys','Order','Abscissa');
     end
+    nop = cell(size(get(o,'Data')));
+    o = set(o,'AttackPos',nop,'ReleasePos',nop);
 end
 if isfield(postoption,'attack') && postoption.attack
     p = get(o,'PeakPos');

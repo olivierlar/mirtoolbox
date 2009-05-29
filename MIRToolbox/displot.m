@@ -151,9 +151,9 @@ if curve
                                 'EdgeColor',col{h}(j,:,k))
                         end
                         if not(isempty(pp)) && not(isempty(pp{1}))
-                            ppj = sort(pp{h}{1,j,i});
+                            [ppj order] = sort(pp{h}{1,j,i});
                             if not(isempty(pm)) && not(isempty(pm{1}))
-                                pmj = pm{h}{1,j,i};
+                                pmj = pm{h}{1,j,i}(order);
                                 [R C] = find(pmj==k);
                                 if iscell(xj)
                                     plot(ppj(R,C)-1,yk(ppj(R,C)),'or') 

@@ -1,5 +1,7 @@
 function varargout = mireventdensity(x,varargin)
-%   e = mireventdensity(x) mean number of events (Event density).
+%   e = mireventdensity(x) estimate the mean frequency of events (i.e., how
+%       many note onsets per second) in the temporal data x.
+
 %   Optional arguments: Option1, Option2
 % Tuomas Eerola, 14.08.2008
 %
@@ -26,7 +28,7 @@ specif.combinechunk = @combinechunk;
 varargout = mirfunction(@mireventdensity,x,varargin,nargout,specif,@init,@main);
 
 
-function [x type] = init(x,option) %% INTEGRATION INTO FLOWCHART.... @subfolders...
+function [x type] = init(x,option)
 if not(isamir(x,'mirenvelope'))
     if option.frame.length.val
         x = mironsets(x,'Klapuri99', 'Frame',option.frame.length.val,...
@@ -40,7 +42,7 @@ end
 type = 'mirscalar';
 
 
-function e = main(o,option,postoption) %% actual computation... This contains the whole input stuff (files, etc...)
+function e = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end

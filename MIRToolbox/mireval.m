@@ -99,7 +99,7 @@ else
 end
 
 if not(l)
-    y = [];
+    v = [];
     return
 end
 
