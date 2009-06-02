@@ -49,7 +49,11 @@ if iscell(x)
                 x = NaN([s(1) l*s(2) nf*s(3:end)]);
                 for j = 1:nf
                     for i = 1:l
-                        zij =  z{1,i,j};
+                        if size(z,1)>size(z,2)
+                            zij =  z{i,1,j};
+                        else
+                            zij =  z{1,i,j};
+                        end
                         if size(zij,3) == 1
                             x(1:size(z{1,i,j},1),...
                               (i-1)*s(2)+1:(i-1)*s(2)+size(z{1,i,j},2),...
@@ -65,15 +69,19 @@ if iscell(x)
                 x = NaN([l*s(1) s(2) nf*s(3:end)]);
                 for j = 1:nf
                     for i = 1:l
-                        zi = z{i,1,j};
-                        if ischar(zi) && length(zi) == 1 && zi>='A' && zi <= 'G'
-                            %zi
-                            zi = zi-'A';
+                        if size(z,1)>size(z,2)
+                            zij =  z{i,1,j};
+                        else
+                            zij =  z{1,i,j};
                         end
-                        x((i-1)*s(1)*size(zi,1)+1:(i-1)*s(1)*size(zi,1)+size(zi,1),...
-                          1:size(zi,2),...
+                        if ischar(zij) && length(zij) == 1 && zij>='A' && zij <= 'G'
+                            %zi
+                            zij = zij-'A';
+                        end
+                        x((i-1)*s(1)*size(zij,1)+1:(i-1)*s(1)*size(zij,1)+size(zij,1),...
+                          1:size(zij,2),...
                           j,...
-                          1:size(zi,4)) = zi;
+                          1:size(zij,4)) = zij;
                     end
                 end
             end

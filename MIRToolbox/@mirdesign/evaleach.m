@@ -232,7 +232,13 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             end
             clear ss
             if h
-                waitbar((chrend-start)/total,h)
+                if order(1)>order(end)
+                    close(h)
+                    h = waitbar((chbeg-start)/total,...
+                        ['Computing ' func2str(d.method) ' (backward)']);
+                else
+                    waitbar((chrend-start)/total,h)
+                end
             end
         end
         if isfield(specif,'afterchunk')

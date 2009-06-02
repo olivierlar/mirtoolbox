@@ -1,8 +1,15 @@
 function d = mirdist(x,y,dist)
 %   d = mirdist(x,y) evaluates the distance between x and y.
-%   Optional argument:
+%   If x and y are not decomposed into frames,
 %       d = mirdist(x,y,f) specifies distance function.
-%           Default value: 'Cosine'
+%           Default value: f = 'Cosine'
+%   If x and y are composed of clustered frames (using mircluster), the
+%       cluster signatures are compared using Earth Mover Distance.
+%       (Logan, Salomon, 2001)
+%   If x and y contains peaks, the vectors representing the peak
+%       distributions are compared using Euclidean distance.
+%       (used with mirnovelty in Jacobson, 2006)
+
 
 clx = get(x,'Clusters');
 if isempty(clx{1})
@@ -14,9 +21,16 @@ if isempty(clx{1})
         end
 
         d = get(x,'Data');
-        d = d{1}{1};
-        if iscell(d)
-            d = d{1};
+        dd = d{1}{1};
+        if iscell(dd)
+            dd = dd{1};
+        end
+        if size(dd,2)>1
+            if size(dd,1)>1
+                error('ERROR IN MIRDIST: If the input is decomposed into frames, they should first be clustered.'); 
+            else
+                dd = dd';
+            end
         end
 
         e = get(y,'Data');
@@ -26,24 +40,41 @@ if isempty(clx{1})
             if iscell(ee)
                 ee = ee{1};
             end
-            if length(d)<length(ee)
-                ee = ee(1:length(d));
-                dd = d;
-            else
-                dd = d(1:length(ee));
+            if size(ee,2)>1
+                if size(ee,1)>1
+                    error('ERROR IN MIRDIST: If the input is decomposed into frames, they should first be clustered.'); 
+                else
+                    ee = ee';
+                end
             end
-            if length(dd) == 1
-                dt{h}{1} = abs(dd-ee);
+            if isempty(ee)
+                if isempty(dd)
+                    dt{h}{1} = 0;
+                else
+                    dt{h}{1} = Inf;
+                end
             else
-                dt{h}{1} = pdist([dd(:)';ee(:)'],dist);
+                if length(dd)<length(ee)
+                    dd(length(ee)) = 0;
+                    %ee = ee(1:length(d));
+                elseif length(ee)<length(dd)
+                    ee(length(dd)) = 0;
+                    %dd = dd(1:length(ee));
+                end
+                if length(dd) == 1
+                    dt{h}{1} = abs(dd-ee);
+                else
+                    dt{h}{1} = pdist([dd(:)';ee(:)'],dist);
+                end
             end
         end
     else
+        % Euclidean distance between vectors to compare data with peaks
+        % (used with mirnovelty in Jacobson, 2006).
         sig = pi/4;
         dx = get(x,'Data');
         nx = length(px{1}{1}{1});
         cx = mean(px{1}{1}{1}/length(dx{1}{1}));
-        c
         dy = get(y,'Data');
         py = get(y,'PeakPos');
         dt = cell(1,length(py));

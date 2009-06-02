@@ -533,6 +533,11 @@ for i = 1:length(d) % For each audio file,...
                             j = j+1;
                         end
                     end
+                    if compar(th(mxlk(end),k,l),th(mxlk(end-1),k,l),option.reso)
+                        decreas = not(option.resofirst) &&...
+                            dh(mxlk(end),k,l)>dh(mxlk(end-1),k,l);
+                        mxlk(end-decreas) = [];
+                    end
                     mx{1,k,l} = mxlk;
                 end
             end

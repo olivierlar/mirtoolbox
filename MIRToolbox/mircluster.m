@@ -3,17 +3,25 @@ function a = mircluster(a,varargin)
 %       contained in the audio object a, along the analytic feature(s) 
 %       f, using the k-means strategy. Multiple analytic features have to
 %       be grouped into one array of cells.
-%   Example:
-%       sg = mirsegment(a);
-%       mircluster(sg, mirmfcc(sg))
-%       mircluster(sg, {mirmfcc(sg), mircentroid(sg)})
+%       Example:
+%           sg = mirsegment(a);
+%           mircluster(sg, mirmfcc(sg))
+%           mircluster(sg, {mirmfcc(sg), mircentroid(sg)})
+%   c = mircluster(d) clusters the frame-decomposed data d into groups
+%       using K-means clustering.
+%       Example:
+%           cc = mirmfcc(a,'Frame');
+%           mircluster(cc)
 %   Optional argument:
 %       mircluster(...,n) indicates the maximal number of clusters.
 %           Default value: n = 2.
 %       mircluster(...,'Runs',r) indicates the maximal number of runs.
 %           Default value: r = 5.
 
+
 if isempty(varargin) || not(isa(varargin{1},'mirdata'))
+    % mircluster version for frame-decomposed data:
+    % frames are clustered into groups using K-means clustering.
     [nclust,nruns] = scanargin(varargin);
     da = get(a,'Data');
     lva = length(da); % Number of audio files in the audio object.
@@ -97,6 +105,8 @@ if isempty(varargin) || not(isa(varargin{1},'mirdata'))
     end
     a = set(a,'Clusters',c);
 else
+    % mircluster version for segmented audio:
+    % segments are clustered into groups using K-means clustering.
     da = varargin{1};
     varargin(1) = [];
     [nclust,nruns] = scanargin(varargin);

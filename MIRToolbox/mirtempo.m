@@ -356,7 +356,7 @@ end
 pt = get(p,'PeakPrecisePos');
 bpm = cell(1,length(pt));
 for j = 1:length(pt)
-    bmp{j} = cell(1,length(pt{j}));
+    bpm{j} = cell(1,length(pt{j}));
     for k = 1:length(pt{j})
         ptk = pt{j}{k};
         bpmk = cell(1,size(ptk,2));
