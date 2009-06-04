@@ -154,8 +154,8 @@ else
     end
     nCh = option.nCh;
     Ch = option.Ch;
-    [tmp x] = gettmp(x); %get(x,'Tmp');
     if strcmpi(option.filtertype, 'Gammatone');
+        [tmp x] = gettmp(x); %get(x,'Tmp');
         if not(Ch)
             Ch = 1:nCh;
         end

@@ -133,7 +133,7 @@ else
     ff = cell(1,length(m));
     newsr = cell(1,length(m));
     dist = str2func(option.dist);
-    tmp = get(s,'Tmp');
+    %[tmp s] = gettmp(s); %get(s,'Tmp');
     for h = 1:length(m)
         ff{h} = cell(1,length(m{h}));
         if not(iscell(m{h}))
@@ -148,10 +148,10 @@ else
                 phi = ph{h}{i};
             end
             fpi = fp{h}{i};
-            if not(isempty(tmp))
-                mi = [tmp.mi mi];
-                fpi = [tmp.fpi fpi];
-            end
+            %if 0 %not(isempty(tmp)) && isstruct(tmp) && isfield(tmp,'mi')
+            %    mi = [tmp.mi mi];
+            %    fpi = [tmp.fpi fpi];
+            %end
             nc = size(mi,2);
             np = size(mi,3);
             if nc == 1
@@ -180,11 +180,11 @@ else
                     fp{h}{i} = fpi(:,2:end);
                 end
                 ff{h}{i} = fl;
-                tmp.mi = mi(:,end,:);
-                tmp.fpi = fpi(:,end,:);
+                %tmp.mi = mi(:,end,:);
+                %tmp.fpi = fpi(:,end,:);
             end
         end
-        tmp = [];
+        %tmp = [];
         if size(fpi,2)<2
             newsr{h} = 0;
         else
@@ -192,7 +192,8 @@ else
         end
     end
     f = mirscalar(s,'Data',ff,'FramePos',fp,'Sampling',newsr,...
-                        'Title',t,'Parameter',param,'Tmp',tmp);
+                        'Title',t,'Parameter',param); %,'Tmp',tmp);
+    %f = settmp(f,tmp);
     if not(isempty(postoption))
         f = modif(f,postoption);
     end

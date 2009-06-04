@@ -1,17 +1,16 @@
 % MIRtoolbox
-% Version 1.1.31 27-May-2009
-%
-% A complete documentation is available in the downloaded folder and online.
-%			http://www.jyu.fi/music/coe/materials/mirtoolbox
+% Version 1.2 3-June-2009
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
 %
-%AUDIO MANIPULATION
+% A complete documentation is available in the downloaded folder and online.
+%			http://www.jyu.fi/music/coe/materials/mirtoolbox
+%
+%BASIC AUDIO OPERATIONS
 % miraudio         - Loads and return waveform
 % mirframe         - Decomposes into successive frames
-% mirsegment       - Segments
-% mirplay          - Plays
+% mirsegment       - Decomposes into successive segments
 % mirlength        - Temporal length
 %
 %DATA OUTPUT
@@ -19,25 +18,39 @@
 %                   further computation in Matlab
 % mirsave          - Save audio signals into audio files
 % mirexport        - Export the analytical results to a text file
-% mirstat          - Returns statistics of any feature
-% mirfeatures      - Compute a large range of features
+% mirplay          - Plays audio and other temporal data
 %
-%TIME DOMAIN ANALYSIS
+%ANALYTICAL OPERATORS
+% mirspectrum      - FFT spectrum and more
+% mirautocor       - Autocorrelation
+% mirfilterbank    - Decomposes into channels via a bank of filters
+% mirsum           - Sums the channels of a filterbank
+%
+%DYNAMIC
 % mirrms           - Root mean square energy
 % mirlowenergy     - Number of frames with lower than average energy
-% mirautocor       - Autocorrelation
+% mirenvelope      - Amplitude envelope (global shape of the waveform)
+% mironsets        - Note onset positions and characteristics
+% mirattacktime    - Duration of note attacks
+% mirattackslope   - Average slope of note attacks
+% mireventdensity  - Average frequency of events
 %
-%SPECTRUM ANALYSIS
-% mirspectrum      - FFT spectrum in frequency or mel-bank domains
+%RHYTHM
+% mirtempo         - Tempo (in beats per minute)
+% mirfluctuation   - Fluctuation strength (periodicities in each channel)
+% mirbeatspectrum  - Beat spectrum, characterizing the rhythmic content
+% mirpulseclarity  - Rhythmic clarity, i.e., beat strength
+%
+%TIMBRE
 % mirbrightness    - Spectral brightness (high-frequency rate)
 % mirrolloff       - Spectral rolloff (frequency above which is located a 
 %                       certain amount of energy)
-%
-%AUDITORY MODELLING
-% mirfilterbank    - Decomposes audio signals through a bank of filters
-% mirenvelope      - Signal envelope (global shape of the waveform)
-% mirsum           - Sums the envelopes of a filterbank
-% mirsummary       - Sums autocorrelations, spectrums, etc. of filterbanks
+% mirmfcc          - Mel-frequency cepstrum coefficients
+%                       (numerical description of the spectrum envelope)
+% mirinharmonicity - Inharmonicity (partials non-multiple of fundamental)
+% mirroughness     - Roughness (sensory dissonance)
+% mirregularity    - Spectrum irregularity (amplitude variability of 
+%                        successive peaks)
 %
 %PITCH
 % mirpitch         - Pitch frequencies
@@ -52,35 +65,14 @@
 % mirtonalcentroid - Tonal centroid (using circles of fifths and thirds)
 % mirhcdf          - Harmonic Change Detection Function
 %
-%RHYTHM
-% mirtempo         - Tempo (in beats per minute)
-% mirfluctuation   - Fluctuation strength (periodicities in each channel)
-% mirpulseclarity  - Rhythmic clarity, i.e., beat strength
-%
-%TIMBRE
-% mirmfcc          - Mel-frequency cepstrum coefficients
-%                       (numerical description of the spectrum envelope)
-% mirinharmonicity - Inharmonicity (partials non-multiple of fundamental)
-% mirroughness     - Roughness (sensory dissonance)
-% mirregularity    - Spectrum irregularity (amplitude variability of 
-%                        successive peaks)
-%
-%ONSETS
-% mironsets        - Note onset positions
-% mirattacks       - Starting position of note attacks
-% mirattacktime    - Duration of note attacks
-% mirattackslope   - Average slope of note attacks
-%
-%ANALYSIS OF TEMPORAL FEATURES
-% mirflux          - Flux, i.e., distance between successive frames
-%
-%ANALYSIS OF CURVES
+%ANALYSIS
+% mirmean          - Returns the mean of any feature
+% mirstd           - Returns the standard deviation of any feature
+% mirstat          - Returns statistics of any feature
 % mirpeaks         - Peaks
 % mirhisto         - Histogram
 % mirentropy       - Entropy
 % mirzerocross     - Sign-changes ratio
-%
-%ANALYSIS OF DISTRIBUTIONS (either spectra, envelopes, or histograms)
 % mircentroid      - Centroid (center of gravity)
 % mirspread        - Spread (non-concentration)
 % mirskewness      - Skewness (lack of symmetry)
@@ -88,24 +80,24 @@
 % mirflatness      - Flatness
 %
 %SIMILARITY
+% mirflux          - Flux, i.e., distance between successive frames
 % mirsimatrix      - Similarity matrix
 % mirnovelty       - Novelty score
 % mirdist          - Distance between audio files
 % mirquery         - Query by example
 %
-%CLUSTERING
+%OTHER
 % mirclassify      - Classifies audio sequences
-% mircluster       - Clusters segments in audio sequences
+% mircluster       - Clusters segments or frames
+% mirfeatures      - Compute a large range of features
+% mirmap           - Performs statistical mapping
 %
 %MATLAB FUNCTIONS generalized to the MIRtoolbox data
 % +                - Superposes audio files
 % *                - Combines autocor, cepstrum curves
 % corrcoef         - Computes correlation between curves
 %
-%DIVERSE
+%PREFERENCES
 % mirchunklim      - Get or set the chunk size threshold
 % mirwaitbar       - Toggles on/off the display of progress bars
 % mirverbose       - Toggles on/off the display of ongoing operations
-
-
-% mirpulseclarity  - Pulse clarity (strength of beats returned by mirtempo)

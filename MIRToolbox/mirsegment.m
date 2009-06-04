@@ -68,11 +68,6 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         mfc.keydefault = 1:13;
     option.mfc = mfc;
 
-        strat.choice = {'Novelty','HCDF'};
-        strat.default = 'Novelty';
-        strat.position = 2;
-    option.strat = strat;
-
         K.key = 'KernelSize';
         K.type = 'Integer';
         K.default = 128;
@@ -124,6 +119,11 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         frame.default = [0 0];
         frame.keydefault = [3 .1];
     option.frame = frame;
+    
+        strat.choice = {'Novelty','HCDF'}; % should remain as last field
+        strat.default = 'Novelty';
+        strat.position = 2;
+    option.strat = strat;
    
 specif.option = option;
 

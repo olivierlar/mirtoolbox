@@ -70,10 +70,12 @@ if iscell(p)
 end
 m = get(s,'Magnitude');
 f = get(s,'Frequency');
+fp1 = get(s,'FramePos');
 if isnumeric(p)
     pf = {{{p}}};
 else
     pf = get(p,'Data');
+    fp2 = get(p,'FramePos');
 end
 v = cell(1,length(m));
 for h = 1:length(m)
@@ -84,7 +86,11 @@ for h = 1:length(m)
         pfi = pf{h}{i};
         v{h}{i} = zeros(1,size(mi,2),size(mi,3));
         if not(size(mi,2) == size(pfi,2))
-            error('ERROR IN MIRINHARMONICITY: The ''f0'' argument should have the same frame decomposition than the main input.');
+            beg = find(fp2{h}{i}(1,:) == fp1{h}{i}(1,1));
+            if isempty(beg) || (beg + size(mi,2)-1 > size(pfi,2))
+                error('ERROR IN MIRINHARMONICITY: The ''f0'' argument should have the same frame decomposition than the main input.');
+            end
+            pfi = pfi(:,beg:beg+size(mi,2)-1);
         end
         for j = 1:size(mi,3)
             for k = 1:size(mi,2)

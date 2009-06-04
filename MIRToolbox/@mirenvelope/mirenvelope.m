@@ -342,6 +342,9 @@ elseif strcmpi(option.method,'Spectro')
             end
             p{h}{i} = mean(fp{h}{i})';
         end
+        if size(fp{h}{i},2)<2
+            error('ERROR IN MIRENVELOPE: The frame decomposition did not succeed. Either the input is of too short duration, or the chunk size is too low.');
+        end
         sr{h} = 1/(fp{h}{i}(1,2)-fp{h}{i}(1,1));
         ch{h} = (1:size(d{h}{i},3))';
     end

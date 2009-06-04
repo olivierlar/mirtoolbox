@@ -17,7 +17,7 @@ mirpeaks(mirkeystrength(f),'Total',1)
 [a,b,c] = mirkey(audio)
 
 %%
-pause
+%pause
 clear a b c f
 close all
 
@@ -36,7 +36,7 @@ sf.rhythm.tempo
 sf.rhythm.attack.time
 sf.rhythm.attack.slope
 
-pause
+%pause
 close all
 
 f.timbre.zerocross{:}
@@ -60,7 +60,7 @@ sf.timbre.rolloff85
 sf.timbre.spectentropy
 sf.timbre.flatness
 
-pause
+%pause
 close all
 
 f.timbre.roughness{:}
@@ -78,7 +78,7 @@ sf.timbre.dmfcc
 sf.timbre.ddmfcc
 sf.timbre.lowenergy
 
-pause
+%pause
 close all
 
 f.timbre.spectralflux{:}
@@ -101,7 +101,7 @@ mirexport('resultdemo.arff',f)
 
 %% Version 1.1
 
-pause
+%pause
 clear f
 close all
 
@@ -119,7 +119,7 @@ mirauditory(audio)
 mirroughness('ragtime')
 
 %%
-pause
+%pause
 clear s ss p le f
 close all
 
@@ -141,7 +141,7 @@ f.rhythm.attack.slope
 %sf.rhythm.attack.time
 %sf.rhythm.attack.slope
 
-pause
+%pause
 close all
 
 f.timbre.zerocross
@@ -163,7 +163,7 @@ f.timbre.spectentropy
 %sf.timbre.rolloff85
 %sf.timbre.spectentropy
 
-pause
+%pause
 close all
 
 f.timbre.flatness
@@ -183,7 +183,7 @@ f.timbre.lowenergy
 %sf.timbre.ddmfcc
 %sf.timbre.lowenergy
 
-pause
+%pause
 close all
 
 f.timbre.spectralflux
@@ -201,34 +201,10 @@ f.tonal.hcdf
 %sf.tonal.mode
 %sf.tonal.hcdf
 
-pause
+%pause
 close all
-
-f.tmp.fluctuation
-f.tmp.onsets
-f.tmp.attacks
-f.tmp.s
-f.tmp.pitch
-f.tmp.mfcc
-f.tmp.dmfcc
-f.tmp.chromagram
-f.tmp.keystrengths
-%sf.tmp.fluctuation
-%sf.tmp.onsets
-%sf.tmp.attacks
-%sf.tmp.s
-%sf.tmp.pitch
-%sf.tmp.mfcc
-%sf.tmp.dmfcc
-%sf.tmp.chromagram
-%sf.tmp.keystrengths
 
 %%
-
-pause
-clear s f
-close all
-
 [s,n] = mirsegment(audio,'KernelSize',64)
 f = mirfeatures(s)
 %sf = mirstat(f);
@@ -246,7 +222,7 @@ f.rhythm.attack.slope
 %sf.rhythm.attack.time
 %sf.rhythm.attack.slope
 
-pause
+%pause
 close all
 
 f.timbre.zerocross
@@ -268,7 +244,7 @@ f.timbre.spectentropy
 %sf.timbre.rolloff85
 %sf.timbre.spectentropy
 
-pause
+%pause
 close all
 
 f.timbre.flatness
@@ -288,7 +264,7 @@ f.timbre.lowenergy
 %sf.timbre.ddmfcc
 %sf.timbre.lowenergy
 
-pause
+%pause
 close all
 
 f.timbre.spectralflux
@@ -306,30 +282,11 @@ f.tonal.hcdf
 %sf.tonal.mode
 %sf.tonal.hcdf
 
-pause
+%pause
 close all
 
-f.tmp.fluctuation
-f.tmp.onsets
-f.tmp.attacks
-f.tmp.s
-f.tmp.pitch
-f.tmp.mfcc
-f.tmp.dmfcc
-f.tmp.chromagram
-f.tmp.keystrengths
-%sf.tmp.fluctuation
-%sf.tmp.onsets
-%sf.tmp.attacks
-%sf.tmp.s
-%sf.tmp.pitch
-%sf.tmp.mfcc
-%sf.tmp.dmfcc
-%sf.tmp.chromagram
-%sf.tmp.keystrengths
-
 %%
-%pause
+%%pause
 %clear f n
 %close all
 %
