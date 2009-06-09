@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.2 3-June-2009
+% Version 1.2 4-June-2009
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -14,15 +14,14 @@
 % mirlength        - Temporal length
 %
 %DATA OUTPUT
-% mirgetdata       - Return any data as a structure that can be used for
-%                   further computation in Matlab
-% mirsave          - Save audio signals into audio files
+% mirgetdata       - Return result as a Matlab standard structure
+% mirsave          - Save audio and other temporal data into audio files
 % mirexport        - Export the analytical results to a text file
 % mirplay          - Plays audio and other temporal data
 %
 %ANALYTICAL OPERATORS
-% mirspectrum      - FFT spectrum and more
-% mirautocor       - Autocorrelation
+% mirspectrum      - FFT spectrum with many post-processing operations
+% mirautocor       - Autocorrelation function
 % mirfilterbank    - Decomposes into channels via a bank of filters
 % mirsum           - Sums the channels of a filterbank
 %

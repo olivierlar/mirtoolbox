@@ -1,9 +1,27 @@
 Congratulations! You have downloaded MIRtoolbox 1.2
+---------------------------------------------------
 
 The list of new features and bug fixes offered by this new version is shown in the ReleaseNotes text file located in the toolbox folder, and also available from our website. New versions of the toolbox will also be released at the same address:
 http://www.jyu.fi/hum/laitokset/musiikki/en/research/coe/materials/mirtoolbox
 
 Please inform me if you find any bug when using the toolbox.
+
+**
+
+Conditions of Use
+-----------------The Toolbox is free software; you can redistribute it and/or modify it under the terms of version 2 of GNU General Public License as published by the Free Software Foundation. 
+When MIRtoolbox is used for academic research, we would highly appreciate if scientific publications of works partly based on MIRtoolbox cite one of the following publications:
+Olivier Lartillot, Petri Toiviainen, “A Matlab Toolbox for Musical Feature Extraction From Audio”, International Conference on Digital Audio Effects, Bordeaux, 2007.
+Olivier Lartillot, Petri Toiviainen, Tuomas Eerola, “A Matlab Toolbox for Music Information Retrieval”, in C. Preisach, H. Burkhardt, L. Schmidt-Thieme, R. Decker (Eds.), Data Analysis, Machine Learning and Applications, Studies in Classification, Data Analysis, and Knowledge Organization, Springer-Verlag, 2008.
+For commercial use of MIRtoolbox, please contact the authors.
+
+**
+
+Please register to the MIRtoolbox announcement list. 
+--------------------------------------------
+http://www.freelists.org/list/mirtoolboxnews
+--------------------------------------------
+This will allow us to estimate the number of users, and this will allow you in return to get informed on the new major releases (including critical bug fixes).
 
 **
 
@@ -30,6 +48,8 @@ MIRtoolbox license is based on GPL 2.0. As such, it can integrate codes from oth
 - codes from the Music Analysis Toolbox by Elias Pampalk (2004), related to the computation of Terhardt outer ear modeling, Bark band decomposition and masking effects.
 
 - openbdf and readbdf script by T.S. Lorig to read BDF files, based on openedf and readedf by Alois Schloegl. 
+
+Other code freely available integrated in the distribution:mp3read for Matlab by Dan Ellis, associated with the mpg123 decoder and the mp3info scanner.
 
 **
 
@@ -61,6 +81,7 @@ demo5export
 demo6curves
 demo7tonality
 demo8classification
+demo9retrieval
 
 **
 
