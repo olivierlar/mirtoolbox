@@ -10,12 +10,18 @@ function d = mirdist(x,y,dist)
 %       distributions are compared using Euclidean distance.
 %       (used with mirnovelty in Jacobson, 2006)
 
+if not(isa(x,'mirdata'))
+    x = miraudio(x);
+end
+if not(isa(y,'mirdata'))
+    y = miraudio(y);
+end
 
 clx = get(x,'Clusters');
 if isempty(clx{1})
     px = get(x,'PeakPos');
     if not(iscell(px)) || isempty(px{1}) || ...
-            not(iscell(px{1})) || not(iscell(px{1}{1}))
+            not(iscell(px{1})) || isempty(px{1}{1}) || not(iscell(px{1}{1}))
         if nargin < 3
             dist = 'Cosine';
         end

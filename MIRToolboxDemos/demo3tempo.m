@@ -8,7 +8,7 @@ d = miraudio('ragtime')
 mirenvelope(d)
 e = mirenvelope(d,'Halfwavediff')
 
-% Decompose the audio file 'drumloop' with a filter bank.
+% Decompose the audio file with a filter bank.
 f = mirfilterbank(d)
 
 % Calculate also a half-wave rectified differentiated envelope.
