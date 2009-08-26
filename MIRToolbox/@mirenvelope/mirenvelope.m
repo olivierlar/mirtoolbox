@@ -401,9 +401,9 @@ else
         d{k} = cell(1,length(sig{k}));
         for i = 1:length(sig{k})
             sigi = sig{k}{i};
-            %if option.zp == 2
-            %    sigi = flipdim(sigi,1);
-            %end
+            if option.zp == 2
+                sigi = flipdim(sigi,1);
+            end
             if option.hilb
                 try
                     for h = 1:size(sigi,2)

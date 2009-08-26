@@ -123,6 +123,8 @@ if curve
                     colr = h;
                 %elseif iscell(cl{i})
                 %    colr = cl{i}(h);
+                elseif length(cl) == 1
+                    colr = cl;
                 else
                     colr = cl(h); %cl{i}(h);
                 end

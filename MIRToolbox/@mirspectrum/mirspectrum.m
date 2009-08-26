@@ -420,7 +420,7 @@ else
                 end
             end
 
-            f0=(0:size(z0,1))'*fsi/size(z0,1);
+            f0=(0:size(z0,1))'*fsi/size(z0,1); %%% TO BE CORRECTED %%%%%%
             len = ceil(size(z0,1)/2);
             if option.max
                 maxf = min(len,ceil(option.max/fsi*2*len));
@@ -645,7 +645,9 @@ if strcmp(s.xscale,'Freq')
                          (fi > center(chan) & fi < upper(chan)).* ...
                          (upper(chan)-fi)/(upper(chan)-center(chan)));
                 end
-                if find(not(sum(mfccFilterWeights,2)))
+                if find(diff(not(sum(mfccFilterWeights,2)))==-1)
+                    % If one channel has no weight whereas the higher one
+                    % has a positive weight.
                     warning('WARNING in MIRSPECTRUM: The frequency resolution of the spectrum is too low for the Mel transformation. Some Mel components are undefined.')
                     display('Recommended frequency resolution: at least 66 Hz.')
                 end

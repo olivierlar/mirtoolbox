@@ -325,9 +325,9 @@ for h = 1:length(d)
         end
         d{h}{k} = dk;
         t{h}{k} = tk;
-        if isfield(para,'reverse') && para.reverse
-            d{h}{k} = flipdim(d{h}{k},1);
-        end
+        %if isfield(para,'reverse') && para.reverse
+        %    d{h}{k} = flipdim(d{h}{k},1);
+        %end
     end
 end
 a = set(a,'Data',d,'Time',t,'Sampling',f,'Clusters',cl);

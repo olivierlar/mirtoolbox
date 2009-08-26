@@ -30,8 +30,6 @@ else
         argin = argin{1};
     end
     if (strcmp(func2str(method),'mirspectrum') && d.option.alongbands) ...
-        || (strcmp(func2str(method),'mirenvelope') ...
-            && strcmpi(d.option.method,'Spectro')) ...
         || (isfield(specif,'nochunk') && specif.nochunk)
         d.frame = [];
         if isfield(d.specif,'eachchunk')
@@ -40,6 +38,11 @@ else
         end
     else
         d.frame = argin.frame;
+        if strcmp(func2str(method),'mirenvelope') ...
+            && strcmpi(d.option.method,'Spectro') ...
+            && not(isempty(d.frame))
+                d.frame.chunknow = 0;
+        end
     end
     d.segment = argin.segment;
     d.chunkdecomposed = argin.chunkdecomposed;

@@ -130,7 +130,7 @@ function varargout = mirautocor(orig,varargin)
     option.fr = fr;
         
         nw.key = 'NormalWindow';
-        nw.when = 'After';
+        nw.when = 'Both';
         if isamir(orig,'mirspectrum')
             nw.default = 0;
         elseif isamir(orig,'mirenvelope')
@@ -234,11 +234,11 @@ else
     f = get(orig,'Sampling');
     
     if isnan(option.win) 
-        if isequal(postoption.nw,0) || ...
-                strcmpi(postoption.nw,'Off') || strcmpi(postoption.nw,'No')
+        if isequal(option.nw,0) || ...
+                strcmpi(option.nw,'Off') || strcmpi(option.nw,'No')
             option.win = 0;
-        elseif isequal(postoption.nw,1) || strcmpi(postoption.nw,'On') || ...
-                                     strcmpi(postoption.nw,'Yes')
+        elseif isequal(option.nw,1) || strcmpi(option.nw,'On') || ...
+                                     strcmpi(option.nw,'Yes')
             option.win = 'hanning';
         else
             option.win = postoption.nw;

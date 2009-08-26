@@ -8,6 +8,7 @@ function [y d2] = evaleach(d)
 CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
+frnow = isfield(d.frame,'chunknow') && not(d.frame.chunknow);
 sg = d.segment;
 sr = d.sampling;
 w = d.size;
@@ -54,7 +55,7 @@ if ischar(a)
         y = miraudio(y,'Mono',1);
     end
     y = set(y,'AcrossChunks',get(d,'AcrossChunks'));
-    if not(d.ascending)
+    if 0 %not(d.ascending)
         y = miraudio(y,'Reverse');
     end
     d2 = d;
@@ -64,20 +65,37 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
     
     [y d2] = evalnow(d);  
     
-elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
+elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % No frame or segment decomposition in the design to evaluate
-
-    if lsz > CHUNKLIM && isfield(specif,'eachchunk') ...
-            && not(d.nochunk)
-        % The required memory exceed the max memory threshold.
-        % The chunk decomposition is therefore performed.
-
+    % (Maybe implicit frame decomposition, though (frnow).)
+    
+    if not(isfield(specif,'eachchunk')) || d.nochunk
+        chunks = [];
+    elseif isempty(fr)
         if isempty(sg)
-            nch = ceil(lsz/CHUNKLIM); 
-            %%% TAKE INTO CONSIDERATION NUMBER OF CHANNELS; ETC...
+            meth = 'Chunk ';
+            if lsz > CHUNKLIM
+            % The required memory exceed the max memory threshold.
+                nch = ceil(lsz/CHUNKLIM); 
+            %%% TAKE INTO CONSIDERATION NUMBER OF CHANNELS; ETC... 
+                chunks = max(1,lsz-CHUNKLIM*(nch:-1:1));
+                chunks(2,:) = lsz-CHUNKLIM*(nch-1:-1:0)-1;
+            else
+                chunks = [];
+            end
         else
-            nch = length(sg) - 1;
+            meth = 'Segment ';
+            chunks = sg(1:end-1)*sr;
+            chunks(2,:) = min( sg(2:end)*sr-1,lsz-1);
         end
+    else
+        meth = 'Chunk ';
+        chunks = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
+    end
+    
+    if not(isempty(chunks))
+        % The chunk decomposition is performed.
+        nch = size(chunks,2);
         d = callbeforechunk(d,d,w,lsz); % Some optional initialisation
         tmp = [];
         if mirwaitbar
@@ -90,10 +108,8 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             d.tmpfile.fid = fopen('tmpfile.mirtoolbox','w');
         end
         tmpfile = [];
-        if d.ascending
-            order = 1:nch;
-        else
-            order = nch:-1:1;
+        if not(d.ascending)
+            chunks = fliplr(chunks);
         end
 
         afterpostoption = d.postoption;
@@ -115,30 +131,20 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
 
         d2 = d;
         d2.method = method;
-        if isempty(sg)
-            start = 0;
-            total = lsz;
-        else
-            start = sg(1)*sr;
-            total = min(sg(end)*sr,lsz-1) - start;
-        end
-        for i = order
-            if isempty(sg)
-                disp(['Chunk ',num2str(i),'/',num2str(nch),'...'])
-                chbeg = max(0,lsz-CHUNKLIM*(nch-i+1)-1);
-                chend = lsz-CHUNKLIM*(nch-i)-1;
-                chrend = chend;
-            else
-                disp(['Segment ',num2str(i),'/',num2str(nch),'...'])
-                chbeg = sg(i)*sr;
-                chend = sg(i+1)*sr;
-                chend = min(chend,lsz-1);
-                chrend = chend;
-            end
-            d2 = set(d2,'Chunk',[chbeg+w(1) chrend+w(1) (i == order(end))]);
+        for i = 1:size(chunks,2)
+            disp([meth,num2str(i),'/',num2str(nch),'...'])
+            d2 = set(d2,'Chunk',[chunks(1,i)+w(1) chunks(2,i)+w(1) (i == size(chunks,2))]);
             if not(ischar(specif.eachchunk) && ...
-                    strcmpi(specif.eachchunk,'Normal'))
-                d2.postoption = {max(0,CHUNKLIM*(nch-i+1)-lsz+1)};
+                   strcmpi(specif.eachchunk,'Normal'))
+               if frnow
+                   d2.postoption = 0;
+               else
+                    diffchunks = diff(chunks); % Usual chunk size
+                    d2.postoption = max(diffchunks) -  diffchunks(i);
+                        % Reduction of the current chunk size to be taken into
+                        % consideration in mirspectrum, for instance, using
+                        % zeropadding
+               end
             end
             d2 = set(d2,'Tmp',tmp);
             d2.chunkdecomposed = 1;
@@ -154,7 +160,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                     strcmpi(specif.combinechunk,'Average')
                 % Measure total size for later averaging
                 dss = get(ss,'Data');
-                dss = mircompute(@multweight,dss,chrend-chbeg+1);
+                dss = mircompute(@multweight,dss,chunks(2,i)-chunks(1,i)+1);
                 ss = set(ss,'Data',dss);
             end
 
@@ -169,7 +175,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                     if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
                         % If temporary file is used, chunk results are written
                         % in the file
-                        if i > 1
+                        if i < size(chunks,2)
                             ds = get(ss{1},'Data');
                             ps = get(ss{1},'Pos');
                             if 0 %(isfield(d.option,'zp') && d.option.zp == 2) ...
@@ -196,7 +202,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                     else
                         % Else, chunk results are directly combined in active
                         % memory
-                        if i == order(1)
+                        if i == 1
                             y = ss;
                         else
                             if isfield(specif,'combinechunk')
@@ -221,7 +227,7 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                         end
                     end
                 else
-                    if i == order(1)
+                    if i == 1
                         y = ss;
                     else
                         for z = 1:length(y)
@@ -232,12 +238,12 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             end
             clear ss
             if h
-                if order(1)>order(end)
+                if not(d.ascending)
                     close(h)
-                    h = waitbar((chbeg-start)/total,...
+                    h = waitbar((chunks(1,i)-chunks(1,end))/chunks(2,1),...
                         ['Computing ' func2str(d.method) ' (backward)']);
                 else
-                    waitbar((chrend-start)/total,h)
+                    waitbar((chunks(2,i)-chunks(1))/chunks(end),h)
                 end
             end
         end
@@ -270,104 +276,49 @@ elseif isempty(fr) || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         % No chunk decomposition
         [y d2] = evalnow(d);
     end    
+elseif d.nochunk
+    [y d2] = evalnow(d);
 else
-
     % No frame or segment decomposition in the design to be evaluated.
-
-    if strcmpi(d.frame.length.unit,'s')
-        fl = ceil(d.frame.length.val*sr);
-    elseif strcmpi(d.frame.length.unit,'sp')
-        fl = d.frame.length.val;
-    end
-    if strcmpi(d.frame.hop.unit,'/1')
-        h = ceil(d.frame.hop.val*fl);
-    elseif strcmpi(d.frame.hop.unit,'%')
-        h = ceil(d.frame.hop.val*fl*.01);
-    elseif strcmpi(d.frame.hop.unit,'s')
-        h = ceil(d.frame.hop.val*sr);
-    elseif strcmpi(d.frame.hop.unit,'sp') || strcmpi(d.frame.hop.unit,'Hz')
-        h = d.frame.hop.val;
-    end
-    if strcmpi(d.frame.hop.unit,'Hz')
-        n = floor((lsz-fl)/sr*h)+1;   % Number of frames
-    else
-        n = floor((lsz-fl)/h)+1;   % Number of frames
-    end
-    if n < 1
-        %warning('WARNING IN MIRFRAME: Frame length longer than total sequence size. No frame decomposition.');
-        fp = w;
-    else
-        fp = zeros(2,n);
-        for j = 1:n % For each frame, ...
-            if strcmpi(d.frame.hop.unit,'Hz')
-                st = floor((j-1)/h*sr)+w(1);
-            else
-                st = floor((j-1)*h)+w(1);
-            end
-            if st+fl-1 <= w(2)
-                fp(:,j) = [st; st+fl-1];
-            else
-                fp(:,j:n) = [];
-                break
-            end
-        end
-    end
-    fpsz = (fp(2,1)-fp(1,1)) * n;      % Total number of samples
-    if fpsz > CHUNKLIM && not(d.nochunk)
-        % The required memory exceed the max memory threshold.
-        % The chunk decomposition is therefore performed.
-
+    [chunks fp] = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
+    if size(chunks,2)>1
+        % The chunk decomposition is performed.
         if mirwaitbar
             h = waitbar(0,['Computing ' func2str(d.method)]);
         else
             h = 0;
         end
-        nfr = size(fp,2);                     % Total number of frames
-        frch = max(ceil(CHUNKLIM/fp(2,1)),2); % Number of frames per chunk
-        frov = d.overlap;
-        frch = max(frch,frov*2);
         tmp = [];
-        nch = ceil((nfr-frch)/(frch-frov))+1; % Number of chunks
-        if nch
-            d = set(d,'Frames',fp);
-            d2 = d;
-            for fri = 1:nch     % For each chunk...
-                disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
-                chbeg = (frch-frov)*(fri-1)+1;    % First frame in the chunk
-                chend = (frch-frov)*(fri-1)+frch; % Last frame in the chunk
-                chend = min(chend,nfr);
-                if frov > 1
-                    chbeg = chend-frch+1;
-                end
-                d2 = set(d2,'Chunk',[fp(1,chbeg) fp(2,chend)]);
-                d2 = set(d2,'Tmp',tmp);
-                %d2.postoption = [];
-                [res d2] = evalnow(d2);
-                if not(isempty(res))
-                    if iscell(res)
-                        tmp = get(res{1},'Tmp');
-                    else
-                        tmp = get(res,'Tmp');
-                        res = {res};
-                    end
-                end
-                if fri == 1
-                    y = res;
-                elseif isfield(specif,'combineframes')
-                    y = specif.combineframes(y{1},res{1});
+        d = set(d,'Frames',fp);
+        d2 = d;
+        nch = size(chunks,2);
+        for fri = 1:nch     % For each chunk...
+            disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
+            d2 = set(d2,'Chunk',chunks(:,fri)');
+            d2 = set(d2,'Tmp',tmp);
+            %d2.postoption = [];
+            [res d2] = evalnow(d2);
+            if not(isempty(res))
+                if iscell(res)
+                    tmp = get(res{1},'Tmp');
                 else
-                    y = combineframes(y,res);
+                    tmp = get(res,'Tmp');
+                    res = {res};
                 end
-                if h
-                    waitbar(chend/nfr,h);
-                end
+            end
+            if fri == 1
+                y = res;
+            elseif isfield(specif,'combineframes')
+                y = specif.combineframes(y{1},res{1});
+            else
+                y = combineframes(y,res);
             end
             if h
-                close(h)
+                waitbar(chend/nfr,h);
             end
-            drawnow
-        else
-            [y d2] = evalnow(d);
+        end
+        if h
+            close(h)
         end
     else
         % No chunk decomposition
@@ -388,6 +339,57 @@ if iscell(y)
             end
         end
     end
+end
+
+
+function [chunks fp] = compute_frames(fr,sr,w,lsz,CHUNKLIM,frov)
+if strcmpi(fr.length.unit,'s')
+    fl = ceil(fr.length.val*sr);
+elseif strcmpi(fr.length.unit,'sp')
+    fl = fr.length.val;
+end
+if strcmpi(fr.hop.unit,'/1')
+    h = ceil(fr.hop.val*fl);
+elseif strcmpi(fr.hop.unit,'%')
+    h = ceil(fr.hop.val*fl*.01);
+elseif strcmpi(fr.hop.unit,'s')
+    h = ceil(fr.hop.val*sr);
+elseif strcmpi(fr.hop.unit,'sp') || strcmpi(fr.hop.unit,'Hz')
+    h = fr.hop.val;
+end
+if strcmpi(fr.hop.unit,'Hz')
+    n = floor((lsz-fl)/sr*h)+1;   % Number of frames
+else
+    n = floor((lsz-fl)/h)+1;   % Number of frames
+end
+if n < 1
+    %warning('WARNING IN MIRFRAME: Frame length longer than total sequence size. No frame decomposition.');
+    fp = w;
+else
+    if strcmpi(fr.hop.unit,'Hz')
+        st = floor(((1:n)-1)/h*sr)+w(1);
+    else
+        st = floor(((1:n)-1)*h)+w(1);
+    end
+    fp = [st; st+fl-1];
+    fp(:,fp(2,:)>w(2)) = [];
+end
+fpsz = (fp(2,1)-fp(1,1)) * n;      % Total number of samples
+if fpsz > CHUNKLIM
+    % The required memory exceed the max memory threshold.
+    nfr = size(fp,2);                     % Total number of frames
+    frch = max(ceil(CHUNKLIM/fp(2,1)),2); % Number of frames per chunk
+    frch = max(frch,frov*2);
+    nch = ceil((nfr-frch)/(frch-frov))+1; % Number of chunks
+    chbeg = (frch-frov)*(0:nch-1)+1;    % First frame in the chunk
+    chend = (frch-frov)*(0:nch-1)+frch; % Last frame in the chunk
+    chend = min(chend,nfr);
+    if frov > 1
+        chbeg = chend-frch+1;
+    end
+    chunks = [fp(1,chbeg) ; fp(2,chend)];
+else
+    chunks = [];
 end
 
 

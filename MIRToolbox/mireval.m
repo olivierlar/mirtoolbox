@@ -178,6 +178,7 @@ elseif isstruct(d)
     end
     for fi = 1:length(fields)
         field = fields{fi};
+        display(['*******',field,'******']);
         res = evalaudiofile(d.(field),file,sampling,size,struc,istmp,index,single);
         if not(isempty(single)) && not(isequal(single,0)) && ...
                 iscell(res) && isa(d.(field),'mirdesign')

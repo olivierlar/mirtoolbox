@@ -1,5 +1,5 @@
-Congratulations! You have downloaded MIRtoolbox 1.2
----------------------------------------------------
+Congratulations! You have downloaded MIRtoolbox 1.2.1
+-----------------------------------------------------
 
 The list of new features and bug fixes offered by this new version is shown in the ReleaseNotes text file located in the toolbox folder, and also available from our website. New versions of the toolbox will also be released at the same address:
 http://www.jyu.fi/hum/laitokset/musiikki/en/research/coe/materials/mirtoolbox
@@ -31,7 +31,7 @@ MIRtoolbox requires Matlab version 7 and Mathworks' Signal Processing toolbox.
 
 This distribution actually includes four different toolboxes:
 
-- the MIRtoolbox itself, version 1.2,
+- the MIRtoolbox itself, version 1.2.1,
 
 - the Auditory toolbox, version 2, by Malcolm Slaney
 (also available directly at http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/),
