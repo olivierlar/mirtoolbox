@@ -314,7 +314,7 @@ else
                 y = combineframes(y,res);
             end
             if h
-                waitbar(chend/nfr,h);
+                waitbar(chunks(2,fri)/chunks(end),h);
             end
         end
         if h
