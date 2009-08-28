@@ -197,13 +197,13 @@ end
 
 
 function a = post(a,para)
-if a.fresh
+if a.fresh && isfield(para,'mono')
     a.fresh = 0;
     if isnan(para.mono)
         para.mono = 1;
     end
 end
-if para.mono == 1
+if isfield(para,'mono') && para.mono == 1
     a = mirsum(a,'Mean');
 end
 d = get(a,'Data');

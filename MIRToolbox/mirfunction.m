@@ -28,6 +28,8 @@ if ischar(x) % The input is a file name.
     end
     orig = mirdesign(@miraudio,'Design',{varg},postoption,struct,'miraudio'); 
     % Implicitly, the audio file needs to be loaded first.
+elseif isnumeric(x)
+    mirerror(func2str(method),'The input should be a file name or a MIRtoolbox object.');
 else
     design_init = 0;
     orig = x;

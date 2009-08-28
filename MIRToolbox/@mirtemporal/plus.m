@@ -24,4 +24,4 @@ for i = 1:length(d)
     end
     n{i} = [l{i} '+' m{i}];
 end
-c = set(a,'Pos',q,'Data',f,'Name',n);
+c = set(a,'Pos',r,'Data',f,'Name',n);

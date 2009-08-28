@@ -278,13 +278,13 @@ else
                 if isempty(misp)
                     warning('WARNING IN MIRAUTOCOR: The specified range of delays exceeds the temporal length of the signal.');
                     disp('Minimum delay set to zero.')
-                    misp = 0;
+                    misp = 1;  % misp is the lowest index of the lag range
                     mi = 0;
                 else
                     misp = misp(1);
                 end
             else
-                misp = 0;
+                misp = 1;
             end
             if ma
                 masp = find(pl(:,1,1)>=ma);
@@ -336,8 +336,8 @@ else
             for i = 1:size(sl,2)
                 for j = 1:size(sl,3)
                     if option.gener == 2
-                        cc = xcorr(sl(:,i,j),masp,scaleopt);
-                        c(:,i,j) = cc(masp+2:end);
+                        cc = xcorr(sl(:,i,j),masp-1,scaleopt);
+                        c(:,i,j) = cc(masp:end);
                     else
                         ss = abs(fft(sl(:,i,j)));
                         ss = ss.^option.gener;
@@ -357,7 +357,7 @@ else
                     % the sum over channels becomes identically 1.0. 
                 end
             end
-            coeffk{l} = c(misp+1:end,:,:);
+            coeffk{l} = c(misp:end,:,:);
             pl = pl(find(pl(:,1,1) >=mi),:,:);
             lagsk{l} = pl(1:min(size(coeffk{l},1),size(pl,1)),:,:);
             windk{l} = kw;

@@ -124,7 +124,7 @@ if not(isnan(option.freq))
     option.filtertype = 'Manual';
 end
         
-disp('Decomposing into a filterbank...');
+%disp('Decomposing into a filterbank...');
 d = get(x,'Data');
 if size(d{1}{1},3) > 1
     if option.Ch

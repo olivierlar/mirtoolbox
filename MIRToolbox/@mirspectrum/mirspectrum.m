@@ -554,7 +554,7 @@ if option.norm
         end
     end
 end
-if option.terhardt
+if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where spectrum already along bands
     % Code taken from Pampalk's MA Toolbox
     for h = 1:length(m)
         for l = 1:length(m{k})
@@ -740,6 +740,7 @@ if option.mask
         warning('WARNING IN MIRSPECTRUM: ''Mask'' option available only for Mel-spectrum and Bark-spectrum.');
         disp('''Mask'' option ignored');
     else
+        nch = get(s,'Channels');
         for h = 1:length(m)
             % Code taken from Pampalk's MA Toolbox.
             %% spreading function: schroeder et al., 1979, JASA, optimizing

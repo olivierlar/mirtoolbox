@@ -31,7 +31,7 @@ figure
 fp2 = uncell(fp);
 c = size(y,2);
 lx = size(y,1);
-l = size(y1,3);
+l = size(y1,3);     % Number of channels
 il = (1-0.15)/l;
 
 if iscell(y)
@@ -52,7 +52,7 @@ else
         l = 1;
     end
 end
-if l > 20 && size(y,3) == 1
+if not(iscell(y)) && l > 20 && size(y,3) == 1
     manychannels = 1;
     if lx == 1
         y = reshape(y,[c l])';
@@ -206,10 +206,8 @@ if curve
                 num = ch(i);
             %end
             pos = get(gca,'Position');
-            hfig = axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],'Visible','off');
+            axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],'Visible','off');
             text(0,0,num2str(num),'FontSize',12,'Color','r')
-        else
-            hfig = gca;
         end
     end
 else
@@ -248,7 +246,8 @@ else
         displayseg = 1;
         for i = 1:l
             if l>1
-                subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
+                subplot(l,1,l-i+1,'align');
+%                subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
             end
             hold on
             %surfplot(segt,x{1},repmat(x{1}/x{1}(end)*.1,[1,length(segt)]));
@@ -279,7 +278,7 @@ else
                 else
                     segt = fp{j}';
                 end
-                surfplot(segt,xxx,yy(:,:,i));
+                surfplot(segt,xxx,yy(:,:));
                 set(gca,'YDir','normal')
                 if (exist('pp') == 1) && not(isempty(pp))
                     if not(isempty(pp{j}))
@@ -300,8 +299,25 @@ else
                     end
                 end
             end
+            if i == l
+                title(t)
+            end
+            if i == 1
+                if manychannels
+                    xlabel(xlab);
+                elseif displayseg
+                    xlabel('time axis (in s.)');
+                else
+                    xlabel('temporal location of beginning of frame (in s.)');
+                end
+            end
+            if l > 1
+                num = ch(i);
+                pos = get(gca,'Position');
+                axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],'Visible','off');
+                text(0,0,num2str(num),'FontSize',12,'Color','r')
+            end
         end
-        title(t)
         y = y{1};
     else
         mel = 0;
@@ -430,13 +446,6 @@ else
                 text(0,0,num2str(num),'FontSize',12,'Color','r')
             end
         end
-    end
-    if manychannels
-        xlabel(xlab);
-    elseif displayseg
-        xlabel('time axis (in s.)');
-    else
-        xlabel('temporal location of beginning of frame (in s.)');
     end
 end
 if l == 1

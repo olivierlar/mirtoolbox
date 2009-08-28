@@ -1,5 +1,8 @@
 function d = mirdist(x,y,dist)
 %   d = mirdist(x,y) evaluates the distance between x and y.
+%   x is the feature values corresponding to one audio file, and y is the
+%       values (for the same feature) corrdponding to one (or several)
+%       audio files.
 %   If x and y are not decomposed into frames,
 %       d = mirdist(x,y,f) specifies distance function.
 %           Default value: f = 'Cosine'
