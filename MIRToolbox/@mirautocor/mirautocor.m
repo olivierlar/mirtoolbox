@@ -383,8 +383,8 @@ if isequal(option.e,1)
     option.e = 2:10;
 end
 if max(option.e) > 1
-    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',0);
-    va = mirpeaks(a,'Valleys','Contrast',0);
+    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01);
+    va = mirpeaks(a,'Valleys','Contrast',.01);
     pv = get(pa,'PeakVal');
     vv = get(va,'PeakVal');
 end
@@ -538,8 +538,11 @@ for k = 1:length(coeff)
                         
                         % The  temporary modifications are
                         % removed from the final curve
-                        if inter>=deter && not(isempty(mv))
-                            c(:,g,h) = cgh2(inter-deter+1:end) +mv;
+                        if inter>=deter
+                            c(:,g,h) = cgh2(inter-deter+1:end);
+                            if not(isempty(mv))
+                                c(:,g,h) = c(:,g,h) + mv;
+                            end
                         else
                             c(:,g,h) = [zeros(deter-inter,1);cgh2];
                         end

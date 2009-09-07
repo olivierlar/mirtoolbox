@@ -156,13 +156,15 @@ end
 if option.m
     d = get(s,'Data');
     ch = get(s,'Channels');
-    for k = 1:length(d)
-        for i = 1:length(d{k})
-            d{k}{i} = d{k}{i}/length(ch{k});
+    if not(isempty(ch))
+        for k = 1:length(d)
+            for i = 1:length(d{k})
+                d{k}{i} = d{k}{i}/length(ch{k});
+            end
+            ch{k} = [1];
         end
-        ch{k} = [1];
+        s = set(s,'Data',d,'Channels',ch);
     end
-    s = set(s,'Data',d,'Channels',ch);
 end
 
 

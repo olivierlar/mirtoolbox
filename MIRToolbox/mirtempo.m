@@ -227,7 +227,7 @@ function varargout = mirtempo(x,varargin)
     
         prod.key = 'Prod';
         prod.type = 'Integers';
-        prod.default = 2:6;
+        prod.default = 0;
         prod.keydefault = 2:6;
     option.prod = prod;
 

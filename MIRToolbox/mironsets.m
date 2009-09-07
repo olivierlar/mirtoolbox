@@ -38,10 +38,10 @@ function varargout = mironsets(x,varargin)
 %                   'Median' (toggled on by default here)
 %           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
 %                of same default characteristics than those returned
-%                 by mirpitch ? with however a range of frequencies not
-%                 exceeding 1000 Hz ?
-%                 and subsequently computes the novelty curve of the resulting similatrix matrix, 
-%                   with a 'KernelSize' of 32 samples.
+%                 by mirpitch (with however a range of frequencies not
+%                 exceeding 1000 Hz) and subsequently computes the novelty 
+%                 curve of the resulting similatrix matrix, with a 'KernelSize' 
+%                 of 32 samples.
 %       mironsets(...,'Detect',d) toggles on or off the onset detection, 
 %           which is based on the onset detection function.
 %           (By default toggled on.)
@@ -278,6 +278,7 @@ function varargout = mironsets(x,varargin)
 %% 'Frame' option
         frame.key = 'Frame';
         frame.type = 'Integer';
+        frame.when = 'Both';
         frame.number = 2;
         frame.default = [0 0];
         frame.keydefault = [3 .1];
@@ -377,29 +378,24 @@ end
 if not(isempty(option)) && option.diffenv
     postoption.diff = 1;
 end
-if isfield(postoption,'ds') && isnan(postoption.ds)
-    if option.decim || strcmpi(option.envmeth,'Spectro')
-        postoption.ds = 0;
-    else
-        postoption.ds = 16;
+if isa(o,'mirenvelope')
+    if isfield(postoption,'sampling') && postoption.sampling
+        o = mirenvelope(o,'Sampling',postoption.sampling);
+    elseif isfield(postoption,'ds') 
+        if isnan(postoption.ds)
+            if option.decim || strcmpi(option.envmeth,'Spectro')
+                postoption.ds = 0;
+            else
+                postoption.ds = 16;
+            end
+        end
+        if postoption.ds
+            o = mirenvelope(o,'Down',postoption.ds);
+        end
     end
 end
 if isfield(postoption,'cthr')
-    if isnan(postoption.cthr) || not(postoption.cthr)
-        if ischar(postoption.detect) || postoption.detect
-            postoption.cthr = .01;
-        end
-    elseif postoption.cthr
-        if not(ischar(postoption.detect) || postoption.detect)
-            postoption.detect = 'Peaks';
-        end
-    end
     if isa(o,'mirenvelope')
-        if postoption.sampling
-            o = mirenvelope(o,'Sampling',postoption.sampling);
-        elseif isfield(postoption,'ds') && postoption.ds
-            o = mirenvelope(o,'Down',postoption.ds);
-        end
         if postoption.log
             o = mirenvelope(o,'Log');
         end
@@ -452,9 +448,18 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if not(isa(o,'mirscalar'))
-    o = mirframenow(o,option);
+    o = mirframenow(o,postoption);
 end
 if isfield(postoption,'detect') && ischar(postoption.detect)
+    if isnan(postoption.cthr) || not(postoption.cthr)
+        if ischar(postoption.detect) || postoption.detect
+            postoption.cthr = .01;
+        end
+    elseif postoption.cthr
+        if not(ischar(postoption.detect) || postoption.detect)
+            postoption.detect = 'Peaks';
+        end
+    end
     if strcmpi(postoption.detect,'Peaks')
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
             'Contrast',postoption.cthr,'Order','Abscissa');

@@ -221,7 +221,7 @@ elseif isa(x,'mirdata')
             fp = get(option.strat,'FramePos');
         elseif isa(option.strat,'mirdata')
             ds = get(option.strat,'AttackPos');
-            if isempty(ds)
+            if isempty(ds) || isempty(ds{1})
                 ds = get(option.strat,'PeakPos');
             end
             xx = get(option.strat,'Pos');
