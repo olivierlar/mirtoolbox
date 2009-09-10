@@ -23,7 +23,7 @@ pause
 % 2. Rhythm
 
 [bs0 sm0] = mirbeatspectrum(query)
-bs = mirbeatspectrum('Folder')
+bs = mirbeatspectrum('Folder');
 
 d2 = mirdist(bs0,bs)
 mirquery(bs0,bs)

@@ -72,8 +72,10 @@ if isempty(clx{1})
                 end
                 if length(dd) == 1
                     dt{h}{1} = abs(dd-ee);
-                else
+                elseif norm(dd) && norm(ee)
                     dt{h}{1} = pdist([dd(:)';ee(:)'],dist);
+                else
+                    dt{h}{1} = NaN;
                 end
             end
         end

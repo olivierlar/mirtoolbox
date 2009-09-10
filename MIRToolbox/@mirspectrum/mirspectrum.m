@@ -152,12 +152,6 @@ function varargout = mirspectrum(orig,varargin)
         reso.type = 'String';
         reso.choice = {'ToiviainenSnyder','Fluctuation','Meter',0,'no','off'};
         reso.default = 0;
-        if isamir(orig,'mirspectrum') ...
-                && strcmp(get(orig,'XScale'),'Mel')
-            reso.keydefault = 'Fluctuation';
-        else
-            reso.keydefault = 'ToiviainenSnyder';
-        end
         reso.when = 'After';
     option.reso = reso;
     
@@ -568,9 +562,17 @@ if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where
         end
     end
 end
-if ischar(option.reso) && (strcmpi(option.reso,'ToiviainenSnyder') || ...
-                           strcmpi(option.reso,'Meter') || ...
-                           strcmpi(option.reso,'Fluctuation'))
+if option.reso
+    if not(ischar(option.reso))
+        if strcmp(get(orig,'XScale'),'Mel')
+            option.reso = 'Fluctuation';
+        else
+            option.reso = 'ToiviainenSnyder';
+        end
+    end
+    %if strcmpi(option.reso,'ToiviainenSnyder') || ...
+    %   strcmpi(option.reso,'Meter') || ...
+    %   strcmpi(option.reso,'Fluctuation')
     for k = 1:length(m)
         for l = 1:length(m{k})
             if strcmpi(option.reso,'ToiviainenSnyder') || strcmpi(option.reso,'Meter')
