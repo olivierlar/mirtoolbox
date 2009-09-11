@@ -24,7 +24,7 @@ function varargout = mirtempo(x,varargin)
 %               Option associated to the mirspectrum function can be
 %               passed here as well (see help mirspectrum):
 %                   'ZeroPad' (set by default to 10000 samples)
-%                   'Prod'
+%                   'Prod' (toggled off by default)
 %           These two strategies can be combined: the autocorrelation
 %               function is translated into the frequency domain in order
 %               to be compared to the spectrum curve.
