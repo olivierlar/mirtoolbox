@@ -22,7 +22,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.title = orig.title;
     d.abs = orig.abs;
     d.ord = orig.ord;
-    d.tmp = orig.tmp;
+    d.interchunk = orig.interchunk;
     d.tmpidx = orig.tmpidx;
     d.acrosschunks = orig.acrosschunks;
     d.interpolable = orig.interpolable;
@@ -53,7 +53,7 @@ else
     d.title = 'Unspecified data';
     d.abs = 'Unspecified abscissa';
     d.ord = 'Unspecified ordinate';
-    d.tmp = [];
+    d.interchunk = [];
     d.tmpidx = 0;
     d.acrosschunks = [];
     d.interpolable = 1;  % If the abscissae axis is non-numeric (0), 

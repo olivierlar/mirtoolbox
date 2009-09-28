@@ -3,6 +3,20 @@ function a = subsasgn(a,index,val)
 switch index(1).type
 case '.'
     if strcmpi(index(1).subs,'tmp')
+        fields = a.fields;
+        data = a.data;
+        
+        if isa(val,'mirdata') || (iscell(val) && isa(val{1},'mirdata'))
+            % If the 'tmp' data turns to be an actual evaluated data,
+            % the mirstruct object is transformed into a simple struct.
+            a = struct;
+            for i = 1:length(fields)
+                a.(fields{i}) = data{i};
+            end
+            a.tmp.(index(2).subs) = val;
+            return
+        end
+        
         if isa(val,'mirdesign')
             val = set(val,'Stored',{index.subs});
         end
@@ -18,6 +32,11 @@ case '.'
         else
             a.tmp.(index(2).subs) = val;
         end
+        aa = struct;
+        aa.fields = fields;
+        aa.data = data;
+        aa.tmp = a.tmp;
+        a = class(aa,'mirstruct',val);
         return
     end
     [is,id] = ismember(index(1).subs,a.fields);

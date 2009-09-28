@@ -1,7 +1,14 @@
-function t = mirtype(x)
+function type = mirtype(x)
 
+if iscell(x)
+    for i = 1:length(x)
+        type{i} = mirtype(x{i});
+    end
+    return
+end
+    
 if isa(x,'mirdesign')
-    t = get(x,'Type');
+    type = get(x,'Type');
 else
-    t = class(x);
+    type = class(x);
 end

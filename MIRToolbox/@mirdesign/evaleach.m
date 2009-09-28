@@ -68,6 +68,25 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
 elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % No frame or segment decomposition in the design to evaluate
     % (Maybe implicit frame decomposition, though (frnow).)
+    if isa(d,'mirstruct')
+        tmp = get(d,'Tmp');
+        if not(isempty(tmp)) % When the 'tmp' variable is a temporal object
+            % (such as mironsets), the chunk decomposition should not be
+            % performed at that stage.
+            f = fields(tmp);
+            for i = 1:length(f)
+                if isamir(tmp.(f{i}),'mirtemporal')
+                    y = evalnow(d);
+                    %bf = get(d,'Fields');
+                    %b = get(d,'Data');
+                    %for j = 1:length(b)
+                    %    y.(bf{j}) = evalnow(b{j});
+                    %end
+                    return
+                end
+            end
+        end
+    end
     
     if not(isfield(specif,'eachchunk')) || d.nochunk
         chunks = [];
@@ -131,6 +150,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
 
         d2 = d;
         d2.method = method;
+        y = {};
         for i = 1:size(chunks,2)
             disp([meth,num2str(i),'/',num2str(nch),'...'])
             d2 = set(d2,'Chunk',[chunks(1,i)+w(1) chunks(2,i)+w(1) (i == size(chunks,2))]);
@@ -146,7 +166,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                         % zeropadding
                end
             end
-            d2 = set(d2,'Tmp',tmp);
+            d2 = set(d2,'InterChunk',tmp);
             d2.chunkdecomposed = 1;
 
             [ss d3] = evalnow(d2);
@@ -164,78 +184,8 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 ss = set(ss,'Data',dss);
             end
 
-            if isempty(ss)
-                y = {};
-            else
-                if not(iscell(ss))
-                    ss = {ss};
-                end
-                if isempty(sg)
-                    tmp = get(ss{1},'Tmp');
-                    if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
-                        % If temporary file is used, chunk results are written
-                        % in the file
-                        if i < size(chunks,2)
-                            ds = get(ss{1},'Data');
-                            ps = get(ss{1},'Pos');
-                            if 0 %(isfield(d.option,'zp') && d.option.zp == 2) ...
-                                 %    || not(get(d,'Ascending'))
-                                pos = chbeg*(size(ds{1}{1},3)+1);
-                                if fseek(d2.tmpfile.fid,pos*8,'bof');
-                                    nbl = fix(pos/2^16);
-                                    rbl = rem(pos,2^16);
-                                    for ibl = 1:nbl
-                                        fwrite(d2.tmpfile.fid,zeros(2^16,1),'double');
-                                    end
-                                    if rbl
-                                        fwrite(d2.tmpfile.fid,zeros(rbl,1),'double');
-                                    end
-                                end
-                            end
-                           % ftell(d2.tmpfile.fid)
-                            count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
-                            count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
-                           % ftell(d2.tmpfile.fid)
-                            clear ds ps
-                        end
-                        y = ss;
-                    else
-                        % Else, chunk results are directly combined in active
-                        % memory
-                        if i == 1
-                            y = ss;
-                        else
-                            if isfield(specif,'combinechunk')
-                                for z = 1:length(y)
-                                    if ischar(specif.combinechunk)
-                                        if strcmpi(specif.combinechunk,'Concat')
-                                            y{z} = concatchunk(y{z},ss{z},d2.ascending);
-                                        elseif strcmpi(specif.combinechunk,'Average')
-                                            y{z} = sumchunk(y{z},ss{z});
-                                        else
-                                            error(['SYNTAX ERROR: ',...
-                                                specif.combinechunk,...
-                                        ' is not a known keyword for combinechunk.']);
-                                        end
-                                    else
-                                        y{z} = specif.combinechunk(y{z},ss{z});
-                                    end
-                                end
-                            else
-                                y = {};
-                            end
-                        end
-                    end
-                else
-                    if i == 1
-                        y = ss;
-                    else
-                        for z = 1:length(y)
-                            y{z} = combinesegment(y{z},ss{z});
-                        end
-                    end
-                end
-            end
+            y = combinechunk_noframe(y,ss,sg,i,d2,specif);
+
             clear ss
             if h
                 if not(d.ascending)
@@ -247,26 +197,31 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 end
             end
         end
-        if isfield(specif,'afterchunk')
-            y{1} = specif.afterchunk(y{1},lsz,d.postoption);
-        elseif isfield(specif,'combinechunk') && ...
-                ischar(specif.combinechunk) && ...
-                strcmpi(specif.combinechunk,'Average')
-            y{1} = divideweightchunk(y{1},lsz);
-        else
-            if not(isempty(afterpostoption)) && isempty(d2.tmpfile)
-                y{1} = d.method(y{1},[],afterpostoption);
+        
+        if not(isstruct(y))
+            if isfield(specif,'afterchunk')
+                y{1} = specif.afterchunk(y{1},lsz,d.postoption);
+            elseif isfield(specif,'combinechunk') && ...
+                    ischar(specif.combinechunk) && ...
+                    strcmpi(specif.combinechunk,'Average')
+                y{1} = divideweightchunk(y{1},lsz);
+            else
+                if not(isempty(afterpostoption)) && isempty(d2.tmpfile)
+                    y{1} = d.method(y{1},[],afterpostoption);
+                end
+            end
+
+            if not(isempty(d2.tmpfile))
+                adr = ftell(d2.tmpfile.fid);
+                fclose(d2.tmpfile.fid);
+                ytmpfile.fid = fopen('tmpfile.mirtoolbox');
+                fseek(ytmpfile.fid,adr,'bof');
+                ytmpfile.data = y{1};
+                ytmpfile.layer = 0;
+                y{1} = set(y{1},'TmpFile',ytmpfile);
             end
         end
-        if not(isempty(d2.tmpfile))
-            adr = ftell(d2.tmpfile.fid);
-            fclose(d2.tmpfile.fid);
-            ytmpfile.fid = fopen('tmpfile.mirtoolbox');
-            fseek(ytmpfile.fid,adr,'bof');
-            ytmpfile.data = y{1};
-            ytmpfile.layer = 0;
-            y{1} = set(y{1},'TmpFile',ytmpfile);
-        end
+        
         if h
             close(h)
         end
@@ -288,31 +243,27 @@ else
         else
             h = 0;
         end
-        tmp = [];
+        inter = [];
         d = set(d,'Frames',fp);
         d2 = d;
         nch = size(chunks,2);
+        y = {};
         for fri = 1:nch     % For each chunk...
             disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
             d2 = set(d2,'Chunk',chunks(:,fri)');
-            d2 = set(d2,'Tmp',tmp);
+            d2 = set(d2,'InterChunk',inter);
             %d2.postoption = [];
             [res d2] = evalnow(d2);
             if not(isempty(res))
                 if iscell(res)
-                    tmp = get(res{1},'Tmp');
-                else
-                    tmp = get(res,'Tmp');
+                    inter = get(res{1},'InterChunk');
+                elseif not(isstruct(res))
+                    inter = get(res,'InterChunk');
                     res = {res};
                 end
             end
-            if fri == 1
-                y = res;
-            elseif isfield(specif,'combineframes')
-                y = specif.combineframes(y{1},res{1});
-            else
-                y = combineframes(y,res);
-            end
+            
+            y = combinechunk_frame(y,res,specif,fri);
             if h
                 waitbar(chunks(2,fri)/chunks(end),h);
             end
@@ -329,13 +280,13 @@ end
  
 if iscell(y)
     for i = 1:length(y)
-        if not(isempty(y{i}))
+        if not(isempty(y{i}) || isstruct(y{i}))
             if iscell(y{i})
                 for j = 1:length(y{i})
-                    y{i}{j} = set(y{i}{j},'Tmp',[]);
+                    y{i}{j} = set(y{i}{j},'InterChunk',[]);
                 end
             else
-                y{i} = set(y{i},'Tmp',[]);
+                y{i} = set(y{i},'InterChunk',[]);
             end
         end
     end
@@ -393,6 +344,98 @@ else
 end
 
 
+function res = combinechunk_frame(old,new,specif,fri)
+if isstruct(old)
+    f = fields(old);
+    for i = 1:length(f)
+        res.(f{i}) = combinechunk_frame(old.(f{i}),new.(f{i}),specif,fri);
+    end
+    return
+end
+if fri == 1
+    res = new;
+elseif isfield(specif,'combineframes')
+    res = specif.combineframes(old{1},new{1});
+else
+    res = combineframes(old,new);
+end
+
+
+function res = combinechunk_noframe(old,new,sg,i,d2,specif)
+if isempty(old)
+    res = new;
+    return
+end
+if isstruct(old)
+    f = fields(old);
+    for i = 1:length(f)
+        res.(f{i}) = combinechunk_noframe(old.(f{i}),new.(f{i}),sg,i,d2,specif);
+    end
+    return
+end
+if isempty(new)
+    res = {};
+    return
+end
+if not(iscell(new))
+    new = {new};
+end
+if not(iscell(old))
+    old = {old};
+end
+if isempty(sg)
+    %tmp = get(new{1},'InterChunk');
+    if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
+        % If temporary file is used, chunk results are written
+        % in the file
+        if i < size(chunks,2)
+            ds = get(new{1},'Data');
+            ps = get(new{1},'Pos');
+           % ftell(d2.tmpfile.fid)
+            count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
+            count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
+           % ftell(d2.tmpfile.fid)
+            clear ds ps
+        end
+        res = new;
+    else
+        % Else, chunk results are directly combined in active
+        % memory
+        if i == 1
+            res = new;
+        else
+            if isfield(specif,'combinechunk')
+                for z = 1:length(old)
+                    if ischar(specif.combinechunk)
+                        if strcmpi(specif.combinechunk,'Concat')
+                            res{z} = concatchunk(old{z},new{z},d2.ascending);
+                        elseif strcmpi(specif.combinechunk,'Average')
+                            res{z} = sumchunk(old{z},new{z});
+                        else
+                            error(['SYNTAX ERROR: ',...
+                                specif.combinechunk,...
+                        ' is not a known keyword for combinechunk.']);
+                        end
+                    else
+                        res{z} = specif.combinechunk(old{z},new{z});
+                    end
+                end
+            else
+                res = {};
+            end
+        end
+    end
+else
+    if i == 1
+        res = new;
+    else
+        for z = 1:length(old)
+            res{z} = combinesegment(old{z},new{z});
+        end
+    end
+end
+            
+
 function old = combineframes(old,new)
 if not(iscell(old))
     old = {old};
@@ -423,6 +466,15 @@ end
 
 
 function [ov omatch nmatch] = combinedata(ov,nv,key,omatch,nmatch,modifdata)
+if isstruct(ov)
+    omatch = [];
+    nmatch = [];
+    f = fields(ov);
+    for i = 1:length(f)
+        ov.(f{i}) = combinedata(ov.(f{i}),nv.(f{i}),key);
+    end
+    return
+end
 odata = get(ov,key);
 if isempty(odata) || isempty(odata{1})
     return
@@ -487,7 +539,7 @@ for i = 1:length(argin)
             % The input can be read from the temporary file
             ch = get(d,'Chunk');
             a = tmpfile.data;
-            a = set(a,'Tmp',get(d,'Tmp'),'TmpFile',tmpfile);
+            a = set(a,'InterChunk',get(d,'InterChunk'),'TmpFile',tmpfile);
             channels = get(a,'Channels');
             channels = length(channels{1});
             if not(channels)
@@ -519,7 +571,7 @@ for i = 1:length(argin)
             a.chunk = d.chunk;
             a.file = d.file;
             a.eval = 1;
-            a.tmp = d.tmp;
+            a.interchunk = d.interchunk;
             a.sampling = d.sampling;
             if isstruct(d.frame) && isfield(d.frame,'samples') ...
                                  && not(isempty(d.frame.samples))
@@ -565,8 +617,61 @@ if iscell(d.postoption)
     [y argin] = d.method(argin,d.option,d.postoption{:});
 else
     [y argin] = d.method(argin,d.option,d.postoption);
-end 
+end
 d = set(d,'Argin',argin);
+
+if isa(d,'mirstruct')
+    % For complex flowcharts, now that the temporary variable has been
+    % computed, the dependent features should be evaluated as well.
+    z = struct;
+    fields = get(d,'Fields');
+    branch = get(d,'Data');
+    tmp = get(d,'Tmp');
+    for i = 1:length(fields)
+        z.(fields{i}) = evalbranch(branch{i},tmp,y);
+    end
+    y = z;
+end
+
+
+function b = evalbranch(b,d,y)
+% We need to evaluated the branch reaching the current node (b) from the parent 
+% corresponding to the temporary variable (d),
+if isstruct(b)
+    % Subtrees are evaluated branch after branch.
+    f = fields(b);
+    for i = 1:length(f)
+        b.(f{i}) = evalbranch(b.(f{i}),d,y);
+    end
+    return
+end
+if isequal(b,d)
+    %% Does it happen ever??
+    b = y;
+    return
+end
+v = get(b,'Stored');
+if length(v)>1 && ischar(v{2})
+    % 
+    f = fields(d);
+    for i = 1:length(f)
+        if strcmpi(v{2},f)
+            b = y; % OK, now the temporary variable has been found.
+                   % End of recursion.
+            return
+        end
+    end
+end
+
+argin = evalbranch(get(b,'Argin'),d,y); % Recursion one parent up
+
+% The operation corresponding to the branch from the parent to the node
+% is finally evaluated.
+if iscell(b.postoption)
+    b = b.method(argin,b.option,b.postoption{:});
+else
+    b = b.method(argin,b.option,b.postoption);
+end
 
 
 function d0 = callbeforechunk(d0,d,w,lsz)
@@ -614,20 +719,26 @@ end
 
 function y = concatchunk(old,new,ascending)
 do = get(old,'Data');
-to = get(old,'Pos');
 dn = get(new,'Data');
-tn = get(new,'Pos');
-if ascending
-    y = set(old,'Data',{{[do{1}{1};dn{1}{1}]}},...
-                'Pos',{{[to{1}{1};tn{1}{1}]}});
+if isa(old,'mirscalar')
+    fpo = get(old,'FramePos');
+    fpn = get(new,'FramePos');
+    y = set(old,'Data',{{[do{1}{1},dn{1}{1}]}},...
+                'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
 else
-    y = set(old,'Data',{{[dn{1}{1};do{1}{1}]}},...
-                'Pos',{{[tn{1}{1};to{1}{1}]}});
+    to = get(old,'Pos');
+    tn = get(new,'Pos');
+    if ascending
+        y = set(old,'Data',{{[do{1}{1};dn{1}{1}]}},...
+                    'Pos',{{[to{1}{1};tn{1}{1}]}});
+    else
+        y = set(old,'Data',{{[dn{1}{1};do{1}{1}]}},...
+                    'Pos',{{[tn{1}{1};to{1}{1}]}});
+    end
 end
 
 
 function y = combinesegment(old,new)
-
 do = get(old,'Data');
 to = get(old,'Pos');
 fpo = get(old,'FramePos');

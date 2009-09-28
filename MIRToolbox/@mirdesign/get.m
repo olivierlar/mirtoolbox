@@ -64,8 +64,8 @@ if ischar(varargin{1})
         case 'Specif'
             varargout = {a.specif};
             return
-        case 'Tmp'
-            varargout = {a.tmp};
+        case 'InterChunk'
+            varargout = {a.interchunk};
             return
         case 'AcrossChunks'
             varargout = {a.acrosschunks};
@@ -93,7 +93,10 @@ if ischar(varargin{1})
             return            
         case 'TmpFile'
             varargout = {a.tmpfile};
-            return            
+            return     
+        case 'TmpOf'
+            varargout = {a.tmpof};
+            return
         case 'Ascending'
             varargout = {a.ascending};
             return            

@@ -107,8 +107,8 @@ if isa(orig,'mirdesign')
             if iscell(orig)
                 orig = orig{1};
             end
-            if isempty(get(orig,'Tmp'))
-                orig = set(orig,'Tmp',get(x,'Tmp'));
+            if isempty(get(orig,'InterChunk'))
+                orig = set(orig,'InterChunk',get(x,'InterChunk'));
             end
         end
     end
@@ -180,16 +180,21 @@ if not(isempty(during)) && mirverbose
         disp(['Computing ',func2str(method),' for all audio files ...'])
     end
 end
+if iscell(x)
+    x = x{1};
+end
 if not(iscell(orig) || isnumeric(x))
     orig = set(orig,'Index',get(x,'Index'));
 end
 o = main(orig,during,after);
-if not(iscell(o) && length(o)>1) ...
-        || (isa(x,'mirdesign') && get(x,'Eval')) ...
-        || (iscell(x) && isa(x{1},'mirdesign') && get(x{1},'Eval'))
+if not(iscell(o) && length(o)>1) || (isa(x,'mirdesign') && get(x,'Eval'))
     o = {o x};
-elseif (iscell(x) && isa(x{1},'mirdesign') && get(x{1},'Eval')) 
-    o = {o x{1}};
+elseif not(isempty(varg)) && isstruct(varg{1}) ...
+            && not(iscell(o) && iscell(o{1}))
+    % When the function was called by mireval, the output should be packed
+    % into one single cell array (in order to be send back to calling
+    % routines).
+    o = {o};
 end
 
 

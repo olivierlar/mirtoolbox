@@ -1,7 +1,8 @@
-function d = mirstruct(varargin)
+function s = mirstruct(varargin)
 
-d.fields = {};
-d.data = {};
-d.tmp = struct;
-d = class(d,'mirstruct');
-d = set(d,varargin{:});
+d = mirdesign('','',{},{},struct,{},0);
+s.fields = {};
+s.data = {};
+s.tmp = struct;
+s = class(s,'mirstruct',d);
+s = set(s,varargin{:});

@@ -26,11 +26,11 @@ if isa(x,'miraudio') || isa(x,'mirdesign')
 else
     a = miraudio('Design','Normal');
 end
-r = mirstruct;
 
 if not(isempty(segm))
     a = mirsegment(a,segm);
 end
+
 
 
 % DYNAMICS
@@ -42,75 +42,70 @@ r.dynamics.rms = mirrms(a,'Frame');
 % RHYTHM
 % ------
 
-r.tmp.fluctuation = mirfluctuation(a,'Summary');
-r.rhythm.fluctuation.peak = mirpeaks(r.tmp.fluctuation,'Total',1);%only one?
-r.rhythm.fluctuation.centroid = mircentroid(r.tmp.fluctuation);
+r.fluctuation = mirstruct;
+r.fluctuation.tmp.f = mirfluctuation(a,'Summary');
+r.fluctuation.peak = mirpeaks(r.fluctuation.tmp.f,'Total',1);%only one?
+r.fluctuation.centroid = mircentroid(r.fluctuation.tmp.f);
 
-r.tmp.onsets = mironsets(a);
+r.rhythm = mirstruct;
+r.rhythm.tmp.onsets = mironsets(a);
 
 %r.rhythm.eventdensity = ...
 
-r.rhythm.tempo = mirtempo(r.tmp.onsets,'Frame');
+r.rhythm.tempo = mirtempo(r.rhythm.tmp.onsets,'Frame');
 %r.rhythm.pulseclarity = mirpulseclarity(r.tmp.onsets,'Frame');
     % Should use the second output of mirtempo.
 
-r.tmp.attacks = mironsets(r.tmp.onsets,'Attacks');
-r.rhythm.attack.time = mirattacktime(r.tmp.attacks);
-r.rhythm.attack.slope = mirattackslope(r.tmp.attacks);
+attacks = mironsets(r.rhythm.tmp.onsets,'Attacks');
+r.rhythm.attack.time = mirattacktime(attacks);
+r.rhythm.attack.slope = mirattackslope(attacks);
 
 % TIMBRE
 % ------
 
 f = mirframe(a,.05,.5);
-if 1 %max(strcmpi('centroid',feat)) || max(strcmpi('mfcc',feat))
-    r.tmp.s = mirspectrum(f);
-end
-r.tmp.pitch = mirpitch(a,'Frame',.05,.5);
+r.spectral = mirstruct;
+r.spectral.tmp.s = mirspectrum(f);
+%pitch = mirpitch(a,'Frame',.05,.5);
+
+r.spectral.centroid = mircentroid(r.spectral.tmp.s);
+r.spectral.brightness = mirbrightness(r.spectral.tmp.s);
+r.spectral.spread = mirspread(r.spectral.tmp.s);
+r.spectral.skewness = mirskewness(r.spectral.tmp.s);
+r.spectral.kurtosis = mirkurtosis(r.spectral.tmp.s);
+r.spectral.rolloff95 = mirrolloff(r.spectral.tmp.s,95);
+r.spectral.rolloff85 = mirrolloff(r.spectral.tmp.s,85);
+r.spectral.spectentropy = mirentropy(r.spectral.tmp.s);
+r.spectral.flatness = mirflatness(r.spectral.tmp.s);
+
+r.spectral.roughness = mirroughness(r.spectral.tmp.s);
+r.spectral.irregularity = mirregularity(r.spectral.tmp.s);
+%r.spectral.inharmonicity = mirinharmonicity(r.spectral.tmp.s,'f0',pitch);
+
+r.spectral.mfcc = mirmfcc(r.spectral.tmp.s);
+r.spectral.dmfcc = mirmfcc(r.spectral.mfcc,'Delta');
+r.spectral.ddmfcc = mirmfcc(r.spectral.dmfcc,'Delta');
 
 r.timbre.zerocross = mirzerocross(f);
-if 1 %max(strcmpi('centroid',feat))
-    r.timbre.centroid = mircentroid(r.tmp.s);
-end
-r.timbre.brightness = mirbrightness(r.tmp.s);
-r.timbre.spread = mirspread(r.tmp.s);
-r.timbre.skewness = mirskewness(r.tmp.s);
-r.timbre.kurtosis = mirkurtosis(r.tmp.s);
-r.timbre.rolloff95 = mirrolloff(r.tmp.s,95);
-r.timbre.rolloff85 = mirrolloff(r.tmp.s,85);
-r.timbre.spectentropy = mirentropy(r.tmp.s);
-r.timbre.flatness = mirflatness(r.tmp.s);
-
-r.timbre.roughness = mirroughness(r.tmp.s);
-r.timbre.irregularity = mirregularity(r.tmp.s);
-r.timbre.inharmonicity = mirinharmonicity(r.tmp.s,'f0',r.tmp.pitch);
-
-if 1 %max(strcmpi('mfcc',feat))
-    r.tmp.mfcc = mirmfcc(r.tmp.s);
-    r.timbre.mfcc = mirmfcc(r.tmp.mfcc); %Direct assignment does not work yet...
-    r.tmp.dmfcc = mirmfcc(r.tmp.mfcc,'Delta');
-    r.timbre.dmfcc = mirmfcc(r.tmp.dmfcc); %Direct assignment does not work yet...
-    r.timbre.ddmfcc = mirmfcc(r.tmp.dmfcc,'Delta');
-end
-
 r.timbre.lowenergy = mirlowenergy(f);
 r.timbre.spectralflux = mirflux(f);
 
 % PITCH
 % -----
 
-r.pitch.salient = mirpitch(r.tmp.pitch);%Direct assignment does not work yet...
-r.tmp.chromagram = mirchromagram(a,'Frame','Wrap',0,'Pitch',0);
-r.pitch.chromagram.peak=mirpeaks(r.tmp.chromagram,'Total',1);
-r.pitch.chromagram.centroid=mircentroid(r.tmp.chromagram);
+r.tonal = mirstruct;
+r.tonal.tmp.chromagram = mirchromagram(a,'Frame','Wrap',0,'Pitch',0);
+r.tonal.chromagram.peak=mirpeaks(r.tonal.tmp.chromagram,'Total',1);
+r.tonal.chromagram.centroid=mircentroid(r.tonal.tmp.chromagram);
 
 % TONALITY/HARMONY
 % ----------------
 
-r.tonal.tmp.keystrengths = mirkeystrength(r.tmp.chromagram);
-[k1 ks]=mirkey(r.tonal.tmp.keystrengths,'Total',1);
-r.tonal.keyclarity = ks;
-r.tonal.mode = mirmode(r.tonal.tmp.keystrengths);
-r.tonal.hcdf = mirhcdf(r.tmp.chromagram);
+keystrengths = mirkeystrength(r.tonal.tmp.chromagram);
+[k r.tonal.keyclarity] = mirkey(keystrengths,'Total',1);
+%r.tonal.keyclarity = k{2};
+r.tonal.mode = mirmode(keystrengths);
+r.tonal.hcdf = mirhcdf(r.tonal.tmp.chromagram);
 
 if stat
     r = mirstat(r);

@@ -12,12 +12,16 @@ varargout = mirfunction(@mirhcdf,orig,varargin,nargout,specif,@init,@main);
 
 
 function [df type] = init(orig,option)
-if isframed(orig)
-    tc = mirtonalcentroid(orig);
+if isamir(orig,'mirscalar')
+    df = orig;
 else
-    tc = mirtonalcentroid(orig,'Frame');
+    if isframed(orig)
+        tc = mirtonalcentroid(orig);
+    else
+        tc = mirtonalcentroid(orig,'Frame');
+    end
+    df = mirflux(tc);
 end
-df = mirflux(tc);
 type = 'mirscalar';
 
 

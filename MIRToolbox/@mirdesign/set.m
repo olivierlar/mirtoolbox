@@ -43,8 +43,8 @@ while length(propertyArgIn) >= 2,
            a.path = val;
        case 'Specif'
            a.specif = val;
-       case 'Tmp'
-           a.tmp = val;
+       case 'InterChunk'
+           a.interchunk = val;
        case 'AcrossChunks'
            a.acrosschunks = val;
        case 'NoChunk'
@@ -57,6 +57,8 @@ while length(propertyArgIn) >= 2,
            a.index = val;
        case 'TmpFile'
            a.tmpfile = val;
+       case 'TmpOf'
+           a.tmpof = val;
        case 'ChunkDecomposed'
            a.chunkdecomposed = val;
        case 'Argin'

@@ -194,8 +194,8 @@ switch propName
         val = a.abs;
     case 'Ord'
         val = a.ord;
-    case 'Tmp'
-        val = a.tmp;
+    case 'InterChunk'
+        val = a.interchunk;
     case 'TmpIdx'
         val = a.tmpidx;       
     case 'AcrossChunks'

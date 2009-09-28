@@ -462,10 +462,10 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     end
     if strcmpi(postoption.detect,'Peaks')
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
-            'Contrast',postoption.cthr,'Order','Abscissa');
+            'Contrast',postoption.cthr,'Order','Abscissa','NoBegin','NoEnd');
     elseif strcmpi(postoption.detect,'Valleys')
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
-            'Contrast',postoption.cthr,'Valleys','Order','Abscissa');
+            'Contrast',postoption.cthr,'Valleys','Order','Abscissa','NoBegin','NoEnd');
     end
     nop = cell(size(get(o,'Data')));
     o = set(o,'AttackPos',nop,'ReleasePos',nop);

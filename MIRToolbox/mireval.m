@@ -160,7 +160,7 @@ function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single)
 % Now let's perform the analysis (or analyses) on the different files.
 %   If d is a structure or a cell array, evaluate each component
 %       separately.
-if isa(d,'mirstruct')
+if 0 %isa(d,'mirstruct')
     display('Computing temporary variables:');
     v.tmp = evalaudiofile(get(d,'Tmp'),file,sampling,size,{},1,index,single);
     fields = get(d,'Fields');
@@ -203,9 +203,8 @@ else
               'Eval',1,'Index',index,'Struct',struc);
     % For that particular file or this particular feature, let's begin the
     % actual evaluation process.
-    res = evaleach(d);    
+    v = evaleach(d);    
     % evaleach performs a top-down traversal of the design flowchart.
-    v = res;
 end
 
 
