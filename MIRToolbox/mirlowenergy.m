@@ -39,7 +39,9 @@ function varargout = mirlowenergy(x,varargin)
     option.frame = frame;
 
 specif.option = option;
-specif.nochunk = 1;
+
+specif.combinechunk = {'Average',@nothing};
+specif.framedchunk = 0;
 
 varargout = mirfunction(@mirlowenergy,x,varargin,nargout,specif,@init,@main);
 
@@ -84,3 +86,7 @@ v = v / size(d,2);
 
 function fp = noframe(fp)
 fp = [fp(1);fp(end)];
+
+
+function y = nothing(old,new)
+y = old;

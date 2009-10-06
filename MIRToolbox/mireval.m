@@ -203,7 +203,7 @@ else
               'Eval',1,'Index',index,'Struct',struc);
     % For that particular file or this particular feature, let's begin the
     % actual evaluation process.
-    v = evaleach(d);    
+    v = evaleach(d,single);    
     % evaleach performs a top-down traversal of the design flowchart.
 end
 

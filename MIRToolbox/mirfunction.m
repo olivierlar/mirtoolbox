@@ -60,11 +60,11 @@ if isa(orig,'mirdesign')
         % with management of the data types throughout the design process.
         [orig type] = init(orig,during);
         
-        if iscell(type)
-            nout = length(type); %NUMBER OF OUTPUTS IS NOT MORE DEPENDENT ON THE CALL
-        end
+        %?&?& if iscell(type)
+        %?%?%    nout = length(type); %NUMBER OF OUTPUTS IS NOT MORE DEPENDENT ON THE CALL
+        %?%?% end
         
-        o = mirdesign(method,orig,during,after,specif,type,nout);
+        o = mirdesign(method,orig,during,after,specif,type); %,nout);
         
                 %if isstruct(during) && during.frame.auto
                 %    % Now that the mirframe step has been integrated in the
@@ -79,7 +79,7 @@ if isa(orig,'mirdesign')
             % Now the design flowchart has been completed created.
             % If the 'Design' keyword not used,
             % the function is immediately evaluated
-            o = mireval(o,filename);
+            o = mireval(o,filename,nout);
         else
             o = returndesign(o,nout);
         end

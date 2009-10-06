@@ -44,7 +44,7 @@ if iscell(y)
         l = 1;
     end
 else
-    if l > 1 && lx == 1  
+    if l > 1 && lx == 1
         y = reshape(y,size(y,2),size(y,3));
         y = y';
         x = repmat(ch,[1 size(y,2) size(y,3)]);

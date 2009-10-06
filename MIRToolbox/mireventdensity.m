@@ -9,7 +9,7 @@ function varargout = mireventdensity(x,varargin)
         normal.choice = {'Option1','Option2'};
         normal.default = 'Option1';
     option.normal = normal;
-        
+
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
@@ -22,8 +22,8 @@ specif.option = option;
 specif.defaultframelength = 1.00;
 specif.defaultframehop = 0.5;
 
-specif.eachchunk = @eachchunk;
-specif.combinechunk = @combinechunk;
+%specif.eachchunk = 'Normal';
+specif.combinechunk = {'Average','Concat'};
 
 varargout = mirfunction(@mireventdensity,x,varargin,nargout,specif,@init,@main);
 
@@ -47,10 +47,11 @@ if iscell(o)
     o = o{1};
 end
 sr = get(o,'Sampling');
-p = mirpeaks(o);
+p = mirpeaks(o); %%%%<<<<<<< MORE OPTIONS HERE
 pv = get(p,'PeakVal');
 v = mircompute(@algo,pv,o,option,sr);
 e = mirscalar(o,'Data',v,'Title','Event density','Unit','per second');
+e = {e o};
 
 
 function e = algo(pv,o,option,sr)
@@ -86,11 +87,11 @@ end
 
 
 
-function [y orig] = eachchunk(orig,option,missing,postchunk)
-y = mireventdensity(orig,option);
+%function [y orig] = eachchunk(orig,option,missing,postchunk)
+%y = mireventdensity(orig,option);
 
 
-function y = combinechunk(old,new)
-do = mirgetdata(old);
-dn = mirgetdata(new);
-y = set(old,'ChunkData',do+dn);
+%function y = combinechunk(old,new)
+%do = mirgetdata(old);
+%dn = mirgetdata(new);
+%y = set(old,'ChunkData',do+dn);

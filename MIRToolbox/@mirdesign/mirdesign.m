@@ -1,4 +1,4 @@
-function d = mirdesign(orig,argin,option,postoption,specif,type,nout)
+function d = mirdesign(orig,argin,option,postoption,specif,type); %,nout)
 
 if isa(orig,'mirdesign')
     d.method = orig.method;
@@ -26,7 +26,7 @@ if isa(orig,'mirdesign')
     d.index = orig.index;
     d.tmpfile = orig.tmpfile;
     d.tmpof = orig.tmpof;
-    d.nout = orig.nout;
+    %d.nout = orig.nout;
 else
     d.method = orig;
     d.argin = argin;
@@ -67,8 +67,9 @@ else
             end
         else
             d.frame = argin.frame;
-            if strcmp(func2str(orig),'mirenvelope') ...
-                && strcmpi(d.option.method,'Spectro') ...
+            if isfield(d.specif,'framedchunk') && not(d.specif.framedchunk) ...
+                ...strcmp(func2str(orig),'mirenvelope') ...
+                ... strcmpi(d.option.method,'Spectro') ...
                 && not(isempty(d.frame))
                     d.frame.chunknow = 0;
             end
@@ -110,10 +111,10 @@ else
         d.tmpfile = [];
     end
     d.tmpof = [];
-    if nargin < 7
-        d.nout = 1;
-    else
-        d.nout = nout;
-    end
+    %if nargin < 7
+    %    d.nout = 1;
+    %else
+    %    d.nout = nout;
+    %end
 end
 d = class(d,'mirdesign');

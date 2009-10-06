@@ -1,5 +1,6 @@
 function x = uncell(x,lvl)
-    % lvl >= 0:
+    % lvl >= 0: The recursion level, starting from 0, when observing the 
+    %   cell structures of cell structures of etc. of the input data x. 
     % lvl = NaN:
     % lvl = -Inf: used in display of segmented mirscalar
 if nargin < 2
@@ -11,7 +12,10 @@ if iscell(x)
     elseif length(x) == 1
         x = uncell(x{1},lvl+1);
     else
-        het = 0;    % heterogeneous structures?
+        het = 0;    % Flags different kinds of structures:
+                    % - structures with fixed column size but variable nb of columns (het = 1)
+                    % - structures with variable column size but fixed nb of columns (het = 2)
+                    % - structures with variable column size and variable nb of columns (het = NaN)
         l = length(x(:,:,1));
         nf = size(x,3);
         z = cell(size(x));
@@ -22,7 +26,8 @@ if iscell(x)
                     if i1 == 1 && i2 == 1 && i3 == 1
                         s = size(z{i1,i2,i3});
                     elseif not(isequal(s,size(z{i1,i2,i3})))
-                        if lvl>1
+                        % A break in the homogeneity has been discovered.
+                        if lvl>0
                             if (het == 0 || het == 2) && (s(2) == size(z{i1,i2,i3},2))
                                 het = 2;
                                 s = max(s,size(z{i1,i2,i3}));

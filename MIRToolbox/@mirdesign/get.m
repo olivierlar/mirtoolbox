@@ -100,9 +100,9 @@ if ischar(varargin{1})
         case 'Ascending'
             varargout = {a.ascending};
             return            
-        case 'NOut'
-            varargout = {a.nout};
-            return            
+        %case 'NOut'
+        %    varargout = {a.nout};
+        %    return            
     end
 end
 

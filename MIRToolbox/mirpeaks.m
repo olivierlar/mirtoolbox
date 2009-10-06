@@ -327,7 +327,7 @@ for i = 1:length(d) % For each audio file,...
         if cha
             if iscell(ti)
                 %% problem here!!!
-                ti = ti{i};
+                ti = ti{i}; %%%%%it seems that sometimes we need to use instead ti{i}(:);
             end
             th = repmat(ti,[1,nc,np,nd0]);
         else
