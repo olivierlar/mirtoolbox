@@ -340,13 +340,13 @@ function res = combinechunk_frame(old,new,d2,fri)
 if isstruct(old)
     f = fields(old);
     for i = 1:length(f)
-        res.(f{i}) = combinechunk_frame(old.(f{i}),new.(f{i}),specif,fri); %<<<< APPARENTLY NEVER USED...
+        res.(f{i}) = combinechunk_frame(old.(f{i}),new.(f{i}),d2.specif,fri);
     end
     return
 end
 if fri == 1
     res = new;
-elseif isfield(d2.specif,'combineframes')
+elseif isfield(d2,'specif') && isfield(d2.specif,'combineframes')
     res = d2.specif.combineframes(old{1},new{1});
 else
     res = combineframes(old,new);
@@ -677,11 +677,19 @@ d = set(d,'Argin',argin);
 if isa(d,'mirstruct')
     % For complex flowcharts, now that the first temporary variable has been
     % computed, the dependent features should be evaluated as well.
-    z = struct;
-    fields = get(d,'Fields');
     branch = get(d,'Data');
+    
+    for i = 1:length(branch)
+        if isa(branch{i},'Design') && get(branch{i},'NoChunk') == 1 
+                                            % if the value is 2, it is OK.
+            mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
+        end
+    end
+
+    fields = get(d,'Fields');
+    z = struct;
     tmp = get(d,'Tmp');
-    for i = 1:length(fields)
+    for i = 1:length(branch)
         z.(fields{i}) = evalbranch(branch{i},tmp,y);
     end
     y = z;

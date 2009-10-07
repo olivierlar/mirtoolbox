@@ -80,7 +80,7 @@ else
         d.file = argin.file;
         d.sampling = argin.sampling;
         if (isfield(specif,'nochunk') && specif.nochunk) || not(isempty(argin.stored))
-            d.nochunk = 1;
+            d.nochunk = 2; % Flag to indicate that no chunk should be performed, because a temporary variable will be already computed.
         else
             d.nochunk = argin.nochunk;
         end

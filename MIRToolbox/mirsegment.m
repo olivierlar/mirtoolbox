@@ -13,10 +13,12 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %           Example: mirsegment(a,'Novelty','KernelSize',10)
 %   f = mirsegment(...,feature) base the segmentation strategy on a specific
 %       feature.
-%       'Spectrum': from the spectrum of the audio signal x.
+%       'Spectrum': from FFT spectrum
 %           (by default)
-%       'MFCC': from the MFCC of the audio signal x.
-%       'Keystrength': from the key strength profile of the audio signal x.
+%       'MFCC': from MFCCs
+%       'Keystrength': from the key strength profile
+%       'AutocorPitch': from the autocorrelation function computed as for
+%           pitch extraction.
 %       The option related to this feature extraction can be specified too.
 %       Example: mirsegment(...,'Spectrum','Window','bartlett')
 %                mirsegment(...,'MFCC','Rank',1:10)
@@ -165,7 +167,7 @@ elseif isa(x,'mirdata')
             if size(dx{1},2) > 1
                 %fr = x;
                 error('ERROR IN MIRSEGMENT: The segmentation of audio signal already decomposed into frames is not available for the moment.');
-            elseif not(strcmpi(option.ana,'Pitch'))
+            else%%%%if not(strcmpi(option.ana,'Pitch'))
                 if not(option.frame.length.val)
                     if strcmpi(option.ana,'Keystrength')
                         option.frame.length.val = .5;
@@ -315,5 +317,5 @@ elseif isa(x,'mirdata')
         fe = {};
     end
 else
-    f = mirsegment(miraudio(x),varargin{:});
+    [f p] = mirsegment(miraudio(x),varargin{:});
 end 
