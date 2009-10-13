@@ -12,7 +12,7 @@ end
 CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
-frnow = isfield(d.frame,'chunknow') && not(d.frame.chunknow);
+frnow = isfield(d.frame,'chunknow');% && not(d.frame.chunknow);
 sg = d.segment;
 sr = d.sampling;
 w = d.size;
@@ -70,6 +70,7 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
 elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % No frame or segment decomposition in the design to evaluate
     % (Maybe implicit frame decomposition, though (frnow).)
+    
     %if isa(d,'mirstruct')
     %    tmp = get(d,'Tmp');
     %    if not(isempty(tmp)) % When the 'tmp' variable is a temporal object
@@ -214,6 +215,11 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         y = afterchunk_noframe(y,lsz,d,afterpostoption,d2);
         % Final operations to be executed after the chunk decomposition
                 
+        if isa(d,'mirstruct') && ...
+                isfield(d.frame,'chunknow') && not(d.frame.chunknow)
+            y = evalbranches(d,y);
+        end
+        
         if h
             close(h)
         end
@@ -340,7 +346,7 @@ function res = combinechunk_frame(old,new,d2,fri)
 if isstruct(old)
     f = fields(old);
     for i = 1:length(f)
-        res.(f{i}) = combinechunk_frame(old.(f{i}),new.(f{i}),d2.specif,fri);
+        res.(f{i}) = combinechunk_frame(old.(f{i}),new.(f{i}),d2,fri);
     end
     return
 end
@@ -657,7 +663,7 @@ for i = 1:length(argin)
                     tmp = tmp{1};
                 end
             else
-                mirerror('THERE');
+                mirerror('evaleach','THERE is a problem..');
             end
             argin{i} = tmp;
         end
@@ -674,25 +680,28 @@ else
 end
 d = set(d,'Argin',argin);
 
-if isa(d,'mirstruct')
-    % For complex flowcharts, now that the first temporary variable has been
-    % computed, the dependent features should be evaluated as well.
-    branch = get(d,'Data');
-    
-    for i = 1:length(branch)
-        if isa(branch{i},'Design') && get(branch{i},'NoChunk') == 1 
-                                            % if the value is 2, it is OK.
-            mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
-        end
-    end
+if isa(d,'mirstruct') && not(isfield(d.frame,'chunknow'))
+    y = evalbranches(d,y);
+end
 
-    fields = get(d,'Fields');
-    z = struct;
-    tmp = get(d,'Tmp');
-    for i = 1:length(branch)
-        z.(fields{i}) = evalbranch(branch{i},tmp,y);
+
+function z = evalbranches(d,y)
+% For complex flowcharts, now that the first temporary variable has been
+% computed, the dependent features should be evaluated as well.
+branch = get(d,'Data');
+
+for i = 1:length(branch)
+    if isa(branch{i},'Design') && get(branch{i},'NoChunk') == 1 
+                                        % if the value is 2, it is OK.
+        mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
     end
-    y = z;
+end
+
+fields = get(d,'Fields');
+z = struct;
+tmp = get(d,'Tmp');
+for i = 1:length(branch)
+    z.(fields{i}) = evalbranch(branch{i},tmp,y);
 end
 
 

@@ -72,9 +72,14 @@ for i = 1:length(fields)
                after.(field) = 'Peaks';
            %end
         elseif isfield(specif,'title')
-            title = get(orig,'Title');
-            if (length(title) > length(specif.title) && ...
-                    strcmp(title(1:length(specif.title)),specif.title))
+            if isa(orig,'mirdata')
+                title = get(orig,'Title');
+                sameclass = (length(title) > length(specif.title) && ...
+                    strcmp(title(1:length(specif.title)),specif.title));
+            else
+                sameclass = strcmp(func2str(get(orig,'Method')),'mironsets');
+            end
+            if sameclass
                 after.(field) = 0;
             else
                 after.(field) = option.(field).default;

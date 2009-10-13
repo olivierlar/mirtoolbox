@@ -121,6 +121,7 @@ else
               'Data',dc,'Rank',rk);
     c = modif(c,option);
 end
+c = {c orig};
 
 
 function c = modif(c,option)

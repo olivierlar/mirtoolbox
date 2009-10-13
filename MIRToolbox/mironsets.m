@@ -290,12 +290,16 @@ specif.eachchunk = 'Normal';
 specif.combinechunk = 'Concat';
 
 specif.title = 'Onset curve'; %used for miroptions
+
 varargout = mirfunction(@mironsets,x,varargin,nargout,specif,@init,@main);
 
 
 %% INIT
 
 function [y type] = init(x,option)
+if iscell(x)
+    x = x{1};
+end
 if ischar(option.presel)
     if strcmpi(option.presel,'Scheirer')
         option.filtertype = 'Scheirer';
@@ -343,7 +347,7 @@ elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
     y = mirnovelty(x,'KernelSize',32);
     type = 'mirscalar';
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope')
-    y = x;
+    y = mirframenow(x,option);
     type = mirtype(x);
 else
     x = mirframenow(x,option);

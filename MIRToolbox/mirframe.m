@@ -27,6 +27,9 @@ if isempty(x)
     f = {};
     return
 end
+if iscell(x)
+    x = x{1};
+end
 if nargin == 0
     f = miraudio;
 elseif isa(x,'mirdesign')
@@ -71,7 +74,7 @@ elseif isa(x,'mirdesign')
     end
 elseif isa(x,'mirdata')
     if isframed(x)
-        warning('WARNING IN MIRFRAME: The input data is already decomposed into frames. No more frame decomposition.');
+        %warning('WARNING IN MIRFRAME: The input data is already decomposed into frames. No more frame decomposition.');
         f = x;
     else
         x = purgedata(x);

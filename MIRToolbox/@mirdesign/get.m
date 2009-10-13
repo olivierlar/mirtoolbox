@@ -37,6 +37,13 @@ if ischar(varargin{1})
                 varargout = {[]};
             end
             return
+        case 'FrameChunkNow'
+            if isstruct(a.frame)
+                varargout = {a.frame.chunknow};
+            else
+                varargout = {[]};
+            end
+            return
         case 'Segment'
             varargout = {a.segment};
             return

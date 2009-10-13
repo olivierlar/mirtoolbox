@@ -133,7 +133,14 @@ function varargout = mirspectrum(orig,varargin)
         band.default = 'Freq';
         band.when = 'Both';
     option.band = band;
-    
+
+        nbbands.key = 'Bands';
+        nbbands.type = 'Integer';
+        nbbands.default = 40;
+        nbbands.keydefault = Inf;
+        nbbands.when = 'After';
+    option.nbbands = nbbands;
+
         mprod.key = 'Prod';
         mprod.type = 'Integers';
         mprod.default = [];
@@ -608,10 +615,9 @@ if strcmp(s.xscale,'Freq')
         lowestFrequency = 133.3333;
         linearFilters = 13;
         linearSpacing = 66.66666666;
-        logFilters = 27;
+        logFilters = option.nbbands - linearFilters; %27;
         logSpacing = 1.0711703;
-        totalFilters = linearFilters + logFilters;
-        cepstralCoefficients = 13;
+        totalFilters = option.nbbands; %linearFilters + logFilters;
 
         % Figure the band edges.  Interesting frequencies are spaced
         % by linearSpacing for a while, then go logarithmic.  First figure

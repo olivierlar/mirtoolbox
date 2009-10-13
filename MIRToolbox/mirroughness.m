@@ -10,9 +10,9 @@ function varargout = mirroughness(x,varargin)
 %           for the computation of roughness.
 %   Optional arguments:
 %       Method used:
-%           mirroughness(...,'Sethares'): based on the summation of roughness
-%               between all pairs of sines (obtained through spectral
-%               peak-picking).
+%           mirroughness(...,'Sethares') (default): based on the summation
+%               of roughness between all pairs of sines (obtained through
+%               spectral peak-picking).
 %           mirroughness(...,'Vassilakis'): variant of 'Sethares' model
 %               with a more complex weighting (Vassilakis, 2001, Eq. 6.23).
 
