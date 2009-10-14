@@ -1,10 +1,13 @@
-function [y d2] = evaleach(d,single)
+function [y d2] = evaleach(d,single,name)
 % Top-down traversal of the design flowchart, at the beginning of the
 % evaluation phase.
 % Called by mirfunction, mireval, mirframe and mirsegment.
 % This is during that traversal that we check whether a chunk decomposition
 % needs to be performed or not, and carry out that chunk decomposition.
 
+if nargin<3 || isempty(name)
+    name = func2str(d.method);
+end
 if nargin<2
     single = 0;
 end
@@ -125,7 +128,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         d = callbeforechunk(d,d,w,lsz); % Some optional initialisation
         tmp = [];
         if mirwaitbar
-            h = waitbar(0,['Computing ' func2str(d.method)]);
+            h = waitbar(0,['Computing ' name]);
         else
             h = 0;
         end
@@ -237,7 +240,7 @@ else
     if size(chunks,2)>1
         % The chunk decomposition is performed.
         if mirwaitbar
-            h = waitbar(0,['Computing ' func2str(d.method)]);
+            h = waitbar(0,['Computing ' name]);
         else
             h = 0;
         end

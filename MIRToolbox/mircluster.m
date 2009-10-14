@@ -51,14 +51,15 @@ if isa(a,'mirdesign')
         end
         a = mircluster(e,varargin{:});
     end
-elseif not(isa(a,'mirdata')) || isa(a,'miraudio')
-    mirerror('mircluster','The input should be either frame- or segment-decomposed.');
-else    
-    [unused option] = miroptions(@mircluster,a,specif,varargin);
-
+else
+    if not(isa(a,'mirdata'))
+        mirerror('mircluster','The input should be either frame- or segment-decomposed.');
+    end
+   
     if isempty(varargin) || not(isa(varargin{1},'mirdata'))
         % mircluster version for frame-decomposed data:
         % frames are clustered into groups using K-means clustering.
+        [unused option] = miroptions(@mircluster,a,specif,varargin);
         da = get(a,'Data');
         lva = length(da); % Number of audio files in the audio object.
         c = cell(1,lva);
@@ -146,6 +147,7 @@ else
         % segments are clustered into groups using K-means clustering.
         da = varargin{1};
         varargin(1) = [];
+        [unused option] = miroptions(@mircluster,a,specif,varargin);
         display('Clustering segments...');
         if isa(da,'mirdata') || (iscell(da) && isa(da{1},'mirdata'))
             if not(iscell(da))

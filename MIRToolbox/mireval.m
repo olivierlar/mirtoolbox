@@ -134,7 +134,7 @@ for i = 1:length(order)
         display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
     end
     tic
-    yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single); %% y = ...
+    yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,''); %% y = ...
     toc
     if not(isempty(export))
         if f==1
@@ -156,21 +156,11 @@ else
 end
     
 
-function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single)
+function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name)
 % Now let's perform the analysis (or analyses) on the different files.
 %   If d is a structure or a cell array, evaluate each component
 %       separately.
-if 0 %isa(d,'mirstruct')
-    display('Computing temporary variables:');
-    v.tmp = evalaudiofile(get(d,'Tmp'),file,sampling,size,{},1,index,single);
-    fields = get(d,'Fields');
-    data = get(d,'Data');
-    for fi = 1:length(fields)
-        display(['Computing ',fields{fi},'...']);
-        v.(fields{fi}) = evalaudiofile(data{fi},file,sampling,size,v,0,index,single);
-    end
-    v = rmfield(v,'tmp');
-elseif isstruct(d)
+if isstruct(d)
     fields = fieldnames(d);
     v = struct;
     if istmp
@@ -179,7 +169,7 @@ elseif isstruct(d)
     for fi = 1:length(fields)
         field = fields{fi};
         display(['*******',field,'******']);
-        res = evalaudiofile(d.(field),file,sampling,size,struc,istmp,index,single);
+        res = evalaudiofile(d.(field),file,sampling,size,struc,istmp,index,single,field);
         if not(isempty(single)) && not(isequal(single,0)) && ...
                 iscell(res) && isa(d.(field),'mirdesign')
             res = res{1};
@@ -196,14 +186,14 @@ elseif iscell(d)
     l = length(d);
     v = cell(1,l);
     for j = 1:l
-        v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,single);
+        v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,single,[name,num2str(j)]);
     end
 else
     d = set(d,'File',file,'Sampling',sampling,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
     % For that particular file or this particular feature, let's begin the
     % actual evaluation process.
-    v = evaleach(d,single);    
+    v = evaleach(d,single,name);    
     % evaleach performs a top-down traversal of the design flowchart.
 end
 

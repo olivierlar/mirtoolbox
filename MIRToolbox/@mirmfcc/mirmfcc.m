@@ -21,6 +21,11 @@ function varargout = mirmfcc(orig,varargin)
 %           Usually 1 or 2.
 %           Default value: 2.
 
+        nbbands.key = 'Bands';
+        nbbands.type = 'Integer';
+        nbbands.default = 40;
+    option.nbbands = nbbands;
+
         rank.key = 'Rank';
         rank.type = 'Integer';
         rank.default = 1:13;
@@ -44,7 +49,7 @@ varargout = mirfunction(@mirmfcc,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 if isamir(x,'miraudio') || isamir(x,'mirspectrum')
-    x = mirspectrum(x,'Mel','log');
+    x = mirspectrum(x,'Mel','log','Bands',option.nbbands);
 end
 type = 'mirmfcc';
 
