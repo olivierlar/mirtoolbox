@@ -36,6 +36,7 @@ case '.'
         aa.fields = fields;
         aa.data = data;
         aa.tmp = a.tmp;
+        aa.stat = a.stat;
         a = class(aa,'mirstruct',val);
         return
     end

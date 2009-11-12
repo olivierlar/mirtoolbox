@@ -8,6 +8,8 @@ switch varargin{1}
         v = a.data;
     case 'Tmp'
         v = a.tmp;
+    case 'Stat'
+        v = a.stat;
     otherwise
         v = get(mirdesign(a),varargin{:});
 end

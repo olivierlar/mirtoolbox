@@ -5,6 +5,7 @@ propertyArgIn = varargin;
 f = s.fields;
 d = s.data;
 t = s.tmp;
+st = s.stat;
 des = mirdesign(s);
 while length(propertyArgIn) >= 2,
     prop = propertyArgIn{1};
@@ -17,6 +18,8 @@ while length(propertyArgIn) >= 2,
             d = val;
         case 'Tmp'
             t = val;
+        case 'Stat'
+            st = val;
         otherwise
             des = set(des,prop,val);
     end
@@ -24,4 +27,5 @@ end
 ss.fields = f;
 ss.data = d;
 ss.tmp = t;
+ss.stat = st;
 ss = class(ss,'mirstruct',des);

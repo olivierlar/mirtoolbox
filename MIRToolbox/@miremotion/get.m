@@ -3,14 +3,14 @@ function val = get(a, propName)
 % and return the value
 
 switch propName
-    case 'Activity'
-        val = a.activity;
-    case 'Valence'
-        val = a.valence;
+    case 'Concepts'
+        val = get(mirdata(a),'Pos');
     case 'ActivityFactors'
         val = a.activity_fact;
     case 'ValenceFactors'
         val = a.valence_fact;
+    case 'TensionFactors'
+        val = a.tension_fact;
     otherwise
         val = get(mirdata(a),propName);
 end

@@ -58,12 +58,6 @@ if isa(x,'mirclassify')
     return
 end
 
-if isa(x,'miremotion')
-    d = uncell(get(x,'Activity'));
-    d2 = uncell(get(x,'Valence'));
-    return
-end
-
 if isa(x,'mirsimatrix')
     pt = [];
 else

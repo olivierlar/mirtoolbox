@@ -222,7 +222,6 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 isfield(d.frame,'chunknow') && not(d.frame.chunknow)
             y = evalbranches(d,y);
         end
-        
         if h
             close(h)
         end
@@ -268,6 +267,9 @@ else
             if h
                 waitbar(chunks(2,fri)/chunks(end),h);
             end
+        end
+        if isa(d,'mirstruct') && get(d,'Stat') 
+            y = mirstat(y);
         end
         if h
             close(h)
@@ -706,6 +708,9 @@ tmp = get(d,'Tmp');
 for i = 1:length(branch)
     z.(fields{i}) = evalbranch(branch{i},tmp,y);
 end
+if get(d,'Stat') && isempty(get(d,'Chunk'))
+    z = mirstat(z);
+end
 
 
 function b = evalbranch(b,d,y)
@@ -761,7 +766,7 @@ function d0 = callbeforechunk(d0,d,w,lsz)
 % If necessary, the chunk decomposition is performed a first time for
 % initialisation purposes.
 % Currently used only for miraudio(...,'Normal')
-if not(ischar(d))
+if not(ischar(d)) && not(iscell(d))
     specif = d.specif;
     CHUNKLIM = mirchunklim;
     nch = ceil(lsz/CHUNKLIM); 

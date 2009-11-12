@@ -86,7 +86,11 @@ if curve
         for h = 1:length(y)
             col{h} = zeros(size(y{h},2),3,size(y{h},4));
             for j = 1:size(y{h},2)
-                xj = x{h}(:,j);
+                if ischar(x{h})
+                    xj = x{h};
+                else
+                    xj = x{h}(:,j);
+                end
                 yj = y{h}(:,j,i,:);
                 lk = size(yj,4);
                 for k = 1:lk
@@ -100,6 +104,8 @@ if curve
                         if iscell(xj)
                             lj = length(xj);
                             abs = 0:lj-1;
+                        elseif ischar(xj)
+                            abs = 1:length(yk);
                         else
                             abs = xj;
                         end
@@ -112,6 +118,8 @@ if curve
                             tick = 0:ceil(lj/14):lj-1;
                             set(gca,'xtick',tick);
                             set(gca,'xticklabel',xj(tick+1));
+                        elseif ischar(xj)
+                            set(gca,'xticklabel',x);
                         end
                         hold on
                     end
@@ -251,6 +259,11 @@ else
             end
             hold on
             %surfplot(segt,x{1},repmat(x{1}/x{1}(end)*.1,[1,length(segt)]));
+            if length(x)==1 && length(y)>1
+                for k = 2:length(y)
+                    x{k} = x{1};
+                end
+            end
             for j = 1:length(x)
                 if size(x{j},1) == 1 && size(x{j},3) > 1
                     x{j} = reshape(x{j},size(x{j},2),size(x{j},3))';
@@ -279,6 +292,10 @@ else
                     segt = fp{j}';
                 end
                 surfplot(segt,xxx,yy(:,:));
+                if not(isempty(ticky))
+                    set(gca,'ytick',ticky);
+                    set(gca,'yticklabel',tickylab);
+                end
                 set(gca,'YDir','normal')
                 if (exist('pp') == 1) && not(isempty(pp))
                     if not(isempty(pp{j}))

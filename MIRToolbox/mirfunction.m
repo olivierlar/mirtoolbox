@@ -181,10 +181,12 @@ if not(isempty(during)) && mirverbose
     end
 end
 if iscell(x)
-    x = x{1};
+    x1 = x{1};
+else
+    x1 = x;
 end
 if not(iscell(orig) || isnumeric(x))
-    orig = set(orig,'Index',get(x,'Index'));
+    orig = set(orig,'Index',get(x1,'Index'));
 end
 o = main(orig,during,after);
 if not(iscell(o) && length(o)>1) || (isa(x,'mirdesign') && get(x,'Eval'))

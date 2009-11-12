@@ -16,11 +16,7 @@ function varargout = mirstat(f,varargin)
 % mirstat does not work for multi-channels objects.
 
 if isa(f,'mirstruct')
-    data = get(f,'Data');
-    for fi = 1:length(data)
-        data{fi} = mirstat(data{fi});
-    end
-    varargout = {set(f,'Data',data)};
+    varargout = {set(f,'Stat',1)};
 elseif isstruct(f)
     fields = fieldnames(f);
     for i = 1:length(fields)
