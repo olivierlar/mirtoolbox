@@ -29,24 +29,26 @@ ch = {};
 try
     [d,f,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
 catch
-    errmsg = lasterr;
+    err.wav = lasterr;
     try
        [d,f,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
     catch
+        err.au = lasterr;
         try
             [d,f,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
+            err.mp3 = lasterr;
             if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
                 try
                    [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
                 catch
-                    if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
-                        error(['ERROR: Cannot open file ',orig]);
+                    if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
+                        misread(orig, err);
                     end
                 end
             else
-                if not(strcmp(errmsg(1:16),'Error using ==> ') && folder)
-                     error(['ERROR: Cannot open file ',orig]);
+                if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
+                    misread(orig, err);
                 end
             end
         end
@@ -128,3 +130,11 @@ else
 end
 fs = DAT.Head.SampleRate(43);
 nbits = NaN;
+
+
+function misread(file,err)
+display('Here are the error message returned by each reader:');
+display(err.wav);
+display(err.au);
+display(err.mp3);
+mirerror('MIRREAD',['Cannot open file ',file]);

@@ -100,9 +100,13 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 && isfield(specif,'combinechunk') ...
                 && iscell(specif.combinechunk))
         chunks = [];
-    elseif isempty(fr)
-        if isempty(sg)
-            meth = 'Chunk ';
+    elseif not(isempty(sg))
+        meth = 'Segment ';
+        chunks = sg(1:end-1)*sr;
+        chunks(2,:) = min( sg(2:end)*sr-1,lsz-1);
+    else
+        meth = 'Chunk ';
+        if isempty(fr)
             if lsz > CHUNKLIM
             % The required memory exceed the max memory threshold.
                 nch = ceil(lsz/CHUNKLIM); 
@@ -113,13 +117,8 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 chunks = [];
             end
         else
-            meth = 'Segment ';
-            chunks = sg(1:end-1)*sr;
-            chunks(2,:) = min( sg(2:end)*sr-1,lsz-1);
+            chunks = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
         end
-    else
-        meth = 'Chunk ';
-        chunks = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
     end
     
     if not(isempty(chunks))
@@ -385,22 +384,22 @@ if not(isempty(old)) && isstruct(old{1})
     end
     return
 end
-if isaverage(d2.specif)
-    % Measure total size for later averaging
-    if iscell(new)
-        new1 = new{1};
-    else
-        new1 = new;
-    end
-    dnew = get(new1,'Data');
-    dnew = mircompute(@multweight,dnew,chunks(2,i)-chunks(1,i)+1);
-    if iscell(new)
-        new{1} = set(new1,'Data',dnew);
-    else
-        new = set(new1,'Data',dnew);
-    end
-end
 if isempty(sg)
+    if isaverage(d2.specif)
+        % Measure total size for later averaging
+        if iscell(new)
+            new1 = new{1};
+        else
+            new1 = new;
+        end
+        dnew = get(new1,'Data');
+        dnew = mircompute(@multweight,dnew,chunks(2,i)-chunks(1,i)+1);
+        if iscell(new)
+            new{1} = set(new1,'Data',dnew);
+        else
+            new = set(new1,'Data',dnew);
+        end
+    end
     %tmp = get(new{1},'InterChunk');
     if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
         % If temporary file is used, chunk results are written
@@ -856,7 +855,7 @@ tvn = get(new,'TrackVal');
 y = set(old,'Data',{{do{1}{:},dn{1}{:}}},...
             'FramePos',{{fpo{1}{:},fpn{1}{:}}}); 
         
-if not(isempty(to))
+if not(isempty(to)) && size(do{1},2) == size(to{1},2)
     y = set(y,'Pos',{{to{1}{:},tn{1}{:}}}); 
 end
 
