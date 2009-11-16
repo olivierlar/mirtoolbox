@@ -448,7 +448,7 @@ if isempty(sg)
                     if isframed(old{z})
                         res(z) = combineframes(old{z},new{z});
                     else
-                        res{z} = {};
+                        mirerror('MIREVAL','Chunk recombination in non-framed mode is not available for all features yet. Please turn off the chunk decomposition.');
                     end
                 end
             end
@@ -467,6 +467,7 @@ end
 
 function res = afterchunk_noframe(input,lsz,d,afterpostoption,d2)
 if isstruct(input)
+    mirerror('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
     f = fields(input);
     for i = 1:length(f)
         index.type = '.';
@@ -727,6 +728,9 @@ if isequal(b,d)
     %% Does it happen ever??
     b = y;
     return
+end
+if not(isa(b,'mirdesign'))
+    mirerror('MIRSTRUCT','In the mirstruct object you defined, the final output should only depend on ''tmp'' variables, and should not therefore reuse the ''Design'' keyword.');
 end
 v = get(b,'Stored');
 if length(v)>1 && ischar(v{2})

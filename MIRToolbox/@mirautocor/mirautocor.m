@@ -576,8 +576,10 @@ y = mirautocor(orig,option);
 
 
 function y = combinechunk(old,new)
-do = mirgetdata(old);
-dn = mirgetdata(new);
+do = get(old,'Data');
+do = do{1}{1};
+dn = get(new,'Data');
+dn = dn{1}{1};
 if abs(size(dn,1)-size(do,1)) <= 2 % Probleme of border fluctuation
     mi = min(size(dn,1),size(do,1));
     dn = dn(1:mi,:,:);

@@ -11,8 +11,8 @@ function varargout = mirkeystrength(orig,varargin)
 %       strength estimation.
 %
 % Krumhansl, Cognitive foundations of musical pitch. Oxford UP, 1990.
-% Gomez, ?Tonal description of polyphonic audio for music content processing,
-%   ? INFORMS Journal on Computing, 18-3, pp. 294?304, 2006.
+% Gomez, Tonal description of polyphonic audio for music content processing,
+%   INFORMS Journal on Computing, 18-3, pp. 294-304, 2006.
 
         wth.key = 'Weight';
         wth.type = 'Integer';

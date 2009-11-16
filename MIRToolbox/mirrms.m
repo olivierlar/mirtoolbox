@@ -65,8 +65,10 @@ y = mirrms(orig,option);
 
 
 function y = combinechunk(old,new)
-do = mirgetdata(old);
-dn = mirgetdata(new);
+do = get(old,'Data');
+do = do{1}{1};
+dn = get(new,'Data');
+dn = dn{1}{1};
 y = set(old,'ChunkData',sqrt(do^2+dn^2));
 
 

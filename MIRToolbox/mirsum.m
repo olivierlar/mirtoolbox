@@ -185,8 +185,10 @@ function y = combinechunk(old,new)
 if isa(old,'mirspectrum')
     warning('WARNING IN MIRSUM: not yet fully generalized to mirspectrum')
 end
-do = mirgetdata(old);
-dn = mirgetdata(new);
+do = get(old,'Data');
+do = do{1}{1};
+dn = get(new,'Data');
+dn = dn{1}{1};
 if length(dn) < length(do)
     dn(length(do),:,:) = 0; % Zero-padding
 end
