@@ -66,7 +66,7 @@ if load
         [s,f,b] = reader(file);
     else
         [s,f,b] = reader(file,1);
-        sz = reader(file,'size');
+        %sz = reader(file,'size');
         %if extract(4)
         %    pt = sz(1);
         %    if extract(4) == 1

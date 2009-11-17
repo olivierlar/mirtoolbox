@@ -111,8 +111,8 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             % The required memory exceed the max memory threshold.
                 nch = ceil(lsz/CHUNKLIM); 
             %%% TAKE INTO CONSIDERATION NUMBER OF CHANNELS; ETC... 
-                chunks = max(1,lsz-CHUNKLIM*(nch:-1:1));
-                chunks(2,:) = lsz-CHUNKLIM*(nch-1:-1:0)-1;
+                chunks = max(0,lsz-CHUNKLIM*(nch:-1:1))+1;
+                chunks(2,:) = lsz-CHUNKLIM*(nch-1:-1:0);
             else
                 chunks = [];
             end
@@ -167,7 +167,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         y = {};
         for i = 1:size(chunks,2)
             disp([meth,num2str(i),'/',num2str(nch),'...'])
-            d2 = set(d2,'Chunk',[chunks(1,i)+w(1) chunks(2,i)+w(1) (i == size(chunks,2))]);
+            d2 = set(d2,'Chunk',[chunks(1,i)+w(1)-1 chunks(2,i)+w(1)-1 (i == size(chunks,2))]);
             
             if not(ischar(specif.eachchunk) && ...
                    strcmpi(specif.eachchunk,'Normal'))
