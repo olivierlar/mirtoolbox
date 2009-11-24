@@ -102,8 +102,8 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         chunks = [];
     elseif not(isempty(sg))
         meth = 'Segment ';
-        chunks = sg(1:end-1)*sr;
-        chunks(2,:) = min( sg(2:end)*sr-1,lsz-1);
+        chunks = sg(1:end-1)*sr+1;
+        chunks(2,:) = min( sg(2:end)*sr-1,lsz-1)+1;
     else
         meth = 'Chunk ';
         if isempty(fr)
