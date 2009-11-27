@@ -25,9 +25,9 @@ if ischar(sg)
     error('ERROR in MIREVAL: mirsegment of design object accepts only array of numbers as second argument.');
 end
 if not(isempty(sg))
-    over = find(sg > len,1);
+    over = find(sg(2,:) > len);
     if not(isempty(over))
-        sg = sg(1:over);
+        sg = sg(:,1:over-1);
     end
 end
 a = d.argin;
@@ -102,8 +102,13 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         chunks = [];
     elseif not(isempty(sg))
         meth = 'Segment ';
-        chunks = sg(1:end-1)*sr+1;
-        chunks(2,:) = min( sg(2:end)*sr-1,lsz-1)+1;
+        if size(sg,1) == 1
+            chunks = floor(sg(1:end-1)*sr)+1;
+            chunks(2,:) = min( floor(sg(2:end)*sr)-1,lsz-1)+1;
+        else
+            chunks = floor(sg*sr);
+            chunks(1,:) = chunks(1,:)+1;
+        end
     else
         meth = 'Chunk ';
         if isempty(fr)
@@ -856,8 +861,11 @@ rpn = get(new,'ReleasePos');
 tpn = get(new,'TrackPos');
 tvn = get(new,'TrackVal');
 
-y = set(old,'Data',{{do{1}{:},dn{1}{:}}},...
-            'FramePos',{{fpo{1}{:},fpn{1}{:}}}); 
+if not(isempty(do))
+    y = set(old,'Data',{{do{1}{:},dn{1}{:}}});
+end
+
+y = set(old,'FramePos',{{fpo{1}{:},fpn{1}{:}}}); 
         
 if not(isempty(to)) && size(do{1},2) == size(to{1},2)
     y = set(y,'Pos',{{to{1}{:},tn{1}{:}}}); 
@@ -889,6 +897,15 @@ end
 if not(isempty(tvn))
     y = set(y,'TrackVal',{[tvo{1},tvn{1}{1}]});
 end
+
+if isa(old,'miremotion')
+    deo = get(old,'DimData');
+    ceo = get(old,'ClassData');
+    den = get(new,'DimData');
+    cen = get(new,'ClassData');
+    y = set(y,'DimData',{[deo{1},den{1}{1}]},...
+            'ClassData',{[ceo{1},cen{1}{1}]});
+end
  
 
 function y = sumchunk(old,new,order)
@@ -903,8 +920,12 @@ y = set(old,'ChunkData',do+dn);
 
 function y = divideweightchunk(orig,length)
 d = get(orig,'Data');
-v = mircompute(@divideweight,d,length);
-y = set(orig,'Data',v);
+if isempty(d)
+    y = orig;
+else
+    v = mircompute(@divideweight,d,length);
+    y = set(orig,'Data',v);
+end
 
 function e = multweight(d,length)
 e = d*length;

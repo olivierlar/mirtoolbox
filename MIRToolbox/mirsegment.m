@@ -152,11 +152,10 @@ if isa(x,'mirdesign')
     else
         % During top-down evaluation initiation
         
-        e = evaleach(x);
-        if iscell(e)
-            e = e{1};
+        f = evaleach(x);
+        if iscell(f)
+            f = f{1};
         end
-        f = mirsegment(e,varargin{:});
         p = x;
     end
 elseif isa(x,'mirdata')

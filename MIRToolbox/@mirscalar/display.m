@@ -1,6 +1,7 @@
 function display(s,varargin)
 % SCALAR/DISPLAY display the values of a scalar object
 disp(' ');
+p = get(s,'Pos');
 v = get(s,'Data');
 m = get(s,'Mode');
 t = get(s,'Title');
@@ -20,7 +21,11 @@ for i = 1:length(v)  % For each audio file
         mi = m{i};
     end
     fpi = fp{i};
-    ppi = pp{i};
+    if isempty(pp)
+        ppi = [];
+    else
+        ppi = pp{i};
+    end
     
     if isempty(vi)
         disp(['The ',t,' related to file ',n{i},...
@@ -140,7 +145,7 @@ for i = 1:length(v)  % For each audio file
             for j = 1:length(vi)     % for each segment
                 vj = vi{j};
                 fpj = fpi{j};
-                if isempty(ppi)
+                if isempty(ppi) || length(ppi)<j
                     ppj = [];
                 else
                     ppj = ppi{j};
@@ -218,14 +223,18 @@ for i = 1:length(v)  % For each audio file
                     for h = 1:nl    % For each dimension represented
                         %if not(isempty(vj(h,:,k)))
                             if isnan(vold)
-                                plot(mean(fpj,1),vj(h,:,k)','+-')
+                                plot(mean(fpj,1),vj(h,:,k)',...
+                                    '+-','Color',num2col(h))
                             else
-                                plot([fold mean(fpj,1)],[vold vj(h,:,k)]','+-')
+                                plot([fold mean(fpj,1)],[vold(h) vj(h,:,k)]',...
+                                    '+-','Color',num2col(h))
                                 % Current curve linked with curve from
                                 % previous segment
                             end
-                            vold = vj(:,end,k);
-                            fold = mean(fpj(:,end),1);
+                            if h == nl
+                                vold = vj(:,end,k);
+                                fold = mean(fpj(:,end),1);
+                            end
                        % else
                        %     vold = NaN;
                        %     fold = NaN;
@@ -280,7 +289,11 @@ for i = 1:length(v)  % For each audio file
         if nl>1
             legnd = cell(nl,1);
             for j = 1:nl
-                legnd{j} = num2str(j);
+                if isempty(p)
+                    legnd{j} = num2str(j);
+                else
+                    legnd{j} = p{i}{1}{j};
+                end
             end
             legend(legnd,'Location','Best')
         end

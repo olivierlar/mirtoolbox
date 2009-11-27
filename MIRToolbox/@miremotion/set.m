@@ -3,9 +3,18 @@ function ee = set(e,varargin)
 % and return the updated object
 
 propertyArgIn = varargin;
-af = e.activity_fact;
-vf = e.valence_fact;
-tf = e.tension_fact;
+%dim = e.dim;
+dimdata = e.dimdata;
+%activity_fact = e.activity_fact;
+%valence_fact = e.valence_fact;
+%tension_fact = e.tension_fact;
+%classes = e.class;
+classdata = e.classdata;
+%happy_fact = e.happy_fact;
+%sad_fact = e.sad_fact;
+%tender_fact = e.tender_fact;
+%anger_fact = e.anger_fact;
+%fear_fact = e.fear_fact;
 d = mirdata(e);
 d = set(d,'Title',get(e,'Title'),'Abs',get(e,'Abs'),'Ord',get(e,'Ord'));
 while length(propertyArgIn) >= 2,
@@ -13,19 +22,24 @@ while length(propertyArgIn) >= 2,
    val = propertyArgIn{2};
    propertyArgIn = propertyArgIn(3:end);
    switch prop
-       case 'ActivityFactors'
-           af = val;
-       case 'ValenceFactors'
-           vf = val;
-       case 'TensionFactors'
-           tf = val;
-       case 'Concepts'
-           d = set(d,'Pos',val);
+       case 'DimData'
+           dimdata = val;
+       case 'ClassData'
+           classdata = val;
        otherwise
            d = set(d,prop,val);
    end
 end
-ee.activity_fact = af;
-ee.valence_fact = vf;
-ee.tension_fact = tf;
+ee.dim = e.dim;
+ee.dimdata = dimdata;
+ee.activity_fact = e.activity_fact;
+ee.valence_fact = e.valence_fact;
+ee.tension_fact = e.tension_fact;
+ee.class = e.class;
+ee.classdata = classdata;
+ee.happy_fact = e.happy_fact;
+ee.sad_fact = e.sad_fact;
+ee.tender_fact = e.tender_fact;
+ee.anger_fact = e.anger_fact;
+ee.fear_fact = e.fear_fact;
 ee = class(ee,'miremotion',d);
