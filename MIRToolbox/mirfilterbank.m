@@ -253,12 +253,13 @@ else
             end
             for j = 1:length(z)
                 [sos,g] = zp2sos(z{j},p{j},k{j});
-                Hd = dfilt.df2tsos(sos,g);
-                Hd.PersistentMemory = true;
+                Hd(j) = dfilt.df2tsos(sos,g);
+                Hd(j).PersistentMemory = true;
                 for h = 1:length(d{i})
-                    output{i}{h}(:,:,j) = filter(Hd,d{i}{h});
+                    output{i}{h}(:,:,j) = filter(Hd(j),d{i}{h});
                 end
             end
+            %fvtool(Hd)
             nch{i} = 1:length(freqi)-step;
         end
         b = set(x,'Data',output,'Channels',nch);

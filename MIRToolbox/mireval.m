@@ -223,7 +223,14 @@ if isstruct(c)
             end
         end
         c.(field) = combineaudiofile(v{:});
+        if strcmp(field,'Class')
+            c.Class = c.Class{1};
+        end
     end
+    return
+end
+if ischar(c)
+    c = varargin;
     return
 end
 if (not(iscell(c)) && not(isa(c,'mirdata')))

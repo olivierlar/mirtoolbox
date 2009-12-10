@@ -21,7 +21,18 @@ elseif isstruct(f)
     fields = fieldnames(f);
     for i = 1:length(fields)
         field = fields{i};
-        stat.(field) = mirstat(f.(field));
+        ff = f.(field);
+        if iscell(ff)
+            ff = ff{1};
+        end
+        if i == 1
+            la = get(ff,'Label');
+            if not(isempty(la))
+                stat.Class = la;
+            end
+        end
+        ff = set(ff,'Label','');
+        stat.(field) = mirstat(ff);
     end
     varargout = {stat};
 else
@@ -44,7 +55,7 @@ if isa(f,'mirhisto')
     return
 end
 fp = get(f,'FramePos');
-ti = get(f,'Title');
+la = get(f,'Label');
 if haspeaks(f)
     ppp = get(f,'PeakPrecisePos');
     if not(isempty(ppp)) && not(isempty(ppp{1}))

@@ -44,6 +44,7 @@ else
     format = 'Matrix';
 end
 title = 'MIRtoolbox';
+class = {};
 if not(isempty(varargin)) && ischar(varargin{end}) && strcmp(varargin{end},'#add')
     add = 1;
     varargin(end) = [];
@@ -72,7 +73,7 @@ for v = 2:narg
         new.data = argv;
         new.textdata = '';
         new.name = {};
-        stored = integrate(stored,new);
+        [stored class] = integrate(stored,new);
     end
 end
 switch format
@@ -80,7 +81,13 @@ switch format
         matrixformat(stored,f,title,add);
         m = 1;
     case 'ARFF'
-        ARFFformat(stored,f,title);
+        classes = {};
+        for i = 1:length(class)
+            if isempty(strcmp(class{i},classes)) || not(max(strcmp(class{i},classes)))
+                classes{end+1} = class{i};
+            end
+        end
+        ARFFformat(stored,f,title,class,classes);
         m = 1;
     case 'Workspace'
         m = variableformat(stored,f,title);
@@ -88,7 +95,9 @@ end
 
 
 
-function stored = integrate(stored,new)
+function [stored class] = integrate(stored,new)
+
+class = {};
 
 % Input information
 data = new.data;
@@ -105,6 +114,11 @@ newtextdata = {};
 newname = {};
 
 if isstruct(data)
+    if isfield(data,'Class')
+        class = data.Class;
+        data = rmfield(data,'Class');
+    end
+    
     fields = fieldnames(data);
     nfields = length(fields);
     
@@ -279,14 +293,27 @@ fclose(fid);
 disp(['Data exported to file ',filename,'.']);
 
 
-function ARFFformat(data,filename,title)
+function ARFFformat(data,filename,title,class,classes)
 fid = fopen(filename,'wt');
 fprintf(fid,'%% Attribution-Relation File automatically generated using MIRtoolbox.\n\n');
 
 fprintf(fid,'@RELATION %s\n\n',title);
+
 for i = 1:length(data.textdata)
     fprintf(fid,'@ATTRIBUTE %s NUMERIC\n',data.textdata{i});
 end
+
+if not(isempty(class))
+    fprintf(fid,'@ATTRIBUTE class {');
+    for i = 1:length(classes)
+        if i>1
+            fprintf(fid,',');
+        end
+        fprintf(fid,'%s',classes{i});
+    end
+    fprintf(fid,'}\n');
+end
+
 fprintf(fid,'\n@DATA\n');
 try
     data = cell2mat(data.data(:))';
@@ -295,6 +322,9 @@ catch
 end
 for i = 1:size(data,1)
     fprintf(fid,'%d ',data(i,:));
+    if not(isempty(class))
+        fprintf(fid,'%s',class{i});
+    end
     fprintf(fid,'\n');
 end
 fclose(fid);

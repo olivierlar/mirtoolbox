@@ -12,6 +12,9 @@ function d = mirdist(x,y,dist)
 %   If x and y contains peaks, the vectors representing the peak
 %       distributions are compared using Euclidean distance.
 %       (used with mirnovelty in Jacobson, 2006)
+%
+% The Earth Mover Distance is based on the implementation by Yossi Rubner,
+% wrapped for Matlab by Elias Pampalk.
 
 if not(isa(x,'mirdata'))
     x = miraudio(x);
