@@ -18,23 +18,28 @@ function varargout = mirstat(f,varargin)
 if isa(f,'mirstruct')
     varargout = {set(f,'Stat',1)};
 elseif isstruct(f)
-    fields = fieldnames(f);
-    for i = 1:length(fields)
-        field = fields{i};
-        ff = f.(field);
-        if iscell(ff)
-            ff = ff{1};
-        end
-        if i == 1
-            la = get(ff,'Label');
-            if not(isempty(la))
-                stat.Class = la;
+    if isdesign(f)
+        f.Stat = 1;
+        varargout = {f};
+    else
+        fields = fieldnames(f);
+        for i = 1:length(fields)
+            field = fields{i};
+            ff = f.(field);
+            if iscell(ff)
+                ff = ff{1};
             end
+            if i == 1
+                la = get(ff,'Label');
+                if not(isempty(la))
+                    stat.Class = la;
+                end
+            end
+            ff = set(ff,'Label','');
+            stat.(field) = mirstat(ff);
         end
-        ff = set(ff,'Label','');
-        stat.(field) = mirstat(ff);
+        varargout = {stat};
     end
-    varargout = {stat};
 else
     specif.nochunk = 1;
     varargout = mirfunction(@mirstat,f,varargin,nargout,specif,@init,@main);
@@ -55,7 +60,6 @@ if isa(f,'mirhisto')
     return
 end
 fp = get(f,'FramePos');
-la = get(f,'Label');
 if haspeaks(f)
     ppp = get(f,'PeakPrecisePos');
     if not(isempty(ppp)) && not(isempty(ppp{1}))
@@ -191,4 +195,18 @@ if not(isempty(nonan))
         cor = cor/sum(cor);
         pe = -sum(cor.*log(cor+1e-12))./log(length(cor));
     end
+end
+
+
+function b = isdesign(f)
+if iscell(f)
+    f = f{1};
+end
+if isa(f,'mirdesign') || isa(f,'mirstruct')
+    b = 1;
+elseif isa(f,'mirdata')
+    b = 0;
+else
+    fields = fieldnames(f);
+    b = isdesign(f.(fields{1}));
 end

@@ -161,22 +161,43 @@ function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name)
 %   If d is a structure or a cell array, evaluate each component
 %       separately.
 if isstruct(d)
-    fields = fieldnames(d);
     v = struct;
     if istmp
         struc.tmp = struct;
     end
+    isstat = isfield(d,'Stat');
+    if isstat
+        d = rmfield(d,'Stat');
+    end
+    fields = fieldnames(d);
     for fi = 1:length(fields)
-        field = fields{fi};
-        display(['*******',field,'******']);
-        res = evalaudiofile(d.(field),file,sampling,size,struc,istmp,index,single,field);
+        fieldname = fields{fi};
+        field = d.(fieldname);
+        display(['*******',fieldname,'******']);
+        if isstat
+            if isa(field,'mirstruct')
+                field = set(field,'Stat',1);
+            elseif isa(field,'mirdesign')
+                field = mirstat(field);
+            else
+                field.Stat = 1;
+            end
+        end
+        res = evalaudiofile(field,file,sampling,size,struc,istmp,index,...
+                                                        single,fieldname);
         if not(isempty(single)) && not(isequal(single,0)) && ...
-                iscell(res) && isa(d.(field),'mirdesign')
+                iscell(res) && isa(field,'mirdesign')
             res = res{1};
         end
-        v.(field) = res;
+        v.(fieldname) = res;
         if istmp
-            struc.tmp.(field) = v.(field);
+            struc.tmp.(fieldname) = res;
+        end
+        if fi == 1
+            if isfield(res,'Class')
+                v.Class = res.Class;
+                v.(fieldname) = rmfield(res,'Class');
+            end
         end
     end
     if isfield(v,'tmp')

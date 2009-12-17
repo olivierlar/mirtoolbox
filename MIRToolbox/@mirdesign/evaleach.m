@@ -6,7 +6,9 @@ function [y d2] = evaleach(d,single,name)
 % needs to be performed or not, and carry out that chunk decomposition.
 
 if nargin<3 || isempty(name)
-    name = func2str(d.method);
+    if not(ischar(d.method))
+        name = func2str(d.method);
+    end
 end
 if nargin<2
     single = 0;
