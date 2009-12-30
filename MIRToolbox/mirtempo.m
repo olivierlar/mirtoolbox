@@ -67,7 +67,7 @@ function varargout = mirtempo(x,varargin)
     
         sum.key = 'Sum';
         sum.type = 'String';
-        sum.choice = {'Before','After','Adjacent'};
+        sum.choice = {'Before','After','Adjacent',0};
         sum.default = 'Before';
     option.sum = sum;
         
@@ -283,17 +283,17 @@ if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
         disp(['Suggestion: Use the ''Frame'' option instead.'])
     end
     if strcmpi(option.sum,'Before')
-        option.sum = 1;
+        optionsum = 1;
     elseif strcmpi(option.sum,'Adjacent')
-        option.sum = 5;
+        optionsum = 5;
     else
-        option.sum = 0;
+        optionsum = 0;
     end
     if option.frame.length.val
         x = mironsets(x,option.fea,'Filterbank',option.fb,...
                     'FilterbankType',option.fbtype,...
                     'FilterType',option.ftype,...
-                    'Sum',option.sum,'Method',option.envmeth,...
+                    'Sum',optionsum,'Method',option.envmeth,...
                     option.band,'Center',option.c,...
                     'HalfwaveCenter',option.chwr,'Diff',option.diff,...
                     'HalfwaveDiff',option.diffhwr,'Lambda',option.lambda,...
@@ -309,7 +309,7 @@ if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
         x = mironsets(x,option.fea,'Filterbank',option.fb,...
                     'FilterbankType',option.fbtype,...
                     'FilterType',option.ftype,...
-                    'Sum',option.sum,'Method',option.envmeth,...
+                    'Sum',optionsum,'Method',option.envmeth,...
                     option.band,'Center',option.c,...
                     'HalfwaveCenter',option.chwr,'Diff',option.diff,...
                     'HalfwaveDiff',option.diffhwr,'Lambda',option.lambda,...
@@ -339,7 +339,9 @@ elseif option.spe && option.aut
                        'ZeroPad',option.zp,'Resonance',option.r);
     y = ac*sp;
 end
-y = mirsum(y);
+if ischar(option.sum)
+    y = mirsum(y);
+end
 if option.m
     y = mirpeaks(y,'Total',option.m,'Pref',option.pref(1),option.pref(2),...
                    'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
@@ -360,15 +362,17 @@ for j = 1:length(pt)
     for k = 1:length(pt{j})
         ptk = pt{j}{k};
         bpmk = cell(1,size(ptk,2));
-        for l = 1:size(ptk,2)
-            ptl = ptk{l};
-            if isempty(ptl)
-                bpmk{l} = NaN;
-            else
-                if isa(p,'mirautocor') && not(get(p,'FreqDomain'))
-                    bpmk{l} = 60./ptl;
+        for h = 1:size(ptk,3)
+            for l = 1:size(ptk,2)
+                ptl = ptk{1,l,h};
+                if isempty(ptl)
+                    bpmk{1,l,h} = NaN;
                 else
-                    bpmk{l} = ptl*60;
+                    if isa(p,'mirautocor') && not(get(p,'FreqDomain'))
+                        bpmk{1,l,h} = 60./ptl;
+                    else
+                        bpmk{1,l,h} = ptl*60;
+                    end
                 end
             end
         end
