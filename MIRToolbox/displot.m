@@ -69,8 +69,7 @@ if not(iscell(y)) && l > 20 && size(y,3) == 1
     end
 end
 curve = ... %not (l > 15 && (lx == 1 || c == 1)) && ...
-        (not(iscell(y)) && ...
-            ((not(isequal(fp2,0)) && size(fp2,2)==1) || lx == 1)) || ...
+        (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
         ...%(iscell(y) && size(y{1}) == 1) || ...
         c == 1 || (strcmp(xlab,'time (s)') && not(manychannels));
 if curve
@@ -341,7 +340,7 @@ else
         if iscell(x)
             x = x{1};
         end
-        if size(x,1) == 1
+        if size(x,1) == 1 && size(y,1) > 1
             if size(x,3) == 1
                 x = x';
             else
@@ -365,20 +364,37 @@ else
             if iscell(fp)
                 fp = uncell(fp);
             end
-            ttt = [fp(1,:) 2*fp(1,end)-fp(1,end-1)];
-            if size(y,4) == 1 && not(mel)
-                xxx = [1.5*xx(1,1)-0.5*xx(2,1);...
-                       (xx(1:end-1)+xx(2:end))/2;...
-                       1.5*xx(end,1)-0.5*xx(end-1,1)];
+            lx = length(xx);
+            if lx < 6
+                curve = 1;
+                ttt = (fp(1,:)+fp(2,:))/2;
+                plot(ttt,yy)
+                if i == 1
+                    legdata = cell(1,lx);
+                    if strcmp(xlab(end),'s')
+                        xlab(end) = [];
+                    end
+                    for j = 1:lx
+                        legdata{j} = [xlab,' ',num2str(j)];
+                    end
+                    legend(legdata)
+                end
             else
-                xxx = (0:size(yy,1))';
+                ttt = [fp(1,:) 2*fp(1,end)-fp(1,end-1)];
+                if size(y,4) == 1 && not(mel)
+                    xxx = [1.5*xx(1)-0.5*xx(2);...
+                           (xx(1:end-1)+xx(2:end))/2;...
+                           1.5*xx(end)-0.5*xx(end-1)];
+                else
+                    xxx = (0:size(yy,1))';
+                end
+                surfplot(ttt,xxx,yy);
+                if not(isempty(ticky))
+                    set(gca,'ytick',ticky);
+                    set(gca,'yticklabel',tickylab);
+                end
+                set(gca,'YDir','normal');
             end
-            surfplot(ttt,xxx,yy);
-            if not(isempty(ticky))
-                set(gca,'ytick',ticky);
-                set(gca,'yticklabel',tickylab);
-            end
-            set(gca,'YDir','normal');
             hold on
             %if iscell(pp)
             %    pp = uncell(pp);
@@ -449,7 +465,8 @@ else
             end
             if i == l
                 title(t)
-            elseif i == 1
+            end
+            if i == 1
                 xlabel('time axis (in s.)');
             end
             if l > 1

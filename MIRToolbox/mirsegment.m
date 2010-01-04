@@ -55,7 +55,7 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %       feature used for the analysis.
  
         ana.type = 'String';
-        ana.choice = {'Spectrum','Keystrength','Pitch'};
+        ana.choice = {'Spectrum','Keystrength','AutocorPitch','Pitch'};
         ana.default = 0;
     option.ana = ana;
     
@@ -65,7 +65,7 @@ function [f,p,m,fe] = mirsegment(x,varargin)
     option.band = band;
 
         mfc.key = {'Rank','MFCC'};
-        mfc.type = 'Integer';
+        mfc.type = 'Integers';
         mfc.default = 0;
         mfc.keydefault = 1:13;
     option.mfc = mfc;
@@ -122,7 +122,7 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         frame.keydefault = [3 .1];
     option.frame = frame;
     
-        strat.choice = {'Novelty','HCDF'}; % should remain as last field
+        strat.choice = {'Novelty','HCDF','Silence'}; % should remain as last field
         strat.default = 'Novelty';
         strat.position = 2;
     option.strat = strat;
@@ -161,12 +161,14 @@ if isa(x,'mirdesign')
 elseif isa(x,'mirdata')
     [unused option] = miroptions(@mirframe,x,specif,varargin);
     if ischar(option.strat)
-        if strcmpi(option.strat,'Novelty') || strcmpi(option.strat,'HCDF')
+        if strcmpi(option.strat,'Novelty') ...
+                || strcmpi(option.strat,'HCDF') ...
+                || strcmpi(option.strat,'Silence')
             dx = get(x,'Data');
             if size(dx{1},2) > 1
                 %fr = x;
                 error('ERROR IN MIRSEGMENT: The segmentation of audio signal already decomposed into frames is not available for the moment.');
-            else%%%%if not(strcmpi(option.ana,'Pitch'))
+            else%%%%if not(strcmpi(option.ana,'AutocorPitch'))
                 if not(option.frame.length.val)
                     if strcmpi(option.ana,'Keystrength')
                         option.frame.length.val = .5;
@@ -174,7 +176,8 @@ elseif isa(x,'mirdata')
                     elseif strcmpi(option.strat,'HCDF')
                         option.frame.length.val = .743;
                         option.frame.hop.val = 1/8;
-                    elseif strcmpi(option.ana,'Pitch')
+                    elseif strcmpi(option.ana,'AutocorPitch') ...
+                            || strcmpi(option.ana,'Pitch')
                         option.frame.length.val = .05;
                         option.frame.hop.val = .01;
                     else
@@ -192,7 +195,8 @@ elseif isa(x,'mirdata')
                                     'Window',option.win);
             elseif strcmpi(option.ana,'Keystrength')
                     fe = mirkeystrength(fr);
-            elseif strcmpi(option.ana,'Pitch')
+            elseif strcmpi(option.ana,'AutocorPitch') ...
+                    || strcmpi(option.ana,'Pitch')
                 [unused,fe] = mirpitch(x,'Frame');
             else
                 fe = fr;
