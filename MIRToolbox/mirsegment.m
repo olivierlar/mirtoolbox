@@ -3,30 +3,37 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %       audio file or 'Folder', for the analysis of the audio files in the
 %       current folder. The segmentation of audio signal already decomposed
 %       into frames is not available for the moment.
-%   f = mirsegment(...,strategy) segments following alternative strategies:
-%       'Novelty': using a self-similarity matrix (Foote & Cooper, 2003).
-%           (by default)
-%       'HCDF': using the Harmonic Change Detection Function (Harte &
-%           Sandler, 2006)
+%   f = mirsegment(...,'Novelty') segments using a self-similarity matrix
+%           (Foote & Cooper, 2003)     (by default)
+%       f = mirsegment(...,feature) bases the segmentation strategy on a
+%           specific feature.
+%           'Spectrum': from FFT spectrum (by default)
+%           'MFCC': from MFCCs
+%           'Keystrength': from the key strength profile
+%           'AutocorPitch': from the autocorrelation function computed as
+%               for pitch extraction.
+%           The option related to this feature extraction can be specified.
+%           Example: mirsegment(...,'Spectrum','Window','bartlett')
+%                    mirsegment(...,'MFCC','Rank',1:10)
+%                    mirsegment(...,'Keystrength','Weight',.5)
+%       These feature need to be frame-based, in order to appreciate their
+%           temporal evolution. Therefore, the audio signal x is first
+%           decomposed into frames. This decomposition can be controled
+%           using the 'Frame' keyword.  
 %       The options available for the chosen strategies can be specified
 %           directly as options of the segment function.
 %           Example: mirsegment(a,'Novelty','KernelSize',10)
-%   f = mirsegment(...,feature) base the segmentation strategy on a specific
-%       feature.
-%       'Spectrum': from FFT spectrum
-%           (by default)
-%       'MFCC': from MFCCs
-%       'Keystrength': from the key strength profile
-%       'AutocorPitch': from the autocorrelation function computed as for
-%           pitch extraction.
-%       The option related to this feature extraction can be specified too.
-%       Example: mirsegment(...,'Spectrum','Window','bartlett')
-%                mirsegment(...,'MFCC','Rank',1:10)
-%                mirsegment(...,'Keystrength','Weight',.5)
-%   These feature need to be frame-based, in order to appreciate their
-%       temporal evolution. Therefore, the audio signal x is first
-%       decomposed into frames. This decomposition can be controled using
-%       the 'Frame' keyword.  
+%   f = mirsegment(...,'HCDF') segments using the Harmonic Change Detection  
+%           Function (Harte & Sandler, 2006)
+%   f = mirsegment(...,'RMS') segments at positions of long silences. A
+%       frame decomposed RMS is computed using mirrms (with default
+%       options), and segments are selected from temporal positions
+%       where the RMS rises to a given 'On' threshold, until temporal
+%       positions where the RMS drops back to a given 'Off' threshold.
+%       f = mirsegment(...,'Off',t1) specifies the RMS 'Off' threshold.
+%           Default value: t1 = .01
+%       f = mirsegment(...,'On',t2) specifies the RMS 'On' threshold.
+%           Default value: t2 = .02
 %
 %   f = mirsegment(a,s) segments a using the results of a segmentation
 %       analysis s. s can be the peaks detected on an analysis of the
@@ -54,15 +61,7 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %   [f,p,m,fe] = mirsegment(...) also displays the temporal evolution of the
 %       feature used for the analysis.
  
-        ana.type = 'String';
-        ana.choice = {'Spectrum','Keystrength','AutocorPitch','Pitch'};
-        ana.default = 0;
-    option.ana = ana;
-    
-        band.choice = {'Mel','Bark','Freq'};
-        band.type = 'String';
-        band.default = 'Freq';
-    option.band = band;
+%   f = mirsegment(...,'Novelty')
 
         mfc.key = {'Rank','MFCC'};
         mfc.type = 'Integers';
@@ -94,26 +93,6 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         cthr.type = 'Integer';
         cthr.default = .1;
     option.cthr = cthr;
-    
-        mi.key = 'Min';
-        mi.type = 'Integer';
-        mi.default = 0;
-    option.mi = mi;
-     
-        ma.key = 'Max';
-        ma.type = 'Integer';
-        ma.default = 0;
-    option.ma = ma;
-    
-        norm.key = 'Normal';
-        norm.type = 'Boolean';
-        norm.default = 0;
-    option.norm = norm;
-
-        win.key = 'Window';
-        win.type = 'String';
-        win.default = 'hamming';
-    option.win = win;
 
         frame.key = 'Frame';
         frame.type = 'Integer';
@@ -121,8 +100,52 @@ function [f,p,m,fe] = mirsegment(x,varargin)
         frame.default = [0 0];
         frame.keydefault = [3 .1];
     option.frame = frame;
+
+        ana.type = 'String';
+        ana.choice = {'Spectrum','Keystrength','AutocorPitch','Pitch'};
+        ana.default = 0;
+    option.ana = ana;
     
-        strat.choice = {'Novelty','HCDF','Silence'}; % should remain as last field
+%       f = mirsegment(...,'Spectrum')    
+    
+            band.choice = {'Mel','Bark','Freq'};
+            band.type = 'String';
+            band.default = 'Freq';
+        option.band = band;
+
+            mi.key = 'Min';
+            mi.type = 'Integer';
+            mi.default = 0;
+        option.mi = mi;
+
+            ma.key = 'Max';
+            ma.type = 'Integer';
+            ma.default = 0;
+        option.ma = ma;
+
+            norm.key = 'Normal';
+            norm.type = 'Boolean';
+            norm.default = 0;
+        option.norm = norm;
+
+            win.key = 'Window';
+            win.type = 'String';
+            win.default = 'hamming';
+        option.win = win;
+    
+%       f = mirsegment(...,'Silence')    
+    
+            throff.key = 'Off';
+            throff.type = 'Integer';
+            throff.default = .01;
+        option.throff = throff;
+
+            thron.key = 'On';
+            thron.type = 'Integer';
+            thron.default = .02;
+        option.thron = thron;
+
+        strat.choice = {'Novelty','HCDF','RMS'}; % should remain as last field
         strat.default = 'Novelty';
         strat.position = 2;
     option.strat = strat;
@@ -161,32 +184,25 @@ if isa(x,'mirdesign')
 elseif isa(x,'mirdata')
     [unused option] = miroptions(@mirframe,x,specif,varargin);
     if ischar(option.strat)
-        if strcmpi(option.strat,'Novelty') ...
-                || strcmpi(option.strat,'HCDF') ...
-                || strcmpi(option.strat,'Silence')
-            dx = get(x,'Data');
-            if size(dx{1},2) > 1
-                %fr = x;
-                error('ERROR IN MIRSEGMENT: The segmentation of audio signal already decomposed into frames is not available for the moment.');
-            else%%%%if not(strcmpi(option.ana,'AutocorPitch'))
-                if not(option.frame.length.val)
-                    if strcmpi(option.ana,'Keystrength')
-                        option.frame.length.val = .5;
-                        option.frame.hop.val = .2;
-                    elseif strcmpi(option.strat,'HCDF')
-                        option.frame.length.val = .743;
-                        option.frame.hop.val = 1/8;
-                    elseif strcmpi(option.ana,'AutocorPitch') ...
-                            || strcmpi(option.ana,'Pitch')
-                        option.frame.length.val = .05;
-                        option.frame.hop.val = .01;
-                    else
-                        option.frame.length.val = .05;
-                        option.frame.hop.val = 1;
-                    end
+        dx = get(x,'Data');
+        if size(dx{1},2) > 1
+            error('ERROR IN MIRSEGMENT: The segmentation of audio signal already decomposed into frames is not available for the moment.');
+        end
+        if strcmpi(option.strat,'Novelty')
+            if not(option.frame.length.val)
+                if strcmpi(option.ana,'Keystrength')
+                    option.frame.length.val = .5;
+                    option.frame.hop.val = .2;
+                elseif strcmpi(option.ana,'AutocorPitch') ...
+                        || strcmpi(option.ana,'Pitch')
+                    option.frame.length.val = .05;
+                    option.frame.hop.val = .01;
+                else
+                    option.frame.length.val = .05;
+                    option.frame.hop.val = 1;
                 end
-                fr = mirframenow(x,option);
             end
+            fr = mirframenow(x,option);
             if not(isequal(option.mfc,0))
                 fe = mirmfcc(fr,'Rank',option.mfc);
             elseif strcmpi(option.ana,'Spectrum')
@@ -201,20 +217,31 @@ elseif isa(x,'mirdata')
             else
                 fe = fr;
             end
-            if strcmpi(option.strat,'Novelty')
-                [n m] = mirnovelty(fe,'Distance',option.distance,...
-                                      'Measure',option.measure,...
-                                      'KernelSize',option.K);
-                p = mirpeaks(n,'Total',option.tot,...
-                                'Contrast',option.cthr,...
-                                'Chrono','NoBegin','NoEnd');
-            elseif strcmpi(option.strat,'HCDF')
-                %[df m fe] = mirhcdf(fe);
-                df = mirhcdf(fe);
-                p = mirpeaks(df);
+            [n m] = mirnovelty(fe,'Distance',option.distance,...
+                                  'Measure',option.measure,...
+                                  'KernelSize',option.K);
+            p = mirpeaks(n,'Total',option.tot,...
+                            'Contrast',option.cthr,...
+                            'Chrono','NoBegin','NoEnd');
+        elseif strcmpi(option.strat,'HCDF')
+            if not(option.frame.length.val)
+                option.frame.length.val = .743;
+                option.frame.hop.val = 1/8;
             end
-        else
-            error('ERROR IN MIRSEGMENT: Syntax error. See help mirsegment.');
+            fr = mirframenow(x,option);
+            %[df m fe] = mirhcdf(fr);
+            df = mirhcdf(fr);
+            p = mirpeaks(df);
+        elseif strcmpi(option.strat,'Silence')
+            if not(option.frame.length.val)
+                option.frame.length.val = .05;
+                option.frame.hop.val = .5;
+            end
+            fr = mirframenow(x,option);
+            %[df m fe] = mirhcdf(fr);
+            df = mirrms(fr);
+            fp = get(df,'FramePos');
+            p = mircompute(@findsilence,df,fp,option.throff,option.thron);
         end
         f = mirsegment(x,p);
     else
@@ -265,6 +292,9 @@ elseif isa(x,'mirdata')
                     else
                         dsm = dsj{m};
                     end
+                    if iscell(dsm)
+                        dsm = dsm{1};
+                    end
                     dsm(find(dsm <= dtk(1))) = [];
                     dsm(find(dsm >= dtk(end))) = [];
                     % It is presupposed here that the segmentations times
@@ -282,32 +312,56 @@ elseif isa(x,'mirdata')
 
             if isempty(fsk)
                 ffsk = {[0;dtk(end)]};
-            else
+            elseif size(fsk,1) == 1
                 ffsk = cell(1,length(fsk)+1);
                 ffsk{1} = [dtk(1);fsk(1)];
                 for h = 1:length(fsk)-1
                     ffsk{h+1} = [fsk(h);fsk(h+1)];
                 end
                 ffsk{end} = [fsk(end);dtk(end)];
-            end
-            n = length(ffsk);
+                
+                n = length(ffsk);
 
-            crd = zeros(1,n+1); % the sample positions of the
-                                % segmentations in the channel
-            crd0 = 0;
-            for i = 1:n
-                crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(1),1);
-                crd(i) = crd0;
-            end
-            crd(n+1) = size(dxk,1)+1;
+                crd = zeros(1,n+1); % the sample positions of the
+                                    % segmentations in the channel
+                crd0 = 0;
+                for i = 1:n
+                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(1),1);
+                    crd(i) = crd0;
+                end
+                crd(n+1) = size(dxk,1)+1;
 
-            sxk = cell(1,n); % each cell contains a segment
-            stk = cell(1,n); % each cell contains
-                             % the corresponding time positions
+                sxk = cell(1,n); % each cell contains a segment
+                stk = cell(1,n); % each cell contains
+                                 % the corresponding time positions
 
-            for i = 1:n
-                sxk{i} = dxk(crd(i):crd(i+1)-1,1,:);
-                stk{i} = dtk(crd(i):crd(i+1)-1);
+                for i = 1:n
+                    sxk{i} = dxk(crd(i):crd(i+1)-1,1,:);
+                    stk{i} = dtk(crd(i):crd(i+1)-1);
+                end
+
+            elseif size(fsk,1) == 2
+                ffsk = cell(1,size(fsk,2));
+                for h = 1:length(fsk)
+                    ffsk{h} = [fsk(1,h);fsk(2,h)];
+                end
+                n = length(ffsk);
+                crd = zeros(2,n); % the sample positions of the
+                                  % segmentations in the channel
+                crd0 = 0;
+                for i = 1:n
+                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(1),1);
+                    crd(i,1) = crd0;
+                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(2),1);
+                    crd(i,2) = crd0;                    
+                end
+                sxk = cell(1,n); % each cell contains a segment
+                stk = cell(1,n); % each cell contains
+                                 % the corresponding time positions
+                for i = 1:n
+                    sxk{i} = dxk(crd(i,1):crd(i,2),1,:);
+                    stk{i} = dtk(crd(i,1):crd(i,2));
+                end
             end
             sx{k} = sxk;
             st{k} = stk;
@@ -322,3 +376,14 @@ elseif isa(x,'mirdata')
 else
     [f p] = mirsegment(miraudio(x),varargin{:});
 end 
+
+
+function p = findsilence(d,fp,throff,thron)
+d = [0 d 0];
+begseg = find(d(1:end-1)<thron & d(2:end)>=thron);
+nseg = length(begseg);
+endseg = zeros(1,nseg);
+for i = 1:nseg
+    endseg(i) = begseg(i) + find(d(begseg(i)+1:end)<=throff, 1);
+end
+p = [fp(1,begseg-1); fp(2,endseg-1)];

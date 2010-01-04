@@ -305,7 +305,7 @@ for h = 1:length(d)
                 n2 = length(tk);
             end
             wh = ones(n2-n1+1,1);
-            dt = round(.02*f{k});
+            dt = round(.02*f{h});
             ha = hann(dt*2);
             wh(1:dt) = ha(1:dt);
             wh(end-dt+1:end) = ha(dt+1:end);
