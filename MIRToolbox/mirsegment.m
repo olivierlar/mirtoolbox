@@ -232,7 +232,7 @@ elseif isa(x,'mirdata')
             %[df m fe] = mirhcdf(fr);
             df = mirhcdf(fr);
             p = mirpeaks(df);
-        elseif strcmpi(option.strat,'Silence')
+        elseif strcmpi(option.strat,'RMS')
             if not(option.frame.length.val)
                 option.frame.length.val = .05;
                 option.frame.hop.val = .5;
