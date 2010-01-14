@@ -51,7 +51,7 @@ function varargout = mirautocor(orig,varargin)
 %       mirautocor(...,'Normal',n) or simply mirautocor(...,n) specifies
 %           the normalization strategy. Accepted values are 'biased',
 %           'unbiased', 'coeff' (default  value) and 'none'.
-%           See help xcorr for an explanation.
+%           See help xcorr for an explanation. 
 
         min.key = 'Min';
         min.type = 'Integer';
