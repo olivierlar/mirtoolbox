@@ -17,6 +17,9 @@ function varargout = mirautocor(orig,varargin)
 %           Possible values:
 %               'Toiviainen' from (Toiviainen & Snyder, 2003)
 %               'vanNoorden' from (van Noorden & Moelants, 2001)
+%           mirautocor(...,'Center',r) assigns the center value of the resonance
+%           option in seconds. Works mainly with Toiviainen & Snyder -option.
+%               Default value: 0.5:
 %       mirautocor(...,'Enhanced',a) reduces the effect of subharmonics.
 %           The original autocorrelation function is half-wave rectified,
 %           time-scaled by the factor a (which can be a factor list as
@@ -110,6 +113,12 @@ function varargout = mirautocor(orig,varargin)
         reso.default = 0;
     option.reso = reso;
         
+        resocenter.key = {'Center','Centre'};
+        resocenter.type = 'Integer';
+        resocenter.default = 0.5;
+        resocenter.when = 'After';
+    option.resocenter = resocenter;
+
         h.key = 'Halfwave';
         h.type = 'Boolean';
         h.when = 'After';
@@ -417,9 +426,9 @@ for k = 1:length(coeff)
                 end
                 if strcmpi(option.reso,'ToiviainenSnyder') || ...
                     strcmpi(option.reso,'Toiviainen')
-                    w = max(1 - 0.25*(log2(max(ll,1e-12)/0.5)).^2, 0);
+                    w = max(1 - 0.25*(log2(max(ll,1e-12)/option.resocenter)).^2, 0);
                 elseif strcmpi(option.reso,'vanNoorden')
-                    f0=2.193; b=0.5; 
+                    f0=2.193; b=option.resocenter; 
                     f=1./ll; a1=(f0*f0-f.*f).^2+b*f.^2; a2=f0^4+f.^4;
                     w=(1./sqrt(a1))-(1./sqrt(a2));
                 end
