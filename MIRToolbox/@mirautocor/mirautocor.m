@@ -17,9 +17,10 @@ function varargout = mirautocor(orig,varargin)
 %           Possible values:
 %               'Toiviainen' from (Toiviainen & Snyder, 2003)
 %               'vanNoorden' from (van Noorden & Moelants, 2001)
-%           mirautocor(...,'Center',r) assigns the center value of the resonance
-%           option in seconds. Works mainly with Toiviainen & Snyder -option.
-%               Default value: 0.5:
+%           mirautocor(...,'Center',c) assigns the center value of the
+%               resonance curve, in seconds.
+%               Works mainly with 'Toiviainen' option.
+%               Default value: c = 0.5
 %       mirautocor(...,'Enhanced',a) reduces the effect of subharmonics.
 %           The original autocorrelation function is half-wave rectified,
 %           time-scaled by the factor a (which can be a factor list as
@@ -37,7 +38,7 @@ function varargout = mirautocor(orig,varargin)
 %           Possible values: any windowing function proposed in the Signal
 %               Processing Toolbox (help window) plus 'rectangle' (no
 %               windowing)
-%           default value:  w = 'hanning'
+%           Default value:  w = 'hanning'
 %           mirautocor(...,'NormalWindow',0): toggles off this normalization
 %               (which is on by default).
 %   All the parameters described previously can be applied to an
@@ -50,7 +51,7 @@ function varargout = mirautocor(orig,varargin)
 %           spectral representation. A normal autocorrelation corresponds
 %           to the value k=2, but values lower than 2 are suggested by
 %           (Tolonen & Karjalainen, 2000).
-%               Default value: k = 0.67
+%           Default value: k = 0.67
 %       mirautocor(...,'Normal',n) or simply mirautocor(...,n) specifies
 %           the normalization strategy. Accepted values are 'biased',
 %           'unbiased', 'coeff' (default  value) and 'none'.
