@@ -37,7 +37,9 @@ function varargout = mirpitch(x,varargin)
 %           (see help peaks)
 %           Default value: thr = .1
 %       mirpitch(...,'Order',o) specifies the ordering for the peak picking.
-%            Default value: o = ?Amplitude?.
+%           Default value: o = 'Amplitude'.
+%       Alternatively, the result of a mirpeaks computation can be directly
+%           given as first argument of the mirpitch function.
 %   Post-processing options:
 %       mirpitch(...,'Median') performs a median filtering of the pitch
 %           curve. When several pitches are extracted in each frame, the
@@ -205,7 +207,7 @@ if isnan(option.frame.hop.val)
     option.frame.hop.val = .01;
     option.frame.hop.unit = 's';
 end
-if isamir(orig,'mirscalar')
+if isamir(orig,'mirscalar') || haspeaks(orig)
     p = orig;
 else
     if isa(orig,'mirautocor')
