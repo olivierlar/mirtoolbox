@@ -1,4 +1,4 @@
-function varargout = mirpitch(x,varargin)
+function varargout = mirpitch(orig,varargin)
 %   p = mirpitch(x) evaluates the pitch frequencies (in Hz).
 %   Specification of the method(s) for pitch estimation (these methods can
 %       be combined):
@@ -66,6 +66,9 @@ function varargout = mirpitch(x,varargin)
 %   [p,a] = mirpitch(...) also displays the result of the method chosen for
 %       pitch estimation, and shows in particular the peaks corresponding
 %       to the pitch values.
+%   p = mirpitch(f,a,<r>) creates a mirpitch object based on the frequencies
+%       specified in f and the related amplitudes specified in a, using a
+%       frame sampling rate of r Hz (set by default to 100 Hz).
 %
 %   T. Tolonen, M. Karjalainen, "A Computationally Efficient Multipitch 
 %       Analysis Model", IEEE TRANSACTIONS ON SPEECH AND AUDIO PROCESSING,
@@ -181,7 +184,22 @@ function varargout = mirpitch(x,varargin)
     
 specif.option = option;
 
-varargout = mirfunction(@mirpitch,x,varargin,nargout,specif,@init,@main);
+if isnumeric(orig)
+    if nargin<3
+        f = 100;
+    else
+        f = varargin{2};
+    end
+    fp = (0:size(orig,1)-1)/f;
+    fp = [fp;fp+1/f];
+    p.amplitude = {{varargin{1}'}};
+    s = mirscalar([],'Data',{{orig'}},'Title','Pitch','Unit','Hz',...
+                     'FramePos',{{fp}},'Sampling',f,'Name',{inputname(1)});
+    p = class(p,'mirpitch',s);
+    varargout = {p};
+else
+    varargout = mirfunction(@mirpitch,orig,varargin,nargout,specif,@init,@main);
+end
 
 
 
