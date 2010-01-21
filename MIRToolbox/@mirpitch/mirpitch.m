@@ -270,10 +270,14 @@ else
                    'Reso',option.reso,'NoBegin','NoEnd',...
                    'Order',option.order);
 end
-type = {'mirscalar',mirtype(p)};
+type = {'mirpitch',mirtype(p)};
     
 
 function o = main(x,option,postoption)
+if isa(x,'mirpitch')
+    o = x;
+    return
+end
 if iscell(x)
     x = x{1};
 end
@@ -281,6 +285,7 @@ if isa(x,'mirscalar')
     pf = get(x,'Data');
 else
     pf = get(x,'PeakPrecisePos');
+    pa = get(x,'PeakPreciseVal');
 end
 fp = get(x,'FramePos');
 if option.stable(1) < Inf
@@ -330,5 +335,11 @@ if option.median
         end
     end
 end
-p = mirscalar(x,'Data',pf,'Title','Pitch','Unit','Hz');
+if isa(x,'mirscalar')
+    p.amplitude = 0;
+else
+    p.amplitude = pa;
+end
+s = mirscalar(x,'Data',pf,'Title','Pitch','Unit','Hz');
+p = class(p,'mirpitch',s);
 o = {p,x};

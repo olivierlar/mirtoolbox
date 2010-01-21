@@ -48,6 +48,9 @@ if iscell(a)
     a = a{1};
 end
 d = get(a,'Data');
+if isa(a,'mirpitch')
+    amp = get(a,'Amplitude');
+end
 f = get(a,'Sampling');
 n = get(a,'Name');
 c = get(a,'Channels');
@@ -113,8 +116,14 @@ if not(isempty(order))
                     if not(isempty(dj))
                         k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
                         k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
+                        if isa(a,'mirpitch')
+                            ampj = repmat(amp{k}{i}{j},1,k2-k1+1);
+                        else
+                            ampj = ones(size(dj),k2-k1+1);
+                        end
                         synth(k1:k2) = synth(k1:k2) ...
-                            + sum(sin(2*pi*dj*(0:k2-k1)/44100),1).*hann(k2-k1+1)';
+                            + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1) ...
+                                    .*hann(k2-k1+1)';
                     end
                 end
                 soundsc(synth,44100);

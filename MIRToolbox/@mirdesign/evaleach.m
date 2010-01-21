@@ -517,6 +517,9 @@ for var = 1:length(new)
     if isa(ov,'mirscalar')
         ov = combinedata(ov,nv,'Data');
         ov = combinedata(ov,nv,'Mode');
+        if isa(ov,'mirpitch')
+            ov = combinedata(ov,nv,'Amplitude');
+        end
     else
         if isa(ov,'mirtemporal')
             [ov omatch nmatch] = combinedata(ov,nv,'Time',[],[],@modiftime);
