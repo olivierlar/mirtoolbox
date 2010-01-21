@@ -1,6 +1,9 @@
 function mirsave(a)
 
 d = get(a,'Data');
+if isa(a,'mirpitch')
+    amp = get(a,'Amplitude');
+end
 n = get(a,'Name');
 t = get(a,'Title');
 c = get(a,'Channels');
@@ -16,18 +19,34 @@ for k = 1:length(d)
     for l = 1:size(dk{1},3)
         for i = 1:length(dk)
             di = dk{i};
+            if isa(a,'mirpitch')
+                ampi = amp{k}{i};
+            end
             synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
             for j = 1:size(di,2)
                 if iscell(di)
                     dj = di{j};
                 else
-                    dj = di(j);
+                    dj = di(:,j);
+                end
+                dj(isnan(dj)) = 0;
+                ampj = zeros(size(dj));
+                if iscell(ampi)
+                    ampj(1:size(ampi{j})) = ampi{j};
+                else
+                    ampj(1:size(ampi(:,j))) = ampi(:,j);
                 end
                 if not(isempty(dj))
                     k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
                     k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
+                    if isa(a,'mirpitch')
+                        ampj = repmat(ampj,1,k2-k1+1);
+                    else
+                        ampj = ones(size(dj),k2-k1+1);
+                    end
                     synth(k1:k2) = synth(k1:k2) ...
-                        + sum(sin(2*pi*dj*(0:k2-k1)/44100),1).*hann(k2-k1+1)';
+                        + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1) ...
+                                .*hann(k2-k1+1)';
                 end
             end
             out = [out synth];

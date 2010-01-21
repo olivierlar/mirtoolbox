@@ -111,8 +111,6 @@ if not(isempty(order))
                 end
                 synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                 for j = 1:size(di,2)
-                    k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
-                    k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
                     if iscell(di)
                         dj = di{j};
                     else
@@ -126,6 +124,8 @@ if not(isempty(order))
                         ampj(1:size(ampi(:,j))) = ampi(:,j);
                     end
                     if not(isempty(dj))
+                        k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
+                        k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
                         if isa(a,'mirpitch')
                             ampj = repmat(ampj,1,k2-k1+1);
                         else
