@@ -274,10 +274,6 @@ type = {'mirpitch',mirtype(p)};
     
 
 function o = main(x,option,postoption)
-if isa(x,'mirpitch')
-    o = x;
-    return
-end
 if iscell(x)
     x = x{1};
 end
