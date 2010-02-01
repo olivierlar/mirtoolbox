@@ -310,8 +310,13 @@ elseif isa(x,'mirdata')
 
             fsk = sort(fsk); % Here is the chronological ordering
 
+            fsk = fsk';
+            
             if isempty(fsk)
                 ffsk = {[0;dtk(end)]};
+                sxk = {dxk};
+                stk = {dtk};
+                n = 1;
             elseif size(fsk,1) == 1
                 ffsk = cell(1,length(fsk)+1);
                 ffsk{1} = [dtk(1);fsk(1)];
