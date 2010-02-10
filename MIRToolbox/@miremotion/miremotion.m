@@ -99,7 +99,7 @@ if option.frame.length.val
     hop = option.frame.hop.val*option.frame.length.val;
     frames = 0:hop:1000000;
     x = mirsegment(x,[frames;frames+option.frame.length.val]);
-else
+elseif isa(x,'mirdesign')
     x = set(x,'NoChunk',1);
 end
 rm = mirrms(x,'Frame',.046,.5);
