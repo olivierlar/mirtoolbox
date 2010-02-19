@@ -96,10 +96,21 @@ function [x type] = init(x,option)
 option = process(option);
 
 if option.frame.length.val
-    %if not(option.frame.hop.val)
-    %    mirerror('MIREMOTION','Hop parameter in ''Frame'' option should be strictly positive.');
-    %end
-    hop = option.frame.hop.val*option.frame.length.val;
+    hop = option.frame.hop.val;
+    if strcmpi(option.frame.hop.unit,'Hz')
+        hop = 1/hop;
+        option.frame.hop.unit = 's';
+    end
+    if strcmpi(option.frame.hop.unit,'s')
+        hop = hop*get(x,'Sampling');
+    end
+    if strcmpi(option.frame.hop.unit,'%')
+        hop = hop/100;
+        option.frame.hop.unit = '/1';
+    end
+    if strcmpi(option.frame.hop.unit,'/1')
+        hop = hop*option.frame.length.val;
+    end
     frames = 0:hop:1000000;
     x = mirsegment(x,[frames;frames+option.frame.length.val]);
 elseif isa(x,'mirdesign')
