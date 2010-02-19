@@ -96,6 +96,9 @@ function [x type] = init(x,option)
 option = process(option);
 
 if option.frame.length.val
+    %if not(option.frame.hop.val)
+    %    mirerror('MIREMOTION','Hop parameter in ''Frame'' option should be strictly positive.');
+    %end
     hop = option.frame.hop.val*option.frame.length.val;
     frames = 0:hop:1000000;
     x = mirsegment(x,[frames;frames+option.frame.length.val]);

@@ -73,8 +73,9 @@ function varargout = mirpeaks(orig,varargin)
 %           are located.
 %       mirpeaks(...,'Only'): keeps from the original curve only the data
 %           corresponding to the peaks, and zeroes the remaining data.
-%       mirpeaks(...,'Track'): tracks partials.
-
+%       mirpeaks(...,'Track',t): tracks temporal continuities of peaks. If
+%           a value t is specified, the variation between successive peaks
+%           is tolerated up to t samples.
 
         m.key = 'Total';
         m.type = 'Integer';
@@ -190,6 +191,7 @@ function varargout = mirpeaks(orig,varargin)
         delta.key = 'Track';
         delta.type = 'Integer';
         delta.default = 0;
+        delta.keydefault = Inf;
     option.delta = delta;
 
         scan.key = 'ScanForward'; % specific to mironsets(..., 'Klapuri99')
@@ -585,7 +587,9 @@ for i = 1:length(d) % For each audio file,...
 
                                 % Step 1 in Mc Aulay & Quatieri
                                 [int m] = min(abs(mxk2-mxk1(n)));
-                                if int > option.delta
+                                if isinf(int) || ...
+                                        (not(isinf(option.delta)) ...
+                                         && int > option.delta)
                                     % all w^{k+1} outside matching interval:
                                         % partial becomes dead
                                     mxl(tr,k+1) = mxl(tr,k);
@@ -607,7 +611,9 @@ for i = 1:length(d) % For each audio file,...
                                     else
                                         % let's look at adjacent lower w^k...
                                         [int mmm] = min(abs(mxk2(1:m)-mxk1(n)));
-                                        if int > option.delta
+                                        if isinf(int) || ...
+                                                (not(isinf(option.delta)) ...
+                                                 && int > option.delta)
                                             % all w^k below matching interval:
                                                 % partial becomes dead
                                             mxl(tr,k+1) = mxl(tr,k);

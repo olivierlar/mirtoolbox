@@ -376,9 +376,6 @@ end
 if iscell(o)
     o = o{1};
 end
-if isfield(option,'sum') && option.sum && 0
-    o = mirsum(o,'Adjacent',option.sum);
-end
 if not(isempty(option)) && option.diffenv
     postoption.diff = 1;
 end
