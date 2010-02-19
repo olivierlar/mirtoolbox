@@ -126,6 +126,9 @@ while i <= length(varg)
                     i = i+1;
                     frame.hop.unit = varg{i};
                 end
+                if not(frame.hop.val || strcmpi(frame.hop.unit,'Hz'))
+                    mirerror(func2str(method),'The hop factor should be strictly positive.')
+                end
             else
                 if not(isempty(persoframe))
                     if isfield(option.(persoframe),'keydefault')
