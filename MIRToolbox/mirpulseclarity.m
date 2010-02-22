@@ -287,7 +287,7 @@ function o = main(a,option,postoption)
 if option.model == 2
     option.stratg = 'InterfAutocor';
 end
-if isa(a,'mirscalar')
+if isa(a,'mirscalar') && not(strcmpi(option.stratg,'Attack')) % not very nice test... to improve.
     o = {a};
     return
 end
