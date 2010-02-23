@@ -310,7 +310,7 @@ elseif isa(x,'mirdata')
 
             fsk = sort(fsk); % Here is the chronological ordering
 
-            fsk = fsk';
+            %fsk = fsk'; %% why did we add that in changeset 108??
             
             if isempty(fsk)
                 ffsk = {[0;dtk(end)]};

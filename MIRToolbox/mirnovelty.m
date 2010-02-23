@@ -49,7 +49,7 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 type = 'mirscalar';
-if not(isamir(x,'mirscalar'))
+if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
                       'Width',option.K);
     x = mirsimatrix(x,'Horizontal');  
