@@ -304,13 +304,11 @@ elseif isa(x,'mirdata')
                     % Practically, the peak picking for instance is based 
                     % therefore on a frame analysis (such as novelty), and
                     % segmentation are inferred between these frames...
-                    fsk = [fsk dsm];
+                    fsk = [fsk dsm(:)'];
                 end
             end
 
             fsk = sort(fsk); % Here is the chronological ordering
-
-            %fsk = fsk'; %% why did we add that in changeset 108??
             
             if isempty(fsk)
                 ffsk = {[0;dtk(end)]};
