@@ -116,7 +116,6 @@ function varargout = mirautocor(orig,varargin)
         
         resocenter.key = {'Center','Centre'};
         resocenter.type = 'Integer';
-        resocenter.default = 0.5;
         resocenter.when = 'After';
     option.resocenter = resocenter;
 
@@ -424,6 +423,9 @@ for k = 1:length(coeff)
                     ll = 1./t;
                 else
                     ll = t;
+                end
+                if not(option.resocenter)
+                    option.resocenter = .5;
                 end
                 if strcmpi(option.reso,'ToiviainenSnyder') || ...
                     strcmpi(option.reso,'Toiviainen')

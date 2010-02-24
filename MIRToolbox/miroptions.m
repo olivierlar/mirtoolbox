@@ -84,8 +84,10 @@ for i = 1:length(fields)
             else
                 after.(field) = option.(field).default;
             end
-        else
+        elseif isfield(option.(field),'default')
             after.(field) = option.(field).default;
+        else
+            after.(field) = 0;
         end
     end
     if not(isfield(option.(field),'when')) || strcmpi(option.(field).when,'Both')
