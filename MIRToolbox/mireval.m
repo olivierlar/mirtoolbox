@@ -3,6 +3,8 @@ function v = mireval(d,file,single,export)
 %       named filename.
 %   mireval(d,'Folder') applied the mirdesign object to each audio files in
 %       the current directory.
+%   mireval(d,'Folders') applied the mirdesign object recursively to the
+%       subfolders.
 %   Optional argument: mireval(...,'Single') only keeps the first
 %       output when several output are returned for a given mirdesign
 %       object.
@@ -29,51 +31,8 @@ if not(ischar(file))
 end
 w = [];    % Array containing the index positions of the starting and ending dates.
 s = getsize(d);
-if strcmpi(file,'Folder')
-    dd = dir;
-    dn = {dd.name};
-    nn = cell(1,length(dn));
-    for i = 1:length(dn)
-        j = 0;
-        while j<length(dn{i})
-            j = j+1;
-            tmp = dn{i}(j) - '0';
-            if tmp>=0 && tmp<=9
-                while j+1<length(dn{i}) && dn{i}(j+1)>='0' && dn{i}(j+1)<='9'
-                    j = j+1;
-                    tmp = tmp*10 + (dn{i}(j)-'0');
-                end
-            else
-                tmp = dn{i}(j);
-            end
-            nn{i}{end+1} = tmp;
-        end
-    end
-    dd = sortnames(dd,[],nn);
-    l = 0;
-    for i=1:length(dd);
-        nf = dd(i).name;
-        [di,tpi,fpi,fi,bi,ni] = mirread([],nf,0,1,0);
-        if not(isempty(ni))
-            l = l+1;
-            if not(isempty(s))
-                interval = s(1:2);
-                if s(3)
-                    interval = round(interval*fi)+1;
-                end
-                if s(4) == 1
-                    interval = interval+round(di/2);
-                elseif s(4) == 2
-                    interval = interval+di;
-                end
-                w{l} = min(max(interval,1),di);
-            else
-                w{l} = [1;di];
-            end
-            sr{l} = fi;
-            a{l} = ni;
-        end
-    end
+if strcmpi(file,'Folder') || strcmpi(file,'Folders')
+    [l w sr a] = evalfolder('',s,0,{},{},{},strcmpi(file,'Folders'));
     if l == 0
         disp('No sound file detected in this folder.')
     end
@@ -350,5 +309,66 @@ while i<length(n)
             tmp{end+1} = n{i}(2:end);
         end
         d2 = sortnames(dmp,d2,tmp);
+    end
+end
+
+
+function [l w sr a] = evalfolder(path,s,l,w,sr,a,folders)
+if not(isempty(path))
+    path = [path '/'];
+end
+dd = dir;
+dn = {dd.name};
+nn = cell(1,length(dn));  % Modified file names
+for i = 1:length(dn)      % Each file name is considered
+    j = 0;
+    while j<length(dn{i})   % Each successive character is modified if necessary
+        j = j+1;
+        tmp = dn{i}(j) - '0';
+        if tmp>=0 && tmp<=9
+            while j+1<length(dn{i}) && dn{i}(j+1)>='0' && dn{i}(j+1)<='9'
+                j = j+1;
+                tmp = tmp*10 + (dn{i}(j)-'0');
+            end
+        else
+            tmp = dn{i}(j);
+        end
+        nn{i}{end+1} = tmp;
+    end
+end
+dd = sortnames(dd,[],nn);
+for i = 1:length(dd);
+    nf = dd(i).name;
+    if folders && dd(i).isdir
+        if not(strcmp(nf(1),'.'))
+            cd(dd(i).name)
+            [l w sr a] = evalfolder(nf,s,l,w,sr,a,1);
+            %l = l + l2;
+            %w = [w w2];
+            %sr = [sr sr2];
+            %a = [a a2];
+            cd ..
+        end
+    else
+        [di,tpi,fpi,fi,bi,ni] = mirread([],nf,0,1,0);
+        if not(isempty(ni))
+            l = l+1;
+            if not(isempty(s))
+                interval = s(1:2);
+                if s(3)
+                    interval = round(interval*fi)+1;
+                end
+                if s(4) == 1
+                    interval = interval+round(di/2);
+                elseif s(4) == 2
+                    interval = interval+di;
+                end
+                w{l} = min(max(interval,1),di);
+            else
+                w{l} = [1;di];
+            end
+            sr{l} = fi;
+            a{l} = [path ni];
+        end
     end
 end
