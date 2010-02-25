@@ -29,13 +29,15 @@ elseif isstruct(f)
             if iscell(ff)
                 ff = ff{1};
             end
-            if i == 1
-                la = get(ff,'Label');
-                if not(isempty(la))
-                    stat.Class = la;
+            if isa(ff,'mirdata')
+                if i == 1 
+                    la = get(ff,'Label');
+                    if not(isempty(la) || isempty(la{1}))
+                        stat.Class = la;
+                    end
                 end
+                ff = set(ff,'Label','');
             end
-            ff = set(ff,'Label','');
             stat.(field) = mirstat(ff);
         end
         varargout = {stat};
