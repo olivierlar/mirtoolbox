@@ -701,8 +701,8 @@ end
 
 
 function z = evalbranches(d,y)
-% For complex flowcharts, now that the first temporary variable has been
-% computed, the dependent features should be evaluated as well.
+% For complex flowcharts, now that the first temporary variable (y) has been
+% computed, the dependent features (d) should be evaluated as well.
 branch = get(d,'Data');
 
 for i = 1:length(branch)
@@ -724,8 +724,12 @@ end
 
 
 function b = evalbranch(b,d,y)
-% We need to evaluated the branch reaching the current node (b) from the parent 
+% We need to evaluate the branch reaching the current node (b) from the parent 
 % corresponding to the temporary variable (d),
+
+if iscell(b)
+    mirerror('MIREVAL','Sorry, forked branching of temporary variable cannnot be evaluated in current version of MIRtoolbox.');
+end
 if isstruct(b)
     % Subtrees are evaluated branch after branch.
     f = fields(b);

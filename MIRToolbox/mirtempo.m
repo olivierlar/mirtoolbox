@@ -254,6 +254,11 @@ function varargout = mirtempo(x,varargin)
         ma.default = 200;
     option.ma = ma;
 
+        track.key = 'Track';
+        track.type = 'Boolean';
+        track.default = 0;
+    option.track = track;
+
         pref.key = 'Pref';
         pref.type = 'Integer';
         pref.number = 2;
@@ -342,7 +347,10 @@ end
 if ischar(option.sum)
     y = mirsum(y);
 end
-if option.m
+if option.track
+    y = mirpeaks(y,'Track','Pref',option.pref(1),option.pref(2),...
+                   'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
+elseif option.m
     y = mirpeaks(y,'Total',option.m,'Pref',option.pref(1),option.pref(2),...
                    'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
 end

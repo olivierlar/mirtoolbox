@@ -6,7 +6,7 @@ varargout = mirfunction(@mtimescell,x,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-type = mirtype(a{1});
+type = mirtype(x{1});
 
 
 function y = main(x,option,postoption)
