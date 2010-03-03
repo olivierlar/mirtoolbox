@@ -13,7 +13,7 @@ function varargout = mirnovelty(orig,varargin)
 %               corresponding to f(x) = exp(-x)
 %       mirnovelty(...,'KernelSize',s) or more simply mirnovelty(...,s) 
 %           specifies the length of the gaussian kernel, in samples.
-%           default value: s = 128.
+%           default value: s = 64.
 %       mirnovelty(...,'Normal',0) does not normalize the novelty curve
 %           between the values 0 and 1.
 %
@@ -33,7 +33,7 @@ function varargout = mirnovelty(orig,varargin)
 
         K.key = {'KernelSize','Width'};
         K.type = 'Integer';
-        K.default = 128;
+        K.default = 64;
     option.K = K;
 
         normal.key = 'Normal';
@@ -52,8 +52,7 @@ function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
-                      'Width',option.K);
-    x = mirsimatrix(x,'Horizontal');  
+                      'Width',option.K,'Horizontal');
 end
 if isa(x,'mirdesign')
     x = set(x,'Overlap',ceil(option.K));
@@ -174,3 +173,18 @@ for var = 1:length(new)
     end
     old{var} = ov;
 end
+
+function y = checkergauss(N)
+hN = ceil(N/2);
+y = zeros(N);
+for j = 1:N
+    for i = 1:N
+        g = exp(-(((i-hN)/hN)^2 + (((j-hN)/hN)^2))*4);
+        if j>hN && xor(j>i,j>N-i)
+            y(i,j) = -g;
+        else
+            y(i,j) = g;
+        end
+    end
+end
+y(hN,hN) = 1;

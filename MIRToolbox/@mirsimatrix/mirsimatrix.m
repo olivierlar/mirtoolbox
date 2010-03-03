@@ -174,23 +174,34 @@ else
                     nc = 1;
                 end
                 nd = size(vz,4);
-                dk{z} = NaN(l,l,nc);
+                if not(isempty(postoption)) && ...
+                    strcmpi(postoption.view,'Horizontal')
+                    dk{z} = NaN(option.K,l,nc);
+                else
+                    dk{z} = NaN(l,l,nc);
+                end
                 for g = 1:nc
-                    vv = zeros(ll*nd,l);
-                    for h = 1:nd
-                        if iscell(vz)
-                            for i = 1:ll
-                                for j = 1:l
-                                    vj = vz{i,j,g,h};
-                                    if isempty(vj)
-                                        vv((h-1)*ll+i,j) = NaN;
-                                    else
-                                        vv((h-1)*ll+i,j) = vj;
+                    if nd == 1
+                        vv = vz;
+                    else
+                        vv = zeros(ll*nd,l);
+                        for h = 1:nd
+                            if iscell(vz)
+                                for i = 1:ll
+                                    for j = 1:l
+                                        vj = vz{i,j,g,h};
+                                        if isempty(vj)
+                                            vv((h-1)*ll+i,j) = NaN;
+                                        else
+                                            vv((h-1)*ll+i,j) = vj;
+                                        end
                                     end
                                 end
+                            else
+                                tic
+                                vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
+                                toc
                             end
-                        else
-                            vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
                         end
                     end
                     if isinf(option.K)  
@@ -214,12 +225,34 @@ else
                     end
                     if manually
                         disf = str2func(option.distance);
-                        for i = 1:l
-                            if mirwaitbar
-                                waitbar(i/l,handle);
+                        if strcmpi(option.distance,'cosine')
+                            for i = 1:l
+                                vv(:,i) = vv(:,i)/norm(vv(:,i));
                             end
-                            for j = max(1,i-hK):min(l,i+hK)
-                                dk{z}(i,j,g) = disf(vv(:,i),vv(:,j));
+                        end
+                        if not(isempty(postoption)) && ...
+                                strcmpi(postoption.view,'Horizontal')
+                            for i = 1:l
+                                if mirwaitbar && (mod(i,100) == 1 || i == l)
+                                    waitbar(i/l,handle);
+                                end
+                                lK = floor(option.K/2);
+                                ij = min(i+lK-1,l);
+                                dkij = disf(vv(:,i),vv(:,i:ij));
+                                for j = 1:ij-i+1
+                                    dk{z}(lK+j-1,i+j-1,g) = dkij(j);
+                                    dk{z}(lK-j+1,i+j-1,g) = dkij(j);
+                                end
+                            end
+                        else
+                            for i = 1:l
+                                if mirwaitbar && (mod(i,100) == 1 || i == l)
+                                    waitbar(i/l,handle);
+                                end
+                                j = min(i+option.K-1,l);
+                                dkij = disf(vv(:,i),vv(:,i:j));
+                                dk{z}(i,i:j,g) = dkij;
+                                dk{z}(i:j,i,g) = dkij';
                             end
                         end
                     end
@@ -232,7 +265,12 @@ else
         end
     end
     m.diagwidth = option.K;
-    m.view = 's';
+    if not(isinf(option.K)) && not(isempty(postoption)) && ...
+            strcmpi(postoption.view,'Horizontal')
+        m.view = 'h';
+    else
+        m.view = 's';
+    end
     m.similarity = 0;
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
@@ -316,13 +354,14 @@ else
 end
 
 function d = cosine(r,s)
-nr = sqrt(r'*r);
-ns = sqrt(s'*s);
-if or(nr == 0, ns == 0);
-    d = 1;
-else
-    d = 1 - r'*s/nr/ns;
-end
+d = 1-r'*s;
+%nr = sqrt(r'*r);
+%ns = sqrt(s'*s);
+%if or(nr == 0, ns == 0);
+%    d = 1;
+%else
+%    d = 1 - r'*s/nr/ns;
+%end
 
 
 function d = KL(x,y)
