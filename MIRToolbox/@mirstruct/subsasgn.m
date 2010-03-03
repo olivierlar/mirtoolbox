@@ -51,4 +51,7 @@ case '.'
     else
         a.data{id} = subsasgn(a.data{id},index(2:end),val);
     end
+    if get(val,'NoChunk')
+        a = set(a,'NoChunk',1);
+    end
 end

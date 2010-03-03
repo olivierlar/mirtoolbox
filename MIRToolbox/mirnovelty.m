@@ -44,6 +44,7 @@ function varargout = mirnovelty(orig,varargin)
     
 specif.option = option;
 specif.combineframes = @combineframes;
+specif.nochunk = 1;
 varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
     
 
