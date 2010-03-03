@@ -37,18 +37,23 @@ catch
         try
             [d,f,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
-            err.mp3 = lasterr;
-            if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
-                try
-                   [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
-                catch
+            err.aiff = lasterr;
+            try
+                [d,f,b,tp,fp,n,ch] = audioread(extract,@aiffread,orig,load,verbose,folder);
+            catch
+                err.mp3 = lasterr;
+                if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
+                    try
+                       [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
+                    catch
+                        if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
+                            misread(orig, err);
+                        end
+                    end
+                else
                     if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
                         misread(orig, err);
                     end
-                end
-            else
-                if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
-                    misread(orig, err);
                 end
             end
         end
