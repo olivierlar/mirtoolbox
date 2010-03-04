@@ -39,6 +39,8 @@ while length(propertyArgIn) >= 2,
            a.frame.hop.unit = val;
        case 'FrameEval'
            a.frame.eval = val;
+       case 'FrameChunkNow'
+           a.frame.chunknow = val;
        case 'Path'
            a.path = val;
        case 'Specif'
