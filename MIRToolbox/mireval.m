@@ -85,27 +85,56 @@ if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     order = order(:)';
 end
 
-%   The evaluation is carried out for each audio file successively.
-for i = 1:length(order)
-    f = order(i);
-    if l > 1
-        fprintf('\n')
-        display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
-    end
-    tic
-    yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,''); %% y = ...
-    toc
-    if not(isempty(export))
-        if f==1
+try
+    matlabpool;
+    parallel = 1;
+    mirwaitbar(0)
+    mirverbose(0)
+catch
+    parallel = 0;
+end
+
+if parallel
+    %   The evaluation is carried out for each audio file successively
+    %       (or in parallel).
+    parfor i = 1:length(order)
+        f = order(i);
+        if l > 1
+            fprintf('\n')
+            display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
+        end
+        tic
+        yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,'');
+        toc
+        if isempty(export)
+             y{f} = yf;
+        elseif f==1
             mirexport(export,yf)
         else
             mirexport(export,yf,'#add')
         end
+        clear yf
     end
-    if isempty(export)
-        y{f} = yf;
+else
+    %   The evaluation is carried out for each audio file successively.
+    for i = 1:length(order)
+        f = order(i);
+        if l > 1
+            fprintf('\n')
+            display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
+        end
+        tic
+        yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,'');
+        toc
+        if isempty(export)
+             y{f} = yf;
+        elseif f==1
+            mirexport(export,yf)
+        else
+            mirexport(export,yf,'#add')
+        end
+        clear yf
     end
-    clear yf
 end
 
 if isempty(export)
