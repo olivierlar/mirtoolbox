@@ -87,7 +87,7 @@ switch format
                 classes{end+1} = class{i};
             end
         end
-        ARFFformat(stored,f,title,class,classes);
+        ARFFformat(stored,f,title,class,classes,add);
         m = 1;
     case 'Workspace'
         m = variableformat(stored,f,title);
@@ -293,28 +293,29 @@ fclose(fid);
 disp(['Data exported to file ',filename,'.']);
 
 
-function ARFFformat(data,filename,title,class,classes)
-fid = fopen(filename,'wt');
-fprintf(fid,'%% Attribution-Relation File automatically generated using MIRtoolbox.\n\n');
-
-fprintf(fid,'@RELATION %s\n\n',title);
-
-for i = 1:length(data.textdata)
-    fprintf(fid,'@ATTRIBUTE %s NUMERIC\n',data.textdata{i});
-end
-
-if not(isempty(class))
-    fprintf(fid,'@ATTRIBUTE class {');
-    for i = 1:length(classes)
-        if i>1
-            fprintf(fid,',');
-        end
-        fprintf(fid,'%s',classes{i});
+function ARFFformat(data,filename,title,class,classes,add)
+if add
+    fid = fopen(filename,'at');
+else
+    fid = fopen(filename,'wt');
+    fprintf(fid,'%% Attribution-Relation File automatically generated using MIRtoolbox.\n\n');
+    fprintf(fid,'@RELATION %s\n\n',title);
+    for i = 1:length(data.textdata)
+        fprintf(fid,'@ATTRIBUTE %s NUMERIC\n',data.textdata{i});
     end
-    fprintf(fid,'}\n');
+    if not(isempty(class))
+        fprintf(fid,'@ATTRIBUTE class {');
+        for i = 1:length(classes)
+            if i>1
+                fprintf(fid,',');
+            end
+            fprintf(fid,'%s',classes{i});
+        end
+        fprintf(fid,'}\n');
+    end
+    fprintf(fid,'\n@DATA\n');
 end
 
-fprintf(fid,'\n@DATA\n');
 try
     data = cell2mat(data.data(:))';
 catch
