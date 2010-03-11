@@ -98,23 +98,22 @@ end
 if parallel
     %   The evaluation is carried out for each audio file successively
     %       (or in parallel).
-    parfor i = 1:length(order)
-        f = order(i);
+    parfor i = 1:l
         if l > 1
             fprintf('\n')
-            display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
+            display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);
         end
         tic
-        yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,'');
+        yi = evalaudiofile(d,a{i},sr{i},w{i},{},0,i,single,'');
         toc
         if isempty(export)
-             y{f} = yf;
-        elseif f==1
-            mirexport(export,yf)
+             y{i} = yi;
+        elseif i==1
+            mirexport(export,yi)
         else
-            mirexport(export,yf,'#add')
+            mirexport(export,yi,'#add')
         end
-        clear yf
+        clear yi
     end
 else
     %   The evaluation is carried out for each audio file successively.
