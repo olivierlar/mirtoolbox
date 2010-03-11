@@ -85,13 +85,14 @@ if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     order = order(:)';
 end
 
-try
-    matlabpool;
-    parallel = 1;
-    mirwaitbar(0)
-    mirverbose(0)
-catch
-    parallel = 0;
+parallel = 0;
+if mirparallel
+    try
+        matlabpool;
+        parallel = 1;
+        mirwaitbar(0)
+        mirverbose(0)
+    end
 end
 
 if parallel
