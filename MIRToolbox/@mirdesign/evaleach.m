@@ -17,7 +17,7 @@ end
 CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
-frnow = isfield(d.frame,'chunknow');% && not(d.frame.chunknow);
+frnow = isfield(d.frame,'chunknow');
 sg = d.segment;
 sr = d.sampling;
 w = d.size;
@@ -224,8 +224,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         y = afterchunk_noframe(y,lsz,d,afterpostoption,d2);
         % Final operations to be executed after the chunk decomposition
                 
-        if isa(d,'mirstruct') && ...
-                isfield(d.frame,'chunknow') && not(d.frame.chunknow)
+        if isa(d,'mirstruct') && isfield(d.frame,'chunknow')
             y = evalbranches(d,y);
         end
         if h

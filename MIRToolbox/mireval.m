@@ -106,8 +106,16 @@ if parallel
         tic
         yi = evalaudiofile(d,a{i},sr{i},w{i},{},0,i,single,'');
         toc
-        if isempty(export)
+        %if isempty(export)
              y{i} = yi;
+        if strncmpi(export,'Separately',10)
+            filename = a{i};
+            filename(filename == '/') = '.';
+            filename = [filename export(11:end)];
+            if i == 1
+                mkdir('Backup');
+            end
+            mirexport(filename,yi)
         elseif i==1
             mirexport(export,yi)
         else
@@ -126,9 +134,17 @@ else
         tic
         yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,'');
         toc
-        if isempty(export)
+        %if isempty(export)
              y{f} = yf;
-        elseif f==1
+        if strncmpi(export,'Separately',10)
+            filename = a{f};
+            filename(filename == '/') = '.';
+            filename = ['Backup/' filename export(11:end)];
+            if i == 1
+                mkdir('Backup');
+            end
+            mirexport(filename,yf)
+        elseif i==1
             mirexport(export,yf)
         else
             mirexport(export,yf,'#add')
@@ -137,11 +153,11 @@ else
     end
 end
 
-if isempty(export)
+%if isempty(export)
     v = combineaudiofile(y{:});
-else
-    v = [];
-end
+%else
+%    v = [];
+%end
     
 
 function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name)

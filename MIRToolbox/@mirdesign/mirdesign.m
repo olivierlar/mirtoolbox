@@ -67,10 +67,7 @@ else
             end
         else
             d.frame = argin.frame;
-            if not(isempty(d.frame)) && ...
-                isfield(d.specif,'framedchunk')% && ...
-                %not(d.specif.framedchunk) %|| ...
-                %(isfield(d.frame,'chunknow'))
+            if not(isempty(d.frame)) && isfield(d.specif,'framedchunk')                
                 % Some frame-docomposed extractor should not be evaluated
                 % chunk after chunk because the whole result is needed for
                 % subsequent computations.
@@ -82,8 +79,15 @@ else
         d.size = argin.size;
         d.file = argin.file;
         d.sampling = argin.sampling;
-        if (isfield(specif,'nochunk') && specif.nochunk) || not(isempty(argin.stored))
-            d.nochunk = 2; % Flag to indicate that no chunk should be performed, because a temporary variable will be already computed.
+        if (isfield(specif,'nochunk') && specif.nochunk) 
+            d.nochunk = 1; % was previously 2
+        elseif not(isempty(argin.stored))
+            % a temporary variable will be already computed.
+            d.nochunk = 2; % Flag to indicate that no chunk should be 
+                           % performed. Temporary variables cannot for the 
+                           % moment be dispatched to dependent variables 
+                           % chunk by chunk, but only once the whole 
+                           % variable has been computed.
         else
             d.nochunk = argin.nochunk;
         end
