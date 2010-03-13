@@ -115,11 +115,11 @@ if parallel
                 if i == 1
                     mkdir('Backup');
                 end
-                mirexport(filename,yi)
+                mirexport(filename,yi);
             elseif i==1
-                mirexport(export,yi)
+                mirexport(export,yi);
             else
-                mirexport(export,yi,'#add')
+                mirexport(export,yi,'#add');
             end
         end
         clear yi
@@ -144,11 +144,11 @@ else
                 if i == 1
                     mkdir('Backup');
                 end
-                mirexport(filename,yf)
+                mirexport(filename,yf);
             elseif i==1
-                mirexport(export,yf)
+                mirexport(export,yf);
             else
-                mirexport(export,yf,'#add')
+                mirexport(export,yf,'#add');
             end
         end
         clear yf

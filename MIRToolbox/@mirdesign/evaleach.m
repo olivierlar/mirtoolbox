@@ -689,7 +689,7 @@ branch = get(d,'Data');
 for i = 1:length(branch)
     if isa(branch{i},'mirdesign') && get(branch{i},'NoChunk') == 1 
                                         % if the value is 2, it is OK.
-        mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
+        %mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
     end
 end
 
