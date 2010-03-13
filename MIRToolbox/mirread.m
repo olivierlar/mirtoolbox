@@ -37,11 +37,11 @@ catch
         try
             [d,f,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
-            err.aiff = lasterr;
+            err.mp3 = lasterr;
             try
                 [d,f,b,tp,fp,n,ch] = audioread(extract,@aiffread,orig,load,verbose,folder);
             catch
-                err.mp3 = lasterr;
+                err.aiff = lasterr;
                 if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
                     try
                        [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
@@ -142,4 +142,5 @@ display('Here are the error message returned by each reader:');
 display(err.wav);
 display(err.au);
 display(err.mp3);
+display(err.aiff);
 mirerror('MIRREAD',['Cannot open file ',file]);
