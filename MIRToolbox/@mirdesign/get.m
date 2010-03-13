@@ -37,9 +37,9 @@ if ischar(varargin{1})
                 varargout = {[]};
             end
             return
-        case 'FrameChunkNow'
+        case 'FrameDontChunk'
             if isstruct(a.frame)
-                varargout = {a.frame.chunknow};
+                varargout = {a.frame.dontchunk};
             else
                 varargout = {[]};
             end

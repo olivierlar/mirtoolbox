@@ -250,7 +250,7 @@ specif.option = option;
 
 specif.eachchunk = 'Normal';
 specif.combinechunk = 'Concat';
-specif.framedchunk = 1;
+specif.extensive = 1;
 
 varargout = mirfunction(@mirenvelope,orig,varargin,nargout,specif,@init,@main);
 

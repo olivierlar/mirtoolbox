@@ -85,7 +85,7 @@ specif.defaultframelength = 1;
 %specif.defaultframehop = .5;
 
 specif.combinechunk = {'Average',@nothing};
-specif.framedchunk = 1;
+specif.extensive = 1;
 
 varargout = mirfunction(@miremotion,orig,varargin,nargout,specif,@init,@main);
 

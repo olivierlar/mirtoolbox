@@ -17,7 +17,7 @@ end
 CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
-frnow = isfield(d.frame,'chunknow');
+frnochunk = isfield(d.frame,'dontchunk');
 sg = d.segment;
 sr = d.sampling;
 w = d.size;
@@ -72,30 +72,10 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
     
     [y d2] = evalnow(d);  
     
-elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
+elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % No frame or segment decomposition in the design to evaluate
-    % (Maybe implicit frame decomposition, though (frnow).)
-    
-    %if isa(d,'mirstruct')
-    %    tmp = get(d,'Tmp');
-    %    if not(isempty(tmp)) % When the 'tmp' variable is a temporal object
-    %        % (such as mironsets), the chunk decomposition should not be
-    %        % performed at that stage.
-    %        f = fields(tmp);
-    %        for i = 1:length(f)
-    %            if 0 %isamir(tmp.(f{i}),'mirtemporal') <<<<<<<<<
-    %                y = evalnow(d);
-    %                %bf = get(d,'Fields');
-    %                %b = get(d,'Data');
-    %                %for j = 1:length(b)
-    %                %    y.(bf{j}) = evalnow(b{j});
-    %                %end
-    %                return
-    %            end
-    %        end
-    %    end
-    %end
-    
+    % (Or particular frame decomposition, where chunks are not distributed to children (frnochunk).)
+        
     if not(isfield(specif,'eachchunk')) ...
             || d.nochunk ...
             || (not(isempty(single)) && isnumeric(single) && single > 1 ...
@@ -178,7 +158,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             
             if not(ischar(specif.eachchunk) && ...
                    strcmpi(specif.eachchunk,'Normal'))
-               if frnow
+               if frnochunk
                    d2.postoption = 0;
                else
                     diffchunks = diff(chunks); % Usual chunk size
@@ -224,7 +204,7 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         y = afterchunk_noframe(y,lsz,d,afterpostoption,d2);
         % Final operations to be executed after the chunk decomposition
                 
-        if isa(d,'mirstruct') && isfield(d.frame,'chunknow')
+        if isa(d,'mirstruct') && isfield(d.frame,'dontchunk')
             y = evalbranches(d,y);
         end
         if h
@@ -235,6 +215,9 @@ elseif isempty(fr) || frnow || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     else 
         % No chunk decomposition
         [y d2] = evalnow(d);
+        if isa(d,'mirstruct') && isfield(d.frame,'dontchunk')
+            y = evalbranches(d,y);
+        end
     end    
 elseif d.nochunk
     [y d2] = evalnow(d);
@@ -693,8 +676,7 @@ else
     [y argin] = d.method(argin,d.option,d.postoption);
 end
 d = set(d,'Argin',argin);
-
-if isa(d,'mirstruct') && not(isfield(d.frame,'chunknow'))
+if isa(d,'mirstruct') && not(isfield(d.frame,'dontchunk'))
     y = evalbranches(d,y);
 end
 
@@ -705,7 +687,7 @@ function z = evalbranches(d,y)
 branch = get(d,'Data');
 
 for i = 1:length(branch)
-    if isa(branch{i},'Design') && get(branch{i},'NoChunk') == 1 
+    if isa(branch{i},'mirdesign') && get(branch{i},'NoChunk') == 1 
                                         % if the value is 2, it is OK.
         mirerror('mireval','Flowchart badly designed: mirstruct should not be used if one or several final variables do not accept chunk decomposition.');
     end

@@ -41,7 +41,7 @@ function varargout = mirlowenergy(x,varargin)
 specif.option = option;
 
 specif.combinechunk = {'Average',@nothing};
-specif.framedchunk = 1;
+specif.extensive = 1;
 
 varargout = mirfunction(@mirlowenergy,x,varargin,nargout,specif,@init,@main);
 

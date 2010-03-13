@@ -52,6 +52,9 @@ case '.'
         a.data{id} = subsasgn(a.data{id},index(2:end),val);
     end
     if get(val,'NoChunk') && isframed(a)
-        a = set(a,'FrameChunkNow',0);
+        a = set(a,'FrameDontChunk',1);
+        % Frame-decomposed flowchart where one dependent variable requires
+        % a complete computation. Should not therefore be evaluated
+        % chunk after chunk.
     end
 end
