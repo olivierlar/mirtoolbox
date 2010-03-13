@@ -43,7 +43,8 @@ elseif length(f)>4 && strcmpi(f(end-4:end),'.arff')
 else
     format = 'Matrix';
 end
-title = 'MIRtoolbox';
+v = ver('MIRtoolbox');
+title = ['MIRtoolbox' v.Version];
 class = {};
 if not(isempty(varargin)) && ischar(varargin{end}) && strcmp(varargin{end},'#add')
     add = 1;
@@ -298,7 +299,7 @@ if add
     fid = fopen(filename,'at');
 else
     fid = fopen(filename,'wt');
-    fprintf(fid,'%% Attribution-Relation File automatically generated using MIRtoolbox.\n\n');
+    fprintf(fid,['%% Attribution-Relation File automatically generated using ',title,'.\n\n']);
     fprintf(fid,'@RELATION %s\n\n',title);
     for i = 1:length(data.textdata)
         fprintf(fid,'@ATTRIBUTE %s NUMERIC\n',data.textdata{i});
