@@ -228,11 +228,11 @@ end
 if isamir(orig,'mirscalar') || haspeaks(orig)
     p = orig;
 else
-    if isa(orig,'mirautocor')
+    if isamir(orig,'mirautocor')
         y = mirautocor(orig,'Min',option.mi,'Hz','Max',option.ma,'Hz','Freq');
-    elseif isa(orig,'mircepstrum')
+    elseif isamir(orig,'mircepstrum')
         y = orig;
-    elseif isa(orig,'mirspectrum')
+    elseif isamir(orig,'mirspectrum')
         if not(option.as) && not(option.ce) && not(option.s)
             option.ce = 1;
         end
