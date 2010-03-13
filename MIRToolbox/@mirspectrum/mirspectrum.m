@@ -334,11 +334,9 @@ else
     f = cell(1,length(sig));
     for i = 1:length(sig)
         d = sig{i};
-        ti = t{i};
         fpi = fp{i};
         if not(iscell(d))
             d = {d};
-            ti = {ti};
         end
         if option.alongbands
             fsi = 1 / (fpi{1}(1,2) - fpi{1}(1,1));
@@ -393,7 +391,9 @@ else
                 end
             else
                 %warning('WARNING in MIRSPECTRUM (for debugging purposes): By default, minimum resolution specified.')
-                option.mr = 66;
+                if not(option.mr)
+                    option.mr = 66;
+                end
             end
             if isnan(option.length)
                 if isnan(option.res)
@@ -420,15 +420,21 @@ else
                 end
             end
 
-            f0=(0:size(z0,1))'*fsi/size(z0,1); %%% TO BE CORRECTED %%%%%%
             len = ceil(size(z0,1)/2);
+            f0 = fsi/2 * linspace(0,1,len)';
             if option.max
-                maxf = min(len,ceil(option.max/fsi*2*len));
+                maxf = find(f0>=option.max,1);
+                if isempty(maxf)
+                    maxf = len;
+                end
             else
                 maxf = len;
             end
             if option.min
-                minf = min(len,ceil(option.min/fsi*2*len));
+                minf = find(f0>=option.min,1);
+                if isempty(minf)
+                    maxf = len;
+                end
             else
                 minf = 1;
             end
