@@ -278,6 +278,9 @@ varargout = mirfunction(@mirtempo,x,varargin,nargout,specif,@init,@main);
 %% INIT
 
 function [y type] = init(x,option)
+if iscell(x)
+    x = x{1};
+end
 if option.perio
     option.m = 3;
     option.enh = 2:10;

@@ -155,9 +155,6 @@ else
             % (cf. previous call of 'init' in this script). 
         % For that reason, the 'init' part of the function needs to be
         % evaluated now.
-        if iscell(orig)
-            orig = orig{1};
-        end
         orig = init(orig,during);
     end
 end
