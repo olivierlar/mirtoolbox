@@ -186,6 +186,9 @@ function [x type] = init(x,option)
 %    warning('WARNING IN MIRPULSECLARITY: The input should not be already decomposed into frames.');
 %    disp(['Suggestion: Use the ''Frame'' option instead.'])
 %end
+if iscell(x)
+    x = x{1};
+end
 if isamir(x,'mirautocor')
     type = {'mirscalar','mirautocor'};
 elseif length(option.model) > 1
