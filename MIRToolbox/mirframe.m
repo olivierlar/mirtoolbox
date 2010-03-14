@@ -70,7 +70,11 @@ elseif isa(x,'mirdesign')
         if iscell(e)
             e = e{1};
         end
-        f = mirframe(e,varargin{:});
+        if isempty(mirgetdata(e))
+            f = e;
+        else
+            f = mirframe(e,varargin{:});
+        end
     end
 elseif isa(x,'mirdata')
     if isframed(x)

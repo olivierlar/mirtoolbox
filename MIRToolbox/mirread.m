@@ -98,7 +98,11 @@ if load
     else
         tp{1} = (extract(1)-1+(0:size(s,1)-1))'/f;
     end
-    fp{1} = tp{1}([1 end]);
+    if isempty(s)
+        fp{1} = 0;
+    else
+        fp{1} = tp{1}([1 end]);
+    end
 else
     [d,f,b] = reader(file,1);
     d = reader(file,'size');

@@ -188,7 +188,11 @@ end
 if not(iscell(orig) || isnumeric(x))
     orig = set(orig,'Index',get(x1,'Index'));
 end
-o = main(orig,during,after);
+if isempty(mirgetdata(orig))
+    o = orig;
+else
+    o = main(orig,during,after);
+end
 if not(iscell(o) && length(o)>1) || (isa(x,'mirdesign') && get(x,'Eval'))
     o = {o x};
 elseif not(isempty(varg)) && isstruct(varg{1}) ...

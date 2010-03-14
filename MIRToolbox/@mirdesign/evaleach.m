@@ -336,6 +336,10 @@ end
 
 
 function res = combinechunk_frame(old,new,d2,fri)
+if isempty(mirgetdata(new))
+    res = old;
+    return
+end
 if isstruct(old)
     f = fields(old);
     for i = 1:length(f)
@@ -355,6 +359,10 @@ end
 function res = combinechunk_noframe(old,new,sg,i,d2,chunks)
 if isempty(new)
     res = {};
+    return
+end
+if isempty(mirgetdata(new))
+    res = old;
     return
 end
 if not(iscell(new))
