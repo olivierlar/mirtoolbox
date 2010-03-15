@@ -67,7 +67,9 @@ pv = get(x,'PeakPreciseVal');
 if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
     d = uncell(pt);
     d2 = uncell(pv);
-    return
+    if not(isempty(d))
+        return
+    end
 end
 
 if isa(x,'mirsimatrix')
@@ -79,7 +81,9 @@ pv = get(x,'PeakVal');
 if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
     d = uncell(pt);
     d2 = uncell(pv);
-    return
+    if not(isempty(d))
+        return
+    end
 end
 
 d = uncell(v,isa(x,'mirscalar'));
