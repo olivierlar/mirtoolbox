@@ -35,6 +35,8 @@ function varargout = mirenvelope(orig,varargin)
 %               b = 'Mel': Mel-band decomposition 
 %               b = 'Bark': Bark-band decomposition 
 %               b = 'Cents': decompositions into cents 
+%       mirenvelope(...,'Frame',...) specifies the frame configuration.
+%           Default value: length: .1 s, hop factor: 10 %.
 %       mirenvelope(...,'UpSample',N) upsamples by a factor N>1, where 
 %           N is an integer.
 %           Default value if 'UpSample' called: N = 2
@@ -71,9 +73,6 @@ function varargout = mirenvelope(orig,varargin)
 %           Default value when the option is toggled on: o=30
 %       mirenvelope(...,'Klapuri06'): follows the model proposed in
 %           (Klapuri et al., 2006). 
-%       mirenvelope(...,'Frame',...): decompose the resulting envelope into 
-%           frames.
-%           Default parameters: length .05 s and hop factor .5
 
         method.type = 'String';
         method.choice = {'Filter','Spectro'};
@@ -241,9 +240,7 @@ function varargout = mirenvelope(orig,varargin)
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
-        frame.default = [0 0];
-        frame.keydefault = [.05 .5];
-        frame.when = 'After';
+        frame.default = [.1 .1];
     option.frame = frame;
         
 specif.option = option;
@@ -277,9 +274,13 @@ if not(isamir(x,'mirenvelope'))
                               'Tau',option.tau,'PreDecim',option.decim);
         end
     elseif strcmpi(option.method,'Spectro')
-        x = mirspectrum(x,'Frame',.1,'s',.05,'/1','Window','hanning',...
-                           option.band,'Power');
-           %    .023,'s',.5,'/1'
+        x = mirspectrum(x,'Frame',option.frame.length.val,...
+                                  option.frame.length.unit,...
+                                  option.frame.hop.val,...
+                                  option.frame.hop.unit,...
+                                  'Window','hanning',...
+                                  option.band,'Power');
+
     end
 end
 
@@ -646,6 +647,6 @@ if isfield(postoption,'sampling')
     end
 end
 e = set(e,'Data',d,'Time',tp); 
-if isfield(postoption,'frame') && isstruct(postoption.frame)
-    e = mirframenow(e,postoption);
-end
+%if isfield(postoption,'frame') && isstruct(postoption.frame)
+%    e = mirframenow(e,postoption);
+%end
