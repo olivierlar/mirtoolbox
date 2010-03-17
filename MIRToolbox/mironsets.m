@@ -8,6 +8,10 @@ function varargout = mironsets(x,varargin)
 %           f = 'Envelope': Envelope of the audio signal. (Default choice).
 %           With two methods for envelope extraction:
 %               mironsets(...,'Spectro') (Default):
+%                   mironsets(...,'SpectroFrame',fl,fh) species the frame
+%                       length fl (in s.) and the hop factor fh (as a value
+%                       between 0 and 1)
+%                       Default values: fl = .1 s., fh = .1
 %                    the frequency reassigment method can be specified:
 %                    'Freq' (default), 'Mel', 'Bark' or 'Cents' (cf. mirspectrum).
 %               mironsets(...,'Filter'):
@@ -113,7 +117,12 @@ function varargout = mironsets(x,varargin)
             band.choice = {'Freq','Mel','Bark','Cents'};
             band.default = 'Freq';
         option.band = band;
-
+        
+            specframe.key = 'SpectroFrame';
+            specframe.type = 'Integer';
+            specframe.number = 2;
+            specframe.default = [.1 .1];
+        option.specframe = specframe;
                     
         sum.key = 'Sum';
         sum.type = 'Boolean';
@@ -204,7 +213,7 @@ function varargout = mironsets(x,varargin)
         flux.type = 'Boolean';
         flux.default = 0;
     option.flux = flux;
-
+    
         complex.key = 'Complex';
         complex.type = 'Boolean';
         complex.when = 'Both';
@@ -329,6 +338,7 @@ if isamir(x,'miraudio')
             fb = x;
         end
         y = mirenvelope(fb,option.envmeth,option.band,...
+                          'Frame',option.specframe(1),option.specframe(2),...
                           'FilterType',option.filter,...
                           'Tau',option.tau,'UpSample',option.up,...
                           'PreDecim',option.decim,'PostDecim',0);
