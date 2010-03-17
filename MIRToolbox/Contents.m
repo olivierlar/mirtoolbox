@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.2.3.7 24-February-2010
+% Version 1.2.4 17-March-2010
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -54,6 +54,7 @@
 %PITCH
 % mirpitch         - Pitch frequencies
 % mircepstrum      - Cepstrum representation (showing periodicities)
+% mirmidi          - Attempts a conversion of audio into MIDI
 %
 %TONALITY
 % mirchromagram    - Chromagram (distribution of energy along pitches)
@@ -100,3 +101,4 @@
 % mirchunklim      - Get or set the chunk size threshold
 % mirwaitbar       - Toggles on/off the display of progress bars
 % mirverbose       - Toggles on/off the display of ongoing operations
+% mirparallel      - Toggles on/off parallel processing
