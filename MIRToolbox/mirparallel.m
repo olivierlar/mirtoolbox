@@ -10,6 +10,13 @@ persistent mir_parallel
 
 if nargin
     warning('MIRtoolbox Parallel computing is currently in Beta Version.');
+    if s
+        try
+            matlabpool size;
+        catch
+            mirerror('mirparallel','Are you sure Parallel Processing Toolbox is installed?');
+        end
+    end
     mir_parallel = s;
 else
     if isempty(mir_parallel)
