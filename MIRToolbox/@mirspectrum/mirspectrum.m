@@ -17,6 +17,7 @@ function varargout = mirspectrum(orig,varargin)
 %           either w = 0 (no windowing) or any windowing function proposed
 %               in the Signal Processing Toolbox (help window).
 %           default value: w = 'hamming'
+%
 %       mirspectrum(...,'Cents'): decomposes the energy in cents.
 %       mirspectrum(...,'Collapsed'): collapses the spectrum into one
 %           octave divided into 1200 cents.
@@ -56,6 +57,7 @@ function varargout = mirspectrum(orig,varargin)
 %           signa (Alonso et al, 2003).
 %       mirspectrum(...,'Sum',s): Similar option using summation instead of
 %           product.
+%
 %       mirspectrum(...,'MinRes',mr): Indicates a minimal accepted
 %           frequency resolution, in Hz. The audio signal is zero-padded in
 %           order to reach the desired resolution.
@@ -67,6 +69,10 @@ function varargout = mirspectrum(orig,varargin)
 %       mirspectrum(...,'Length',l): Specifies the length of the FFT,
 %           overriding the FFT length initially planned.
 %       mirspectrum(...,'ZeroPad',s): Zero-padding of s samples.
+%       mirspectrum(...,'ConstantQ',nb): Carries out a Constant Q Transform
+%           instead of a FFT, with a number of bins per octave fixed to nb.
+%           Default value for nb: 12 bins per octave.
+%
 %       mirspectrum(...,'Smooth',o): smooths the envelope using a movering
 %           average of order o.
 %           Default value when the option is toggled on: o=10
@@ -110,6 +116,12 @@ function varargout = mirspectrum(orig,varargin)
         zp.default = 0;
         zp.keydefault = Inf;
     option.zp = zp;
+    
+        constq.key = 'ConstantQ';
+        constq.type = 'Integer';
+        constq.default = 0;
+        constq.keydefault = 12;
+    option.constq = constq;
     
         alongbands.key = 'AlongBands';
         alongbands.type = 'Boolean';
@@ -346,8 +358,8 @@ else
         mi = cell(1,length(d));
         phi = cell(1,length(d));
         fi = cell(1,length(d));
-        for j = 1:length(d)
-            dj = d{j};
+        for J = 1:length(d)
+            dj = d{J};
             if option.ni
                 mxdj = repmat(max(dj),[size(dj,1),1,1]);
                 mndj = repmat(min(dj),[size(dj,1),1,1]);
@@ -358,91 +370,98 @@ else
                     error('ERROR IN MIRSPECTRUM: ''AlongBands'' is restricted to spectrum decomposed into bands, such as ''Mel'' and ''Bark''.') 
                 end
                 dj = reshape(dj,[size(dj,2),1,size(dj,3)]);
-                fp{i}{j} = fp{i}{j}([1;end]);
+                fp{i}{J} = fp{i}{J}([1;end]);
             end
-            if not(option.win == 0)
-                N = size(dj,1);           
-                winf = str2func(option.win);
-                try
-                    w = window(winf,N);
-                catch
-                    if strcmpi(option.win,'hamming')
-                        disp('Signal Processing Toolbox does not seem to be installed. Recompute the hamming window manually.');
-                        w = 0.54 - 0.46 * cos(2*pi*(0:N-1)'/(N-1));
+                        
+            if option.constq
+                % Constant Q Transform
+                r = 2^(1/option.constq);
+                Q = 1 / (r - 1);
+                f_max = min(fsi/2,option.max);
+                f_min = option.min;
+                if not(f_min)
+                    f_min = 16.3516;
+                end
+                B = floor(log(f_max/f_min) / log(r)); % number of bins
+                N0 = round(Q*fsi/f_min); % maximum Nkcq
+                j2piQn = -j*2*pi*Q*(0:N0-1)';
+
+                fj = f_min * r.^(0:B-1)';
+                transf = NaN(B,size(dj,2),size(dj,3));
+                for kcq = 1:B
+                    Nkcq = round(Q*fsi/fj(kcq));
+                    win = mirwindow(dj,option.win,Nkcq);
+                    exq = repmat(exp(j2piQn(1:Nkcq)/Nkcq),...
+                                 [1,size(win,2),size(win,3)]);
+                    transf(kcq,:) = sum(win.* exq) / Nkcq;
+                end
+            else
+                % FFT
+                dj = mirwindow(dj,option.win);
+                if option.zp
+                    if option.zp < Inf
+                        dj = [dj;zeros(option.zp,size(dj,2),size(dj,3))];
                     else
-                        error(['ERROR in MIRSPECTRUM: Unknown windowing function ',win,' (maybe Signal Processing Toolbox is not installed).']);
+                        dj = [dj;zeros(size(dj))];
                     end
                 end
-                kw = repmat(w,[1,size(dj,2),size(dj,3)]);
-                dj = center(dj).* kw;
-            end
-
-            if option.zp
-                if option.zp < Inf
-                    dj = [dj;zeros(option.zp,size(dj,2),size(dj,3))];
-                else
-                    dj = [dj;zeros(size(dj))];
-                end
-            end
-            if isstruct(postoption)
-                if strcmpi(postoption.band,'Mel') && ...
-                        (not(option.mr) || option.mr > 66)
-                    option.mr = 66;
-                end
-            else
-                %warning('WARNING in MIRSPECTRUM (for debugging purposes): By default, minimum resolution specified.')
-                if not(option.mr)
-                    option.mr = 66;
-                end
-            end
-            if isnan(option.length)
-                if isnan(option.res)
-                    N = size(dj,1);
-                    if option.mr
-                        N = max(N,fsi/option.mr);
+                if isstruct(postoption)
+                    if strcmpi(postoption.band,'Mel') && ...
+                            (not(option.mr) || option.mr > 66)
+                        option.mr = 66;
                     end
-                    N = 2^nextpow2(N);
                 else
-                    N = ceil(fsi/option.res);
+                    %warning('WARNING in MIRSPECTRUM (for debugging purposes): By default, minimum resolution specified.')
+                    if not(option.mr)
+                        option.mr = 66;
+                    end
                 end
-            else
-                N = option.length;
-            end
-
-            % Here is the spectrum computation itself
-            if option.rapid
-
-            else
-                ft = fft(dj,N);
-                z0 = abs(ft);
-                if option.phase
-                    p0 = angle(ft);
+                if isnan(option.length)
+                    if isnan(option.res)
+                        N = size(dj,1);
+                        if option.mr
+                            N = max(N,fsi/option.mr);
+                        end
+                        N = 2^nextpow2(N);
+                    else
+                        N = ceil(fsi/option.res);
+                    end
+                else
+                    N = option.length;
                 end
-            end
 
-            len = ceil(size(z0,1)/2);
-            f0 = fsi/2 * linspace(0,1,len)';
-            if option.max
-                maxf = find(f0>=option.max,1);
-                if isempty(maxf)
+
+                % Here is the spectrum computation itself
+                transf = fft(dj,N);
+
+                len = ceil(size(transf,1)/2);
+                fj = fsi/2 * linspace(0,1,len)';
+                if option.max
+                    maxf = find(fj>=option.max,1);
+                    if isempty(maxf)
+                        maxf = len;
+                    end
+                else
                     maxf = len;
                 end
-            else
-                maxf = len;
-            end
-            if option.min
-                minf = find(f0>=option.min,1);
-                if isempty(minf)
-                    maxf = len;
+                if option.min
+                    minf = find(fj>=option.min,1);
+                    if isempty(minf)
+                        maxf = len;
+                    end
+                else
+                    minf = 1;
                 end
-            else
-                minf = 1;
+                
+                transf = transf(minf:maxf,:,:);
+                fj = fj(minf:maxf);
             end
-            mi{j} = z0(minf:maxf,:,:);
+            
+            mi{J} = abs(transf);
             if option.phase
-                phi{j} = p0(minf:maxf,:,:);
+                phi{J} = angle(transf);
             end
-            fi{j} = repmat(f0(minf:maxf),[1,size(z0,2),size(z0,3)]);
+            fi{J} = repmat(fj,[1,size(transf,2),size(transf,3)]);
         end
         if iscell(sig{i})
             m{i} = mi;
@@ -668,12 +687,12 @@ if strcmp(s.xscale,'Freq')
                     display('Recommended frequency resolution: at least 66 Hz.')
                 end
                 e{h}{i} = zeros(1,size(mi,2),totalFilters);
-                for j = 1:size(mi,2)
-                    if max(mi(:,j)) > 0
+                for J = 1:size(mi,2)
+                    if max(mi(:,J)) > 0
                         fftData = zeros(fftSize,1); % Zero-padding ?
-                        fftData(1:size(mi,1)) = mi(:,j);
+                        fftData(1:size(mi,1)) = mi(:,J);
                         p = mfccFilterWeights * fftData + 1e-16;
-                        e{h}{i}(1,j,:) = reshape(p,[1,1,length(p)]);
+                        e{h}{i}(1,J,:) = reshape(p,[1,1,length(p)]);
                     end
                 end
                 f{h}{i} = zeros(1,size(mi,2),totalFilters);
@@ -697,10 +716,10 @@ if strcmp(s.xscale,'Freq')
                 mi = sum(m{h}{i},3);
                 e{h}{i} = zeros(1,size(mi,2),cb);
                 k = 1;
-                for j=1:cb, %% group into bark bands
-                    idx = find(f{h}{i}(k:end,1,1)<=bark_upper(j));
+                for J=1:cb, %% group into bark bands
+                    idx = find(f{h}{i}(k:end,1,1)<=bark_upper(J));
                     idx = idx + k-1;
-                    e{h}{i}(1,:,j) = sum(mi(idx,:,:),1);
+                    e{h}{i}(1,:,J) = sum(mi(idx,:,:),1);
                     k = max(idx)+1;
                 end
                 f{h}{i} = zeros(1,size(mi,2),cb);
@@ -766,10 +785,10 @@ if option.mask
                 spread(i,:) = 10.^((15.81+7.5*((i-(1:cb))+0.474)-17.5*(1+((i-(1:cb))+0.474).^2).^0.5)/10);
             end
             for i = 1:length(m{h})
-                for j = 1:size(m{h}{i},2)
-                    mj = m{h}{i}(1,j,:);
+                for J = 1:size(m{h}{i},2)
+                    mj = m{h}{i}(1,J,:);
                     mj = spread(1:length(mj),1:length(mj))*mj(:);
-                    m{h}{i}(1,j,:) = reshape(mj,1,1,length(mj));
+                    m{h}{i}(1,J,:) = reshape(mj,1,1,length(mj));
                 end
             end
         end
@@ -847,6 +866,29 @@ if option.gauss
     end
 end
 s = set(s,'Magnitude',m,'Frequency',f);
+
+
+function dj = mirwindow(dj,win,N)
+if nargin<3
+    N = size(dj,1);
+elseif size(dj,1)<N
+    dj(N,1,1) = 0;
+end
+if not(win == 0)
+    winf = str2func(win);
+    try
+        w = window(winf,N);
+    catch
+        if strcmpi(win,'hamming')
+            disp('Signal Processing Toolbox does not seem to be installed. Recompute the hamming window manually.');
+            w = 0.54 - 0.46 * cos(2*pi*(0:N-1)'/(N-1));
+        else
+            error(['ERROR in MIRSPECTRUM: Unknown windowing function ',win,' (maybe Signal Processing Toolbox is not installed).']);
+        end
+    end
+    kw = repmat(w,[1,size(dj,2),size(dj,3)]);
+    dj = dj(1:N,:,:).* kw;
+end
 
 
 function [y orig] = eachchunk(orig,option,missing,postchunk)
