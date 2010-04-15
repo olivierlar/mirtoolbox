@@ -39,6 +39,8 @@ function varargout = miraudio(orig,varargin)
 %              'TrimStart' only trims the beginning of the audio file,
 %              'TrimEnd' only trims the end.
 %           miraudio(...,'TrimThreshold',t) specifies the trimming threshold t.
+%       miraudio(...,'Channel',c) or miraudio(...,'Channels',c) selects the
+%           channels indicated by the (array of) integer(s) c.
 %   Labeling option:
 %       miraudio(...,'Label',l) labels the audio signal(s) following the 
 %           label(s) l.
@@ -134,6 +136,12 @@ end
         mono.when = 'After';
     option.mono = mono;    
     
+        Ch.key = {'Channel','Channels'};
+        Ch.type = 'Integer';
+        Ch.default = [];
+        Ch.when = 'After';
+    option.Ch = Ch;
+        
 specif.option = option;
 
 specif.beforechunk = {@beforechunk,'normal'};
@@ -248,6 +256,9 @@ for h = 1:length(d)
             end
             tk = tk(ft,:,:);
             dk = dk(ft,:,:);
+        end
+        if isfield(para,'Ch') && not(isempty(para.Ch))
+            dk = dk(:,:,para.Ch);
         end
         if isfield(para,'center') && para.center
             dk = center(dk);
