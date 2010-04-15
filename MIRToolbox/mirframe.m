@@ -107,8 +107,10 @@ elseif isa(x,'mirdata')
                 h = ceil(para.hop.val*l*.01);
             elseif strcmpi(para.hop.unit,'s')
                 h = ceil(para.hop.val*sf{k});
-            elseif strcmpi(para.hop.unit,'sp') || strcmpi(para.hop.unit,'Hz')
+            elseif strcmpi(para.hop.unit,'sp')
                 h = para.hop.val;
+            elseif strcmpi(para.hop.unit,'Hz')
+                h = sf{k}/para.hop.val;
             end
             dx2k = cell(1,length(dxk));
             dt2k = cell(1,length(dxk));
@@ -121,18 +123,7 @@ elseif isa(x,'mirdata')
                     dtj = dtj(1,:)';
                 end
 
-                % Number of frames: n
-                if strcmpi(para.hop.unit,'Hz')
-                    n = (size(dxj,1)-l)/sf{k}*h;
-                    if mod(n,1)>.9
-                        n = ceil(n)+1;
-                    else
-                        n = floor(n)+1;
-                    end
-                else
-                    n = floor((size(dxj,1)-l)/h)+1;
-                end
-
+                n = floor((size(dxj,1)-l)/h)+1; % Number of frames
                 dx2j = zeros(l,n,size(dxj,3));
                 dt2j = zeros(l,n);
                 fpj = zeros(2,n);
@@ -143,11 +134,7 @@ elseif isa(x,'mirdata')
                     fpj = [dtj(1) ; dtj(end)];
                 else
                     for i = 1:n % For each frame, ...
-                        if strcmpi(para.hop.unit,'Hz')
-                            st = floor((i-1)/h*sf{k})+1;
-                        else
-                            st = (i-1)*h+1;
-                        end
+                        st = floor((i-1)*h+1);
                         dx2j(:,i,:) = dxj(st:st+l-1,1,:);
                         dt2j(:,i) = dtj(st:st+l-1);
                         fpj(:,i) = [dtj(st) dtj(st+l-1)];

@@ -296,23 +296,17 @@ elseif strcmpi(fr.hop.unit,'%')
     h = ceil(fr.hop.val*fl*.01);
 elseif strcmpi(fr.hop.unit,'s')
     h = ceil(fr.hop.val*sr);
-elseif strcmpi(fr.hop.unit,'sp') || strcmpi(fr.hop.unit,'Hz')
+elseif strcmpi(fr.hop.unit,'sp')
     h = fr.hop.val;
+elseif strcmpi(fr.hop.unit,'Hz')
+    h = sr/fr.hop.val;
 end
-if strcmpi(fr.hop.unit,'Hz')
-    n = floor((lsz-fl)/sr*h)+1;   % Number of frames
-else
-    n = floor((lsz-fl)/h)+1;   % Number of frames
-end
+n = floor((lsz-fl)/h)+1;   % Number of frames
 if n < 1
     %warning('WARNING IN MIRFRAME: Frame length longer than total sequence size. No frame decomposition.');
     fp = w;
 else
-    if strcmpi(fr.hop.unit,'Hz')
-        st = floor(((1:n)-1)/h*sr)+w(1);
-    else
-        st = floor(((1:n)-1)*h)+w(1);
-    end
+    st = floor(((1:n)-1)*h)+w(1);
     fp = [st; st+fl-1];
     fp(:,fp(2,:)>w(2)) = [];
 end
