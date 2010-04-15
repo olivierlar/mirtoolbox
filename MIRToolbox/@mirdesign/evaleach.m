@@ -314,7 +314,7 @@ fpsz = (fp(2,1)-fp(1,1)) * n;      % Total number of samples
 if fpsz > CHUNKLIM
     % The required memory exceed the max memory threshold.
     nfr = size(fp,2);                     % Total number of frames
-    frch = max(ceil(CHUNKLIM/fp(2,1)),2); % Number of frames per chunk
+    frch = max(ceil(CHUNKLIM/(fp(2,1)-fp(1,1))),2); % Number of frames per chunk
     frch = max(frch,frov*2);
     nch = ceil((nfr-frch)/(frch-frov))+1; % Number of chunks
     chbeg = (frch-frov)*(0:nch-1)+1;    % First frame in the chunk
