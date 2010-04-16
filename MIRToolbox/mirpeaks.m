@@ -559,28 +559,39 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
-        if option.delta
+        if option.delta % Peak tracking
             tp{i}{h} = cell(1,np);
             for l = 1:np
                 
+                % mxl will be the resulting track position matrix
+                % and myl the related track amplitude
                 % In the first frame, tracks can be identified to peaks.
                 mxl = mx{1,1,l}(:)-1;        
                 myl = dh(mx{1,1,l}(:),k,l); 
+                
                 % To each peak is associated the related track ID
                 tr2 = 1:length(mx{1,1,l});
+                
+                grvy = []; % The graveyard...
+                
                 for k = 1:nc-1
+                    % For each successive frame...
                     mxk1 = mx{1,k,l};   % w^k
                     mxk2 = mx{1,k+1,l}; % w^{k+1}
                     myk2 = dh(mx{1,k+1,l},k,l); % amplitude
                     tr1 = tr2;
                     tr2 = NaN(1,length(mxk2));
                     
+                    mxl(:,k+1) = mxl(:,k);
+                    
                     if isempty(mxk1) || isempty(mxk2)
-                        mxl(:,k+1) = mxl(:,k);
+                        %% IS THIS TEST NECESSARY??
+                        
                         myl(:,k+1) = 0;
                     else
                         for n = 1:length(mxk1)
-                            tr = tr1(n); % Track of the current peak
+                            % Let's check each track.
+                            tr = tr1(n); % Current track.
 
                             if not(isnan(tr))
                                 % still alive...
@@ -594,12 +605,13 @@ for i = 1:length(d) % For each audio file,...
                                         % partial becomes dead
                                     mxl(tr,k+1) = mxl(tr,k);
                                     myl(tr,k+1) = 0;
+                                    grvy = [grvy tr]; % added to the graveyard
                                 else
                                     % closest w^{k+1} is tentatively selected:
                                         % candidate match
 
                                     % Step 2 in Mc Aulay & Quatieri
-                                    [unused mm] = min(abs(mxk2(m)-mxk1));
+                                    [best mm] = min(abs(mxk2(m)-mxk1));
                                     if mm == n
                                         % no better match to remaining w^k:
                                             % definite match
@@ -609,15 +621,16 @@ for i = 1:length(d) % For each audio file,...
                                         mxk1(n) = -Inf; % selected w^k is eliminated from further consideration
                                         mxk2(m) = Inf;  % selected w^{k+1} is eliminated as well
                                     else
-                                        % let's look at adjacent lower w^k...
+                                        % let's look at adjacent lower w^{k+1}...
                                         [int mmm] = min(abs(mxk2(1:m)-mxk1(n)));
-                                        if isinf(int) || ...
+                                        if int > best || ... % New condition added (Lartillot 16.4.2010)
+                                                isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
                                                 (not(isinf(option.delta)) ...
                                                  && int > option.delta)
-                                            % all w^k below matching interval:
                                                 % partial becomes dead
                                             mxl(tr,k+1) = mxl(tr,k);
                                             myl(tr,k+1) = 0;
+                                            grvy = [grvy tr]; % added to the graveyard
                                         else
                                             % definite match
                                             mxl(tr,k+1) = mxk2(mmm)-1;
@@ -635,12 +648,23 @@ for i = 1:length(d) % For each audio file,...
                     % Step 3 in Mc Aulay & Quatieri
                     for m = 1:length(mxk2)
                         if not(isinf(mxk2(m)))
-                            % unmatched w^{k+1}:
+                            % unmatched w^{k+1}
+                            
+                            % Let's try to reuse a zombie from the
+                            % graveyard.
+                            [int z] = min(abs(mxl(grvy,k+1)+1-mxk2(m)));
+                            if isempty(int) || int > option.delta ...
+                                    || int > min(abs(mxl(:,k+1)+1-mxk2(m)))
+                                % No suitable zombie.
                                 % birth of a new partial
-                            mxl2 = [mxl;zeros(1,k+1)];
-                            mxl = mxl2;
-                            tr = size(mxl,1);
-                            mxl(tr,k) = mxk2(m)-1;
+                                mxl = [mxl;zeros(1,k+1)];
+                                tr = size(mxl,1);
+                                mxl(tr,k) = mxk2(m)-1;
+                            else
+                                % Suitable zombie found.
+                                tr = grvy(z);
+                                grvy(z) = [];
+                            end
                             mxl(tr,k+1) = mxk2(m)-1;
                             myl(tr,k+1) = myk2(m);
                             tr2(m) = tr;
