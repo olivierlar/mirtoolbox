@@ -412,7 +412,7 @@ for i = 1:length(d) % For each audio file,...
                              ddh(2:end,k,l) <= 0)))+1;
             end
         end
-        if option.cthr && option.m > 1
+        if option.cthr
             for l = 1:np
                 for k = 1:nc
                     finalmxk = [];
