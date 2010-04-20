@@ -305,7 +305,7 @@ else
             else
                 masp = Inf;
             end
-            masp = min(masp,ceil(ls/3));
+            masp = min(masp,ceil(ls/2));
             if masp < misp
                 if size(sl,2) > 1
                     warning('WARNING IN MIRAUTOCOR: Frame length is too small.');    
