@@ -67,11 +67,15 @@ else
             end
         else
             d.frame = argin.frame;
-            if not(isempty(d.frame)) && isfield(d.specif,'extensive') 
-                d.frame.dontchunk = 1;
-                % Some frame-decomposed extractor should not be evaluated
-                % chunk after chunk because the whole result is needed for
-                % subsequent computations.
+            if not(isempty(d.frame))
+                if isfield(d.specif,'extensive') 
+                    d.frame.dontchunk = 1;
+                    % Some frame-decomposed extractor should not be evaluated
+                    % chunk after chunk because the whole result is needed for
+                    % subsequent computations.
+                elseif isfield(d.specif,'chunkframebefore')
+                    d.frame.chunkbefore = 1;
+                end
             end
         end
         d.segment = argin.segment;

@@ -146,6 +146,12 @@ function varargout = mirpitch(orig,varargin)
         order.choice = {'Amplitude','Abscissa'};
         order.default = 'Amplitude';
     option.order = order;    
+
+        reso.key = 'Reso';
+        reso.type = 'String';
+        reso.choice = {0,'SemiTone'};
+        reso.default = 0;
+    option.reso = reso;
         
 %% post-processing options
         
@@ -162,12 +168,6 @@ function varargout = mirpitch(orig,varargin)
         median.keydefault = .1;
     option.median = median;
     
-        reso.key = 'Reso';
-        reso.type = 'String';
-        reso.choice = {0,'SemiTone'};
-        reso.default = 0;
-    option.reso = reso;
-
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
@@ -183,6 +183,7 @@ function varargout = mirpitch(orig,varargin)
     option.tolo = tolo;
     
 specif.option = option;
+specif.chunkframebefore = 1;
 
 if isnumeric(orig)
     if nargin<3
@@ -203,17 +204,11 @@ end
 
 
 
-function [p type] = init(orig,option)
+function [y type] = init(orig,option)
 if option.tolo
     option.enh = 2:10;
     option.gener = .67;
     option.filtertype = '2Channels';
-end
-if option.multi && option.m == 1
-    option.m = Inf;
-end
-if option.mono && option.m == Inf
-    option.m = 1;
 end
 if not(option.ac) && not(option.as) && not(option.ce) && not(option.s)
     option.ac = 1;
@@ -226,7 +221,7 @@ if isnan(option.frame.hop.val)
     option.frame.hop.unit = 's';
 end
 if isamir(orig,'mirscalar') || haspeaks(orig)
-    p = orig;
+    y = orig;
 else
     if isamir(orig,'mirautocor')
         y = mirautocor(orig,'Min',option.mi,'Hz','Max',option.ma,'Hz','Freq');
@@ -284,18 +279,24 @@ else
             end
         end
     end
-    p = mirpeaks(y,'Total',option.m,'Contrast',option.thr,...
-                   ...'Normalize','Local','Threshold',.3,...
-                   'Reso',option.reso,'NoBegin','NoEnd',...
-                   'Order',option.order);
 end
-type = {'mirpitch',mirtype(p)};
+type = {'mirpitch',mirtype(y)};
     
 
 function o = main(x,option,postoption)
+if option.multi && option.m == 1
+    option.m = Inf;
+end
+if option.mono && option.m == Inf
+    option.m = 1;
+end
 if iscell(x)
     x = x{1};
 end
+x = mirpeaks(x,'Total',option.m,'Contrast',option.thr,...
+               'Threshold',.4,...
+               'Reso',option.reso,'NoBegin','NoEnd',...
+               'Order',option.order);
 if isa(x,'mirscalar')
     pf = get(x,'Data');
 else

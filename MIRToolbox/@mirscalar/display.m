@@ -122,9 +122,36 @@ for i = 1:length(v)  % For each audio file
         else
             xlab = 'Temporal location of events (in s.)';
         end
-        
-        if iscell(vi{1});    % Variable data size for each frame,
-                             % displayed with diamonds
+
+        varpeaks = 0; % Variable data size over frames?
+        if iscell(vi{1})
+            for j = 1:length(vi)
+                for k = 1:l 
+                    for h = 1:size(vi{j},2)
+                        if length(vi{j}{1,h,k}) > 1
+                            varpeaks = 1;
+                        end
+                    end
+                end
+            end
+            if not(varpeaks)
+                for j = 1:length(vi)
+                    vj = zeros(size(vi{j}));
+                    for k = 1:l 
+                        for h = 1:size(vi{j},2)
+                            if isempty(vi{j}{1,h,k})
+                                vj(1,h,k) = NaN;
+                            else
+                                vj(1,h,k) = vi{j}{1,h,k};
+                            end
+                        end
+                    end
+                end
+                vi{j} = vj;
+            end
+        end
+                
+        if varpeaks         % Peaks displayed with diamonds
             diamond = 1;
             set(gca,'NextPlot','replacechildren')
             hold on

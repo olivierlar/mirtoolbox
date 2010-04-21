@@ -18,6 +18,7 @@ CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
 frnochunk = isfield(d.frame,'dontchunk');
+frchunkbefore = isfield(d.frame,'chunkbefore');
 sg = d.segment;
 sr = d.sampling;
 w = d.size;
@@ -236,6 +237,15 @@ else
         d2 = d;
         nch = size(chunks,2);
         y = {};
+        
+        if frchunkbefore
+            d2after = d2;
+            d2.method = d2.argin.method;
+            d2.option = d2.argin.option;
+            d2.postoption = d2.argin.postoption;
+            d2.argin = d2.argin.argin;
+        end
+        
         for fri = 1:nch     % For each chunk...
             disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
             d2 = set(d2,'Chunk',chunks(:,fri)');
@@ -256,6 +266,11 @@ else
                 waitbar(chunks(2,fri)/chunks(end),h);
             end
         end
+        
+        if frchunkbefore
+            y = d2after.method(y{1},d2after.option,d2after.postoption);
+        end
+        
         if isa(d,'mirstruct') && get(d,'Stat') 
             y = mirstat(y);
         end
