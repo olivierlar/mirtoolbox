@@ -616,7 +616,7 @@ for i = 1:length(d) % For each audio file,...
                                         % candidate match
 
                                     % Step 2 in Mc Aulay & Quatieri
-                                    [best mm] = min(abs(mxk2(m)-mxk1));
+                                    [best mm] = min(abs(mxk2(m)-mx{1,k,l}));
                                     if mm == n
                                         % no better match to remaining w^k:
                                             % definite match
@@ -625,6 +625,11 @@ for i = 1:length(d) % For each audio file,...
                                         tr2(m) = tr;
                                         mxk1(n) = -Inf; % selected w^k is eliminated from further consideration
                                         mxk2(m) = Inf;  % selected w^{k+1} is eliminated as well
+                                        zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
+                                                    mxl(grvy,k) <= mxl(tr,k+1)) | ...
+                                                   (mxl(grvy,k) <= mxl(tr,k) & ...
+                                                    mxl(grvy,k) >= mxl(tr,k+1)));
+                                        grvy(zz) = [];
                                     else
                                         % let's look at adjacent lower w^{k+1}...
                                         [int mmm] = min(abs(mxk2(1:m)-mxk1(n)));
@@ -643,6 +648,11 @@ for i = 1:length(d) % For each audio file,...
                                             tr2(mmm) = tr;
                                             mxk1(n) = -Inf;     % selected w^k is eliminated from further consideration
                                             mxk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
+                                            zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
+                                                        mxl(grvy,k) <= mxl(tr,k+1)) | ...
+                                                       (mxl(grvy,k) <= mxl(tr,k) & ...
+                                                        mxl(grvy,k) >= mxl(tr,k+1)));
+                                            grvy(zz) = [];
                                         end
                                     end
                                 end
@@ -656,17 +666,18 @@ for i = 1:length(d) % For each audio file,...
                             % unmatched w^{k+1}
                             
                             % Let's try to reuse a zombie from the
-                            % graveyard.
+                            % graveyard (Lartillot).
                             [int z] = min(abs(mxl(grvy,k+1)+1-mxk2(m)));
                             if isempty(int) || int > option.delta ...
                                     || int > min(abs(mxl(:,k+1)+1-mxk2(m)))
                                 % No suitable zombie.
-                                % birth of a new partial
+                                % birth of a new partial (Mc Aulay &
+                                % Quatieri)
                                 mxl = [mxl;zeros(1,k+1)];
                                 tr = size(mxl,1);
                                 mxl(tr,k) = mxk2(m)-1;
                             else
-                                % Suitable zombie found.
+                                % Suitable zombie found. (Lartillot)
                                 tr = grvy(z);
                                 grvy(z) = [];
                             end
