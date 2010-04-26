@@ -313,6 +313,7 @@ if ischar(option.presel)
     if strcmpi(option.presel,'Scheirer')
         option.filtertype = 'Scheirer';
         option.filter = 'HalfHann';
+        option.envmeth = 'Filter';
     elseif strcmpi(option.presel,'Klapuri99')
         option.filtertype = 'Klapuri';
         option.filter = 'HalfHann';
