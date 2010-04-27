@@ -687,6 +687,12 @@ for i = 1:length(d) % For each audio file,...
                         end
                     end
                 end
+                if size(mxl,1) > option.m
+                    tot = sum(myl,2);
+                    [tot ix] = sort(tot,'descend');
+                    mxl(ix(option.m+1:end),:) = [];
+                    myl(ix(option.m+1:end),:) = [];
+                end
                 tp{i}{h}{l} = mxl;
                 tv{i}{h}{l} = myl;
             end
