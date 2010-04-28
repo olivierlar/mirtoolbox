@@ -306,6 +306,10 @@ if not(isempty(option.scan))
     pscan = get(option.scan,'PeakPos');
 end
 
+interpol = get(x,'Interpolable') && not(isempty(option.interpol)) && ...
+                ((isnumeric(option.interpol) && option.interpol) || ...
+                 (ischar(option.interpol) && not(strcmpi(option.interpol,'No')) && not(strcmpi(option.interpol,'Off'))));
+                
 for i = 1:length(d) % For each audio file,...
     di = d{i};
     if cha
@@ -404,7 +408,8 @@ for i = 1:length(d) % For each audio file,...
             dh3((l-1)*nl0+(1:nl0)',:,:) = dh2(:,:,:,l);
             th2((l-1)*nl0+(1:nl0)',:,:) = th(:,:,:);
         end
-        th = th2;
+        
+        th = th2; % The X-abscissa
 
         ddh = diff(dh);
         % Let's find the local maxima
@@ -566,6 +571,10 @@ for i = 1:length(d) % For each audio file,...
         end
         if option.delta % Peak tracking
             tp{i}{h} = cell(1,np);
+            if interpol
+                tpp{i}{h} = cell(1,np);
+                tpv{i}{h} = cell(1,np);
+            end
             for l = 1:np
                 
                 % mxl will be the resulting track position matrix
@@ -693,8 +702,35 @@ for i = 1:length(d) % For each audio file,...
                     mxl(ix(option.m+1:end),:) = [];
                     myl(ix(option.m+1:end),:) = [];
                 end
+                
                 tp{i}{h}{l} = mxl;
                 tv{i}{h}{l} = myl;
+                
+                if interpol  
+                    tpv{i}{h}{l} = zeros(size(mxl));
+                    tpp{i}{h}{l} = zeros(size(mxl));
+                    for k = 1:size(mxl,2)
+                        for j = 1:size(mxl,1)
+                            mj = mxl(j,k);
+                            if mj>2 && mj<length(dh3)-1
+                                % More precise peak position
+                                y0 = dh3(mj,k,l);
+                                ym = dh3(mj-1,k,l);
+                                yp = dh3(mj+1,k,l);
+                                p = (yp-ym)/(2*(2*y0-yp-ym));
+                                tpv{i}{h}{l}(j,k) = y0 - 0.25*(ym-yp)*p;
+                                if p >= 0
+                                    tpp{i}{h}{l}(j,k) = (1-p)*th(mj)+p*th(mj+1);
+                                elseif p < 0
+                                    tpp{i}{h}{l}(j,k) = (1+p)*th(mj)-p*th(mj-1);
+                                end
+                            else
+                                tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
+                                tpp{i}{h}{l}(j,k) = th(mj);
+                            end
+                        end
+                    end
+                end
             end
         end
         for l = 1:np % Orders the peaks and select the best ones
@@ -868,10 +904,7 @@ for i = 1:length(d) % For each audio file,...
         pp{i}{h} = mmx;
         pm{i}{h} = mmy;
         pv{i}{h} = mmv;
-        if not(get(x,'Interpolable')) || isempty(option.interpol) || ...
-                (isnumeric(option.interpol) && not(option.interpol)) || ...
-                (ischar(option.interpol) && ...
-                    (strcmpi(option.interpol,'no') || strcmpi(option.interpol,'off')))
+        if not(interpol)
             ppp{i}{h} = {};
             ppv{i}{h} = {};
         else % Interpolate to find the more exact peak positions
@@ -901,11 +934,6 @@ for i = 1:length(d) % For each audio file,...
                                 vih{1,k,l}(j) = dh3(mj,k,l);
                                 pih{1,k,l}(j) = th(mj);
                             end
-                        else %not finished
-                            select = max(1,j-1):min(length(th),j+1);
-                            highres = th(select(1)):...
-                                (th(select(end))-th(select(1)))/100:th(select(end));
-                            intp = interp1(th(select),dh(select),highres,option.interpol);
                         end
                     end
                 end
@@ -938,9 +966,8 @@ for i = 1:length(d) % For each audio file,...
     end
 end
 p = set(x,'PeakPos',pp,'PeakVal',pv,'PeakMode',pm);
-if get(x,'Interpolable') && not(isempty(option.interpol)) && ...
-       (not(isnumeric(option.interpol)) || option.interpol)
-    p = set(p,'PeakPrecisePos',ppp,'PeakPreciseVal',ppv);
+if interpol
+   p = set(p,'PeakPrecisePos',ppp,'PeakPreciseVal',ppv);
 end
 if option.extract
     p = set(p,'Data',d);
@@ -951,6 +978,9 @@ if option.only
 end
 if option.delta
     p = set(p,'TrackPos',tp,'TrackVal',tv);
+    if interpol
+       p = set(p,'TrackPrecisePos',tpp,'TrackPreciseVal',tpv);
+    end
 end
 if isa(x,'mirsimatrix')
     p = set(p,'AttackPos',ax,'ReleasePos',rx);

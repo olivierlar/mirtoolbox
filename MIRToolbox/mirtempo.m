@@ -351,7 +351,7 @@ if ischar(option.sum)
     y = mirsum(y);
 end
 if option.track
-    y = mirpeaks(y,'Track','Pref',option.pref(1),option.pref(2),...
+    y = mirpeaks(y,'Total',option.m,'Track','Pref',option.pref(1),option.pref(2),...
                    'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
 elseif option.m
     y = mirpeaks(y,'Total',option.m,'Pref',option.pref(1),option.pref(2),...
@@ -366,7 +366,12 @@ function o = main(p,option,postoption)
 if iscell(p)
     p = p{1};
 end
-pt = get(p,'PeakPrecisePos');
+pt = get(p,'TrackPrecisePos');
+track = 1;
+if isempty(pt)
+    pt = get(p,'PeakPrecisePos');
+    track = 0;
+end
 bpm = cell(1,length(pt));
 for j = 1:length(pt)
     bpm{j} = cell(1,length(pt{j}));
@@ -386,6 +391,9 @@ for j = 1:length(pt)
                     end
                 end
             end
+        end
+        if track
+            bpmk = bpmk{1};
         end
         bpm{j}{k} = bpmk;
     end 

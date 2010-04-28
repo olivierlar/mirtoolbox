@@ -191,6 +191,10 @@ switch propName
         else
             val = a.track.val;
         end
+    case 'TrackPrecisePos'
+        val = a.track.precisepos;
+    case 'TrackPreciseVal'
+        val = a.track.preciseval;
     case 'Title'
         val = a.title;
     case 'Abs'

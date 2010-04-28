@@ -59,6 +59,10 @@ while length(propertyArgIn) >= 2,
            a.track.pos = val;
        case 'TrackVal'
            a.track.val = val;
+       case 'TrackPrecisePos'
+           a.track.precisepos = val;
+       case 'TrackPreciseVal'
+           a.track.preciseval = val;
        case 'InterChunk'
            a.interchunk = val;
        case 'TmpIdx'
