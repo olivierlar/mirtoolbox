@@ -43,6 +43,13 @@ elseif isstruct(f)
         varargout = {stat};
     end
 else
+            alongfiles.key = 'AlongFiles';
+            alongfiles.type = 'Boolean';
+            alongfiles.default = 0;
+        option.alongfiles = alongfiles;
+    
+    specif.option = option;
+
     specif.nochunk = 1;
     varargout = mirfunction(@mirstat,f,varargin,nargout,specif,@init,@main);
 end
@@ -76,78 +83,107 @@ if haspeaks(f)
         stat = addstat(stat,get(f,'PeakVal'),fp,'PeakMag');
     end
 else
-    stat = addstat(struct,get(f,'Data'),fp,'');
+    stat = addstat(struct,get(f,'Data'),fp,'',option.alongfiles,get(f,'Name'));
 end
 
 
-function stat = addstat(stat,d,fp,field)
+function stat = addstat(stat,d,fp,field,alongfiles,filename)
 l = length(d);
-anyframe = 0;
-for i = 1:l
-    if not(iscell(d{i}))
-        d{i} = {d{i}};
-    end
-    for k = 1:length(d{i})
-        dd = d{i}{k};
-        if iscell(dd)
-            if length(dd)>1
-                anyframe = 1;
-            end
-            dn = zeros(1,length(dd));
-            for j = 1:length(dd)
-                if isempty(dd{j})
-                    dn(j) = NaN;
-                else
-                    dn(j) = dd{j}(1);
+if not(alongfiles) || l == 1
+    anyframe = 0;
+    for i = 1:l
+        if not(iscell(d{i}))
+            d{i} = {d{i}};
+        end
+        for k = 1:length(d{i})
+            dd = d{i}{k};
+            if iscell(dd)
+                if length(dd)>1
+                    anyframe = 1;
                 end
-            end
-            [m{i}{k},s{i}{k},sl{i}{k},pa{i}{k},pf{i}{k},pe{i}{k}] ...
-                = computestat(dn,fp{i}{k});
-        elseif size(dd,2) < 2
-            nonan = find(not(isnan(dd)));
-            dn = dd(nonan);
-            if isempty(dn)
-                m{i}{k} = NaN;
+                dn = cell2array(dd);
+                [m{i}{k},s{i}{k},sl{i}{k},pa{i}{k},pf{i}{k},pe{i}{k}] ...
+                    = computestat(dn,fp{i}{k});
+            elseif size(dd,2) < 2
+                nonan = find(not(isnan(dd)));
+                dn = dd(nonan);
+                if isempty(dn)
+                    m{i}{k} = NaN;
+                else
+                    m{i}{k} = mean(dn,2);
+                end
+                s{i}{k} = NaN;
+                sl{i}{k} = NaN;
+                pa{i}{k} = NaN;
+                pf{i}{k} = NaN;
+                pe{i}{k} = NaN;
             else
-                m{i}{k} = mean(dn,2);
-            end
-            s{i}{k} = NaN;
-            sl{i}{k} = NaN;
-            pa{i}{k} = NaN;
-            pf{i}{k} = NaN;
-            pe{i}{k} = NaN;
-        else
-            anyframe = 1;
-            s1 = size(dd,1);
-            s3 = size(dd,3);
-            dd = mean(dd,4); %mean(dd,3),4);
-            m{i}{k} = NaN(s1,1,s3);
-            s{i}{k} = NaN(s1,1,s3);
-            sl{i}{k} = NaN(s1,1,s3);
-            pa{i}{k} = NaN(s1,1,s3);
-            pf{i}{k} = NaN(s1,1,s3);
-            pe{i}{k} = NaN(s1,1,s3);
-            for h = 1:s3
-                for j = 1:s1
-                    [m{i}{k}(j,1,h),s{i}{k}(j,1,h),sl{i}{k}(j,1,h),...
-                     pa{i}{k}(j,1,h),pf{i}{k}(j,1,h),pe{i}{k}(j,1,h)] = ...
-                        computestat(dd(j,:,h),fp{i}{k});
+                anyframe = 1;
+                s1 = size(dd,1);
+                s3 = size(dd,3);
+                dd = mean(dd,4); %mean(dd,3),4);
+                m{i}{k} = NaN(s1,1,s3);
+                s{i}{k} = NaN(s1,1,s3);
+                sl{i}{k} = NaN(s1,1,s3);
+                pa{i}{k} = NaN(s1,1,s3);
+                pf{i}{k} = NaN(s1,1,s3);
+                pe{i}{k} = NaN(s1,1,s3);
+                for h = 1:s3
+                    for j = 1:s1
+                        [m{i}{k}(j,1,h),s{i}{k}(j,1,h),sl{i}{k}(j,1,h),...
+                         pa{i}{k}(j,1,h),pf{i}{k}(j,1,h),pe{i}{k}(j,1,h)] = ...
+                            computestat(dd(j,:,h),fp{i}{k});
+                    end
                 end
             end
         end
     end
-end
-if anyframe
-    fields = {'Mean','Std','Slope','PeriodFreq','PeriodAmp','PeriodEntropy'};
-    stats = {m,s,sl,pf,pa,pe};   
+    if anyframe
+        fields = {'Mean','Std','Slope','PeriodFreq','PeriodAmp','PeriodEntropy'};
+        stats = {m,s,sl,pf,pa,pe};   
+    else
+        fields = {'Mean'};
+        stats = {m};   
+    end
+    for i = 1:length(stats)
+        data = stats{i};
+        data = uncell(data,NaN);
+        stat.(strcat(field,fields{i})) = data;
+    end
 else
-    fields = {'Mean'};
-    stats = {m};   
+    if iscell(d{1}{1})
+        slash = strfind(filename{1},'/');
+        nbfolders = 1;
+        infolder = 0;
+        foldername{1} = filename{1}(1:slash(end)-1);
+        for i = 1:length(d)
+            slash = strfind(filename{i},'/');
+            if not(strcmpi(filename{i}(1:slash(end)-1),foldername))
+                nbfolders = nbfolders + 1;
+                infolder = 0;
+                foldername{nbfolders} = filename{i}(1:slash(end)-1);
+            end
+            infolder = infolder+1;
+            dd{nbfolders}(infolder,:) = cell2array(d{i}{1});
+        end
+        for i = 1:length(dd)
+            figure
+            plot(dd{i}')
+            stat.Mean{i} = mean(dd{i});
+            stat.Std{i} = std(dd{i});
+        end
+    end
 end
-for i = 1:length(stats)
-    data = stats{i};
-    data = uncell(data,NaN);
-    stat.(strcat(field,fields{i})) = data;
+
+
+function dn = cell2array(dd)
+dn = zeros(1,length(dd));
+for j = 1:length(dd)
+    if isempty(dd{j})
+        dn(j) = NaN;
+    else
+        dn(j) = dd{j}(1);
+    end
 end
 
 
