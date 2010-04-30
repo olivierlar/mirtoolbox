@@ -26,7 +26,7 @@ elseif isstruct(f)
         for i = 1:length(fields)
             field = fields{i};
             ff = f.(field);
-            if iscell(ff)
+            if iscell(ff) && isa(ff{1},'mirdata')
                 ff = ff{1};
             end
             if isa(ff,'mirdata')
@@ -42,6 +42,15 @@ elseif isstruct(f)
         end
         varargout = {stat};
     end
+elseif iscell(f)
+    res = zeros(length(f),1);
+    for i = 1:length(f)
+        res(i) = mirstat(f{i});
+    end
+    varargout = {res};
+elseif isnumeric(f)
+    f(isnan(f)) = [];
+    varargout = {mean(f)};
 else
             alongfiles.key = 'AlongFiles';
             alongfiles.type = 'Boolean';
@@ -242,7 +251,7 @@ if iscell(f)
 end
 if isa(f,'mirdesign') || isa(f,'mirstruct')
     b = 1;
-elseif isa(f,'mirdata')
+elseif isa(f,'mirdata') || not(isstruct(f))
     b = 0;
 else
     fields = fieldnames(f);
