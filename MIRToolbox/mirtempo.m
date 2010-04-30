@@ -350,13 +350,10 @@ end
 if ischar(option.sum)
     y = mirsum(y);
 end
-if option.track
-    y = mirpeaks(y,'Total',option.m,'Track','Pref',option.pref(1),option.pref(2),...
-                   'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
-elseif option.m
-    y = mirpeaks(y,'Total',option.m,'Pref',option.pref(1),option.pref(2),...
-                   'Contrast',option.thr,'NoBegin','NoEnd','Normalize','Local');
-end
+y = mirpeaks(y,'Total',option.m,'Track',option.track,...
+               'Pref',option.pref(1),option.pref(2),...
+               'Contrast',option.thr,'NoBegin','NoEnd',...
+               'Normalize','Local');
 type = {'mirscalar',mirtype(y)};            
 
 

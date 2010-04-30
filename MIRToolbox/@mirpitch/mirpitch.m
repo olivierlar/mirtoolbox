@@ -153,6 +153,11 @@ function varargout = mirpitch(orig,varargin)
         reso.default = 0;
     option.reso = reso;
         
+        track.key = 'Track';        % Not used yet
+        track.type = 'Boolean';
+        track.default = 0;
+    option.track = track;
+
 %% post-processing options
         
         stable.key = 'Stable';
@@ -293,8 +298,8 @@ end
 if iscell(x)
     x = x{1};
 end
-x = mirpeaks(x,'Total',option.m,'Contrast',option.thr,...
-               'Threshold',.4,...
+x = mirpeaks(x,'Total',option.m,'Track',option.track,...
+               'Contrast',option.thr,'Threshold',.4,...
                'Reso',option.reso,'NoBegin','NoEnd',...
                'Order',option.order);
 if isa(x,'mirscalar')

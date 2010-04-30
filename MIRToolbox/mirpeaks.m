@@ -588,8 +588,18 @@ for i = 1:length(d) % For each audio file,...
                 
                 grvy = []; % The graveyard...
                 
+                wait = 0;
+                if nc-1>500
+                    wait = waitbar(0,['Tracking peaks...']);
+                end
+
                 for k = 1:nc-1
                     % For each successive frame...
+                    
+                    if wait && not(mod(k,500))
+                        waitbar(k/(nc-1),wait);
+                    end
+
                     mxk1 = mx{1,k,l};   % w^k
                     mxk2 = mx{1,k+1,l}; % w^{k+1}
                     myk2 = dh(mx{1,k+1,l},k,l); % amplitude
@@ -696,6 +706,13 @@ for i = 1:length(d) % For each audio file,...
                         end
                     end
                 end
+                
+                if wait
+                    waitbar(1,wait);
+                    close(wait);
+                    drawnow
+                end
+
                 if size(mxl,1) > option.m
                     tot = sum(myl,2);
                     [tot ix] = sort(tot,'descend');
