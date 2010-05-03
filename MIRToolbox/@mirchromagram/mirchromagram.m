@@ -3,6 +3,9 @@ function varargout = mirchromagram(orig,varargin)
 %       along pitches, of the audio signal x.
 %       (x can be the name of an audio file as well, or a spectrum, ...)
 %   Optional argument:
+%       c = mirchromagram(...,'Tuning',t): specifies the frequency (in Hz.)
+%           associated to  chroma C.
+%               Default value, t = 261.6256 Hz
 %       c = mirchromagram(...,'Wrap',w): specifies whether the chromagram is
 %           wrapped or not.
 %           w = 1: groups all the pitches belonging to same pitch classes
@@ -96,6 +99,11 @@ function varargout = mirchromagram(orig,varargin)
         res.default = 12;
     option.res = res;
 
+        origin.key = 'Tuning';
+        origin.type = 'Integer';
+        origin.default = 261.6256;
+    option.origin = origin;
+   
 specif.option = option;
 specif.defaultframelength = .1;
 specif.defaultframehop = .125;
@@ -181,7 +189,7 @@ else
             
             [s1 s2 s3] = size(mj);
             
-            cj = freq2chro(fj,option.res);
+            cj = freq2chro(fj,option.res,option.origin);
             if not(ismember(min(cj)+1,cj))
                 warning('WARNING IN MIRCHROMAGRAM: Frequency resolution of the spectrum is too low.');    
                 display('The conversion of low frequencies into chromas may be incorrect.');
@@ -189,9 +197,9 @@ else
             ccj = min(min(min(cj))):max(max(max(cj)));
             sc = length(ccj);   % The size of range of absolute chromas.
             mat = zeros(s1,sc);
-            fc = chro2freq(ccj,option.res);   % The absolute chromas in Hz.
-            fl = chro2freq(ccj-1,option.res); % Each previous chromas in Hz.
-            fr = chro2freq(ccj+1,option.res); % Each related next chromas in Hz.
+            fc = chro2freq(ccj,option.res,option.origin);   % The absolute chromas in Hz.
+            fl = chro2freq(ccj-1,option.res,option.origin); % Each previous chromas in Hz.
+            fr = chro2freq(ccj+1,option.res,option.origin); % Each related next chromas in Hz.
             for k = 1:sc
                 rad = find(and(fj(:,1) > fc(k)-option.wth*(fc(k)-fl(k)),...
                                fj(:,1) < fc(k)-option.wth*(fc(k)-fr(k))));
@@ -296,12 +304,12 @@ if option.cen || option.nor || option.wrp
 end
 
 
-function c = freq2chro(f,res)
-c = round(res*log2(f/261.6256));
+function c = freq2chro(f,res,origin)
+c = round(res*log2(f/origin));
 
 
-function f = chro2freq(c,res)
-f = 2.^(c/res)*261.6256;
+function f = chro2freq(c,res,origin)
+f = 2.^(c/res)*origin;
 
 
 function y = vectnorm(x,p)
