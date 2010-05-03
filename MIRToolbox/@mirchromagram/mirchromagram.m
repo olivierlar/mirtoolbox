@@ -136,6 +136,7 @@ else
     c.plabel = 1;
     c.wrap = 0;
     c.chromaclass = {};
+    c.chromafreq = {};
     c.register = {};
     c = class(c,'mirchromagram',mirdata(orig));
     c = purgedata(c);
@@ -153,6 +154,7 @@ else
     cc = cell(1,length(m));  % The final structured list of chroma classes.
     o = cell(1,length(m));  % The final structured list of octave registers.
     p = cell(1,length(m));  % The final structured list of chromas.
+    cf = cell(1,length(m));  % The final structured list of central frequencies related to chromas.
     for i = 1:length(m)
         mi = m{i};
         fi = f{i};
@@ -164,6 +166,7 @@ else
         ci = cell(1,length(mi));    % The list of chroma classes.
         oi = cell(1,length(mi));    % The list of octave registers.
         pi = cell(1,length(mi));    % The list of absolute chromas.
+        cfi = cell(1,length(mi));    % The central frequency of each chroma.
         for j = 1:length(mi)
             mj = mi{j};
             fj = fi{j};
@@ -221,13 +224,16 @@ else
             ci{j} = repmat(cj,[1,s2,s3]);
             pi{j} = repmat(pj,[1,s2,s3]);
             ni{j} = nj;
+            cfi{j} = fc;
         end
         n{i} = ni;
         cc{i} = ci;
         o{i} = oi;
         p{i} = pi;
+        cf{i} = cfi;
     end
-    c = set(c,'Magnitude',n,'Chroma',p,'ChromaClass',cc,'Register',o);
+    c = set(c,'Magnitude',n,'Chroma',p,'ChromaClass',cc,...
+              'ChromaFreq',cf,'Register',o);
     c = modif(c,option,chromascale);
     c = {c orig};
 end

@@ -6,6 +6,7 @@ propertyArgIn = varargin;
 pl = c.plabel;
 wr = c.wrap;
 cl = c.chromaclass;
+cf = c.chromafreq;
 or = c.register;
 d = mirdata(c);
 d = set(d,'Title',get(c,'Title'),'Abs',get(c,'Abs'),'Ord',get(c,'Ord'));
@@ -20,6 +21,8 @@ while length(propertyArgIn) >= 2,
            d = set(d,'Pos',val);
        case 'ChromaClass'
            cl = val;
+       case 'ChromaFreq'
+           cf = val;
        case 'Register'
            or = val;
        case 'PitchLabel'
@@ -33,5 +36,6 @@ end
 cc.plabel = pl;
 cc.wrap = wr;
 cc.chromaclass = cl;
+cc.chromafreq = cf;
 cc.register = or;
 cc = class(cc,'mirchromagram',d);

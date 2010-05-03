@@ -9,6 +9,8 @@ switch propName
         val = get(mirdata(a),'Pos');
     case 'ChromaClass'
         val = a.chromaclass;
+    case 'ChromaFreq'
+        val = a.chromafreq;
     case 'Register'
         val = a.register;
     case 'PitchLabel'
