@@ -16,7 +16,23 @@ function varargout = miremotion(orig,varargin)
 %   miremotion(...,'Anger') includes the 'Anger' concept.
 %   miremotion(...,'Fear') includes the 'Fear' concept.
 %   miremotion(...,'Frame',...) predict emotion frame by frame.
-
+%
+% Selection of features and coefficients are taken from a study: 
+%         Eerola, T., Lartillot, O., and Toiviainen, P. 
+%            (2009). Prediction of multidimensional emotional ratings in 
+%            music from audio using multivariate regression models. 
+%            In Proceedings of 10th International Conference on Music Information Retrieval 
+%            (ISMIR 2009), pages 621-626.
+%
+% The implemented models are based on multiple linear regression with 5 best
+% predictors (MLR option in the paper). The box-cox transformations have now been 
+% removed until the normalization values have been established with a large sample of music.
+% 
+% TODO: Revision of coefficients to (a) force the output range between 0 - 1 and 
+%    (b) to be based on alternative models and materials (training sets). 
+%
+% Updated 03.05.2010 TE
+%
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
@@ -120,8 +136,8 @@ rm = mirrms(x,'Frame',.046,.5);
 
 le = 0; %mirlowenergy(rm,'ASR');
 
-%o = mironsets(x,'Filterbank',15,'Contrast',0.1);
-at = 0; %mirattacktime(o);
+o = mironsets(x,'Filterbank',15,'Contrast',0.1);
+at = mirattacktime(o);
 as = 0; %mirattackslope(o);
 ed = 0; %mireventdensity(o,'Option1');
 
@@ -130,27 +146,29 @@ fp = mirpeaks(fl,'Total',1);
 fc = 0; %mircentroid(fl);
 
 tp = 0; %mirtempo(x,'Frame',2,.5,'Autocor','Spectrum');
-pc = 0; %mirpulseclarity(x,'Frame',2,.5);
+pc = mirpulseclarity(x,'Frame',2,.5);
 
 s = mirspectrum(x,'Frame',.046,.5);
 sc = mircentroid(s);
-ss = 0; %mirspread(s);
+ss = mirspread(s);
 sr = mirroughness(s);
 
-ps = 0; %mirpitch(x,'Frame',.046,.5,'Tolonen');
+%ps = mirpitch(x,'Frame',.046,.5,'Tolonen');
 
 c = mirchromagram(x,'Frame',.046,.5,'Wrap',0,'Pitch',0);
 cp = mirpeaks(c,'Total',1);
+ps = 0;%cp;
 ks = mirkeystrength(c);
 [k kc] = mirkey(ks);
 mo = mirmode(ks);
 hc = mirhcdf(c);
 
-se = 0; %mirentropy(mirspectrum(x,'Collapsed','Min',40,'Smooth',70,'Frame',1.5,.5));
+se = mirentropy(mirspectrum(x,'Collapsed','Min',40,'Smooth',70,'Frame',1.5,.5));
 
-ns = 0; %mirnovelty(mirspectrum(x,'Frame',.1,.5,'Max',5000),'Normal',0);
+ns = mirnovelty(mirspectrum(x,'Frame',.1,.5,'Max',5000),'Normal',0);
 nt = mirnovelty(mirchromagram(x,'Frame',.1,.5),'Normal',0);
-nr = 0; %mirnovelty(mirchromagram(x,'Frame',.1,.5,'Wrap',0),'Normal',0);
+nr = mirnovelty(mirchromagram(x,'Frame',.1,.5,'Wrap',0),'Normal',0);
+
 
 
 x = {rm,le, at,as,ed, fp,fc, tp,pc, sc,ss,sr, ps, cp,kc,mo,hc, se, ns,nt,nr};
@@ -169,46 +187,48 @@ type = {'miremotion','mirscalar','mirscalar',...
 %%
 function e = main(x,option,postoption)
 
+
 option = process(option);
 rm = get(x{1},'Data');
 %le = get(x{2},'Data');
-%at = get(x{3},'Data');
+at = get(x{3},'Data');
 %as = get(x{4},'Data');
 %ed = get(x{5},'Data');
 %fpp = get(x{6},'PeakPosUnit');
 fpv = get(x{6},'PeakVal');
 %fc = get(x{7},'Data');
 %tp = get(x{8},'Data');
-%pc = get(x{9},'Data');
+pc = get(x{9},'Data');
 sc = get(x{10},'Data');
-%ss = get(x{11},'Data');
+ss = get(x{11},'Data');
 rg = get(x{12},'Data');
-%ps = get(x{13},'Data');
+%ps = get(x{13},'PeakPosUnit');
 cp = get(x{14},'PeakPosUnit');
 kc = get(x{15},'Data');
 mo = get(x{16},'Data');
 hc = get(x{17},'Data');
-%se = get(x{18},'Data');
-%ns = get(x{19},'Data');
+se = get(x{18},'Data');
+ns = get(x{19},'Data');
 nt = get(x{20},'Data');
-%nr = get(x{21},'Data');
+nr = get(x{21},'Data');
+
 
 e.dim = {};
 e.dimdata = mircompute(@initialise,rm);
 if option.activity == 1
-    [e.dimdata e.activity_fact] = mircompute(@activity,e.dimdata,fpv,sc,rg,cp,hc);
+    [e.dimdata e.activity_fact] = mircompute(@activity,e.dimdata,rm,fpv,sc,ss,se);
     e.dim = [e.dim,'Activity'];
-else
+else   
     e.activity_fact = NaN;
 end
 if option.valence == 1
-    [e.dimdata e.valence_fact] = mircompute(@valence,e.dimdata,rm,fpv,kc,mo,nt);
+    [e.dimdata e.valence_fact] = mircompute(@valence,e.dimdata,rm,fpv,kc,mo,ns);
     e.dim = [e.dim,'Valence'];
 else
     e.valence_fact = NaN;
 end
 if option.tension == 1
-    [e.dimdata e.tension_fact] = mircompute(@tension,e.dimdata,rm,fpv,sc,kc,nt);
+    [e.dimdata e.tension_fact] = mircompute(@tension,e.dimdata,rm,fpv,kc,hc,nr);
     e.dim = [e.dim,'Tension'];
 else
     e.tension_fact = NaN;
@@ -217,31 +237,31 @@ end
 e.class = {};
 e.classdata = mircompute(@initialise,rm);
 if option.happy == 1
-    [e.classdata e.happy_fact] = mircompute(@happy,e.classdata,fpv,sc,rg,cp,hc);
+    [e.classdata e.happy_fact] = mircompute(@happy,e.classdata,fpv,ss,cp,kc,mo);
     e.class = [e.class,'Happy'];
 else
     e.happy_fact = NaN;
 end
 if option.sad == 1
-    [e.classdata e.sad_fact] = mircompute(@sad,e.classdata,rm,fpv,kc,mo,nt);
+    [e.classdata e.sad_fact] = mircompute(@sad,e.classdata,ss,cp,mo,hc,nt);
     e.class = [e.class,'Sad'];
 else
     e.sad_fact = NaN;
 end
 if option.tender == 1
-    [e.classdata e.tender_fact] = mircompute(@tender,e.classdata,rm,fpv,sc,kc,nt);
+    [e.classdata e.tender_fact] = mircompute(@tender,e.classdata,sc,rg,kc,hc,ns);
     e.class = [e.class,'Tender'];
 else
     e.tender_fact = NaN;
 end
 if option.anger == 1
-    [e.classdata e.anger_fact] = mircompute(@anger,e.classdata,fpv,sc,rg,cp,hc);
+    [e.classdata e.anger_fact] = mircompute(@anger,e.classdata,rg,kc,se,nr);
     e.class = [e.class,'Anger'];
 else
     e.anger_fact = NaN;
 end
 if option.fear == 1
-    [e.classdata e.fear_fact] = mircompute(@fear,e.classdata,rm,fpv,kc,mo,nt);
+    [e.classdata e.fear_fact] = mircompute(@fear,e.classdata,rm,at,fpv,kc,mo);
     e.class = [e.class,'Fear'];
 else
     e.fear_fact = NaN;
@@ -252,7 +272,6 @@ e = purgedata(e);
 fp = mircompute(@noframe,get(x{1},'FramePos'));
 e = set(e,'Title','Emotion','Abs','emotions','Ord','magnitude','FramePos',fp);
 %          'Data','FramePos',fp);
-      
       
 %%      
 function option = process(option)
@@ -330,8 +349,8 @@ if option.concepts
     option.anger = 1;
     option.fear = 1;
 end
-if 1 %option.happy==1 || option.sad==1 || option.tender==1 ...
-        %|| option.anger==1 || option.fear==1
+if option.happy==1 || option.sad==1 || option.tender==1 ...
+        || option.anger==1 || option.fear==1
     if isnan(option.happy)
         option.happy = 0;
     end
@@ -355,123 +374,89 @@ function e = initialise(rm)
 e = [];
 
       
-function e = activity(e,fpv,sc,rg,cp,hc)
-af(1) = 0.40099*((boxcox(mean(fpv{1}),-.8,1.1011e+04)-2.3546e+07)/5.4559e+03); % NORMALIZATION NEEDS TO BE CALCULATED FROM BOX-COX SCORES
-af(2) = 0.25906*((mean(cell2mat(sc)) - 1677.7)./570.34);
-af(3) = 1.14410*((mean(rg) - 197.39)./112.72);
-af(4) = 0.35787*((mean(cell2mat(cp)) - 8.5321)./2.5899);
-af(5) = 0.61027*((mean(hc) - 0.29615)./0.045898);
+function e = activity(e,rm,fpv,sc,ss,se) % without the box-cox transformation, revised coefficients
+af(1) = 0.6664* ((mean(rm) - 0.0559)/0.0337); % 
+af(2) =  0.6099 * ((mean(fpv{1}) - 13270.1836)/10790.655);
+af(3) = 0.4486*((mean(cell2mat(sc)) - 1677.7)./570.34);
+af(4) = -0.4639*((mean(cell2mat(ss)) - 250.5574)./205.3147);
+af(5) = 0.7056*((mean(se) - 0.954)./0.0258);
 af(isnan(af)) = [];
 e(end+1,:) = sum(af)+5.4861;
 e = {e af};
 
-
-function e = valence(e,rm,fpv,kc,mo,nt)
-vf(1) = -0.31258 * ((std(rm) - 0.024254)./0.015667);
-vf(2) =  0.64626 * ((boxcox(mean(fpv{1}),-.8,1.1011e+04)-2.3546e+07)/5.4559e+03);
-vf(3) = 0.88766 * ((mean(kc) - 0.5123)./0.091953);
-vf(4) = 0.37939 * ((mean(mo) - -0.0019958)./0.048664);
-nt(isnan(nt)) = [];
-vf(5) = 0.42506 * ((mean(nt) - 172.84)./41.334);
+function e = valence(e,rm,fpv,kc,mo,ns) % without the box-cox transformation, revised coefficients
+vf(1) = -0.3161 * ((std(rm) - 0.024254)./0.015667);
+vf(2) =  0.6099 * ((mean(fpv{1}) - 13270.1836)/10790.655);
+vf(3) = 0.8802 * ((mean(kc) - 0.5123)./0.091953);
+vf(4) = 0.4565 * ((mean(mo) - -0.0019958)./0.048664);
+ns(isnan(ns)) = [];
+vf(5) = 0.4015 * ((mean(ns) - 131.9503)./47.6463);
 vf(isnan(vf)) = [];
 e(end+1,:) = sum(vf)+5.2749;
 e = {e vf};
 
-
-function e = tension(e,rm,fpv,sc,kc,nt)
-tf(1) = 0.6333 * ((std(rm) - 0.024254)./0.015667);
-tf(2) =  -0.42467 * ((boxcox(mean(fpv{1}),-.8,1.1011e+04)-2.3546e+07)/5.4559e+03);
-tf(3) = 0.55581 * ((mean(cell2mat(sc)) - 1677.7)./570.34);
-tf(4) = -0.82602 * ((mean(kc) - 0.5123)./0.091953);
-tf(5) = -0.87464 * ((mean(nt) - 172.84)./41.334);
+function e = tension(e,rm,fpv,kc,hc,nr)
+tf(1) = 0.5382 * ((std(rm) - 0.024254)./0.015667);
+tf(2) =  -0.5406 * ((mean(fpv{1}) - 13270.1836)/10790.655);
+tf(3) = -0.6808 * ((mean(kc) - 0.5124)./0.092);
+tf(4) = 0.8629 * ((mean(hc) - 0.2962)./0.0459);
+tf(5) = -0.5958 * ((mean(nr) - 71.8426)./46.9246);
 tf(isnan(tf)) = [];
 e(end+1,:) = sum(tf)+5.4679;
 e = {e tf};
 
 
-function e = happy(e,fpv,sc,rg,cp,hc)
-e = activity(e,fpv,sc,rg,cp,hc);
+% BASIC EMOTION PREDICTORS
 
+function e = happy(e,fpv,ss,cp,kc,mo)
+ha_f(1) = 0.7438*((mean(cell2mat(fpv)) - 13270.1836)./10790.655);
+ha_f(2) = -0.3965*((mean(cell2mat(ss)) - 250.5574)./205.3147);
+ha_f(3) = 0.4047*((std(cell2mat(cp)) - 8.5321)./2.5899);
+ha_f(4) = 0.7780*((mean(kc) - 0.5124)./0.092);
+ha_f(5) = 0.6220*((mean(mo) - -0.002)./0.0487);
+ha_f(isnan(ha_f)) = [];
+e(end+1,:) = sum(ha_f)+2.6166;
+e = {e ha_f};
 
-function e = sad(e,rm,fpv,kc,mo,nt)
-e = valence(e,rm,fpv,kc,mo,nt);
+function e = sad(e,ss,cp,mo,hc,nt)
+sa_f(1) = 0.4324*((mean(cell2mat(ss)) - 250.5574)./205.3147);
+sa_f(2) = -0.3137*((std(cell2mat(cp)) - 8.5321)./2.5899);
+sa_f(3) = -0.5201*((mean(mo) - -0.0020)./0.0487);
+sa_f(4) = -0.6017*((mean(hc) - 0.2962)./0.0459);
+sa_f(5) = 0.4493*((mean(nt) - 42.2022)./36.7782);
+sa_f(isnan(sa_f)) = [];
+e(end+1,:) = sum(sa_f)+2.9756;
+e = {e sa_f};
 
+function e = tender(e,sc,rg,kc,hc,ns)
+te_f(1) = -0.2709*((mean(cell2mat(sc)) - 1677.7106)./570.3432);
+te_f(2) = -0.4904*((std(rg) - 85.9387)./106.0767);
+te_f(3) = 0.5192*((mean(kc) - 0.5124)./0.0920);
+te_f(4) = -0.3995*((mean(hc) - 0.2962)./0.0459);
+te_f(5) = 0.3391*((mean(ns) - 131.9503)./47.6463);
+te_f(isnan(te_f)) = [];
+e(end+1,:) = sum(te_f)+2.9756;
+e = {e te_f};
 
-function e = tender(e,rm,fpv,sc,kc,nt)
-e = tension(e,rm,fpv,sc,kc,nt);
+function e = anger(e,rg,kc,se,nr) % 
+%an_f(1) = -0.2353*((mean(pc) - 0.1462)./.1113);
+an_f(2) = 0.5517*((mean(rg) - 85.9387)./106.0767);
+an_f(3) = -.5802*((mean(kc) - 0.5124)./0.092);
+an_f(4) = .2821*((mean(se) - 0.954)./0.0258);
+an_f(5) = -.2971*((mean(nr) - 71.8426)./46.9246);
+an_f(isnan(an_f)) = [];
+e(end+1,:) = sum(an_f)+1.9767;
+e = {e an_f};
 
-
-function e = anger(e,fpv,sc,rg,cp,hc)
-e = activity(e,fpv,sc,rg,cp,hc);
-
-
-function e = fear(e,rm,fpv,kc,mo,nt)
-e = valence(e,rm,fpv,kc,mo,nt);
-
-
-%%
-function v=boxcox(x,lamda,xdot)
-%Syntax: v=boxcox(x,lamda,xdot)
-%______________________________
-%
-% Makes the Box-Cox transformation of a data set x.
-%
-% v is the transformed data vector.
-% x is the data set.
-% lamda is the parameter of the transformation.
-% xdot is the geometric mean of the data.
-%
-% Alexandros Leontitsis
-% Institute of Mathematics and Statistics
-% University of Kent at Canterbury
-% Canterbury
-% Kent, CT2 7NF
-% U.K.
-% University e-mail: al10@ukc.ac.uk (until December 2001)
-% Lifetime e-mail: leoaleq@yahoo.com
-% Homepage: http://www.geocities.com/CapeCanaveral/Lab/1421
-%
-% June 15, 2001.
-
-if nargin<1 | isempty(x)==1
-   error('You shoud provide a data set.');
-else
-   % x must be a vector
-   if min(size(x))>1
-      error('Invalid data set.');
-   end
-   x=x(:);
-   % n is the data set length
-   n=length(x);
-end
-
-if nargin<2 | isempty(lamda)==1
-   lamda=0;
-else
-   %lamda must be either a scalar or a vector
-   if min(size(lamda))>1
-      error('lamda must be either a scalar or a vector.');
-   end
-end
-
-if nargin<3 | isempty(xdot)==1
-   xdot=1;
-else
-   % xdot must be a scalar
-   if sum(size(xdot))>2
-      error('xdot must be a scalar.');
-   end
-end
-
-% Box-Cox transformation
-for i=1:length(lamda)
-   if lamda(i)~=0
-      v(:,i)=(x.^lamda(i)-1)/(lamda(i)*xdot^(lamda(i)-1));
-   else
-      v(:,i)=xdot*log(x);
-   end
-end
-
+function e = fear(e,rm,at,fpv,kc,mo)
+fe_f(1) = 0.4069*((std(rm) - 0.0243)./0.0157);
+fe_f(2) = -0.6388*((mean(at) - 0.0707)./0.015689218536423);
+fe_f(3) = -0.2538*((mean(cell2mat(fpv)) - 13270.1836)./10790.655);
+fe_f(4) = -0.9860*((mean(kc) - 0.5124)./0.0920);
+fe_f(5) = -0.3144*((mean(mo) - -0.0019958)./0.048663550639094);
+fe_f(isnan(fe_f)) = [];
+e(end+1,:) = sum(fe_f)+2.7847;
+e = {e fe_f};
 
 function fp = noframe(fp)
 fp = [fp(1);fp(end)];
