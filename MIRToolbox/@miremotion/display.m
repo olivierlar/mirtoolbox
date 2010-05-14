@@ -6,7 +6,7 @@ c = get(e,'Class');
 cd = get(e,'ClassData');
 fp = get(e,'FramePos');
 n = get(e,'Name');
-if not(isempty(d))
+if 0 %not(isempty(d))
     if length(d)==1
         s = mirscalar(e);
         s = set(s,'Pos',{{d'}},'Data',dd,...
@@ -62,6 +62,11 @@ if not(isempty(d))
         display(['The Dimensional Emotion related to file ',n{i},...
             ' is displayed in Figure ',gcf'.']);
     end
+end
+if not(isempty(d))
+    s = mirscalar(e);
+    s = set(s,'Pos',{{d'}},'Data',dd,...
+        'Title','Dimensional Emotion','Abs','Emotion Dimensions')
 end
 if not(isempty(c))
     s = mirscalar(e);
