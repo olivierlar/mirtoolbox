@@ -52,7 +52,7 @@ else
         l = 1;
     end
 end
-if not(iscell(y)) && l > 20 && size(y,3) == 1
+if not(iscell(y)) && l > 20 %&& size(y,3) == 1
     manychannels = 1;
     if lx == 1
         y = reshape(y,[c l])';
@@ -68,8 +68,7 @@ if not(iscell(y)) && l > 20 && size(y,3) == 1
         x = ch';
     end
 end
-curve = ... %not (l > 15 && (lx == 1 || c == 1)) && ...
-        (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
+curve = (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
         ...%(iscell(y) && size(y{1}) == 1) || ...
         c == 1 || (strcmp(xlab,'time (s)') && not(manychannels));
 if curve
