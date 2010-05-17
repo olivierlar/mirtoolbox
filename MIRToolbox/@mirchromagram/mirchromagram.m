@@ -3,8 +3,8 @@ function varargout = mirchromagram(orig,varargin)
 %       along pitches, of the audio signal x.
 %       (x can be the name of an audio file as well, or a spectrum, ...)
 %   Optional argument:
-%       c = mirchromagram(...,'Tuning',t): specifies the frequency (in Hz.)
-%           associated to  chroma C.
+%       c = mirchromagram(...,'Tuning',t): specifies the central frequency
+%           (in Hz.) associated to  chroma C.
 %               Default value, t = 261.6256 Hz
 %       c = mirchromagram(...,'Wrap',w): specifies whether the chromagram is
 %           wrapped or not.
