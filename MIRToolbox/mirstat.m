@@ -38,7 +38,10 @@ elseif isstruct(f)
                 end
                 ff = set(ff,'Label','');
             end
-            stat.(field) = mirstat(ff);
+            stat.(field) = mirstat(ff,'FileNames',0);
+        end
+        if isempty(varargin)
+            stat.FileNames = get(f,'Name');
         end
         varargout = {stat};
     end
@@ -56,7 +59,12 @@ else
             alongfiles.type = 'Boolean';
             alongfiles.default = 0;
         option.alongfiles = alongfiles;
-    
+
+            filenames.key = 'FileNames';
+            filenames.type = 'Boolean';
+            filenames.default = 1;
+        option.filenames = filenames;
+        
     specif.option = option;
 
     specif.nochunk = 1;
@@ -94,10 +102,16 @@ if haspeaks(f)
 else
     stat = addstat(struct,get(f,'Data'),fp,'',option.alongfiles,get(f,'Name'));
 end
+if option.filenames
+    stat.FileNames = get(f,'Name');
+end
 
 
 function stat = addstat(stat,d,fp,field,alongfiles,filename)
 l = length(d);
+if nargin<5
+    alongfiles = 0;
+end
 if not(alongfiles) || l == 1
     anyframe = 0;
     for i = 1:l

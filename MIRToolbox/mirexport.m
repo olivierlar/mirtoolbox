@@ -122,10 +122,15 @@ if isstruct(data)
         class = data.Class;
         data = rmfield(data,'Class');
     end
+        
+    if isfield(data,'FileNames')
+        name = data.FileNames;
+        data = rmfield(data,'FileNames');
+    end
     
     fields = fieldnames(data);
     nfields = length(fields);
-    
+
     for w = 1:nfields
         % Field information
         field = fields{w};
@@ -143,11 +148,14 @@ if isstruct(data)
             % Concatenation of the results
             newdata = {newdata{:} n.data{:}};
             newtextdata = {newtextdata{:} n.textdata{:}};
-            newname = checkname(newname,n.name);
+            newname = checkname(newname,name);
         end
     end
 elseif isa(data,'mirdata')
     newinput.data = mirstat(data);
+    if isfield(newinput.data,'FileNames')
+        newinput.data = rmfield(newinput.data,'FileNames');
+    end
     title = get(data,'Title');
     newinput.textdata = [textdata '_' title(find(not(isspace(title))))];
     n = integrate({},newinput);
