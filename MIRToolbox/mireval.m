@@ -156,7 +156,7 @@ else
 end
 
 %if isempty(export)
-    v = combineaudiofile(y{:});
+    v = combineaudiofile(a,y{:});
 %else
 %    v = [];
 %end
@@ -225,7 +225,7 @@ else
 end
 
 
-function c = combineaudiofile(varargin) % Combine output from several audio files into one single
+function c = combineaudiofile(filename,varargin) % Combine output from several audio files into one single
 c = varargin{1};    % The (series of) input(s) related to the first audio file
 if isempty(c)
     return
@@ -249,10 +249,13 @@ if isstruct(c)
                 v{j} = NaN;
             end
         end
-        c.(field) = combineaudiofile(v{:});
+        c.(field) = combineaudiofile('',v{:});
         if strcmp(field,'Class')
             c.Class = c.Class{1};
         end
+    end
+    if not(isempty(filename))
+        c.FileNames = filename;
     end
     return
 end
@@ -278,10 +281,10 @@ if (not(iscell(c)) && not(isa(c,'mirdata')))
 end
 if (iscell(c) && not(isa(c{1},'mirdata')))
     for i = 1:length(c)
-        for j = 1:nargin
+        for j = 1:nargin-1
             v{j} = varargin{j}{i};
         end
-        c{i} = combineaudiofile(v{:});
+        c{i} = combineaudiofile(filename,v{:});
     end
     return
 end

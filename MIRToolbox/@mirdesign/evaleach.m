@@ -717,7 +717,7 @@ for i = 1:length(branch)
     z.(fields{i}) = evalbranch(branch{i},tmp,y);
 end
 if get(d,'Stat') && isempty(get(d,'Chunk'))
-    z = mirstat(z);
+    z = mirstat(z,'FileNames',0);
 end
 
 

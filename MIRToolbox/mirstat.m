@@ -41,7 +41,15 @@ elseif isstruct(f)
             stat.(field) = mirstat(ff,'FileNames',0);
         end
         if isempty(varargin)
-            stat.FileNames = get(f,'Name');
+            f0 = f;
+            while isstruct(f0)
+                fields = fieldnames(f0);
+                f0 = f0.(fields{1});
+            end
+            if iscell(f0)
+                f0 = f0{1};
+            end
+            stat.FileNames = get(f0,'Name');
         end
         varargout = {stat};
     end
