@@ -271,7 +271,6 @@ e = class(e,'miremotion',mirdata(x{1}));
 e = purgedata(e);
 fp = mircompute(@noframe,get(x{1},'FramePos'));
 e = set(e,'Title','Emotion','Abs','emotions','Ord','magnitude','FramePos',fp);
-%          'Data','FramePos',fp);
       
 %%      
 function option = process(option)
@@ -279,7 +278,7 @@ if option.arousal==1
     option.activity = 1;
     option.tension = 1;
     if isnan(option.dim)
-        option.dim = 0;
+        option.dim = 0; 
     end
 end
 if option.activity==1 || option.valence==1 || option.tension==1

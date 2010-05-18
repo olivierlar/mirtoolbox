@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.2.5 16-April-2010
+% Version 1.3 18-May-2010
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -64,6 +64,9 @@
 % mirmode          - General estimation of mode (major/minor)
 % mirtonalcentroid - Tonal centroid (using circles of fifths and thirds)
 % mirhcdf          - Harmonic Change Detection Function
+%
+%PREDICTIONS
+% miremotion       - Emotion, represented both as classes and dimensions
 %
 %ANALYSIS
 % mirmean          - Returns the mean of any feature
