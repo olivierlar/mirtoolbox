@@ -146,8 +146,8 @@ for i = 1:length(v)  % For each audio file
                             end
                         end
                     end
+                    vi{j} = vj;
                 end
-                vi{j} = vj;
             end
         end
                 
@@ -171,6 +171,7 @@ for i = 1:length(v)  % For each audio file
             
             for j = 1:length(vi)     % for each segment
                 vj = vi{j};
+                
                 fpj = fpi{j};
                 if isempty(ppi) || length(ppi)<j
                     ppj = [];
