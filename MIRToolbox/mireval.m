@@ -126,6 +126,7 @@ if parallel
     end
 else
     %   The evaluation is carried out for each audio file successively.
+    isstat = isfield(d,'Stat');
     for i = 1:length(order)
         f = order(i);
         if l > 1
@@ -156,7 +157,7 @@ else
 end
 
 %if isempty(export)
-    v = combineaudiofile(a,y{:});
+    v = combineaudiofile(a,isstat,y{:});
 %else
 %    v = [];
 %end
@@ -184,7 +185,7 @@ if isstruct(d)
             if isa(field,'mirstruct')
                 field = set(field,'Stat',1);
             elseif isa(field,'mirdesign')
-                field = mirstat(field);
+                field = mirstat(field,'FileNames',0);
             else
                 field.Stat = 1;
             end
@@ -225,7 +226,7 @@ else
 end
 
 
-function c = combineaudiofile(filename,varargin) % Combine output from several audio files into one single
+function c = combineaudiofile(filename,isstat,varargin) % Combine output from several audio files into one single
 c = varargin{1};    % The (series of) input(s) related to the first audio file
 if isempty(c)
     return
@@ -249,12 +250,12 @@ if isstruct(c)
                 v{j} = NaN;
             end
         end
-        c.(field) = combineaudiofile('',v{:});
+        c.(field) = combineaudiofile('',isstat,v{:});
         if strcmp(field,'Class')
             c.Class = c.Class{1};
         end
     end
-    if not(isempty(filename))
+    if not(isempty(filename)) && isstat
         c.FileNames = filename;
     end
     return
@@ -281,10 +282,10 @@ if (not(iscell(c)) && not(isa(c,'mirdata')))
 end
 if (iscell(c) && not(isa(c{1},'mirdata')))
     for i = 1:length(c)
-        for j = 1:nargin-1
+        for j = 1:nargin-2
             v{j} = varargin{j}{i};
         end
-        c{i} = combineaudiofile(filename,v{:});
+        c{i} = combineaudiofile(filename,isstat,v{:});
     end
     return
 end
