@@ -197,6 +197,8 @@ else
 end
 if not(iscell(o) && length(o)>1) || (isa(x,'mirdesign') && get(x,'Eval'))
     o = {o x};
+elseif iscell(x) && isa(x{1},'mirdesign') && get(x{1},'Eval')
+    o = {o x{1}};
 elseif not(isempty(varg)) && isstruct(varg{1}) ...
             && not(iscell(o) && iscell(o{1}))
     % When the function was called by mireval, the output should be packed
