@@ -20,48 +20,8 @@ function varargout = mirplay(a,varargin)
 %                        'increasing', mirrms('Folder'),...
 %                        'every',5)
 
-
-        ch.key = 'Channel';
-        ch.type = 'Integer';
-        ch.default = 0;
-    option.ch = ch;
-        
-        sg.key = 'Segment';
-        sg.type = 'Integer';
-        sg.default = 0;
-    option.sg = sg;
-        
-        se.key = 'Sequence';
-        se.type = 'Integer';
-        se.default = 0;
-    option.se = se;
-
-        inc.key = 'Increasing';
-        inc.type = 'MIRtb';
-    option.inc = inc;
-
-        dec.key = 'Decreasing';
-        dec.type = 'MIRtb';
-    option.dec = dec;
-
-        every.key = 'Every';
-        every.type = 'Integer';
-    option.every = every;
-
-specif.option = option;
-
-specif.eachchunk = 'Normal';
-
-varargout = mirfunction(@mirplay,a,varargin,nargout,specif,@init,@main);
-if nargout == 0
-    varargout = {};
+if ischar(a)
+    varargout = mirplay(miraudio(a),varargin{:});
+else
+    mirerror('mirplay','You cannot play this type of object.')
 end
-
-
-function [x type] = init(x,option)
-type = '';
-
-
-function p = main(a,option,postoption)
-mirplay(a);
-p = {};
