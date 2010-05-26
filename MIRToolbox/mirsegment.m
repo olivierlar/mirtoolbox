@@ -386,7 +386,14 @@ d = [0 d 0];
 begseg = find(d(1:end-1)<thron & d(2:end)>=thron);
 nseg = length(begseg);
 endseg = zeros(1,nseg);
+removed = [];
 for i = 1:nseg
-    endseg(i) = begseg(i) + find(d(begseg(i)+1:end)<=throff, 1);
+    endseg(i) = begseg(i) + find(d(begseg(i)+1:end)<=throff, 1)-1;
+    if i>1 && endseg(i) == endseg(i-1)
+        removed = [removed i];
+    end
 end
+begseg(removed) = [];
+endseg(removed) = [];
+endseg(end) = min(endseg(end),length(d)+1);
 p = [fp(1,begseg-1); fp(2,endseg-1)];
