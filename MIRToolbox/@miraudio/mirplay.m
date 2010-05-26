@@ -52,7 +52,7 @@ f = get(a,'Sampling');
 n = get(a,'Name');
 c = get(a,'Channels');
 fp = get(a,'FramePos');
-if isempty(option.se) || not(option.se)
+if not(option.se)
     if length(d)>1
         if isfield(option,'inc')
             [unused order] = sort(mirgetdata(option.inc));

@@ -561,9 +561,9 @@ for i = 1:length(d) % For each audio file,...
                 for k = 1:nc
                     mxlk = mx{1,k,l};
                     if strcmp(option.logsc,'Log')
-                        [M I] = min(abs(log(th(mxlk)/option.near)));
+                        [M I] = min(abs(log(th(mxlk,k,l)/option.near)));
                     else
-                        [M I] = min(abs(th(mxlk)-option.near));
+                        [M I] = min(abs(th(mxlk,k,l)-option.near));
                     end
                     mx{1,k,l} = mxlk(I);
                 end
@@ -737,13 +737,13 @@ for i = 1:length(d) % For each audio file,...
                                 p = (yp-ym)/(2*(2*y0-yp-ym));
                                 tpv{i}{h}{l}(j,k) = y0 - 0.25*(ym-yp)*p;
                                 if p >= 0
-                                    tpp{i}{h}{l}(j,k) = (1-p)*th(mj)+p*th(mj+1);
+                                    tpp{i}{h}{l}(j,k) = (1-p)*th(mj,k,l)+p*th(mj+1,k,l);
                                 elseif p < 0
-                                    tpp{i}{h}{l}(j,k) = (1+p)*th(mj)-p*th(mj-1);
+                                    tpp{i}{h}{l}(j,k) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
                                 end
                             else%if mj
                                 tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
-                                tpp{i}{h}{l}(j,k) = th(mj);
+                                tpp{i}{h}{l}(j,k) = th(mj,k,l);
                             end
                         end
                     end
@@ -943,13 +943,13 @@ for i = 1:length(d) % For each audio file,...
                                 p = (yp-ym)/(2*(2*y0-yp-ym));
                                 vih{1,k,l}(j) = y0 - 0.25*(ym-yp)*p;
                                 if p >= 0
-                                    pih{1,k,l}(j) = (1-p)*th(mj)+p*th(mj+1);
+                                    pih{1,k,l}(j) = (1-p)*th(mj,k,l)+p*th(mj+1,k,l);
                                 elseif p < 0
-                                    pih{1,k,l}(j) = (1+p)*th(mj)-p*th(mj-1);
+                                    pih{1,k,l}(j) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
                                 end
                             else
                                 vih{1,k,l}(j) = dh3(mj,k,l);
-                                pih{1,k,l}(j) = th(mj);
+                                pih{1,k,l}(j) = th(mj,k,l);
                             end
                         end
                     end
