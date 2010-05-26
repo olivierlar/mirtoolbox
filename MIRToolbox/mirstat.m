@@ -100,8 +100,8 @@ if haspeaks(f)
         stat = addstat(struct,ppp,fp,'PeakPos');
         stat = addstat(stat,get(f,'PeakPreciseVal'),fp,'PeakMag');
     else
-        if isa(f,'mirkeystrength') || isa(f,'mirchromagram')
-            stat = addstat(struct,get(f,'PeakPos'),fp,'PeakPos');
+        if isa(f,'mirkeystrength') || (isa(f,'mirchromagram') && get(f,'Wrap'))
+            stat = struct; % This needs to be defined using some kind of circular statistics..
         else
             stat = addstat(struct,get(f,'PeakPosUnit'),fp,'PeakPos');
         end
