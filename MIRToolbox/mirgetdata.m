@@ -1,4 +1,4 @@
-function [d,d2] = mirgetdata(x)
+function [d,d2] = mirgetdata(x,varargin)
 %   d = mirgetdata(x) return the data contained in the object x in a
 %       structure that can be used for further computation outside MIRtoolbox.
 %       If x corresponds to one non-segmented audio sequence, the result is 
@@ -87,7 +87,7 @@ if not(isempty(pt)) && not(isempty(pt{1})) && not(isempty(pt{1}{1}))
 end
 
 d = uncell(v,isa(x,'mirscalar'));
-if iscell(d) && not(isempty(d))
+if iscell(d) && not(isempty(d)) && nargin == 1
     disp('The result is an array of cell.')
     disp(['If d is the name of the output variable, ',...
         'the successive cells can be accessed by typing d{1}, d{2}, etc.']);

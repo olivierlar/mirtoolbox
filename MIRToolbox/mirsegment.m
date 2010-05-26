@@ -394,6 +394,6 @@ for i = 1:nseg
     end
 end
 begseg(removed) = [];
-endseg(removed) = [];
-endseg(end) = min(endseg(end),length(d)+1);
-p = [fp(1,begseg-1); fp(2,endseg-1)];
+%endseg(removed) = [];
+%endseg(end) = min(endseg(end),length(d)+1);
+p = fp(1,begseg); %; fp(2,endseg-1)];
