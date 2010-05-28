@@ -14,7 +14,7 @@ varargout = mirfunction(@mirmidi,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-if not(isamir(x,'mirmidi'))
+if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
     o = mironsets(x);
     x = {o x};
 end
