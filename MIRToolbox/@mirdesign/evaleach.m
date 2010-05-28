@@ -268,7 +268,7 @@ else
         end
         
         if frchunkbefore
-            y = d2after.method(y{1},d2after.option,d2after.postoption);
+            y = d2after.method(y,d2after.option,d2after.postoption);
         end
         
         if isa(d,'mirstruct') && get(d,'Stat') 
