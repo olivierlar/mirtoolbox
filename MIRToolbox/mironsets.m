@@ -44,8 +44,10 @@ function varargout = mironsets(x,varargin)
 %                of same default characteristics than those returned
 %                 by mirpitch (with however a range of frequencies not
 %                 exceeding 1000 Hz) and subsequently computes the novelty 
-%                 curve of the resulting similatrix matrix, with a 'KernelSize' 
-%                 of 32 samples.
+%                 curve of the resulting similatrix matrix.
+%               Option associated to the mirnovelty function can be
+%               passed here as well (see help mirnovelty):
+%                   'KernelSize' (set by default to 32 samples)
 %       mironsets(...,'Detect',d) toggles on or off the onset detection, 
 %           which is based on the onset detection function.
 %           (By default toggled on.)
@@ -244,6 +246,11 @@ function varargout = mironsets(x,varargin)
         pitch.default = 0;
     option.pitch = pitch;
 
+        kernelsize.key = 'KernelSize';
+        kernelsize.type = 'Integer';
+        kernelsize.default = 32;
+    option.kernelsize = kernelsize;
+    
 %% options related to event detection
         detect.key = 'Detect';
         detect.type = 'String';
@@ -350,12 +357,12 @@ if isamir(x,'miraudio')
         type = 'mirscalar';
     elseif option.pitch
         [unused ac] = mirpitch(x,'Frame','Stable','Multi','Max',1000);
-        y = mirnovelty(ac,'KernelSize',32);
+        y = mirnovelty(ac,'KernelSize',option.kernelsize);
         type = 'mirscalar';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
         || isamir(x,'mirsimatrix')
-    y = mirnovelty(x,'KernelSize',32);
+    y = mirnovelty(x,'KernelSize',option.kernelsize);
     type = 'mirscalar';
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope')
     y = mirframenow(x,option);
