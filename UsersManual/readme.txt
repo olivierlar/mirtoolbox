@@ -1,4 +1,4 @@
-Congratulations! You have downloaded MIRtoolbox 1.2.1
+Congratulations! You have downloaded MIRtoolbox 1.3
 -----------------------------------------------------
 
 The list of new features and bug fixes offered by this new version is shown in the ReleaseNotes text file located in the toolbox folder, and also available from our website. New versions of the toolbox will also be released at the same address:
@@ -31,7 +31,7 @@ MIRtoolbox requires Matlab version 7 and Mathworks' Signal Processing toolbox.
 
 This distribution actually includes four different toolboxes:
 
-- the MIRtoolbox itself, version 1.2.1,
+- the MIRtoolbox itself, version 1.3,
 
 - the Auditory toolbox, version 2, by Malcolm Slaney
 (also available directly at http://cobweb.ecn.purdue.edu/~malcolm/interval/1998-010/),
@@ -53,7 +53,7 @@ Other code freely available integrated in the distribution:mp3read for Matlab b
 
 **
 
-To install MIRtoolbox in your Matlab environment, copy all the toolboxes folders (or only those that are not installed yet in your computer) into your Matlab "toolbox" folder. Then add each folder in your Matlab path.
+To install MIRtoolbox in your Matlab environment, move the main MIRtoolbox folder to the location of your choice in your computer (for instance, in your Matlab "toolbox" folder, if you have administrative rights to modify it). Then open the “Set Path” environment available in Matlab File menu, click on “Add with Subfolders...”, browse into the file hierarchy and select the main MIRtoolbox folder, then click “Open”. You can then “Save” and “Close” the Set Path environment.
 
 **
 
