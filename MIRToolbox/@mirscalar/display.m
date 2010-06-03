@@ -260,8 +260,13 @@ for i = 1:length(v)  % For each audio file
                                 % previous segment
                             end
                             if h == nl
-                                vold = vj(:,end,k);
-                                fold = mean(fpj(:,end),1);
+                                if isempty(vj)
+                                    vold = NaN;
+                                    fold = NaN;
+                                else
+                                    vold = vj(:,end,k);
+                                    fold = mean(fpj(:,end),1);
+                                end
                             end
                        % else
                        %     vold = NaN;
