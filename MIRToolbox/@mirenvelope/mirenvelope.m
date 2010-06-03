@@ -571,7 +571,7 @@ for k = 1:length(d)
                     d{k}{i} = d{k}{i}(2:end,:,:); 
                     tp{k}{i} = tp{k}{i}(2:end,:,:);
                 elseif order == 1
-                    ddki = diff(d{k}{i});
+                    ddki = diff(d{k}{i},1,1);
                 else
                     b = firls(order,[0 0.9],[0 0.9*pi],'differentiator');
                     ddki = filter(b,1,...
