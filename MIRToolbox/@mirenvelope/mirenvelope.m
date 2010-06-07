@@ -334,6 +334,7 @@ elseif strcmpi(option.method,'Spectro')
     ch = get(orig,'Channels');
     ph = get(orig,'Phase');
     for h = 1:length(d)
+        sr{h} = 0;
         for i = 1:length(d{h})
             if size(d{h}{i},3)>1 % Already in bands (channels in 3d dim)
                 d{h}{i} = permute(sum(d{h}{i}),[2 1 3]);
@@ -343,14 +344,14 @@ elseif strcmpi(option.method,'Spectro')
                 ph{h}{i} = permute(ph{h}{i},[2 3 1]);
             end
             p{h}{i} = mean(fp{h}{i})';
+            if not(sr{h}) && size(fp{h}{i},2)>1
+                sr{h} = 1/(fp{h}{i}(1,2)-fp{h}{i}(1,1));
+            end
         end
-        if size(fp{h}{i},2)<2
-            %error('ERROR IN MIRENVELOPE: The frame decomposition did not succeed. Either the input is of too short duration, or the chunk size is too low.');
-            sr{h} = 0;
-        else
-            sr{h} = 1/(fp{h}{i}(1,2)-fp{h}{i}(1,1));
+        if not(sr{h})
+            warning('WARNING IN MIRENVELOPE: The frame decomposition did not succeed. Either the input is of too short duration, or the chunk size is too low.');
         end
-        ch{h} = (1:size(d{h}{i},3))';
+        ch{h} = (1:size(d{h}{1},3))';
     end
     e.downsampl = 0;
     e.hwr = 0;
