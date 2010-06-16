@@ -131,7 +131,7 @@ elseif 0 %scal
         %x = y;
     end
 elseif not(isnan(lvl)) && lvl>=0
-    x = squeeze(x);
+    %x = squeeze(x);
     if size(x,1) == 1
         x = x(:);
     end
