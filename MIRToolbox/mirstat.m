@@ -108,17 +108,21 @@ if haspeaks(f)
         stat = addstat(stat,get(f,'PeakVal'),fp,'PeakMag');
     end
 else
-    stat = addstat(struct,get(f,'Data'),fp,'',option.alongfiles,get(f,'Name'));
+    stat = addstat(struct,get(f,'Data'),fp,'',option.alongfiles,...
+                          get(f,'Name'),get(f,'Label'));
 end
 if option.filenames
     stat.FileNames = get(f,'Name');
 end
 
 
-function stat = addstat(stat,d,fp,field,alongfiles,filename)
+function stat = addstat(stat,d,fp,field,alongfiles,filename,labels)
 l = length(d);
 if nargin<5
     alongfiles = 0;
+end
+if nargin<7
+    labels = {};
 end
 if not(alongfiles) || l == 1
     anyframe = 0;
@@ -204,6 +208,9 @@ else
             stat.Std{i} = std(dd{i});
         end
     end
+end
+if not(isempty(labels) || isempty(labels{1}))
+    stat.Class = labels;
 end
 
 

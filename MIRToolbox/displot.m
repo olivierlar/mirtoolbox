@@ -265,52 +265,54 @@ else
                 end
             end
             for j = 1:length(x)
-                if size(x{j},1) == 1 && size(x{j},3) > 1
-                    x{j} = reshape(x{j},size(x{j},2),size(x{j},3))';
-                    mel = 1;
-                else
-                    mel = 0;
-                end
-                xx = zeros(size(x{j},1)*size(y{j},4),1); %,size(x{j},2));
-                yy = zeros(size(y{j},1)*size(y{j},4),size(y{j},2));
-                for k = 1:size(y{j},4)
-                    xx((k-1)*size(x{j},1)+1:k*size(x{j},1),1) = x{j}(:,1);
-                    yy((k-1)*size(y{j},1)+1:k*size(y{j},1),:) = y{j}(:,:,i,k);
-                end
-                if size(y{j},4) == 1 && not(mel)
-                    xxx = [1.5*xx(1,1)-0.5*xx(2,1);...
-                                (xx(1:end-1)+xx(2:end))/2;...
-                                1.5*xx(end,1)-0.5*xx(end-1,1)];
-                else
-                    xxx = (0:size(yy,1))';
-                end
-                if size(fp{j},2) > 1
-                    segt = [fp{j}(1,1),...
-                            mean([fp{j}(2,1:end-1);fp{j}(1,2:end)]),...
-                            fp{j}(2,end)];
-                else
-                    segt = fp{j}';
-                end
-                surfplot(segt,xxx,yy(:,:));
-                if not(isempty(ticky))
-                    set(gca,'ytick',ticky);
-                    set(gca,'yticklabel',tickylab);
-                end
-                set(gca,'YDir','normal')
-                if (exist('pp') == 1) && not(isempty(pp))
-                    if not(isempty(pp{j}))
-                        for k = 1:length(pp{j})
-                            ppj = pp{j}{k};
-                            if size(ppj,3) == 2
-                                ppj(:,:,1) = ppj(:,:,1) + (ppj(:,:,2)-1)*size(x,1);
-                                ppj(:,:,2) = [];
-                                plot(mean(fp{j}(:,k)),ppj-.5,'+w')
-                            elseif 0 %(exist('pm') == 1) && not(isempty(pm))
-                                pmj = pm{k}{1,1,i};
-                                ppj(:,:) = ppj(:,:) + (pmj(:,:)-1)*size(x,1);
-                                plot(mean(fp{j}(:,k)),ppj-.5,'+w') % fp shows segmentation points
-                            elseif not(isempty(ppj))
-                                plot(mean(fp{j}(:,k)),xx(ppj),'+k')
+                if not(isempty(x{j}))
+                    if size(x{j},1) == 1 && size(x{j},3) > 1
+                        x{j} = reshape(x{j},size(x{j},2),size(x{j},3))';
+                        mel = 1;
+                    else
+                        mel = 0;
+                    end
+                    xx = zeros(size(x{j},1)*size(y{j},4),1); %,size(x{j},2));
+                    yy = zeros(size(y{j},1)*size(y{j},4),size(y{j},2));
+                    for k = 1:size(y{j},4)
+                        xx((k-1)*size(x{j},1)+1:k*size(x{j},1),1) = x{j}(:,1);
+                        yy((k-1)*size(y{j},1)+1:k*size(y{j},1),:) = y{j}(:,:,i,k);
+                    end
+                    if size(y{j},4) == 1 && not(mel)
+                        xxx = [1.5*xx(1,1)-0.5*xx(2,1);...
+                                    (xx(1:end-1)+xx(2:end))/2;...
+                                    1.5*xx(end,1)-0.5*xx(end-1,1)];
+                    else
+                        xxx = (0:size(yy,1))';
+                    end
+                    if size(fp{j},2) > 1
+                        segt = [fp{j}(1,1),...
+                                mean([fp{j}(2,1:end-1);fp{j}(1,2:end)]),...
+                                fp{j}(2,end)];
+                    else
+                        segt = fp{j}';
+                    end
+                    surfplot(segt,xxx,yy(:,:));
+                    if not(isempty(ticky))
+                        set(gca,'ytick',ticky);
+                        set(gca,'yticklabel',tickylab);
+                    end
+                    set(gca,'YDir','normal')
+                    if (exist('pp') == 1) && not(isempty(pp))
+                        if not(isempty(pp{j}))
+                            for k = 1:length(pp{j})
+                                ppj = pp{j}{k};
+                                if size(ppj,3) == 2
+                                    ppj(:,:,1) = ppj(:,:,1) + (ppj(:,:,2)-1)*size(x,1);
+                                    ppj(:,:,2) = [];
+                                    plot(mean(fp{j}(:,k)),ppj-.5,'+w')
+                                elseif 0 %(exist('pm') == 1) && not(isempty(pm))
+                                    pmj = pm{k}{1,1,i};
+                                    ppj(:,:) = ppj(:,:) + (pmj(:,:)-1)*size(x,1);
+                                    plot(mean(fp{j}(:,k)),ppj-.5,'+w') % fp shows segmentation points
+                                elseif not(isempty(ppj))
+                                    plot(mean(fp{j}(:,k)),xx(ppj),'+k')
+                                end
                             end
                         end
                     end

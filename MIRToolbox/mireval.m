@@ -36,6 +36,27 @@ if strcmpi(file,'Folder') || strcmpi(file,'Folders')
     if l == 0
         disp('No sound file detected in this folder.')
     end
+elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
+    a = importdata(file);
+    l = length(a);
+    for i = 1:l
+        [di,tpi,fpi,fi] = mirread([],a{i},0,0,0);
+        if not(isempty(s))
+            interval = s(1:2);
+            if s(3)
+                interval = round(interval*fi)+1;
+            end
+            if s(4) == 1
+                interval = interval+round(di/2);
+            elseif s(4) == 2
+                interval = interval+di;
+            end
+            w(:,i) = min(max(interval,1),di);
+        else
+            w(:,i) = [1;di];
+        end
+        sr(i) = fi;
+    end
 else
     l = 1;
     [d1,tp1,fp1,f1] = mirread([],file,0,0,0);
@@ -49,11 +70,11 @@ else
         elseif s(4) == 2
             interval = interval+d1;
         end
-        w = {min(max(interval,1),d1)};
+        w = min(max(interval,1),d1);
     else
-        w = {[1;d1]};
+        w = [1;d1];
     end
-    sr = {f1};
+    sr = f1;
     a = {file};
 end
 
@@ -104,7 +125,7 @@ if parallel
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);
         end
         tic
-        yi = evalaudiofile(d,a{i},sr{i},w{i},{},0,i,single,'');
+        yi = evalaudiofile(d,a{i},sr(i),w(:,i),{},0,i,single,'');
         toc
         y{i} = yi;
         if not(isempty(export))
@@ -134,7 +155,7 @@ else
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
         end
         tic
-        yf = evalaudiofile(d,a{f},sr{f},w{f},{},0,f,single,'');
+        yf = evalaudiofile(d,a{f},sr(f),w(:,f),{},0,f,single,'');
         toc
         y{f} = yf;
         if not(isempty(export))
@@ -414,11 +435,11 @@ for i = 1:length(dd);
                 elseif s(4) == 2
                     interval = interval+di;
                 end
-                w{l} = min(max(interval,1),di);
+                w(:,l) = min(max(interval,1),di);
             else
-                w{l} = [1;di];
+                w(:,l) = [1;di];
             end
-            sr{l} = fi;
+            sr(l) = fi;
             a{l} = [path ni];
         end
     end

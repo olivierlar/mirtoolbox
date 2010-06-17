@@ -66,13 +66,13 @@ for v = 2:narg
         else
             imported = importdata(argv,'\t',1);
             imported.name = {};
-            stored = integrate(stored,imported);
+            [stored class] = integrate(stored,imported);
         end
     elseif isstruct(argv) && isfield(argv,'data')
         new.data = argv.data;
         new.textdata = argv.fields;
         new.name = {};
-        stored = integrate(stored,new);
+        [stored class] = integrate(stored,new);
     else
         new.data = argv;
         new.textdata = '';
@@ -143,7 +143,7 @@ if isstruct(data)
             end
 
             % Processing of the field
-            n = integrate({},newfield);
+            [n class] = integrate({},newfield);
 
             % Concatenation of the results
             newdata = {newdata{:} n.data{:}};
@@ -158,7 +158,7 @@ elseif isa(data,'mirdata')
     end
     title = get(data,'Title');
     newinput.textdata = [textdata '_' title(find(not(isspace(title))))];
-    n = integrate({},newinput);
+    [n class] = integrate({},newinput);
     newdata = n.data;
     newtextdata = n.textdata;
     newname = get(data,'Name');
@@ -180,7 +180,7 @@ elseif iscell(data)
             newelement.textdata = [textdata num2str(i)];
 
             % Processing of the element
-            n = integrate({},newelement);
+            [n class] = integrate({},newelement);
 
             % Concatenation of the results
             newdata = {newdata{:} n.data{:}};
@@ -200,7 +200,7 @@ elseif size(data,4)>1
         end
         
         % Processing of the bin
-        n = integrate({},bin);
+        [n class] = integrate({},bin);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
@@ -218,7 +218,7 @@ elseif size(data,3)>1
         end
         
         % Processing of the bin
-        n = integrate({},bin);
+        [n class] = integrate({},bin);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
@@ -236,7 +236,7 @@ elseif size(data,1)>1 && size(data,1)<=50
         end
         
         % Processing of the bin
-        n = integrate({},bin);
+        [n class] = integrate({},bin);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
@@ -310,7 +310,7 @@ if add
     fid = fopen(filename,'at');
 else
     fid = fopen(filename,'wt');
-    fprintf(fid,['%% Attribution-Relation File automatically generated using ',title,'.\n\n']);
+    fprintf(fid,['%% Attribution-Relation File automatically generated using ',title,'\n\n']);
     fprintf(fid,'@RELATION %s\n\n',title);
     for i = 1:length(data.textdata)
         fprintf(fid,'@ATTRIBUTE %s NUMERIC\n',data.textdata{i});

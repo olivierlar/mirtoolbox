@@ -741,7 +741,7 @@ for i = 1:length(d) % For each audio file,...
                                 elseif p < 0
                                     tpp{i}{h}{l}(j,k) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
                                 end
-                            else%if mj
+                            elseif mj
                                 tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
                                 tpp{i}{h}{l}(j,k) = th(mj,k,l);
                             end
