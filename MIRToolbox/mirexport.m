@@ -326,6 +326,11 @@ else
         fprintf(fid,'}\n');
     end
     fprintf(fid,'\n@DATA\n');
+    fid2 = fopen([filename(1:end-5) '.filenames.txt'],'wt');    
+    for i = 1:length(data.name)
+        fprintf(fid2,'%s\n',data.name{i});
+    end
+    fclose(fid2);
 end
 
 try
