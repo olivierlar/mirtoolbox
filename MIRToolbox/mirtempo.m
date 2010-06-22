@@ -59,6 +59,8 @@ function varargout = mirtempo(x,varargin)
 %           total amplitude of the autocorrelation function.
 %               if no value for thr is given, the value thr=0.1 is chosen
 %                   by default.
+%       mirtempo(...,'Nearest',n): chooses the peak closest to n (in s.)
+%           Default value when option toggled on: n = .5 s.
 %
 %   [t,p] = mirtempo(...) also displays the result of the signal analysis
 %       leading to the tempo estimation, and shows in particular the
@@ -255,8 +257,9 @@ function varargout = mirtempo(x,varargin)
     option.ma = ma;
 
         track.key = 'Track';
-        track.type = 'Boolean';
+        track.type = 'Integer';
         track.default = 0;
+        %track.keydefault = Inf;
     option.track = track;
 
         pref.key = 'Pref';
@@ -264,7 +267,13 @@ function varargout = mirtempo(x,varargin)
         pref.number = 2;
         pref.default = [0 .2];
     option.pref = pref;
-            
+
+        nearest.key = 'Nearest';
+        nearest.type = 'Integer';
+        nearest.default = 0;
+        nearest.keydefault = .5;
+    option.nearest = nearest;
+
         perio.key = 'Periodicity';
         perio.type = 'Boolean';
         perio.default = 0;
@@ -352,6 +361,7 @@ if ischar(option.sum)
 end
 y = mirpeaks(y,'Total',option.m,'Track',option.track,...
                'Pref',option.pref(1),option.pref(2),...
+               'Nearest',option.nearest,'Lin',...
                'Contrast',option.thr,'NoBegin','NoEnd',...
                'Normalize','Local');
 type = {'mirscalar',mirtype(y)};            
