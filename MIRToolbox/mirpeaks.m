@@ -624,10 +624,8 @@ for i = 1:length(d) % For each audio file,...
                                 % still alive...
 
                                 % Step 1 in Mc Aulay & Quatieri
-                                [int m] = min(abs(mxk2-mxk1(n)));
-                                if isinf(int) || ...
-                                        (not(isinf(option.delta)) ...
-                                         && int > option.delta)
+                                [int m] = min(abs(th(mxk2,k,l)-th(mxk1(n),k,l)));
+                                if isinf(int) || int > option.delta
                                     % all w^{k+1} outside matching interval:
                                         % partial becomes dead
                                     mxl(tr,k+1) = mxl(tr,k);
@@ -654,11 +652,10 @@ for i = 1:length(d) % For each audio file,...
                                         grvy(zz) = [];
                                     else
                                         % let's look at adjacent lower w^{k+1}...
-                                        [int mmm] = min(abs(mxk2(1:m)-mxk1(n)));
+                                        [int mmm] = min(abs(th(mxk2(1:m),k,l)-th(mxk1(n),k,l)));
                                         if int > best || ... % New condition added (Lartillot 16.4.2010)
                                                 isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
-                                                (not(isinf(option.delta)) ...
-                                                 && int > option.delta)
+                                                int > option.delta
                                                 % partial becomes dead
                                             mxl(tr,k+1) = mxl(tr,k);
                                             myl(tr,k+1) = 0;
@@ -689,7 +686,7 @@ for i = 1:length(d) % For each audio file,...
                             
                             % Let's try to reuse a zombie from the
                             % graveyard (Lartillot).
-                            [int z] = min(abs(mxl(grvy,k+1)+1-mxk2(m)));
+                            [int z] = min(abs(th(mxl(grvy,k+1)+1,k,l)-th(mxk2(m),k,l)));
                             if isempty(int) || int > option.delta ...
                                     || int > min(abs(mxl(:,k+1)+1-mxk2(m)))
                                 % No suitable zombie.

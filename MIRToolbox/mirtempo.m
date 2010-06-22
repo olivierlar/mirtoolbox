@@ -259,7 +259,7 @@ function varargout = mirtempo(x,varargin)
         track.key = 'Track';
         track.type = 'Integer';
         track.default = 0;
-        %track.keydefault = Inf;
+        track.keydefault = Inf;
     option.track = track;
 
         pref.key = 'Pref';
