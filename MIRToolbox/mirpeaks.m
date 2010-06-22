@@ -216,6 +216,9 @@ if option.chro
 elseif option.ranked
     option.order = 'Amplitude';
 end
+if not(isnan(option.near)) && option.m == 1
+    option.m = Inf;
+end
 x = purgedata(x);
 if option.m <= 0
     p = x;
