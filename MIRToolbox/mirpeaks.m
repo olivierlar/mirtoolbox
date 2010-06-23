@@ -732,7 +732,6 @@ for i = 1:length(d) % For each audio file,...
                 mxl(:,not(max(myl))) = 0;
                 
                 if option.shorttrackthresh
-                    %myl2 = [zeros(1,nc) ; myl];
                     [myl bestrack] = max(myl,[],1);
                     mxl = mxl(bestrack + (0:size(mxl,2)-1)*size(mxl,1));
                     changes = find(not(bestrack(1:end-1) == bestrack(2:end)))+1;
@@ -740,7 +739,11 @@ for i = 1:length(d) % For each audio file,...
                         lengths = diff([1 changes nc+1]);
                         shorts = find(lengths < option.shorttrackthresh);
                         for k = 1:length(shorts)
-                            k1 = changes(shorts(k)-1);
+                            if shorts(k) == 1
+                                k1 = 1;
+                            else
+                                k1 = changes(shorts(k)-1);
+                            end
                             k2 = k1 + lengths(shorts(k)) -1;
                             myl(1,k1:k2) = 0;
                             mxl(1,k1:k2) = 0;
