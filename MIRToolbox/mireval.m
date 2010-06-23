@@ -61,7 +61,7 @@ else
     l = 1;
     [d1,tp1,fp1,f1] = mirread([],file,0,0,0);
     if length(s)>1
-        interval = s(1:2);
+        interval = s(1:2)';
         if s(3)
             interval = round(interval*f1)+1;
         end
