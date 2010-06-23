@@ -76,6 +76,9 @@ function varargout = mirpeaks(orig,varargin)
 %       mirpeaks(...,'Track',t): tracks temporal continuities of peaks. If
 %           a value t is specified, the variation between successive peaks
 %           is tolerated up to t samples.
+%       mirpeaks(...,'CollapseTrack',ct): collapses tracks into one single
+%           track, and remove small track transitions, of length shorter
+%           than ct samples. Default value: ct = 7
 
         m.key = 'Total';
         m.type = 'Integer';
@@ -193,6 +196,12 @@ function varargout = mirpeaks(orig,varargin)
         delta.default = 0;
         delta.keydefault = Inf;
     option.delta = delta;
+
+        shorttrackthresh.key = 'CollapseTracks';
+        shorttrackthresh.type = 'Integer';
+        shorttrackthresh.default = 0;
+        shorttrackthresh.keydefault = 7;
+    option.shorttrackthresh = shorttrackthresh;
 
         scan.key = 'ScanForward'; % specific to mironsets(..., 'Klapuri99')
         scan.default = [];
@@ -718,6 +727,23 @@ for i = 1:length(d) % For each audio file,...
                     [tot ix] = sort(tot,'descend');
                     mxl(ix(option.m+1:end),:) = [];
                     myl(ix(option.m+1:end),:) = [];
+                end
+                
+                mxl(:,not(max(myl))) = 0;
+                
+                if option.shorttrackthresh
+                    %myl2 = [zeros(1,nc) ; myl];
+                    [myl bestrack] = max(myl);
+                    mxl = mxl(bestrack + (0:size(mxl,2)-1)*size(mxl,1));
+                    changes = find(not(bestrack(1:end-1) == bestrack(2:end)))+1;
+                    lengths = diff([1 changes nc+1]);
+                    shorts = find(lengths < option.shorttrackthresh);
+                    for k = 1:length(shorts)
+                        k1 = changes(shorts(k)-1);
+                        k2 = k1 + lengths(shorts(k)) -1;
+                        myl(1,k1:k2) = 0;
+                        mxl(1,k1:k2) = 0;
+                    end
                 end
                 
                 tp{i}{h}{l} = mxl;
