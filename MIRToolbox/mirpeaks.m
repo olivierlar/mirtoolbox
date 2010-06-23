@@ -755,7 +755,7 @@ for i = 1:length(d) % For each audio file,...
                     for k = 1:size(mxl,2)
                         for j = 1:size(mxl,1)
                             mj = mxl(j,k);
-                            if mj>2 && mj<length(dh3)-1
+                            if mj>2 && mj<size(dh3,1)-1
                                 % More precise peak position
                                 y0 = dh3(mj,k,l);
                                 ym = dh3(mj-1,k,l);
