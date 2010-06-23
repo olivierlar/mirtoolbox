@@ -188,7 +188,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             d3.method = method;
             d2 = d3; % This new argument is transfered to d
 
-            y = combinechunk_noframe(y,ss,sg,i,d2,chunks);
+            y = combinechunk_noframe(y,ss,sg,i,d2,chunks,single);
 
             clear ss
             if h
@@ -365,7 +365,7 @@ else
 end
 
 
-function res = combinechunk_noframe(old,new,sg,i,d2,chunks)
+function res = combinechunk_noframe(old,new,sg,i,d2,chunks,single)
 if isempty(new)
     res = {};
     return
@@ -386,9 +386,12 @@ if not(isempty(old)) && isstruct(old{1})
         index.type = '.';
         index.subs = f{j};
         res.(f{j}) = combinechunk_noframe(old{1}.(f{j}),new{1}.(f{j}),...
-                                                sg,i,subsref(d2,index),chunks);
+                                    sg,i,subsref(d2,index),chunks,single);
     end
     return
+end
+if ischar(single) && not(isempty(old))
+    old = {old{1}};
 end
 if isempty(sg)
     if isaverage(d2.specif)
@@ -473,7 +476,7 @@ end
 
 function res = afterchunk_noframe(input,lsz,d,afterpostoption,d2)
 if isstruct(input)
-    mirerror('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
+    warning('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
     f = fields(input);
     for i = 1:length(f)
         index.type = '.';
