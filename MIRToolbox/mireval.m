@@ -32,7 +32,7 @@ end
 w = [];    % Array containing the index positions of the starting and ending dates.
 s = getsize(d);
 if strcmpi(file,'Folder') || strcmpi(file,'Folders')
-    [l w sr a] = evalfolder('',s,0,{},{},{},strcmpi(file,'Folders'));
+    [l w sr a] = evalfolder('',s,0,[],[],{},strcmpi(file,'Folders'));
     if l == 0
         disp('No sound file detected in this folder.')
     end
