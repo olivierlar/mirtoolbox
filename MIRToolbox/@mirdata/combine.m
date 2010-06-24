@@ -15,6 +15,12 @@ pm = cell(1,l);
 pv = cell(1,l);
 ppp = cell(1,l);
 ppv = cell(1,l);
+tp = cell(1,l);
+tv = cell(1,l);
+tpp = cell(1,l);
+tpv = cell(1,l);
+ap = cell(1,l);
+rp = cell(1,l);
 if isa(c,'temporal')
     nb = cell(1,l);
 end
@@ -37,6 +43,11 @@ for i = 1:l
     pv{i} = getargin(argin,'PeakVal');
     ppp{i} = getargin(argin,'PeakPrecisePos');
     ppv{i} = getargin(argin,'PeakPreciseVal');
+    tp{i} = getargin(argin,'TrackPos');
+    tv{i} = getargin(argin,'TrackVal');
+    tpp{i} = getargin(argin,'TrackPrecisePos');
+    ap{i} = getargin(argin,'AttackPos');
+    rp{i} = getargin(argin,'ReleasePos');    
     if isa(c,'temporal')
         ct = getargin(argin,'Centered');
         nb{i} = getargin(argin,'NBits');
@@ -48,7 +59,10 @@ end
 c = set(c,'Pos',p,'Data',d,'FramePos',fp,'Channels',ch,...
           'Sampling',sr,'NBits',nb,'Name',n,'Label',la,...
           'Clusters',cl,'PeakPos',pp,'PeakMode',pm,'PeakVal',pv,...
-          'PeakPrecisePos',ppp,'PeakPreciseVal',ppv);
+          'PeakPrecisePos',ppp,'PeakPreciseVal',ppv,...
+          'TrackPos',tp,'TrackVal',tv,...
+          'TrackPrecisePos',tpp,'TrackPreciseVal',tpv,...
+          'AttackPos',ap,'ReleasePos',rp);
 if isa(c,'temporal')
     c = set(c,'Centered',ct,'NBits',nb);
 end
