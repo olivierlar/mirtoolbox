@@ -476,14 +476,15 @@ end
 
 function res = afterchunk_noframe(input,lsz,d,afterpostoption,d2)
 if isstruct(input)
-    warning('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
-    f = fields(input);
-    for i = 1:length(f)
-        index.type = '.';
-        index.subs = f{i};
-        res.(f{i}) = afterchunk_noframe(input.(f{i}),lsz,...
-                      subsref(d,index),afterpostoption,subsref(d2,index));
-    end
+    %mirerror('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
+    res = input;
+    %f = fields(input);
+    %for i = 1:length(f)
+    %    index.type = '.';
+    %    index.subs = f{i};
+    %    res.(f{i}) = afterchunk_noframe(input.(f{i}),lsz,...
+    %                  subsref(d,index),afterpostoption,subsref(d2,index));
+    %end
     return
 end
 if isfield(d2.specif,'afterchunk')

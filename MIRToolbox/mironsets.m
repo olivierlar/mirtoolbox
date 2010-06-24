@@ -304,6 +304,7 @@ specif.option = option;
 
 specif.eachchunk = 'Normal';
 specif.combinechunk = 'Concat';
+specif.extensive = 1;
 
 specif.title = 'Onset curve'; %used for miroptions
 
