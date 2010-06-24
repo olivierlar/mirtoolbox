@@ -388,6 +388,7 @@ for j = 1:length(pt)
         for h = 1:size(ptk,3)
             for l = 1:size(ptk,2)
                 ptl = ptk{1,l,h};
+                ptl(~ptl) = NaN;
                 if isempty(ptl)
                     bpmk{1,l,h} = NaN;
                 else
