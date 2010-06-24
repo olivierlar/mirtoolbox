@@ -54,11 +54,15 @@ elseif isstruct(f)
         varargout = {stat};
     end
 elseif iscell(f)
-    res = zeros(length(f),1);
-    for i = 1:length(f)
-        res(i) = mirstat(f{i});
+    if 0 %ischar(f{1})
+        varargout = {f};
+    else
+        res = zeros(length(f),1);
+        for i = 1:length(f)
+            res(i) = mirstat(f{i});
+        end
+        varargout = {res};
     end
-    varargout = {res};
 elseif isnumeric(f)
     f(isnan(f)) = [];
     varargout = {mean(f)};

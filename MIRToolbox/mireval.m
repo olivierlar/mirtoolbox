@@ -303,6 +303,7 @@ if (not(iscell(c)) && not(isa(c,'mirdata')))
 end
 if (iscell(c) && not(isa(c{1},'mirdata')))
     for i = 1:length(c)
+        v = cell(1,nargin-2);
         for j = 1:nargin-2
             v{j} = varargin{j}{i};
         end

@@ -205,7 +205,8 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         y = afterchunk_noframe(y,lsz,d,afterpostoption,d2);
         % Final operations to be executed after the chunk decomposition
                 
-        if isa(d,'mirstruct') && isfield(d.frame,'dontchunk')
+        if isa(d,'mirstruct') && ...
+                (isempty(d.frame) || isfield(d.frame,'dontchunk'))
             y = evalbranches(d,y);
         end
         if h
@@ -697,7 +698,7 @@ else
     [y argin] = d.method(argin,d.option,d.postoption);
 end
 d = set(d,'Argin',argin);
-if isa(d,'mirstruct') && not(isfield(d.frame,'dontchunk'))
+if isa(d,'mirstruct') && not(isfield(d.frame,'dontchunk')) && isempty(get(d,'Chunk'))
     y = evalbranches(d,y);
 end
 
