@@ -46,8 +46,9 @@ for i = 1:l
     tp{i} = getargin(argin,'TrackPos');
     tv{i} = getargin(argin,'TrackVal');
     tpp{i} = getargin(argin,'TrackPrecisePos');
+    tpv{i} = getargin(argin,'TrackPreciseVal');
     ap{i} = getargin(argin,'AttackPos');
-    rp{i} = getargin(argin,'ReleasePos');    
+    rp{i} = getargin(argin,'ReleasePos');
     if isa(c,'temporal')
         ct = getargin(argin,'Centered');
         nb{i} = getargin(argin,'NBits');
