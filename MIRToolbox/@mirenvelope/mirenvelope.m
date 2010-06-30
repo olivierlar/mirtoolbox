@@ -50,7 +50,7 @@ function varargout = mirenvelope(orig,varargin)
 %       mirenvelope(...,'Center'): centers the extracted envelope.
 %       mirenvelope(...,'HalfwaveCenter'): performs a half-wave
 %           rectification on the centered envelope.
-%       mirenvelope(...,'Log',mu): computes the logarithm of the
+%       mirenvelope(...,'Mu',mu): computes the logarithm of the
 %           envelope, before the eventual differentiation, using a mu-law
 %           compression (Klapuri, 2006).
 %               Default value for mu: 100
@@ -179,12 +179,12 @@ function varargout = mirenvelope(orig,varargin)
         chwr.when = 'After';
     option.chwr = chwr;
     
-        oplog.key = 'Log';
-        oplog.type = 'Integer';
-        oplog.default = 0;
-        oplog.keydefault = 100;
-        oplog.when = 'After';
-    option.log = oplog;
+        mu.key = 'Mu';
+        mu.type = 'Integer';
+        mu.default = 0;
+        mu.keydefault = 100;
+        mu.when = 'After';
+    option.mu = mu;
     
         oppow.key = 'Power';
         oppow.type = 'Integer';
@@ -314,7 +314,7 @@ if isfield(option,'presel') && ischar(option.presel) && ...
         strcmpi(option.presel,'Klapuri06')
     option.method = 'Spectro';
     postoption.up = 2;
-    postoption.log = 100;
+    postoption.mu = 100;
     postoption.diffhwr = 1;
     postoption.lambda = .8;
 end
@@ -529,9 +529,9 @@ for k = 1:length(d)
                 d{k}{i}(1:tdk,:,:) = repmat(d{k}{i}(tdk,:,:),[tdk,1,1]); 
                 d{k}{i}(end-tdk+1:end,:,:) = repmat(d{k}{i}(end-tdk,:,:),[tdk,1,1]);
             end
-            if postoption.log
+            if postoption.mu
                 dki = max(0,d{k}{i});
-                mu = postoption.log;
+                mu = postoption.mu;
                 dki = log(1+mu*dki)/log(1+mu);
                 dki(~isfinite(d{k}{i})) = NaN;
                 d{k}{i} = dki;

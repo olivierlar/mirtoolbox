@@ -137,11 +137,11 @@ function varargout = mironsets(x,varargin)
         chwr.when = 'After';
     option.chwr = chwr;
     
-        oplog.key = 'Log';
-        oplog.type = 'Boolean';
-        oplog.default = 0;
-        oplog.when = 'After';
-    option.log = oplog;
+        mu.key = 'Mu';
+        mu.type = 'Boolean';
+        mu.default = 0;
+        mu.when = 'After';
+    option.mu = mu;
     
         oppow.key = 'Power';
         oppow.type = 'Boolean';
@@ -385,7 +385,7 @@ if not(isempty(option)) && ischar(option.presel)
         option.sum = 0;
         postoption.detect = 0;
     elseif strcmpi(option.presel,'Klapuri99')
-        postoption.log = 1;
+        postoption.mu = 1;
         postoption.diffhwr = 1;
         option.sum = 0;
         postoption.ds = 0;
@@ -416,8 +416,8 @@ if isa(o,'mirenvelope')
 end
 if isfield(postoption,'cthr')
     if isa(o,'mirenvelope')
-        if postoption.log
-            o = mirenvelope(o,'Log');
+        if postoption.mu
+            o = mirenvelope(o,'Mu');
         end
         if postoption.power
             o = mirenvelope(o,'Power');
@@ -455,7 +455,7 @@ if isfield(option,'sum') && option.sum
 end
 if isfield(option,'presel') && ...
         ischar(option.presel) && strcmpi(option.presel,'Klapuri99')
-    % o, already computed, corresponds to mirenvelope(o,'Log','HalfwaveDiff');
+    % o, already computed, corresponds to mirenvelope(o,'Mu','HalfwaveDiff');
     % o is the relative distance function W in (Klapuri, 99);
     o2 = mirenvelope(o2,'HalfwaveDiff');
     % o2 is the absolute distance function D in (Klapuri, 99);
