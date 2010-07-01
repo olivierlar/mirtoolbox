@@ -50,10 +50,13 @@ function varargout = mirenvelope(orig,varargin)
 %       mirenvelope(...,'Center'): centers the extracted envelope.
 %       mirenvelope(...,'HalfwaveCenter'): performs a half-wave
 %           rectification on the centered envelope.
+%       mirenvelope(...,'Log'): computes the common logarithm (base 10) of
+%           the envelope.
 %       mirenvelope(...,'Mu',mu): computes the logarithm of the
 %           envelope, before the eventual differentiation, using a mu-law
 %           compression (Klapuri, 2006).
 %               Default value for mu: 100
+%       mirenvelope(...,'Log'): computes the logarithm of the envelope.
 %       mirenvelope(...,'Power'): computes the power (square) of the
 %           envelope.
 %       mirenvelope(...,'Diff'): computes the differentation of the
@@ -186,6 +189,12 @@ function varargout = mirenvelope(orig,varargin)
         mu.when = 'After';
     option.mu = mu;
     
+        oplog.key = 'Log';
+        oplog.type = 'Boolean';
+        oplog.default = 0;
+        oplog.when = 'After';
+    option.log = oplog;
+
         oppow.key = 'Power';
         oppow.type = 'Integer';
         oppow.default = 0;
@@ -528,6 +537,9 @@ for k = 1:length(d)
                 tdk = round(newsr*.1); 
                 d{k}{i}(1:tdk,:,:) = repmat(d{k}{i}(tdk,:,:),[tdk,1,1]); 
                 d{k}{i}(end-tdk+1:end,:,:) = repmat(d{k}{i}(end-tdk,:,:),[tdk,1,1]);
+            end
+            if postoption.log
+                d{k}{i} = log10(d{k}{i});
             end
             if postoption.mu
                 dki = max(0,d{k}{i});

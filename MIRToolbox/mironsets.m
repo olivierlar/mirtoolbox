@@ -143,6 +143,12 @@ function varargout = mironsets(x,varargin)
         mu.when = 'After';
     option.mu = mu;
     
+        oplog.key = 'Log';
+        oplog.type = 'Boolean';
+        oplog.default = 0;
+        oplog.when = 'After';
+    option.log = oplog;
+
         oppow.key = 'Power';
         oppow.type = 'Boolean';
         oppow.default = 0;
@@ -418,6 +424,9 @@ if isfield(postoption,'cthr')
     if isa(o,'mirenvelope')
         if postoption.mu
             o = mirenvelope(o,'Mu');
+        end
+        if postoption.log
+            o = mirenvelope(o,'Log');
         end
         if postoption.power
             o = mirenvelope(o,'Power');
