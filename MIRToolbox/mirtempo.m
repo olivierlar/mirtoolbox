@@ -59,8 +59,6 @@ function varargout = mirtempo(x,varargin)
 %           total amplitude of the autocorrelation function.
 %               if no value for thr is given, the value thr=0.1 is chosen
 %                   by default.
-%       mirtempo(...,'Nearest',n): chooses the peak closest to n (in s.)
-%           Default value when option toggled on: n = .5 s.
 %
 %   [t,p] = mirtempo(...) also displays the result of the signal analysis
 %       leading to the tempo estimation, and shows in particular the
@@ -143,17 +141,12 @@ function varargout = mirtempo(x,varargin)
             lambda.default = 1;
         option.lambda = lambda;
 
-            mu.key = 'Mu';
-            mu.type = 'Boolean';
-            mu.default = 0;
-        option.mu = mu;
+            log.key = 'Log';
+            log.type = 'Boolean';
+            log.default = 0;
+        option.log = log;
 
-            oplog.key = 'Log';
-            oplog.type = 'Boolean';
-            oplog.default = 0;
-        option.log = oplog;
-
-          c.key = 'Center';
+            c.key = 'Center';
             c.type = 'Boolean';
             c.default = 0;
         option.c = c;
@@ -262,9 +255,8 @@ function varargout = mirtempo(x,varargin)
     option.ma = ma;
 
         track.key = 'Track';
-        track.type = 'Integer';
+        track.type = 'Boolean';
         track.default = 0;
-        track.keydefault = Inf;
     option.track = track;
 
         pref.key = 'Pref';
@@ -272,13 +264,7 @@ function varargout = mirtempo(x,varargin)
         pref.number = 2;
         pref.default = [0 .2];
     option.pref = pref;
-
-        nearest.key = 'Nearest';
-        nearest.type = 'Integer';
-        nearest.default = 0;
-        nearest.keydefault = .5;
-    option.nearest = nearest;
-
+            
         perio.key = 'Periodicity';
         perio.type = 'Boolean';
         perio.default = 0;
@@ -322,8 +308,7 @@ if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
                     'Smooth',option.aver,'Sampling',option.sampling,...
                     'Complex',option.complex,'Inc',option.inc,...
                     'Median',option.median(1),option.median(2),...
-                    'Halfwave',option.hw,'Detect',0,...
-                    'Log',option.log,'Mu',option.mu,...
+                    'Halfwave',option.hw,'Detect',0,'Log',option.log,...
                     'Frame',option.frame.length.val,...
                             option.frame.length.unit,...
                             option.frame.hop.val,...
@@ -339,8 +324,7 @@ if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
                     'Smooth',option.aver,'Sampling',option.sampling,...
                     'Complex',option.complex,'Inc',option.inc,...
                     'Median',option.median(1),option.median(2),...
-                    'Halfwave',option.hw,'Detect',0,...
-                    'Log',option.log,'Mu',option.mu);
+                    'Halfwave',option.hw,'Detect',0,'Log',option.log);
     end
 end
 if option.aut == 0 && option.spe == 0
@@ -368,9 +352,8 @@ if ischar(option.sum)
 end
 y = mirpeaks(y,'Total',option.m,'Track',option.track,...
                'Pref',option.pref(1),option.pref(2),...
-               'Nearest',option.nearest,'Lin',...
                'Contrast',option.thr,'NoBegin','NoEnd',...
-               'Normalize','Local','CollapseTracks');
+               'Normalize','Local');
 type = {'mirscalar',mirtype(y)};            
 
 
@@ -395,7 +378,6 @@ for j = 1:length(pt)
         for h = 1:size(ptk,3)
             for l = 1:size(ptk,2)
                 ptl = ptk{1,l,h};
-                ptl(~ptl) = NaN;
                 if isempty(ptl)
                     bpmk{1,l,h} = NaN;
                 else
