@@ -529,6 +529,9 @@ for var = 1:length(new)
             [ov omatch nmatch] = combinedata(ov,nv,'Time',[],[],@modiftime);
         else
             [ov omatch nmatch] = combinedata(ov,nv,'Pos',[],[]);
+            if isa(ov,'mirspectrum')
+                [ov omatch nmatch] = combinedata(ov,nv,'Phase',[],[]);
+            end
         end
         ov = combinedata(ov,nv,'Data',omatch,nmatch);
     end
