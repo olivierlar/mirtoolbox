@@ -6,6 +6,7 @@ function cl = mirchunklim(lim)
 % mirchunklim(c) specifies a new maximal chunk size.
 %   If MIRtoolbox tends to use more memory than what is available in the
 %   RAM of your computer, you should decrease the maximal chunk size.
+% mirchunklim(Inf) toggles off the automated chunk decomposition.
 
 persistent chunklim
 

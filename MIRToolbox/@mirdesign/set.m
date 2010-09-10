@@ -27,8 +27,8 @@ while length(propertyArgIn) >= 2,
            a.frame = val;
        case 'Segment'
            a.segment = val;
-       case 'Frames'
-           a.frame.samples = val;
+       case 'FrameDecomposition'
+           a.frame.decomposition = val;
        case 'FrameLength'
            a.frame.length.val = val;
        case 'FrameHop'

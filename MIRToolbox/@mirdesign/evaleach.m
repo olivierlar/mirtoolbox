@@ -52,8 +52,8 @@ if ischar(a)
         % Chunk decomposition
         if isstruct(fr) && fr.eval
             % in a frame-decomposed context
-            frs = fr.samples;
-            y = miraudio(f,'Now',[frs(1,ch(1)),frs(2,ch(2)) 0]);
+            %%%%%% Apparently, this should never happen..
+            mirerror('frame.decomposition','Sorry! MIRtoolbox bug here. Please contact olartillot@gmail.com');
         else
             % in a non-frame-decomposed context            
             y = miraudio(f,'Now',[ch(1),ch(2) 0]);
@@ -225,7 +225,7 @@ elseif d.nochunk
     [y d2] = evalnow(d);
 else
     % Frame decomposition in the design to be evaluated.
-    [chunks fp] = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
+    chunks = compute_frames(fr,sr,w,lsz,CHUNKLIM,d.overlap);
     if size(chunks,2)>1
         % The chunk decomposition is performed.
         if mirwaitbar
@@ -234,7 +234,7 @@ else
             h = 0;
         end
         inter = [];
-        d = set(d,'Frames',fp);
+        d = set(d,'FrameDecomposition',1);
         d2 = d;
         nch = size(chunks,2);
         y = {};
@@ -300,7 +300,7 @@ if iscell(y)
 end
 
 
-function [chunks fp] = compute_frames(fr,sr,w,lsz,CHUNKLIM,frov)
+function chunks = compute_frames(fr,sr,w,lsz,CHUNKLIM,frov)
 if strcmpi(fr.length.unit,'s')
     fl = ceil(fr.length.val*sr);
 elseif strcmpi(fr.length.unit,'sp')
@@ -651,8 +651,8 @@ for i = 1:length(argin)
             a.eval = 1;
             a.interchunk = d.interchunk;
             a.sampling = d.sampling;
-            if isstruct(d.frame) && isfield(d.frame,'samples') ...
-                                 && not(isempty(d.frame.samples))
+            if isstruct(d.frame) && isfield(d.frame,'decomposition') ...
+                                 && not(isempty(d.frame.decomposition))
                 a.chunkdecomposed = 1;
             else
                 a.chunkdecomposed = d.chunkdecomposed;
