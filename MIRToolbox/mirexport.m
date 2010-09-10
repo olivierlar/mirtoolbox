@@ -99,10 +99,12 @@ end
 
 
 
-function [stored class] = integrate(stored,new)
+function [stored class] = integrate(stored,new,class)
 
-class = {};
-
+if nargin<3
+    class = {};
+end
+    
 % Input information
 data = new.data;
 textdata = new.textdata;
@@ -143,7 +145,7 @@ if isstruct(data)
             end
 
             % Processing of the field
-            [n class] = integrate({},newfield);
+            [n class] = integrate({},newfield,class);
 
             % Concatenation of the results
             newdata = {newdata{:} n.data{:}};
@@ -158,7 +160,7 @@ elseif isa(data,'mirdata')
     end
     title = get(data,'Title');
     newinput.textdata = [textdata '_' title(find(not(isspace(title))))];
-    [n class] = integrate({},newinput);
+    [n class] = integrate({},newinput,class);
     newdata = n.data;
     newtextdata = n.textdata;
     newname = get(data,'Name');
@@ -180,7 +182,7 @@ elseif iscell(data)
             newelement.textdata = [textdata num2str(i)];
 
             % Processing of the element
-            [n class] = integrate({},newelement);
+            [n class] = integrate({},newelement,class);
 
             % Concatenation of the results
             newdata = {newdata{:} n.data{:}};
@@ -200,7 +202,7 @@ elseif size(data,4)>1
         end
         
         % Processing of the bin
-        [n class] = integrate({},bin);
+        [n class] = integrate({},bin,class);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
@@ -218,7 +220,7 @@ elseif size(data,3)>1
         end
         
         % Processing of the bin
-        [n class] = integrate({},bin);
+        [n class] = integrate({},bin,class);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
@@ -236,7 +238,7 @@ elseif size(data,1)>1 && size(data,1)<=50
         end
         
         % Processing of the bin
-        [n class] = integrate({},bin);
+        [n class] = integrate({},bin,class);
         
         % Concatenation of the results
         newdata = {newdata{:} n.data{:}};
