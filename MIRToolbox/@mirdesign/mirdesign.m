@@ -13,6 +13,7 @@ if isa(orig,'mirdesign')
     d.size = orig.size;
     d.file = orig.file;
     d.sampling = orig.sampling;
+    d.resampling = orig.resampling;
     d.nochunk = orig.nochunk;
     d.ascending = orig.ascending;
     d.overlap = orig.overlap;
@@ -41,6 +42,7 @@ else
         d.size = {};
         d.file = '';
         d.sampling = 0;
+        d.resampling = 0;
         d.nochunk = 0;
         if not(isempty(orig)) && ...
                 strcmp(func2str(orig),'mirenvelope') && d.option.zp == 2
@@ -83,6 +85,7 @@ else
         d.size = argin.size;
         d.file = argin.file;
         d.sampling = argin.sampling;
+        d.resampling = argin.resampling;
         if (isfield(specif,'nochunk') && specif.nochunk) 
             d.nochunk = 1; % was previously 2
         elseif not(isempty(argin.stored))

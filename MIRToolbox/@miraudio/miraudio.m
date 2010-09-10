@@ -115,7 +115,7 @@ end
         sampling.key = 'Sampling';
         sampling.type = 'Integer';
         sampling.default = 0;
-        sampling.when = 'After';
+        sampling.when = 'Both';
     option.sampling = sampling;
         
    %     segment.key = 'Segment';
@@ -166,6 +166,11 @@ end
 
 
 function [x type] = init(x,option)
+if isa(x,'mirdesign')
+    if option.sampling
+        x = setresampling(x,option.sampling);
+    end
+end
 type = 'miraudio';
 
 

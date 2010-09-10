@@ -59,7 +59,11 @@ elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
         else
             w(:,i) = [1;di];
         end
-        sr(i) = fi;
+        if getsampling(d)
+            sr(i) = getsampling(d);
+        else
+            sr(i) = fi;
+        end
     end
 else
     l = 1;
@@ -78,7 +82,11 @@ else
     else
         w = [1;d1];
     end
-    sr = f1;
+    if getsampling(d)
+        sr = getsampling(d);
+    else
+        sr = f1;
+    end
     a = {file};
 end
 
