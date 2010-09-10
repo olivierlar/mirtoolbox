@@ -189,7 +189,8 @@ if not(iscell(orig) || isnumeric(x))
     orig = set(orig,'Index',get(x1,'Index'));
 end
 d = get(orig,'Data');
-if not(iscell(orig)) && isamir(orig,'miraudio') && isempty(d{1}{1})
+if not(iscell(orig)) && isamir(orig,'miraudio') && ...
+        length(d) == 1 && length(d{1}) == 1 && isempty(d{1}{1})
     % To solve a problem when MP3read returns empty chunk.
     % Warning: it should not be a cell, because for instance nthoutput can have first input empty... 
     o = orig;
