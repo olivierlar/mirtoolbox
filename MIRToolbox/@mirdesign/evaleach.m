@@ -303,24 +303,24 @@ end
 
 function chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,frov)
 if strcmpi(fr.length.unit,'s')
-    fl = ceil(fr.length.val*sr);
-    fl2 = ceil(fr.length.val*sr2);
+    fl = fr.length.val*sr;
+    fl2 = fr.length.val*sr2;
 elseif strcmpi(fr.length.unit,'sp')
     fl = fr.length.val;
     fl2 = fl;
 end
 if strcmpi(fr.hop.unit,'/1')
-    h = ceil(fr.hop.val*fl);
-    h2 = h;
+    h = fr.hop.val*fl;
+    h2 = fr.hop.val*fl2;
 elseif strcmpi(fr.hop.unit,'%')
-    h = ceil(fr.hop.val*fl*.01);
-    h2 = h;
+    h = fr.hop.val*fl*.01;
+    h2 = fr.hop.val*fl2*.01;
 elseif strcmpi(fr.hop.unit,'s')
-    h = ceil(fr.hop.val*sr);
-    h2 = ceil(fr.hop.val*sr2);
+    h = fr.hop.val*sr;
+    h2 = fr.hop.val*sr2;
 elseif strcmpi(fr.hop.unit,'sp')
     h = fr.hop.val;
-    h2 = h;
+    h2 = fr.hop.val;
 elseif strcmpi(fr.hop.unit,'Hz')
     h = sr/fr.hop.val;
     h2 = sr2/fr.hop.val;
@@ -332,10 +332,10 @@ if n < 1
     fp2 = (w-1)/sr*sr2+1;
 else
     st = floor(((1:n)-1)*h)+w(1);
-    st2 = round((st-w(1))/sr*sr2)+w(1);
-    fp = [st; st+fl-1];
+    st2 = floor(((1:n)-1)*h2)+w(1);
+    fp = [st; floor(st+fl-1)];
     fp(:,fp(2,:)>w(2)) = [];
-    fp2 = [st2; st2+fl2-1];
+    fp2 = [st2; floor(st2+fl2-1)];
     fp2(:,fp2(2,:)>(w(2)-w(1))/sr*sr2+w(2)) = [];
 end
 fpe = (fp2-1)/sr2-(fp-1)/sr; %Rounding error if resampling
@@ -346,7 +346,8 @@ if max(fpsz,fpsz2) > CHUNKLIM
     nfr = size(fp,2);                     % Total number of frames
     frch = max(ceil(CHUNKLIM/(fp(2,1)-fp(1,1))),2); % Number of frames per chunk
     frch = max(frch,frov*2);
-    %[unused frch] = min(sum(abs(fpe(:,1:frch))),[],2);
+    [unused cut] = min(abs(fpe(1,frch:-1:1)));
+    %frch = frch - cut;
         % this correspond to the  frame with less rounding error
     nch = ceil((nfr-frch)/(frch-frov))+1; % Number of chunks
     chbeg = (frch-frov)*(0:nch-1)+1;    % First frame in the chunk
@@ -355,7 +356,7 @@ if max(fpsz,fpsz2) > CHUNKLIM
     if frov > 1
         chbeg = chend-frch+1;
     end
-    chunks = [fp(1,chbeg) ; fp(2,chend)];
+    chunks = [fp(1,chbeg) ; fp(2,chend)+1];
 else
     chunks = [];
 end

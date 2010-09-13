@@ -17,9 +17,9 @@ function v = mireval(d,file,single,export)
 %   The evaluation starts with a top-down traversal of the design flowchart
 %       (evaleach).
 
-if not(isa(d,'mirdesign'))
-    error('ERROR IN MIREVAL: the first input should be a flowchart (using ''Design'')')
-end
+%if not(isa(d,'mirdesign'))
+%    error('ERROR IN MIREVAL: the first input should be a flowchart (using ''Design'')')
+%end
 if not(ischar(file))
     error('ERROR IN MIREVAL: the second input should be a file name or ''Folder''')
 end

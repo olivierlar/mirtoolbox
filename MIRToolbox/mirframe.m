@@ -97,16 +97,16 @@ elseif isa(x,'mirdata')
             dxk = dx{k};
             dtk = dt{k};
             if strcmpi(para.wlength.unit,'s')
-                l = ceil(para.wlength.val*sf{k});
+                l = para.wlength.val*sf{k};
             elseif strcmpi(para.wlength.unit,'sp')
                 l = para.wlength.val;
             end
             if strcmpi(para.hop.unit,'/1')
-                h = ceil(para.hop.val*l);
+                h = para.hop.val*l;
             elseif strcmpi(para.hop.unit,'%')
-                h = ceil(para.hop.val*l*.01);
+                h = para.hop.val*l*.01;
             elseif strcmpi(para.hop.unit,'s')
-                h = ceil(para.hop.val*sf{k});
+                h = para.hop.val*sf{k};
             elseif strcmpi(para.hop.unit,'sp')
                 h = para.hop.val;
             elseif strcmpi(para.hop.unit,'Hz')
