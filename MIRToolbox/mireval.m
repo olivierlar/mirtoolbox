@@ -249,6 +249,8 @@ elseif iscell(d)
     for j = 1:l
         v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,single,[name,num2str(j)]);
     end
+elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
+    mirerror('MIRSTRUCT','You should always use tmp fields when using mirstruct. Else, just use struct.');
 else
     d = set(d,'File',file,'Sampling',sampling,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
