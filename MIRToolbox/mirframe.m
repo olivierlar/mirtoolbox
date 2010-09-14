@@ -135,9 +135,10 @@ elseif isa(x,'mirdata')
                 else
                     for i = 1:n % For each frame, ...
                         st = floor((i-1)*h+1);
-                        dx2j(:,i,:) = dxj(st:st+l-1,1,:);
-                        dt2j(:,i) = dtj(st:st+l-1);
-                        fpj(:,i) = [dtj(st) dtj(st+l-1)];
+                        stend = floor(st+l-1);
+                        dx2j(:,i,:) = dxj(st:stend,1,:);
+                        dt2j(:,i) = dtj(st:stend);
+                        fpj(:,i) = [dtj(st) dtj(stend)];
                     end
                 end
                 dx2k{j} = dx2j;
