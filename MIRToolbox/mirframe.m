@@ -112,6 +112,7 @@ elseif isa(x,'mirdata')
             elseif strcmpi(para.hop.unit,'Hz')
                 h = sf{k}/para.hop.val;
             end
+            l = floor(l);
             dx2k = cell(1,length(dxk));
             dt2k = cell(1,length(dxk));
             fpk = cell(1,length(dxk));
@@ -135,7 +136,7 @@ elseif isa(x,'mirdata')
                 else
                     for i = 1:n % For each frame, ...
                         st = floor((i-1)*h+1);
-                        stend = floor(st+l-1);
+                        stend = st+l-1;
                         dx2j(:,i,:) = dxj(st:stend,1,:);
                         dt2j(:,i) = dtj(st:stend);
                         fpj(:,i) = [dtj(st) dtj(stend)];
