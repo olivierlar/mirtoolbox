@@ -69,6 +69,9 @@ function varargout = mirspectrum(orig,varargin)
 %       mirspectrum(...,'Length',l): Specifies the length of the FFT,
 %           overriding the FFT length initially planned.
 %       mirspectrum(...,'ZeroPad',s): Zero-padding of s samples.
+%       mirspectrum(...,'WarningRes',s): Indicates a required frequency
+%           resolution, in Hz, for the input signal. If the resolution does
+%           not reach that prerequisite, a warning is displayed.
 %       mirspectrum(...,'ConstantQ',nb): Carries out a Constant Q Transform
 %           instead of a FFT, with a number of bins per octave fixed to nb.
 %           Default value for nb: 12 bins per octave.
@@ -116,6 +119,11 @@ function varargout = mirspectrum(orig,varargin)
         zp.default = 0;
         zp.keydefault = Inf;
     option.zp = zp;
+    
+        wr.key = 'WarningRes';
+        wr.type = 'Integer';
+        wr.default = 0;
+    option.wr = wr;
     
         constq.key = 'ConstantQ';
         constq.type = 'Integer';
@@ -419,7 +427,10 @@ else
                 if isnan(option.length)
                     if isnan(option.res)
                         N = size(dj,1);
-                        if option.mr
+                        if option.mr && N < fsi/option.mr
+                            if option.wr && N < fsi/option.wr
+                                warning('WARNING IN MIRSPECTRUM: The input signal is too short to obtain the desired frequency resolution. Performed zero-padding will not guarantee the quality of the results.'); 
+                            end                
                             N = max(N,fsi/option.mr);
                         end
                         N = 2^nextpow2(N);
@@ -429,7 +440,6 @@ else
                 else
                     N = option.length;
                 end
-
 
                 % Here is the spectrum computation itself
                 transf = fft(dj,N);

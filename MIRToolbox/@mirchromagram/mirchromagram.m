@@ -14,7 +14,7 @@ function varargout = mirchromagram(orig,varargin)
 %       c = mirchromagram(...,'Frame',l,h) orders a frame decomposition of window
 %           length l (in seconds) and hop factor h, expressed relatively to
 %           the window length. For instance h = 1 indicates no overlap.
-%           Default values: l = .1 seconds and h = .125
+%           Default values: l = .2 seconds and h = .05
 %       c = mirchromagram(...,'Center'): centers the result.
 %       c = mirchromagram(...,'Normal',n): performs a n-norm of the
 %           resulting chromagram. Toggled off if n = 0
@@ -105,25 +105,26 @@ function varargout = mirchromagram(orig,varargin)
     option.origin = origin;
    
 specif.option = option;
-specif.defaultframelength = .1;
-specif.defaultframehop = .125;
+specif.defaultframelength = .2;
+specif.defaultframehop = .05;
 
 varargout = mirfunction(@mirchromagram,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
 if isamir(x,'mirtemporal') || isamir(x,'mirspectrum')
-    freqmin = option.min; %chro2freq(chromin,option.res);
+    freqmin = option.min;
     freqmax = freqmin*2;
     while freqmax < option.max
         freqmax = freqmax*2;
     end
-    freqres = freqmin/option.res*.8;
+    freqres = freqmin*(2.^(1/option.res)-1);
         % Minimal frequency resolution should correspond to frequency range
         %   between the first two bins of the chromagram 
         
     x = mirspectrum(x,'dB',option.thr,'Min',freqmin,'Max',freqmax,...
-                      'NormalInput','MinRes',freqres);
+                      'NormalInput','MinRes',freqres*.5,...
+                      'WarningRes',freqres);
 end
 type = 'mirchromagram';
 
