@@ -229,20 +229,18 @@ f = set(f,'Data',fl);
 
 
 function y = Euclidian(mi,mj,inc)
-%nl = size(mi,1);
 if inc
-    y = sqrt(sum(max(0,(mj-mi)).^2));%/nl;
+    y = sqrt(sum(max(0,(mj-mi)).^2));
 else
-    y = sqrt(sum((mj-mi).^2));%;/nl;
+    y = sqrt(sum((mj-mi).^2));
 end
 
 
 function y = City(mi,mj,inc)
-nl = size(mi,1);
 if inc
-    y = sum(max(0,(mj-mi)))/nl;
+    y = sum(max(0,(mj-mi)));
 else
-    y = sum(mj-mi)/nl;
+    y = sum(abs(mj-mi));
 end
 
 
