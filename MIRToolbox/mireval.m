@@ -78,6 +78,9 @@ else
         elseif s(4) == 2
             interval = interval+d1;
         end
+        if d1 < interval(2)
+            warning('WARNING IN MIRAUDIO: The temporal region to be extracted exceeds the temporal extent of the whole audio file.'); 
+        end
         w = min(max(interval,1),d1);
     else
         w = [1;d1];
