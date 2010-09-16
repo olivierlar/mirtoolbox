@@ -78,7 +78,7 @@ elseif isa(x,'mirdesign')
     end
 elseif isa(x,'mirdata')
     if isframed(x)
-        %warning('WARNING IN MIRFRAME: The input data is already decomposed into frames. No more frame decomposition.');
+        warning('WARNING IN MIRFRAME: The input data is already decomposed into frames. No more frame decomposition.');
         f = x;
     else
         x = purgedata(x);

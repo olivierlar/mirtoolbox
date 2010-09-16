@@ -124,9 +124,9 @@ if not(isnan(option.freq))
     option.filtertype = 'Manual';
 end
         
-%disp('Decomposing into a filterbank...');
 d = get(x,'Data');
 if size(d{1}{1},3) > 1
+    warning('WARNING IN MIRFILTERBANK: The input data is already decomposed into channels. No more channel decomposition.');
     if option.Ch
         cx = get(x,'Channels');
         db = cell(1,length(d));
