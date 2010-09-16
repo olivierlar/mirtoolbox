@@ -14,8 +14,13 @@ varargout = mirfunction(@mirmidi,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
+try
+    hz2midi(440);
+catch
+    mirerror('MIRMIDI','MIDItoolbox does not seem to be installed.');
+end
 if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
-    o = mironsets(x);
+    o = mironsets(x,'Sum',0);
     x = {o x};
 end
 type = 'mirmidi';
