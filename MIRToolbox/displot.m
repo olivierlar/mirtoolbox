@@ -265,7 +265,7 @@ else
                 end
             end
             for j = 1:length(x)
-                if not(isempty(x{j}))
+                if length(x{j}) > 1
                     if size(x{j},1) == 1 && size(x{j},3) > 1
                         x{j} = reshape(x{j},size(x{j},2),size(x{j},3))';
                         mel = 1;
