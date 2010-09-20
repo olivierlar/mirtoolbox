@@ -41,6 +41,9 @@ function varargout = mirpitch(orig,varargin)
 %       Alternatively, the result of a mirpeaks computation can be directly
 %           given as first argument of the mirpitch function.
 %   Post-processing options:
+%       mirpitch(...,'Sum','no') does not sum back the channels at the end 
+%           of the computation. The resulting pitch information remains
+%           therefore decomposed into several channels.
 %       mirpitch(...,'Median') performs a median filtering of the pitch
 %           curve. When several pitches are extracted in each frame, the
 %           pitch curve contains the best peak of each successive frame.
@@ -179,6 +182,11 @@ function varargout = mirpitch(orig,varargin)
         frame.default = [0 0];
         frame.keydefault = [NaN NaN];
     option.frame = frame;
+
+        sum.key = 'Sum';
+        sum.type = 'Boolean';
+        sum.default = 1;
+    option.sum = sum;
     
 %% preset model
 
@@ -258,7 +266,9 @@ else
             x = mirframenow(x,option);
             y = mirautocor(x,'Generalized',option.gener,...
                                 'Min',option.mi,'Hz','Max',option.ma,'Hz');
-            y = mirsummary(y);
+            if option.sum
+                y = mirsummary(y);
+            end
             y = mirautocor(y,'Enhanced',option.enh,'Freq');
         end
         if option.as || option.ce || option.s

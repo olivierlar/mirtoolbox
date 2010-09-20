@@ -267,8 +267,18 @@ else
         for j = 1:length(d{i})
             if iscell(d{i})
                 dij = d{i}{j};
-                if size(dij,3) > 1 && size(dij,1) == 1
+                if ~cha && j == 1 && size(dij,3) > 1 && size(dij,1) == 1
                     cha = 1;
+                end
+                if cha && j > 1 && size(dij,1) > 1
+                    cha = -1;
+                end
+            end
+        end
+        for j = 1:length(d{i})
+            if iscell(d{i})
+                dij = d{i}{j};
+                if cha == 1
                     if iscell(dij)
                         for k = 1:size(dij,2)
                             d{i}{j}{k} = reshape(dij{k},size(dij{k},2),size(dij{k},3));
@@ -282,7 +292,7 @@ else
             end
         end
     end
-    if cha
+    if cha == 1
         t = get(x,'Channels');
     else
         t = get(x,'Pos');
@@ -324,7 +334,7 @@ interpol = get(x,'Interpolable') && not(isempty(option.interpol)) && ...
                 
 for i = 1:length(d) % For each audio file,...
     di = d{i};
-    if cha
+    if cha == 1
         ti = t; %sure ?
     else
         ti = t{i};
@@ -342,7 +352,7 @@ for i = 1:length(d) % For each audio file,...
         end
         dh2 = dh0;
         [nl0 nc np nd0] = size(dh0);
-        if cha
+        if cha == 1
             if iscell(ti)
                 %% problem here!!!
                 ti = ti{i}; %%%%%it seems that sometimes we need to use instead ti{i}(:);
@@ -992,7 +1002,7 @@ for i = 1:length(d) % For each audio file,...
         if not(iscell(d{i})) % for chromagram
             d{i} = dh3(2:end-1,:,:,:);
         else
-            if cha
+            if cha == 1
                 d{i}{h} = zeros(1,size(dh3,2),size(dh3,1)-2);
                 for k = 1:size(dh3,2)
                      d{i}{h}(1,k,:) = dh3(2:end-1,k);

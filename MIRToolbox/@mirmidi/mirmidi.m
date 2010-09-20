@@ -31,7 +31,7 @@ if iscell(x) %not(isamir(x,'mirmidi'))
     o = x{1};
     a = x{2};
     s = mirsegment(a,o);
-    x = mirpitch(s,'Contrast',option.thr);
+    x = mirpitch(s,'Contrast',option.thr,'Sum',0);
 end
 d = get(x,'Data');
 fp = get(x,'FramePos');

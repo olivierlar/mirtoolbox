@@ -26,7 +26,7 @@ function varargout = mironsets(x,varargin)
 %                       passed here as well (see help mirenvelope):
 %                      'FilterType','Tau','PreDecim'
 %               mironsets(...,'Sum','no') does not sum back the channels at
-%                   then end of the computation. The resulting onset curve
+%                   the end of the computation. The resulting onset curve
 %                   remains therefore decomposed into several channels.
 %               Options associated to the mirenvelope function can be
 %                   passed here as well (see help mirenvelope):
