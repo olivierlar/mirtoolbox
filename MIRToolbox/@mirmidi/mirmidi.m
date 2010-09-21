@@ -66,7 +66,6 @@ if iscell(x) %not(isamir(x,'mirmidi'))
                 nmat{i} = sortrows(nmat{i});
             end
         end
-        nmat
     end
 end
 m.data = nmat;

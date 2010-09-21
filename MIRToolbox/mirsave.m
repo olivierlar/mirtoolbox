@@ -15,5 +15,8 @@ function mirsave(d,varargin)
 %       If f ends with '.wav', the file is saved in WAV format (by
 %               default).
 %       If f ends with '.au', the file is saved in AU format.
+%   mirsave(d,f,'SeparateChannels') save each separate channel in a 
+%               different file.
+
 
 mirsave(miraudio(d),varargin{:})

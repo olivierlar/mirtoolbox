@@ -1,7 +1,7 @@
-function mirsave(a,f)
+function mirsave(a,f,multichan)
 
 ext = 0;    % Specified new extension
-if nargin == 1
+if nargin < 2
     f = '.mir';
 elseif length(f)>3 && strcmpi(f(end-3:end),'.wav')
     ext = '.wav';
@@ -13,6 +13,10 @@ elseif length(f)>2 && strcmpi(f(end-2:end),'.au')
     if length(f)==3
         f = '.mir';
     end
+end
+
+if nargin < 3
+    multichan = '';
 end
 
 d = get(a,'Data');
@@ -49,29 +53,47 @@ for i = 1:nf
         nmi(end-2:end) = [];
     end
     
-    for j = 1:size(out,2)
-        if size(out,2) > 1
-            nb = num2str(chi(j));
-        else
-            nb = '';
-        end
+    nchan = size(out,2);
+    if isempty(multichan) || nchan < 2
         if nf>1 || strcmp(f(1),'.')
             %Let's add the new suffix
-            n = [nmi nb f];
+            n = [nmi f];
         else
-            n = [f nb];
+            n = f;
         end
         if not(ischar(ext)) || strcmp(ext,'.wav')
             if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
                 n = [n '.wav'];
             end
-            wavwrite(out(:,j),fsi,nbi,n)
+            wavwrite(out,fsi,nbi,n)
         elseif strcmp(ext,'.au')
             if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
                 n = [n '.au'];
             end
-            auwrite(out(:,j),fsi,nbi,'linear',n)
+            auwrite(out,fsi,nbi,'linear',n)
         end
         disp([n,' saved.']);
+    else
+        for j = 1:nchan
+            nb = num2str(chi(j));
+            if nf>1 || strcmp(f(1),'.')
+                %Let's add the new suffix
+                n = [nmi nb f];
+            else
+                n = [f nb];
+            end
+            if not(ischar(ext)) || strcmp(ext,'.wav')
+                if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
+                    n = [n '.wav'];
+                end
+                wavwrite(out(:,j),fsi,nbi,n)
+            elseif strcmp(ext,'.au')
+                if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
+                    n = [n '.au'];
+                end
+                auwrite(out(:,j),fsi,nbi,'linear',n)
+            end
+            disp([n,' saved.']);
+        end
     end
 end
