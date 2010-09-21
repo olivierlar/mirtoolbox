@@ -135,6 +135,11 @@ end
         mono.default = NaN;
         mono.when = 'After';
     option.mono = mono;    
+
+        separate.key = 'SeparateChannels';
+        separate.type = 'Boolean';
+        separate.default = 0;
+    option.separate = separate;    
     
         Ch.key = {'Channel','Channels'};
         Ch.type = 'Integer';
@@ -154,7 +159,6 @@ if nargin > 1 && ischar(varargin{1}) && strcmp(varargin{1},'Now')
     else
         extract = [];
     end
-    %para.mono = 1;  % Turn by default the sequence into mono.
     para = [];
     varargout = {main(orig,[],para,[],extract)};
 else

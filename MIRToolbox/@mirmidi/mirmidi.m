@@ -8,6 +8,11 @@ function varargout = mirmidi(orig,varargin)
     thr.default = .3;
 option.thr = thr;
 
+    mono.key = 'Mono';
+    mono.type = 'Boolean';
+    mono.default = 1;
+option.mono = mono;
+
 specif.option = option;
 
 varargout = mirfunction(@mirmidi,orig,varargin,nargout,specif,@init,@main);
@@ -20,7 +25,10 @@ catch
     mirerror('MIRMIDI','MIDItoolbox does not seem to be installed.');
 end
 if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
-    o = mironsets(x,'Sum',0);
+    if not(option.mono)
+        x = miraudio(x,'Mono',0,'SeparateChannels');
+    end
+    o = mironsets(x);
     x = {o x};
 end
 type = 'mirmidi';
