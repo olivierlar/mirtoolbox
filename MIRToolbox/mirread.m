@@ -70,23 +70,12 @@ if load
     if isempty(extract)
         [s,f,b] = reader(file);
     else
-        [s,f,b] = reader(file,1);
-        %sz = reader(file,'size');
-        %if extract(4)
-        %    pt = sz(1);
-        %    if extract(4) == 1
-        %        pt = round(pt/2);
-        %    end
-        %else
-        %    pt = 0;
-        %end
-        %if extract(3)   % already done in mireval? remove?
-        %    interv = max(pt+round(extract(1:2)*f+1),sz(1));
-        %else
-        %    interv = max(pt+extract(1:2),sz(1));
-        %end
-        %s = reader(file,interv);
+        [unused,f,b] = reader(file,1);
         s = reader(file,extract(1:2));
+        chan = extract(4);
+        if not(isempty(chan))
+            s = s(:,chan);
+        end
     end
     if verbose
         disp([file,' loaded.']);
@@ -104,12 +93,12 @@ if load
         fp{1} = tp{1}([1 end]);
     end
 else
-    [d,f,b] = reader(file,1);
-    d = reader(file,'size');
-    d = d(1);
+    [unused,f,b] = reader(file,1);
+    dsize = reader(file,'size');
+    d = dsize(1);
     tp = {};
     fp = {};
-    ch = [];
+    ch = dsize(2);
 end
 
 

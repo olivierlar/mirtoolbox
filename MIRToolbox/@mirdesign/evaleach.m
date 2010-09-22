@@ -36,6 +36,7 @@ if not(isempty(sg))
 end
 a = d.argin;
 ch = d.chunk;
+chan = d.channel;
 specif = d.specif;
 if isaverage(specif)
     specif.eachchunk = 'Normal';
@@ -48,7 +49,7 @@ if ischar(a)
     
     if isempty(ch)
         % No chunk decomposition
-        y = miraudio(f,'Now',[w(:)' 0 0]);
+        y = miraudio(f,'Now',[w(:)' 0 0 chan]);
     else
         % Chunk decomposition
         if isstruct(fr) && fr.eval
@@ -57,16 +58,13 @@ if ischar(a)
             mirerror('frame.decomposition','Sorry! MIRtoolbox bug here. Please contact olartillot@gmail.com');
         else
             % in a non-frame-decomposed context            
-            y = miraudio(f,'Now',[ch(1),ch(2) 0]);
+            y = miraudio(f,'Now',[ch(1),ch(2) 0 chan]);
         end
     end
     if not(isempty(d.postoption)) && d.postoption.mono
         y = miraudio(y,'Mono',1);
     end
     y = set(y,'AcrossChunks',get(d,'AcrossChunks'));
-    if 0 %not(d.ascending)
-        y = miraudio(y,'Reverse');
-    end
     d2 = d;
     
 elseif d.chunkdecomposed && isempty(d.tmpfile)
@@ -665,6 +663,7 @@ for i = 1:length(argin)
             a.size = d.size;
             a.chunk = d.chunk;
             a.file = d.file;
+            a.channel = d.channel;
             a.eval = 1;
             a.interchunk = d.interchunk;
             a.sampling = d.sampling;

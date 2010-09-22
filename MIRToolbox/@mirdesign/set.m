@@ -69,6 +69,10 @@ while length(propertyArgIn) >= 2,
            a.option = val;
        case 'Overlap'
            a.overlap = val;
+       case 'SeparateChannels'
+           a.separate = val;
+       case 'Channel'
+           a.channel = val;
        otherwise
            error(['Unknown MIRdesign property: ' prop])
    end

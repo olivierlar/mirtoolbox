@@ -12,11 +12,13 @@ if isa(orig,'mirdesign')
     d.chunkdecomposed = orig.chunkdecomposed;
     d.size = orig.size;
     d.file = orig.file;
+    d.channel = orig.channel;
     d.sampling = orig.sampling;
     d.resampling = orig.resampling;
     d.nochunk = orig.nochunk;
     d.ascending = orig.ascending;
     d.overlap = orig.overlap;
+    d.separate = orig.separate;
     d.chunk = orig.chunk;
     d.eval = orig.eval;
     d.interchunk = orig.interchunk;
@@ -27,7 +29,6 @@ if isa(orig,'mirdesign')
     d.index = orig.index;
     d.tmpfile = orig.tmpfile;
     d.tmpof = orig.tmpof;
-    %d.nout = orig.nout;
 else
     d.method = orig;
     d.argin = argin;
@@ -41,21 +42,18 @@ else
         d.chunkdecomposed = 0;
         d.size = {};
         d.file = '';
+        d.channel = [];
         d.sampling = 0;
         d.resampling = 0;
         d.nochunk = 0;
         if not(isempty(orig)) && ...
                 strcmp(func2str(orig),'mirenvelope') && d.option.zp == 2
-            %if ((isnan(d.option.zp) && strcmpi(option.filter,'IIR')) || ...
-            %     (not(isnan(d.option.zp)) &&  d.option.zp)) 
-            %    d.ascending = 1;
-            %else
                 d.ascending = 0;
-            %end
         else
             d.ascending = 1;
         end
         d.overlap = 0;
+        d.separate = 0;
     else
         if iscell(argin)
             argin = argin{1};
@@ -84,6 +82,7 @@ else
         d.chunkdecomposed = argin.chunkdecomposed;
         d.size = argin.size;
         d.file = argin.file;
+        d.channel = argin.channel;
         d.sampling = argin.sampling;
         d.resampling = argin.resampling;
         if (isfield(specif,'nochunk') && specif.nochunk) 
@@ -108,6 +107,7 @@ else
             d.ascending = argin.ascending;
         end
         d.overlap = argin.overlap;
+        d.separate = argin.separate;
     end
     d.chunk = [];
     d.eval = 0;
@@ -125,10 +125,5 @@ else
         d.tmpfile = [];
     end
     d.tmpof = [];
-    %if nargin < 7
-    %    d.nout = 1;
-    %else
-    %    d.nout = nout;
-    %end
 end
 d = class(d,'mirdesign');

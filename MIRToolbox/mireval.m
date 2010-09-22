@@ -35,6 +35,7 @@ end
 % etc.
 w = [];    % Array containing the index positions of the starting and ending dates.
 s = getsize(d);
+ch = 1;
 if strcmpi(file,'Folder') || strcmpi(file,'Folders')
     [l w sr a] = evalfolder('',s,0,[],[],{},strcmpi(file,'Folders'));
     if l == 0
@@ -67,7 +68,7 @@ elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
     end
 else
     l = 1;
-    [d1,tp1,fp1,f1] = mirread([],file,0,0,0);
+    [d1,tp1,fp1,f1,b,n,ch] = mirread([],file,0,0,0);
     if length(s)>1
         interval = s(1:2)';
         if s(3)
@@ -140,7 +141,7 @@ if parallel
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);
         end
         tic
-        yi = evalaudiofile(d,a{i},sr(i),w(:,i),{},0,i,single,'');
+        yi = evalaudiofile(d,a{i},sr(i),w(:,i),{},0,i,single,'',ch);
         toc
         y{i} = yi;
         if not(isempty(export))
@@ -170,7 +171,7 @@ else
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
         end
         tic
-        yf = evalaudiofile(d,a{f},sr(f),w(:,f),{},0,f,single,'');
+        yf = evalaudiofile(d,a{f},sr(f),w(:,f),{},0,f,single,'',ch);
         toc
         y{f} = yf;
         if not(isempty(export))
@@ -199,7 +200,7 @@ end
 %end
     
 
-function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name)
+function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name,ch)
 % Now let's perform the analysis (or analyses) on the different files.
 %   If d is a structure or a cell array, evaluate each component
 %       separately.
@@ -227,7 +228,7 @@ if isstruct(d)
             end
         end
         res = evalaudiofile(field,file,sampling,size,struc,istmp,index,...
-                                                        single,fieldname);
+                                                     single,fieldname,ch);
         if not(isempty(single)) && not(isequal(single,0)) && ...
                 iscell(res) && isa(field,'mirdesign')
             res = res{1};
@@ -250,17 +251,29 @@ elseif iscell(d)
     l = length(d);
     v = cell(1,l);
     for j = 1:l
-        v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,single,[name,num2str(j)]);
+        v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,...
+                                       single,[name,num2str(j)],ch);
     end
 elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
     mirerror('MIRSTRUCT','You should always use tmp fields when using mirstruct. Else, just use struct.');
 else
-    d = set(d,'File',file,'Sampling',sampling,'Size',size,...
-              'Eval',1,'Index',index,'Struct',struc);
-    % For that particular file or this particular feature, let's begin the
-    % actual evaluation process.
-    v = evaleach(d,single,name);    
-    % evaleach performs a top-down traversal of the design flowchart.
+    if get(d,'SeparateChannels')
+        for i = 1:ch
+            d = set(d,'File',file,'Sampling',sampling,'Size',size,...
+                      'Eval',1,'Index',index,'Struct',struc,'Channel',i);
+            % For that particular file or this particular feature, let's begin the
+            % actual evaluation process.
+            v = evaleach(d,single,name);    
+            % evaleach performs a top-down traversal of the design flowchart.
+        end
+    else
+        d = set(d,'File',file,'Sampling',sampling,'Size',size,...
+                  'Eval',1,'Index',index,'Struct',struc);
+        % For that particular file or this particular feature, let's begin the
+        % actual evaluation process.
+        v = evaleach(d,single,name);    
+        % evaleach performs a top-down traversal of the design flowchart.
+    end
 end
 
 

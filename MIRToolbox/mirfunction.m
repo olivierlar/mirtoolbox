@@ -59,22 +59,9 @@ if isa(orig,'mirdesign')
         % Automatic development of the implicit prerequisites,
         % with management of the data types throughout the design process.
         [orig type] = init(orig,during);
-        
-        %?&?& if iscell(type)
-        %?%?%    nout = length(type); %NUMBER OF OUTPUTS IS NOT MORE DEPENDENT ON THE CALL
-        %?%?% end
-        
-        o = mirdesign(method,orig,during,after,specif,type); %,nout);
-        
-                %if isstruct(during) && during.frame.auto
-                %    % Now that the mirframe step has been integrated in the
-                %    % flowchart, the 'Frame' option can be removed from the
-                %    % flowchart's terminal node.
-                %    opt = get(o,'Option');
-                %    opt.frame = [];
-                %    o = set(o,'Option',opt,'Frame',[]);
-                %end
-            
+                
+        o = mirdesign(method,orig,during,after,specif,type);
+                    
         if design_init && not(strcmpi(filename,'Design'))
             % Now the design flowchart has been completed created.
             % If the 'Design' keyword not used,
@@ -92,7 +79,6 @@ if isa(orig,'mirdesign')
         % beginning of the evaluation process.
         
         if not(isempty(get(orig,'TmpFile'))) && get(orig,'ChunkDecomposed')
-            %ch = get(orig,'Chunk');
             orig = evaleach(orig);
             if iscell(orig)
                 orig = orig{1};
@@ -102,7 +88,6 @@ if isa(orig,'mirdesign')
             [orig x] = evaleach(orig);
         end
         
-        %during.extract = [];
         if not(isequal(method,@nthoutput))
             if iscell(orig)
                 orig = orig{1};

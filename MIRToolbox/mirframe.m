@@ -46,15 +46,14 @@ elseif isa(x,'mirdesign')
         fhu = get(x,'FrameHopUnit');
         if fl
             f = set(f,'FrameLength',fl,'FrameLengthUnit',flu,...
-                      'FrameHop',fh,'FrameHopUnit',fhu,'FrameEval',1);
+                      'FrameHop',fh,'FrameHopUnit',fhu);
         else
             f = set(f,'FrameLength',para.wlength.val,...
                       'FrameLengthUnit',para.wlength.unit,...
                       'FrameHop',para.hop.val,...
-                      'FrameHopUnit',para.hop.unit,...
-                      'FrameEval',1);
+                      'FrameHopUnit',para.hop.unit);
         end
-        
+        f = set(f,'FrameEval',1,'SeparateChannels',1);
         if not(isamir(x,'miraudio'))
             f = set(f,'NoChunk',1);
         end
