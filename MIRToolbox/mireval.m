@@ -258,14 +258,16 @@ elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
     mirerror('MIRSTRUCT','You should always use tmp fields when using mirstruct. Else, just use struct.');
 else
     if get(d,'SeparateChannels')
+        v = cell(1,ch);
         for i = 1:ch
             d = set(d,'File',file,'Sampling',sampling,'Size',size,...
                       'Eval',1,'Index',index,'Struct',struc,'Channel',i);
             % For that particular file or this particular feature, let's begin the
             % actual evaluation process.
-            v = evaleach(d,single,name);    
+            v{i} = evaleach(d,single,name);    
             % evaleach performs a top-down traversal of the design flowchart.
         end
+        v = combinechannels(v);
     else
         d = set(d,'File',file,'Sampling',sampling,'Size',size,...
                   'Eval',1,'Index',index,'Struct',struc);
@@ -275,6 +277,25 @@ else
         % evaleach performs a top-down traversal of the design flowchart.
     end
 end
+
+
+function y = combinechannels(c)
+y = c{1};
+v = get(y,'Data');
+for h = 2:length(c)
+    d = get(c{h},'Data');
+    for i = 1:length(d)
+        if isa(y,'mirmidi')
+            d{i}(:,3) = h;
+            v{i} = sortrows([v{i};d{i}]);
+        else
+            for j = 1:length(d{i})
+                v{i}{j}(:,:,h) = d{i}{j};
+            end
+        end
+    end
+end
+y = set(y,'Data',v);
 
 
 function c = combineaudiofile(filename,isstat,varargin) % Combine output from several audio files into one single

@@ -60,5 +60,5 @@ for i = 1:length(d)
         end
     end
 end
-m.data = nmat;
-m = class(m,'mirmidi',mirdata(x));
+m = class(struct,'mirmidi',mirdata(x));
+m = set(m,'Data',nmat);

@@ -49,7 +49,7 @@ if ischar(a)
     
     if isempty(ch)
         % No chunk decomposition
-        y = miraudio(f,'Now',[w(:)' 0 0 chan]);
+        y = miraudio(f,'Now',[w(:)' 0 chan]);
     else
         % Chunk decomposition
         if isstruct(fr) && fr.eval
