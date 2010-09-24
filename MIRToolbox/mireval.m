@@ -86,7 +86,7 @@ else
     else
         w = [1;d1];
     end
-    if getsampling(d)
+    if isa(d,'mirdesign') && getsampling(d)
         sr = getsampling(d);
     else
         sr = f1;
