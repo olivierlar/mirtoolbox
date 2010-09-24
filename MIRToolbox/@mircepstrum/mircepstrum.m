@@ -98,7 +98,7 @@ elseif isa(orig,'mirspectrum')
         start = ceil(option.mi*f{h})+1;
         q{h} = cell(1,length(mag{h}));
         for k = 1:length(mag{h})
-            m = mag{h}{k}.*exp(i*pha{h}{k});
+            m = mag{h}{k}.*exp(1i*pha{h}{k});
             m = [m(1:end-1,:) ; conj(flipud(m))];  % Reconstitution of the complete abs(FFT)
             if not(option.complex)
                 m = abs(m);
