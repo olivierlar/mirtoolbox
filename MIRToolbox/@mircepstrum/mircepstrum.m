@@ -96,7 +96,6 @@ elseif isa(orig,'mirspectrum')
     pha = get(orig,'Phase');
     f = get(orig,'Sampling');
     q = cell(1,length(mag));
-    %disp('Computing cepstrum...')
     for h = 1:length(mag)
         len = ceil(option.ma*f{h});
         start = ceil(option.mi*f{h})+1;
