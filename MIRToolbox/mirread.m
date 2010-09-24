@@ -26,9 +26,9 @@ tp = {};
 fp = {};
 n = {};
 ch = {};
-try
+%try
     [d,f,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
-catch
+if 0%catch
     err.wav = lasterr;
     try
        [d,f,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
@@ -72,9 +72,8 @@ if load
     else
         [unused,f,b] = reader(file,1);
         s = reader(file,extract(1:2));
-        chan = extract(4);
-        if not(isempty(chan))
-            s = s(:,chan);
+        if length(extract) > 3
+            s = s(:,extract(4));
         end
     end
     if verbose
