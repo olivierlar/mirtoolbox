@@ -3,6 +3,10 @@ function varargout = mircepstrum(orig,varargin)
 %       periodicities, and is used for instance for pitch detection.
 %   x can be either a spectrum, an audio signal, or the name of an audio file.
 %   Optional parameter:
+%       mircepstrum(...,'Min',min) specifies the lowest delay taken into
+%           consideration, in seconds.
+%           Default value: 0.0002 s (corresponding to a maximum frequency of 
+%               5 kHz).
 %       mircepstrum(...,'Max',max) specifies the highest delay taken into
 %           consideration, in seconds.
 %           Default value: 0.05 s (corresponding to a minimum frequency of 
@@ -12,7 +16,7 @@ function varargout = mircepstrum(orig,varargin)
 
         mi.key = 'Min';
         mi.type = 'Integer';
-        mi.default = 0.0005;
+        mi.default = 0.0002;
         mi.unit = {'s','Hz'};
         mi.defaultunit = 's';
         mi.opposite = 'ma';
