@@ -371,7 +371,7 @@ if iscell(p)
 end
 pt = get(p,'TrackPrecisePos');
 track = 1;
-if isempty(pt)
+if isempty(pt) || isempty(pt{1})
     pt = get(p,'PeakPrecisePos');
     track = 0;
 end
