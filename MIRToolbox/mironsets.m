@@ -372,7 +372,7 @@ elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
     y = mirnovelty(x,'KernelSize',option.kernelsize);
     type = 'mirscalar';
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope')
-    y = mirframenow(x,option);
+    y = x; %mirframenow(x,option);
     type = mirtype(x);
 else
     x = mirframenow(x,option);
