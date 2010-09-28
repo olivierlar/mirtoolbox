@@ -112,7 +112,7 @@ if not(isempty(order))
                         pause(idealtime-practime)
                     end
                 end
-                if sgk(end)>1
+                if 0 %sgk(end)>1
                     sound(rand(1,10))
                 end
             end
