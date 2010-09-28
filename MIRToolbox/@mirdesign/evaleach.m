@@ -354,7 +354,8 @@ if max(fpsz,fpsz2) > CHUNKLIM
     if frov > 1
         chbeg = chend-frch+1;
     end
-    chunks = [fp(1,chbeg) ; fp(2,chend)+1];
+    chunks = [fp(1,chbeg) ; fp(2,chend)+1]; % After resampling, one sample may be missing, leading to a complete frame drop.
+    chunks(end) = min(chunks(end),fp(end)); % Last chunk should not extend beyond audio size.
 else
     chunks = [];
 end
