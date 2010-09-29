@@ -117,11 +117,13 @@ if not(isempty(order))
                         dj = di(:,j);
                     end
                     dj(isnan(dj)) = 0;
-                    ampj = zeros(size(dj));
-                    if iscell(ampi)
-                        ampj(1:size(ampi{j})) = ampi{j};
-                    else
-                        ampj(1:size(ampi(:,j))) = ampi(:,j);
+                    if isa(a,'mirpitch')
+                        ampj = zeros(size(dj));
+                        if iscell(ampi)
+                            ampj(1:size(ampi{j})) = ampi{j};
+                        else
+                            ampj(1:size(ampi(:,j))) = ampi(:,j);
+                        end
                     end
                     if not(isempty(dj))
                         k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
