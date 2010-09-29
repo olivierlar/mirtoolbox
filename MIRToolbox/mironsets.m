@@ -42,9 +42,12 @@ function varargout = mironsets(x,varargin)
 %                   'Median' (toggled on by default here)
 %           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
 %                of same default characteristics than those returned
-%                 by mirpitch (with however a range of frequencies not
-%                 exceeding 1000 Hz) and subsequently computes the novelty 
-%                 curve of the resulting similatrix matrix.
+%                by mirpitch, with however a range of frequencies set by 
+%                the following options:
+%                   'Min' (set by default to 30 Hz),
+%                   'Max' (set by default to 1000 Hz),
+%                and subsequently computes the novelty curve of the 
+%                resulting similatrix matrix.
 %               Option associated to the mirnovelty function can be
 %               passed here as well (see help mirnovelty):
 %                   'KernelSize' (set by default to 32 samples)
@@ -54,6 +57,7 @@ function varargout = mironsets(x,varargin)
 %           Option associated to the mirpeaks function can be specified as
 %               well:
 %               'Contrast' with default value c = .01
+%               'Threshold' with default value t = 0
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
 %       mironsets(...,'Release') (or 'Releases') detects release phases.
 %           mironsets(...,'Gauss',o) estimate the attack and/or release
@@ -252,6 +256,16 @@ function varargout = mironsets(x,varargin)
         pitch.default = 0;
     option.pitch = pitch;
 
+        min.key = 'Min';
+        min.type = 'Integer';
+        min.default = 30;
+    option.min = min;
+
+        max.key = 'Max';
+        max.type = 'Integer';
+        max.default = 1000;
+    option.max = max;
+
         kernelsize.key = 'KernelSize';
         kernelsize.type = 'Integer';
         kernelsize.default = 32;
@@ -271,7 +285,13 @@ function varargout = mironsets(x,varargin)
         cthr.default = NaN;
         cthr.when = 'After';
     option.cthr = cthr;
-    
+
+        thr.key = 'Threshold';
+        thr.type = 'Integer';
+        thr.default = 0;
+        thr.when = 'After';
+    option.thr = thr;
+
         attack.key = {'Attack','Attacks'};
         attack.type = 'Boolean';
         attack.default = 0;
@@ -363,7 +383,7 @@ if isamir(x,'miraudio')
         y = mirflux(x,'Inc',option.inc,'Complex',option.complex);
         type = 'mirscalar';
     elseif option.pitch
-        [unused ac] = mirpitch(x,'Frame','Stable','Multi','Max',1000);
+        [unused ac] = mirpitch(x,'Frame','Min',option.min,'Max',option.max);
         y = mirnovelty(ac,'KernelSize',option.kernelsize);
         type = 'mirscalar';
     end
@@ -491,10 +511,12 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     end
     if strcmpi(postoption.detect,'Peaks')
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
-            'Contrast',postoption.cthr,'Order','Abscissa','NoBegin','NoEnd');
+            'Threshold',postoption.thr,'Contrast',postoption.cthr,...
+            'Order','Abscissa','NoBegin','NoEnd');
     elseif strcmpi(postoption.detect,'Valleys')
         o = mirpeaks(o,'Total',Inf,'SelectFirst',...
-            'Contrast',postoption.cthr,'Valleys','Order','Abscissa','NoBegin','NoEnd');
+            'Threshold',postoption.thr,'Contrast',postoption.cthr,...
+            'Valleys','Order','Abscissa','NoBegin','NoEnd');
     end
     nop = cell(size(get(o,'Data')));
     o = set(o,'AttackPos',nop,'ReleasePos',nop);

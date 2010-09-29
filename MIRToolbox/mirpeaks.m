@@ -131,12 +131,7 @@ function varargout = mirpeaks(orig,varargin)
         thr.type = 'Integer';
         thr.default = NaN;
     option.thr = thr;
-        
-    %    lthr.key = 'InverseThreshold';
-    %    lthr.type = 'Integer';
-    %    lthr.default = NaN;
-    %option.lthr = lthr;
-    
+            
         smthr.key = 'MatrixThreshold'; % to be documented in version 1.3
         smthr.type = 'Integer';
         smthr.default = NaN;
