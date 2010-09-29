@@ -26,9 +26,9 @@ tp = {};
 fp = {};
 n = {};
 ch = {};
-%try
+try
     [d,f,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
-if 0%catch
+catch
     err.wav = lasterr;
     try
        [d,f,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
