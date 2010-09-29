@@ -28,6 +28,11 @@ function varargout = mirplay(a,varargin)
         every.key = 'Every';
         every.type = 'Integer';
     option.every = every;
+    
+        burst.key = 'Burst';
+        burst.type = 'Boolean';
+        burst.default = 1;
+    option.burst = burst;
 
 specif.option = option;
 
@@ -112,7 +117,7 @@ if not(isempty(order))
                         pause(idealtime-practime)
                     end
                 end
-                if 0 %sgk(end)>1
+                if option.burst && sgk(end)>1
                     sound(rand(1,10))
                 end
             end
