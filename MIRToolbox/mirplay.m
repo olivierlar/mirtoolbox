@@ -16,6 +16,8 @@ function varargout = mirplay(a,varargin)
 %           of d, which could be either an array or a mirscalar data.
 %       mirplay(...,'Every',s) plays every s sequence, where s is a number
 %           indicating the step between sequences.
+%       mirplay(...,'Burst',0) toggles off the burst sound between
+%           segments.
 %       Example: mirplay(mirenvelope('Folder'),...
 %                        'increasing', mirrms('Folder'),...
 %                        'every',5)
