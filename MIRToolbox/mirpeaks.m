@@ -621,13 +621,15 @@ for i = 1:length(d) % For each audio file,...
 
                     mxk1 = mx{1,k,l};   % w^k
                     mxk2 = mx{1,k+1,l}; % w^{k+1}
+                    thk1 = th(mxk1,k,l);
+                    thk2 = th(mxk2,k,l);
                     myk2 = dh(mx{1,k+1,l},k,l); % amplitude
                     tr1 = tr2;
                     tr2 = NaN(1,length(mxk2));
                     
                     mxl(:,k+1) = mxl(:,k);
-                    
-                    if isempty(mxk1) || isempty(mxk2)
+                                        
+                    if isempty(thk1) || isempty(thk2)
                         %% IS THIS TEST NECESSARY??
                         
                         myl(:,k+1) = 0;
@@ -640,7 +642,7 @@ for i = 1:length(d) % For each audio file,...
                                 % still alive...
 
                                 % Step 1 in Mc Aulay & Quatieri
-                                [int m] = min(abs(th(mxk2,k,l)-th(mxk1(n),k,l)));
+                                [int m] = min(abs(thk2-thk1(n)));
                                 if isinf(int) || int > option.delta
                                     % all w^{k+1} outside matching interval:
                                         % partial becomes dead
@@ -652,15 +654,15 @@ for i = 1:length(d) % For each audio file,...
                                         % candidate match
 
                                     % Step 2 in Mc Aulay & Quatieri
-                                    [best mm] = min(abs(mxk2(m)-mx{1,k,l}));
+                                    [best mm] = min(abs(thk2(m)-th(mx{1,k,l})));
                                     if mm == n
                                         % no better match to remaining w^k:
                                             % definite match
                                         mxl(tr,k+1) = mxk2(m)-1;
                                         myl(tr,k+1) = myk2(m);
                                         tr2(m) = tr;
-                                        mxk1(n) = -Inf; % selected w^k is eliminated from further consideration
-                                        mxk2(m) = Inf;  % selected w^{k+1} is eliminated as well
+                                        thk1(n) = -Inf; % selected w^k is eliminated from further consideration
+                                        thk2(m) = Inf;  % selected w^{k+1} is eliminated as well
                                         zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
                                                     mxl(grvy,k) <= mxl(tr,k+1)) | ...
                                                    (mxl(grvy,k) <= mxl(tr,k) & ...
@@ -668,7 +670,7 @@ for i = 1:length(d) % For each audio file,...
                                         grvy(zz) = [];
                                     else
                                         % let's look at adjacent lower w^{k+1}...
-                                        [int mmm] = min(abs(th(mxk2(1:m),k,l)-th(mxk1(n),k,l)));
+                                        [int mmm] = min(abs(thk2(1:m)-thk1(n)));
                                         if int > best || ... % New condition added (Lartillot 16.4.2010)
                                                 isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
                                                 int > option.delta
@@ -681,8 +683,8 @@ for i = 1:length(d) % For each audio file,...
                                             mxl(tr,k+1) = mxk2(mmm)-1;
                                             myl(tr,k+1) = myk2(mmm);
                                             tr2(mmm) = tr;
-                                            mxk1(n) = -Inf;     % selected w^k is eliminated from further consideration
-                                            mxk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
+                                            thk1(n) = -Inf;     % selected w^k is eliminated from further consideration
+                                            thk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
                                             zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
                                                         mxl(grvy,k) <= mxl(tr,k+1)) | ...
                                                        (mxl(grvy,k) <= mxl(tr,k) & ...
@@ -697,14 +699,14 @@ for i = 1:length(d) % For each audio file,...
                     
                     % Step 3 in Mc Aulay & Quatieri
                     for m = 1:length(mxk2)
-                        if not(isinf(mxk2(m)))
+                        if not(isinf(thk2(m)))
                             % unmatched w^{k+1}
                             
                             % Let's try to reuse a zombie from the
                             % graveyard (Lartillot).
-                            [int z] = min(abs(th(mxl(grvy,k+1)+1,k,l)-th(mxk2(m),k,l)));
+                            [int z] = min(abs(th(mxl(grvy,k+1)+1,k,l)-thk2(m)));
                             if isempty(int) || int > option.delta ...
-                                    || int > min(abs(mxl(:,k+1)+1-mxk2(m)))
+                                    || int > min(abs(th(mxl(:,k+1)+1,k,l)-thk2(m)))
                                 % No suitable zombie.
                                 % birth of a new partial (Mc Aulay &
                                 % Quatieri)
