@@ -28,7 +28,7 @@ if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
     if isa(x,'mirdesign') && not(option.mono)
         x = set(x,'SeparateChannels',1);
     end
-    o = mironsets(x,'Attacks');
+    o = mironsets(x,'Attacks','Releases');
     x = {o x};
 end
 type = 'mirmidi';
@@ -41,6 +41,9 @@ if iscell(x) %not(isamir(x,'mirmidi'))
     s = mirsegment(a,o);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
     do = get(o,'PeakVal');
+    da = get(o,'AttackPos');
+    dr = get(o,'ReleasePos');
+    df = get(o,'FramePos');
 else
     do = NaN;
 end
