@@ -229,11 +229,6 @@ ac = get(a,'AcrossChunks');
 f = get(a,'Sampling');
 cl = get(a,'Clusters');
 for h = 1:length(d)
-    %if isfield(para,'segment') && not(isempty(para.segment)) && para.segment
-    %    t{h} = {t{h}{para.segment}};
-    %    d{h} = {d{h}{para.segment}};
-    %    cl{h} = cl{h}(para.segment);
-    %end
     for k = 1:length(d{h})
         tk = t{h}{k};
         dk = d{h}{k};

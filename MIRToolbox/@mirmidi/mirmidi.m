@@ -28,7 +28,7 @@ if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
     if isa(x,'mirdesign') && not(option.mono)
         x = set(x,'SeparateChannels',1);
     end
-    o = mironsets(x);
+    o = mironsets(x,'Attacks');
     x = {o x};
 end
 type = 'mirmidi';
@@ -40,21 +40,29 @@ if iscell(x) %not(isamir(x,'mirmidi'))
     a = x{2};
     s = mirsegment(a,o);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
+    do = get(o,'PeakVal');
+else
+    do = NaN;
 end
-d = get(x,'Data');
+dp = get(x,'Data');
 fp = get(x,'FramePos');
-nmat = cell(1,length(d));
-for i = 1:length(d)
+nmat = cell(1,length(dp));
+for i = 1:length(dp)
     nmat{i} = [];
-    for j = 1:length(d{i})
+    for j = 2:length(dp{i})
         tij = fp{i}{j}(1);
         dij = diff(fp{i}{j});
-        for k = 1:size(d{i}{j},3)
-            for l = 1:size(d{i}{j},2)
-                for n = 1:length(d{i}{j}{1,l,k})
-                    f = d{i}{j}{1,l,k}(n);
+        if not(iscell(do))
+            vij = 120;
+        else
+            vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
+        end
+        for k = 1:size(dp{i}{j},3)
+            for l = 1:size(dp{i}{j},2)
+                for n = 1:length(dp{i}{j}{1,l,k})
+                    f = dp{i}{j}{1,l,k}(n);
                     p = round(hz2midi(f));
-                    nmat{i} = [nmat{i}; tij dij 1 p 120 tij dij];
+                    nmat{i} = [nmat{i}; tij dij 1 p vij tij dij];
                 end
             end
         end
