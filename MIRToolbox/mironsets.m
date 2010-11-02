@@ -521,25 +521,19 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     nop = cell(size(get(o,'Data')));
     o = set(o,'AttackPos',nop,'ReleasePos',nop);
 end
-if isfield(postoption,'attack') && postoption.attack
+if (isfield(postoption,'attack') && postoption.attack) || ...
+        (isfield(postoption,'release') && postoption.release)
     p = get(o,'PeakPos');
     pm = get(o,'PeakMode');
     d = get(o,'Data');
-    do = mirenvelope(o,'Diff','Gauss',postoption.gauss);
-    dd = get(do,'Data');
-    [st p pm] = mircompute(@startattack,d,dd,p,pm);
+    if postoption.attack
+        [st p pm] = mircompute(@startattack,d,p,pm);
+    end
+    if postoption.release
+        [rl p pm st] = mircompute(@endrelease,d,p,pm,st);
+        o = set(o,'ReleasePos',rl);
+    end
     o = set(o,'AttackPos',st,'PeakPos',p,'PeakMode',pm);
-else
-    st = [];
-end
-if isfield(postoption,'release') && postoption.release
-    p = get(o,'PeakPos');
-    pm = get(o,'PeakMode');
-    d = get(o,'Data');
-    do = mirenvelope(o,'Diff','Gauss',postoption.gauss);
-    dd = get(do,'Data');
-    [rl p pm st] = mircompute(@endrelease,d,dd,p,pm,st);
-    o = set(o,'ReleasePos',rl,'AttackPos',st,'PeakPos',p,'PeakMode',pm);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
@@ -547,21 +541,25 @@ if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
 end
 
 
-function st = startattack(d,dd,z,pm)
+function st = startattack(d,z,pm)
 z = sort(z{1});
 pm = pm{1};
 st = zeros(size(z));
 i = 1;
+dd = diff(d,1,1);       % d'
+ddd = diff(dd,1,1);     % d''
+dddd = diff(ddd,1,1);   % d'''
 while i<=length(z)
-    p = find(dd(z(i)-1:-1:1)>0,1); % previous increasing portion
+    % Start attack is identified to previous peak in d''.
+    p = find(dddd((z(i)-1)-1:-1:1)<0,1); % previous decreasing d''
     if isempty(p)
         st(i) = 1;
     else
-        n = find(dd(z(i)-p-1:-1:1)<0,1); % previous decreasing portion
+        n = find(dddd((z(i)-1)-p-1:-1:1)>0,1); % previous increasing d''
         if isempty(n)
             st(i) = 1;
         else
-            st(i) = z(i)-p-n;
+            st(i) = ((z(i)-1)-p-(n-1))+1;
         end
         if i>1 && st(i-1)==st(i)
             if d(z(i))>d(z(i-1))
@@ -580,7 +578,7 @@ end
 st = {{st} {z} {pm}};
 
 
-function rt = endrelease(d,dd,z,pm,st)
+function rt = endrelease(d,z,pm,st)
 z = sort(z{1});
 pm = pm{1};
 if not(isempty(st))
@@ -588,30 +586,41 @@ if not(isempty(st))
 end
 rt = zeros(size(z));
 i = 1;
+dd = diff(d,1,1);       % d'
+ddd = diff(dd,1,1);     % d''
+dddd = diff(ddd,1,1);   % d'''
 while i<=length(z)
-    p = find(dd(z(i)+1:end)<0,1); % next decreasing portion
-    if isempty(p)
+    % Release attack is identified to next (sufficiently positive) peak 
+    % in d''.
+    l = find(ddd((z(i)-1):end)<min(ddd)/100,1); 
+        % next d'' sufficiently negative
+    if isempty(l)
         rt(i) = length(d);
     else
-        n = find(dd(z(i)+p+1:end)>0,1); % next increasing portion
-        if isempty(n)
+        p = find(ddd((z(i)-1)+(l-1)+1:end)>max(ddd)/100,1); % next increasing d''
+        if isempty(p)
             rt(i) = length(d);
         else
-            rt(i) = z(i)+p+n;
-        end
-        if i>1 && rt(i-1)==rt(i)
-            if d(z(i))>d(z(i-1))
-                del = i-1;
+            n = find(dddd((z(i)-1)+(l-1)+p+1:end)<0,1); % next decreasing d''
+            if isempty(n)
+                rt(i) = length(d);
             else
-                del = i;
+                rt(i) = ((z(i)-1)+(l-1)+p+n)+1;
             end
-            rt(del) = [];
-            z(del) = [];
-            pm(del) = [];
-            if not(isempty(st))
-                st(del) = [];
+            if i>1 && rt(i-1)==rt(i)
+                if d(z(i))>d(z(i-1))
+                    del = i-1;
+                else
+                    del = i;
+                end
+                rt(del) = [];
+                z(del) = [];
+                pm(del) = [];
+                if not(isempty(st))
+                    st(del) = [];
+                end
+                i = i-1;
             end
-            i = i-1;
         end
     end
     i = i+1;
