@@ -48,13 +48,13 @@ else
     do = NaN;
 end
 dp = get(x,'Data');
-fp = get(x,'FramePos');
+%fp = get(x,'FramePos');
 nmat = cell(1,length(dp));
 for i = 1:length(dp)
     nmat{i} = [];
     for j = 2:length(dp{i})
-        tij = fp{i}{j}(1);
-        dij = diff(fp{i}{j});
+        tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
+        dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
         if not(iscell(do))
             vij = 120;
         else
