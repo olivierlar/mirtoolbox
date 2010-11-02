@@ -848,9 +848,9 @@ end
 function y = concatchunk(old,new,ascending)
 do = get(old,'Data');
 dn = get(new,'Data');
+fpo = get(old,'FramePos');
+fpn = get(new,'FramePos');
 if isa(old,'mirscalar')
-    fpo = get(old,'FramePos');
-    fpn = get(new,'FramePos');
     y = set(old,'Data',{{[do{1}{1},dn{1}{1}]}},...
                 'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
 else
@@ -858,10 +858,12 @@ else
     tn = get(new,'Pos');
     if ascending
         y = set(old,'Data',{{[do{1}{1};dn{1}{1}]}},...
-                    'Pos',{{[to{1}{1};tn{1}{1}]}});
+                    'Pos',{{[to{1}{1};tn{1}{1}]}},...
+                    'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
     else
         y = set(old,'Data',{{[dn{1}{1};do{1}{1}]}},...
-                    'Pos',{{[tn{1}{1};to{1}{1}]}});
+                    'Pos',{{[tn{1}{1};to{1}{1}]}},...
+                    'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
     end
 end
 
