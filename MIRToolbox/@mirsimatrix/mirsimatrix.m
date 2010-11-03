@@ -22,7 +22,8 @@ function varargout = mirsimatrix(orig,varargin)
 %                   corresponding to f(x)= exp(-x)
 %       mirsimatrix(...,'Width',w) or more simply dissimatrix(...,w) 
 %           specifies the size of the diagonal bandwidth, in samples,
-%           outside which the dissimilarity will not be computed.
+%           outside which the dissimilarity will not be computed. If w is
+%           even, the actual width is w-1 samples.
 %           if w = inf (default value), all the matrix will be computed.
 %       mirsimatrix(...,'Horizontal') rotates the matrix 45 degrees in order to
 %           make the first diagonal horizontal, and to restrict on the
@@ -176,7 +177,7 @@ else
                 nd = size(vz,4);
                 if not(isempty(postoption)) && ...
                     strcmpi(postoption.view,'Horizontal')
-                    dk{z} = NaN(option.K,l,nc);
+                    dk{z} = NaN(ceil((option.K)/2)*2-1,l,nc);
                 else
                     dk{z} = NaN(l,l,nc);
                 end
@@ -236,7 +237,7 @@ else
                                 if mirwaitbar && (mod(i,100) == 1 || i == l)
                                     waitbar(i/l,handle);
                                 end
-                                lK = floor(option.K/2);
+                                lK = ceil(option.K/2);
                                 ij = min(i+lK-1,l);
                                 dkij = disf(vv(:,i),vv(:,i:ij));
                                 for j = 1:ij-i+1
