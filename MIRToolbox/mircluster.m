@@ -56,7 +56,9 @@ else
         mirerror('mircluster','The input should be either frame- or segment-decomposed.');
     end
    
-    if isempty(varargin) || not(isa(varargin{1},'mirdata'))
+    if isempty(varargin) || (not(isa(varargin{1},'mirdata') || ...
+                             (iscell(varargin{1}) && ...
+                              isa(varargin{1}{1},'mirdata'))))
         % mircluster version for frame-decomposed data:
         % frames are clustered into groups using K-means clustering.
         [unused option] = miroptions(@mircluster,a,specif,varargin);
