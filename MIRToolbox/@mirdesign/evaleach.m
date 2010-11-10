@@ -52,14 +52,7 @@ if ischar(a)
         y = miraudio(f,'Now',[w(:)' 0 chan]);
     else
         % Chunk decomposition
-        if isstruct(fr) && fr.eval
-            % in a frame-decomposed context
-            %%%%%% Apparently, this should never happen..
-            mirerror('frame.decomposition','Sorry! MIRtoolbox bug here. Please contact olartillot@gmail.com');
-        else
-            % in a non-frame-decomposed context            
-            y = miraudio(f,'Now',[ch(1),ch(2) 0 chan]);
-        end
+        y = miraudio(f,'Now',[ch(1),ch(2) 0 chan]);
     end
     if not(isempty(d.postoption)) && d.postoption.mono
         y = miraudio(y,'Mono',1);
