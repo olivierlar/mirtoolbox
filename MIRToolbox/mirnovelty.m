@@ -35,6 +35,11 @@ function varargout = mirnovelty(orig,varargin)
         K.type = 'Integer';
         K.default = 64;
     option.K = K;
+    
+        transf.type = 'String';
+        transf.default = 'TimeLag';
+        transf.choice = {'Horizontal','TimeLag'};
+    option.transf = transf;
 
         normal.key = 'Normal';
         normal.type = 'Boolean';
@@ -52,7 +57,7 @@ function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
-                      'Width',option.K,'Horizontal');
+                      'Width',option.K,option.transf);
 end
 if isa(x,'mirdesign')
     x = set(x,'Overlap',ceil(option.K));
@@ -77,7 +82,7 @@ if not(isa(orig,'mirscalar'))
         else
             cgs = dwk;
         end
-        cg = checkergauss(cgs);
+        cg = checkergauss(cgs,option.transf);
         disp('Computing convolution, please wait...')
         for z = 1:length(s{k})
             sz = s{k}{z};
@@ -173,16 +178,31 @@ for var = 1:length(new)
     old{var} = ov;
 end
 
-function y = checkergauss(N)
+
+function y = checkergauss(N,transf)
 hN = ceil(N/2);
-y = zeros(hN,N);
-for j = 1:N
-    for i = 1:hN
-        g = exp(-((i/hN)^2 + (((j-hN)/hN)^2))*4);
-        if j>hN && j<hN+i
-            y(hN-i+1,j) = -g;
-        else
-            y(hN-i+1,j) = g;
+if strcmpi(transf,'TimeLag')
+    y = zeros(hN,N);
+    for j = 1:N
+        for i = 1:hN
+            g = exp(-((i/hN)^2 + (((j-hN)/hN)^2))*4);
+            if j>hN && j<hN+i
+                y(hN-i+1,j) = -g;
+            else
+                y(hN-i+1,j) = g;
+            end
+        end
+    end
+else
+    y = zeros(N);
+    for i = 1:N
+        for j = 1:N
+            g = exp(-(((i-hN)/hN)^2 + (((j-hN)/hN)^2))*4);
+            if xor(j>i,j>N-i)
+                y(i,j) = -g;
+            else
+                y(i,j) = g;
+            end
         end
     end
 end
