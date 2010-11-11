@@ -271,8 +271,7 @@ else
         end
     end
     m.diagwidth = option.K;
-    if not(isinf(option.K)) && not(isempty(postoption)) && ...
-            strcmpi(postoption.view,'TimeLag')
+    if not(isempty(postoption)) && strcmpi(postoption.view,'TimeLag')
         m.view = 'l';
     else
         m.view = 's';
