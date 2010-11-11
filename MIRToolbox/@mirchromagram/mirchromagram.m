@@ -118,13 +118,14 @@ if isamir(x,'mirtemporal') || isamir(x,'mirspectrum')
     while freqmax < option.max
         freqmax = freqmax*2;
     end
-    freqres = freqmin*(2.^(1/option.res)-1);
+    %freqres = freqmin*(2.^(1/option.res)-1);
         % Minimal frequency resolution should correspond to frequency range
         %   between the first two bins of the chromagram 
         
     x = mirspectrum(x,'dB',option.thr,'Min',freqmin,'Max',freqmax,...
-                      'NormalInput','MinRes',freqres*.5,...
-                      'WarningRes',freqres);
+                      'NormalInput','MinRes',option.res,'OctaveRatio',.75);
+                  %freqres*.5,...
+                  %    'WarningRes',freqres);
 end
 type = 'mirchromagram';
 

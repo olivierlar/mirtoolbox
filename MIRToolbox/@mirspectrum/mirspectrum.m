@@ -63,6 +63,14 @@ function varargout = mirspectrum(orig,varargin)
 %           order to reach the desired resolution.
 %           If the 'Mel' option is toggled on, 'MinRes' is set by default
 %               to 66 Hz.
+%       mirspectrum(...,'MinRes',mr,'OctaveRatio',tol): Indicates the
+%           minimal accepted resolution in terms of number of divisions of 
+%           the octave. Low  frequencies are ignored in order to reach the
+%           desired resolution.
+%               The corresponding required frequency resolution is equal to
+%               the difference between the first frequency bins, multiplied
+%               by the constraining multiplicative factor tol (set by
+%               default to .75).
 %       mirspectrum(...,'Res',r): Indicates the required precise frequency
 %           resolution, in Hz. The audio signal is zero-padded in order to
 %           reach the desired resolution.
@@ -124,6 +132,11 @@ function varargout = mirspectrum(orig,varargin)
         wr.type = 'Integer';
         wr.default = 0;
     option.wr = wr;
+    
+        octave.key = 'OctaveRatio';
+        octave.type = 'Boolean';
+        octave.default = 0;
+    option.octave = octave;
     
         constq.key = 'ConstantQ';
         constq.type = 'Integer';
@@ -424,7 +437,20 @@ else
                         option.mr = 66;
                     end
                 end
-                if isnan(option.length)
+                if option.octave
+                    N = size(dj,1);
+                    res = (2.^(1/option.mr)-1)*option.octave;
+                        % Minimal freq ratio between 2 first bins.
+                        % freq resolution should be > option.min * res
+                    if fsi/(option.min*res) > N
+                            % If corresponding required sample length is
+                            % not met
+                        option.min = fsi/N / res;
+                        warning('WARNING IN MIRSPECTRUM: The input signal is too short to obtain the desired octave resolution. Lowest frequencies need to be ignored.');
+                        display(['New low frequency range: ' num2str(option.min) ' Hz.']);
+                    end
+                    N = 2^nextpow2(N);
+                elseif isnan(option.length)
                     if isnan(option.res)
                         N = size(dj,1);
                         if option.mr && N < fsi/option.mr
