@@ -288,20 +288,32 @@ if not(isempty(postoption))
             for k = 1:length(d)
                 for z = 1:length(d{k})
                     d{k}{z} = rotatesim(d{k}{z},m.diagwidth);
+                    if option.K < m.diagwidth
+                        W = size(d{k}{z},1);
+                        hW = ceil(W/2);
+                        hK = ceil(option.K/2);
+                        d{k}{z} = d{k}{z}(hW-hK:hW+hK,:);
+                        m.diagwidth = option.K;
+                    end
                 end
             end
             m = set(m,'Data',d);
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
             W = ceil(m.diagwidth/2);
-            if isinf(W)
-                W = size(d{k}{z},1);
-            end
             for k = 1:length(d)
                 for z = 1:length(d{k})
-                    dz = NaN(W,size(d{k}{z}));
-                    for l = 1:W
+                    if isinf(W)
+                        dz = NaN(size(d{k}{z}));
+                    else
+                        dz = NaN(W,size(d{k}{z},2));
+                    end
+                    for l = 1:size(dz,1)
                         dz(l,l:end) = diag(d{k}{z},l-1)';
+                    end
+                    if option.K < m.diagwidth
+                        dz = dz(1:ceil(option.K/2),:);
+                        m.diagwidth = option.K;
                     end
                     d{k}{z}= dz;
                 end
