@@ -22,12 +22,14 @@ function varargout = mirsimatrix(orig,varargin)
 %                   corresponding to f(x)= exp(-x)
 %       mirsimatrix(...,'Width',w) or more simply dissimatrix(...,w) 
 %           specifies the size of the diagonal bandwidth, in samples,
-%           outside which the dissimilarity will not be computed. If w is
-%           even, the actual width is w-1 samples.
+%           outside which the dissimilarity will not be computed.
 %           if w = inf (default value), all the matrix will be computed.
 %       mirsimatrix(...,'Horizontal') rotates the matrix 45 degrees in order to
 %           make the first diagonal horizontal, and to restrict on the
-%           diagonal bandwith only.
+%           diagonal bandwidth only.
+%       mirsimatrix(...,'TimeLag') transforms the (non-rotated) matrix into
+%           a time-lag matrix, making the first diagonal horizontal as well
+%           (corresponding to the zero-lag line).
 %
 %       mirsimatrix(M,r) creates a mirsimatrix similarity matrix based on
 %           the Matlab square matrix M, of frame rate r (in Hz.)
@@ -138,7 +140,6 @@ else
     d = cell(1,length(v));
     for k = 1:length(v)
         vk = v{k};
-        hK = floor(option.K/2);
         if mirwaitbar
             handle = waitbar(0,'Computing dissimilarity matrix...');
         else
@@ -152,6 +153,7 @@ else
         if 0 %iscell(vk) %&& length(vk) > 1 %%% ATTENTION KL!!<<<<<<<<<<<<
             l = length(vk);
             dk = NaN(l,l);
+            hK = floor(option.K/2);
             for i = 1:l
                 if handle
                     waitbar(i/l,handle);
@@ -176,8 +178,12 @@ else
                 end
                 nd = size(vz,4);
                 if not(isempty(postoption)) && ...
-                    strcmpi(postoption.view,'Horizontal')
-                    dk{z} = NaN(ceil((option.K)/2)*2-1,l,nc);
+                    strcmpi(postoption.view,'TimeLag')
+                    lK = ceil(option.K/2);
+                    if isinf(lK)
+                        lK = l;
+                    end
+                    dk{z} = NaN(lK,l,nc);
                 else
                     dk{z} = NaN(l,l,nc);
                 end
@@ -232,17 +238,16 @@ else
                             end
                         end
                         if not(isempty(postoption)) && ...
-                                strcmpi(postoption.view,'Horizontal')
+                                strcmpi(postoption.view,'TimeLag')
+                            lK = ceil(option.K/2);
                             for i = 1:l
                                 if mirwaitbar && (mod(i,100) == 1 || i == l)
                                     waitbar(i/l,handle);
                                 end
-                                lK = ceil(option.K/2);
                                 ij = min(i+lK-1,l);
                                 dkij = disf(vv(:,i),vv(:,i:ij));
                                 for j = 1:ij-i+1
-                                    dk{z}(lK+j-1,i+j-1,g) = dkij(j);
-                                    dk{z}(lK-j+1,i+j-1,g) = dkij(j);
+                                    dk{z}(j,i+j-1,g) = dkij(j);
                                 end
                             end
                         else
@@ -267,8 +272,8 @@ else
     end
     m.diagwidth = option.K;
     if not(isinf(option.K)) && not(isempty(postoption)) && ...
-            strcmpi(postoption.view,'Horizontal')
-        m.view = 'h';
+            strcmpi(postoption.view,'TimeLag')
+        m.view = 'l';
     else
         m.view = 's';
     end
@@ -289,11 +294,12 @@ if not(isempty(postoption))
             m = set(m,'Data',d);
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
+            W = ceil(m.diagwidth/2);
             for k = 1:length(d)
                 for z = 1:length(d{k})
-                    dz = NaN(size(d{k}{z}));
-                    for l = 1:size(dk,1)
-                        dz(1:end-l+1,l) = diag(d{k}{z},l-1);
+                    dz = NaN(W,size(d{k}{z}));
+                    for l = 1:W
+                        dz(l,l:end) = diag(d{k}{z},l-1)';
                     end
                     d{k}{z}= dz;
                 end

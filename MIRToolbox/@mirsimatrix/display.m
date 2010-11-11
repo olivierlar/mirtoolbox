@@ -24,12 +24,12 @@ for i = 1:length(d)
         if size(fpi,1) == 2
             fpi = (fpi(1,:,:,:)+fpi(2,:,:,:))/2;
         end
-        if strcmp(m.view,'h')
-            h = imagesc(fpi,fpi-fpi(end)/2,d{i}(:,:,k));
+        if strcmp(m.view,'l')
+            h = imagesc(fpi,fpi(1:size(d{i},1))-fpi(1),d{i}(:,:,k));
         else
             h = imagesc(fpi,fpi,d{i}(:,:,k));
         end
-        if not(isempty(ap))
+        if not(isempty(ap)) && not(isempty(ap{i}))
             hold on
             for j = 1:length(ap{i}{1})
                 if not(isempty(ap{i}{1}{j}))
@@ -44,15 +44,13 @@ for i = 1:length(d)
             title(t)
         end
         if k == 1
-            if strcmp(m.view,'l')
-                xlabel('temporal lag (in s.)')
-            else
-                xlabel('temporal location of frame centers (in s.)')
-            end
+            xlabel('temporal location of frame centers (in s.)')
         end
         if k == ceil(l/2)
             if strcmp(m.view,'h')
                 ylabel('relative distance between compared frames (in s.)')
+            elseif strcmp(m.view,'l')
+                ylabel('temporal lag (in s.)')
             else
                 ylabel('temporal location of frame centers (in s.)')
             end

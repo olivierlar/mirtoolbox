@@ -77,7 +77,6 @@ if not(isa(orig,'mirscalar'))
         else
             cgs = dwk;
         end
-        hgs = floor(cgs/2);
         cg = checkergauss(cgs);
         disp('Computing convolution, please wait...')
         for z = 1:length(s{k})
@@ -93,7 +92,7 @@ if not(isa(orig,'mirscalar'))
                 warning('WARNING IN NOVELTY: No frame decomposition. The novelty score cannot be computed.');
                 score{k}{z} = [];
             else
-                sco = cv(ceil(nl/2),:);
+                sco = cv(floor(size(cv,1)/2),:);
                 incr = find(diff(sco)>=0);
                 if not(isempty(incr))
                     decr = find(diff(sco)<=0);
@@ -176,15 +175,14 @@ end
 
 function y = checkergauss(N)
 hN = ceil(N/2);
-y = zeros(N);
+y = zeros(hN,N);
 for j = 1:N
-    for i = 1:N
-        g = exp(-(((i-hN)/hN)^2 + (((j-hN)/hN)^2))*4);
-        if j>hN && xor(j>i,j>N-i)
-            y(i,j) = -g;
+    for i = 1:hN
+        g = exp(-((i/hN)^2 + (((j-hN)/hN)^2))*4);
+        if j>hN && j<hN+i
+            y(hN-i+1,j) = -g;
         else
-            y(i,j) = g;
+            y(hN-i+1,j) = g;
         end
     end
 end
-y(hN,hN) = 1;
