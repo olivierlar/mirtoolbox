@@ -295,6 +295,9 @@ if not(isempty(postoption))
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
             W = ceil(m.diagwidth/2);
+            if isinf(W)
+                W = size(d{k}{z},1);
+            end
             for k = 1:length(d)
                 for z = 1:length(d{k})
                     dz = NaN(W,size(d{k}{z}));
