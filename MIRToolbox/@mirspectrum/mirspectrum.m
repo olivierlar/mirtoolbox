@@ -442,11 +442,13 @@ else
                     res = (2.^(1/option.mr)-1)*option.octave;
                         % Minimal freq ratio between 2 first bins.
                         % freq resolution should be > option.min * res
-                    if fsi/(option.min*res) > N
-                            % If corresponding required sample length is
-                            % not met
+                    Nrec = fsi/(option.min*res);
+                        % Recommended minimal sample length.
+                    if Nrec > N
+                            % If actual sample length is too small.
                         option.min = fsi/N / res;
-                        warning('WARNING IN MIRSPECTRUM: The input signal is too short to obtain the desired octave resolution. Lowest frequencies need to be ignored.');
+                        warning('WARNING IN MIRSPECTRUM: The input signal is too short to obtain the desired octave resolution. Lowest frequencies will be ignored.');
+                        display(['(The recommended minimal input signal length would be ' num2str(Nrec/fsi) ' s.)']);
                         display(['New low frequency range: ' num2str(option.min) ' Hz.']);
                     end
                     N = 2^nextpow2(N);

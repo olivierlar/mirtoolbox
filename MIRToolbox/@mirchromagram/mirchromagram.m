@@ -123,7 +123,7 @@ if isamir(x,'mirtemporal') || isamir(x,'mirspectrum')
         %   between the first two bins of the chromagram 
         
     x = mirspectrum(x,'dB',option.thr,'Min',freqmin,'Max',freqmax,...
-                      'NormalInput','MinRes',option.res,'OctaveRatio',.75);
+                      'NormalInput','MinRes',option.res,'OctaveRatio',.85);
                   %freqres*.5,...
                   %    'WarningRes',freqres);
 end
