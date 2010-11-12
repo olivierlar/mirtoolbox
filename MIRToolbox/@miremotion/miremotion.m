@@ -155,7 +155,7 @@ sr = mirroughness(s);
 
 %ps = mirpitch(x,'Frame',.046,.5,'Tolonen');
 
-c = mirchromagram(x,'Frame',.046,.5,'Wrap',0,'Pitch',0);
+c = mirchromagram(x,'Frame','Wrap',0,'Pitch',0);    %%%%%%%%%%%%%%%%%%%% Previous frame size was too small.
 cp = mirpeaks(c,'Total',1);
 ps = 0;%cp;
 ks = mirkeystrength(c);
@@ -166,8 +166,8 @@ hc = mirhcdf(c);
 se = mirentropy(mirspectrum(x,'Collapsed','Min',40,'Smooth',70,'Frame',1.5,.5));
 
 ns = mirnovelty(mirspectrum(x,'Frame',.1,.5,'Max',5000),'Normal',0);
-nt = mirnovelty(mirchromagram(x,'Frame',.1,.5),'Normal',0);
-nr = mirnovelty(mirchromagram(x,'Frame',.1,.5,'Wrap',0),'Normal',0);
+nt = mirnovelty(mirchromagram(x,'Frame',.2,.25),'Normal',0);    %%%%%%%%%%%%%%%%%%%% Previous frame size was too small.
+nr = mirnovelty(mirchromagram(x,'Frame',.2,.25,'Wrap',0),'Normal',0);   %%%%%%%%%%%%%%%%%%%% Previous frame size was too small.
 
 
 
