@@ -17,6 +17,8 @@ function [a d] = mircluster(a,varargin)
 %           Default value: n = 2.
 %       mircluster(...,'Runs',r) indicates the maximal number of runs.
 %           Default value: r = 5.
+%
+%   Requires SOM Toolbox (included in the MIRtoolbox distribution).
 
 
         nruns.key = 'Runs';
