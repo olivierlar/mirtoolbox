@@ -295,8 +295,8 @@ elseif isa(x,'mirdata')
                     if iscell(dsm)
                         dsm = dsm{1};
                     end
-                    dsm(find(dsm <= dtk(1))) = [];
-                    dsm(find(dsm >= dtk(end))) = [];
+                    dsm(:,find(dsm(1,:) < dtk(1))) = [];
+                    dsm(:,find(dsm(2,:) > dtk(end))) = [];
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
@@ -304,7 +304,10 @@ elseif isa(x,'mirdata')
                     % Practically, the peak picking for instance is based 
                     % therefore on a frame analysis (such as novelty), and
                     % segmentation are inferred between these frames...
-                    fsk = [fsk dsm(:)'];
+                    if size(dsm,2) == 1
+                        dsm = dsm';
+                    end
+                    fsk = [fsk dsm];
                 end
             end
 
