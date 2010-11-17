@@ -6,9 +6,8 @@ n = get(m,'Name');
 fp = get(m,'FramePos');
 cha = get(m,'Channels');
 t = get(m,'Title');
-pp = get(m,'PeakPos');
-ap = get(m,'AttackPos');
-rp = get(m,'ReleasePos');
+tp = get(m,'TrackPos');
+tv = get(m,'TrackVal');
 for i = 1:length(d)
     if iscell(d{i})
         d{i} = d{i}{1};
@@ -29,13 +28,28 @@ for i = 1:length(d)
         else
             h = imagesc(fpi,fpi,d{i}(:,:,k));
         end
-        if not(isempty(ap)) && not(isempty(ap{i}))
+        if not(isempty(tp)) && not(isempty(tp{i}))
             hold on
-            for j = 1:length(ap{i}{1})
-                if not(isempty(ap{i}{1}{j}))
-                    plot([fpi(j);fpi(j)],fpi([ap{i}{1}{j};rp{i}{1}{j}]),'--k')
-                    plot(fpi(j),fpi(ap{i}{1}{j}),'dk')
-                    plot(fpi(j),fpi(rp{i}{1}{j}),'dk')
+            for k = 1:size(tp{i}{1}{1},1)
+                prej = 0;
+                for j = 1:size(tp{i}{1}{1},2)
+                    if tv{i}{1}{1}(k,j)
+                        if prej% && not(isempty(tp(k,j)))
+                            plot([fpi(prej) fpi(j)],...
+                                 [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
+                                  fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                 'k','LineWidth',1)
+                            plot([fpi(prej) fpi(j)],...
+                                 [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
+                                  fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                 'w+','MarkerSize',10)
+                            plot([fpi(prej) fpi(j)],...
+                                 [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
+                                  fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                 'kx','MarkerSize',10)
+                        end
+                        prej = j;
+                    end
                 end
             end
         end

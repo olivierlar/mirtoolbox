@@ -252,7 +252,7 @@ elseif isa(x,'mirsimatrix')
     for i = 1:length(t)
         for j = 1:length(t{i})
             t{i}{j} = repmat((t{i}{j}(1,:,:)+t{i}{j}(2,:,:))'/2,...
-                                    [1 size(d{i},2) 1]);
+                                    [1 size(d{i}{j},2) 1]);
         end
     end
 elseif isa(x,'mirhisto')
@@ -808,7 +808,7 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
-        if isa(x,'mirsimatrix')
+        if 0 %isa(x,'mirsimatrix')
            ax{i}{h} = cell(1,nc,np);
            rx{i}{h} = cell(1,nc,np);
            for l = 1:np
@@ -1040,7 +1040,7 @@ if option.delta
     end
 end
 if isa(x,'mirsimatrix')
-    p = set(p,'AttackPos',ax,'ReleasePos',rx);
+    p = set(p,'AttackPos',pp,'ReleasePos',pp);
 end
 
 
