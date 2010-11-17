@@ -146,7 +146,7 @@ fp = mirpeaks(fl,'Total',1);
 fc = 0; %mircentroid(fl);
 
 tp = 0; %mirtempo(x,'Frame',2,.5,'Autocor','Spectrum');
-pc = mirpulseclarity(x,'Frame',2,.5);
+pc = mirpulseclarity(x,'Frame',2,.5); %%%%%%%%%%% Why 'Frame'?? 
 
 s = mirspectrum(x,'Frame',.046,.5);
 sc = mircentroid(s);
@@ -163,7 +163,7 @@ ks = mirkeystrength(c);
 mo = mirmode(ks);
 hc = mirhcdf(c);
 
-se = mirentropy(mirspectrum(x,'Collapsed','Min',40,'Smooth',70,'Frame',1.5,.5));
+se = mirentropy(mirspectrum(x,'Collapsed','Min',40,'Smooth',70,'Frame',1.5,.5)); %%%%%%%%% Why 'Frame'?? 
 
 ns = mirnovelty(mirspectrum(x,'Frame',.1,.5,'Max',5000),'Normal',0);
 nt = mirnovelty(mirchromagram(x,'Frame',.2,.25),'Normal',0);    %%%%%%%%%%%%%%%%%%%% Previous frame size was too small.

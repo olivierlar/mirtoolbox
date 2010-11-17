@@ -27,6 +27,10 @@ end
 if isa(c,'mirscalar')
     m = cell(1,l);
 end
+if isa(c,'miremotion')
+    dd = cell(1,l);
+    cd = cell(1,l);
+end
 for i = 1:l
     argin = varargin{i};
     p{i} = getargin(argin,'Pos');
@@ -56,6 +60,10 @@ for i = 1:l
     if isa(c,'mirscalar')
         m{i} = getargin(argin,'Mode');
     end
+    if isa(c,'miremotion')
+        dd{i} = getargin(argin,'DimData');
+        cd{i} = getargin(argin,'ClassData');
+    end
 end
 c = set(c,'Pos',p,'Data',d,'FramePos',fp,'Channels',ch,...
           'Sampling',sr,'NBits',nb,'Name',n,'Label',la,...
@@ -69,6 +77,9 @@ if isa(c,'temporal')
 end
 if isa(c,'mirscalar')
     c = set(c,'Mode',m);
+end
+if isa(c,'miremotion')
+    c = set(c,'DimData',dd,'ClassData',cd);
 end
       
       
