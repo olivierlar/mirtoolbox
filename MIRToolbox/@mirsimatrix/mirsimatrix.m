@@ -211,7 +211,7 @@ else
                             end
                         end
                     end
-                    if isinf(option.K)  
+                    if isinf(option.K) && not(strcmpi(postoption.view,'TimeLag'))
                         try
                             manually = 0;
                             dk{z}(:,:,g) = squareform(pdist(vv',option.distance));
