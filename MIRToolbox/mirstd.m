@@ -1,5 +1,5 @@
 function varargout = mirstd(f,varargin)
-% m = mirstd(f) returns the std along frames of the feature f
+% m = mirstd(f) returns the standard deviation along frames of the feature f
 %
 %   f can be a structure array composed of features. In this case,
 %       m will be structured the same way.
