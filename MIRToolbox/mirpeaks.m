@@ -191,6 +191,11 @@ function varargout = mirpeaks(orig,varargin)
         delta.default = 0;
         delta.keydefault = Inf;
     option.delta = delta;
+    
+        mem.key = 'TrackMem';
+        mem.type = 'Integer';
+        mem.default = Inf;
+    option.mem = mem;
 
         shorttrackthresh.key = 'CollapseTracks';
         shorttrackthresh.type = 'Integer';
@@ -615,7 +620,12 @@ for i = 1:length(d) % For each audio file,...
                 for k = 1:nc-1
                     % For each successive frame...
                     
-                    if wait && not(mod(k,500))
+                    if not(isempty(grvy))
+                        old = find(grvy(:,2) == k-option.mem-1);
+                        grvy(old,:) = [];
+                    end
+                    
+                    if wait && not(mod(k,100))
                         waitbar(k/(nc-1),wait);
                     end
 
@@ -648,7 +658,7 @@ for i = 1:length(d) % For each audio file,...
                                         % partial becomes dead
                                     mxl(tr,k+1) = mxl(tr,k);
                                     myl(tr,k+1) = 0;
-                                    grvy = [grvy tr]; % added to the graveyard
+                                    grvy = [grvy; tr k]; % added to the graveyard
                                 else
                                     % closest w^{k+1} is tentatively selected:
                                         % candidate match
@@ -663,11 +673,13 @@ for i = 1:length(d) % For each audio file,...
                                         tr2(m) = tr;
                                         thk1(n) = -Inf; % selected w^k is eliminated from further consideration
                                         thk2(m) = Inf;  % selected w^{k+1} is eliminated as well
-                                        zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
-                                                    mxl(grvy,k) <= mxl(tr,k+1)) | ...
-                                                   (mxl(grvy,k) <= mxl(tr,k) & ...
-                                                    mxl(grvy,k) >= mxl(tr,k+1)));
-                                        grvy(zz) = [];
+                                        if not(isempty(grvy))
+                                            zz = find ((mxl(grvy(:,1),k) >= mxl(tr,k) & ...
+                                                        mxl(grvy(:,1),k) <= mxl(tr,k+1)) | ...
+                                                       (mxl(grvy(:,1),k) <= mxl(tr,k) & ...
+                                                        mxl(grvy(:,1),k) >= mxl(tr,k+1)));
+                                            grvy(zz,:) = [];
+                                        end
                                     else
                                         % let's look at adjacent lower w^{k+1}...
                                         [int mmm] = min(abs(thk2(1:m)-thk1(n)));
@@ -677,7 +689,7 @@ for i = 1:length(d) % For each audio file,...
                                                 % partial becomes dead
                                             mxl(tr,k+1) = mxl(tr,k);
                                             myl(tr,k+1) = 0;
-                                            grvy = [grvy tr]; % added to the graveyard
+                                            grvy = [grvy; tr k]; % added to the graveyard
                                         else
                                             % definite match
                                             mxl(tr,k+1) = mxk2(mmm)-1;
@@ -685,11 +697,13 @@ for i = 1:length(d) % For each audio file,...
                                             tr2(mmm) = tr;
                                             thk1(n) = -Inf;     % selected w^k is eliminated from further consideration
                                             thk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
-                                            zz = find ((mxl(grvy,k) >= mxl(tr,k) & ...
-                                                        mxl(grvy,k) <= mxl(tr,k+1)) | ...
-                                                       (mxl(grvy,k) <= mxl(tr,k) & ...
-                                                        mxl(grvy,k) >= mxl(tr,k+1)));
-                                            grvy(zz) = [];
+                                            if not(isempty(grvy))
+                                                zz = find ((mxl(grvy(:,1),k) >= mxl(tr,k) & ...
+                                                            mxl(grvy(:,1),k) <= mxl(tr,k+1)) | ...
+                                                           (mxl(grvy(:,1),k) <= mxl(tr,k) & ...
+                                                            mxl(grvy(:,1),k) >= mxl(tr,k+1)));
+                                                grvy(zz,:) = [];
+                                            end
                                         end
                                     end
                                 end
@@ -702,9 +716,13 @@ for i = 1:length(d) % For each audio file,...
                         if not(isinf(thk2(m)))
                             % unmatched w^{k+1}
                             
-                            % Let's try to reuse a zombie from the
-                            % graveyard (Lartillot).
-                            [int z] = min(abs(th(mxl(grvy,k+1)+1,k,l)-thk2(m)));
+                            if isempty(grvy)
+                                int = [];
+                            else
+                                % Let's try to reuse a zombie from the
+                                % graveyard (Lartillot).
+                                [int z] = min(abs(th(mxl(grvy(:,1),k+1)+1,k,l)-thk2(m)));
+                            end
                             if isempty(int) || int > option.delta ...
                                     || int > min(abs(th(mxl(:,k+1)+1,k,l)-thk2(m)))
                                 % No suitable zombie.
@@ -715,8 +733,8 @@ for i = 1:length(d) % For each audio file,...
                                 mxl(tr,k) = mxk2(m)-1;
                             else
                                 % Suitable zombie found. (Lartillot)
-                                tr = grvy(z);
-                                grvy(z) = [];
+                                tr = grvy(z,1);
+                                grvy(z,:) = [];
                             end
                             mxl(tr,k+1) = mxk2(m)-1;
                             myl(tr,k+1) = myk2(m);
