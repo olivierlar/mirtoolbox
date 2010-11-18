@@ -3,8 +3,12 @@ function c = mirclassify(a,da,t,dt,varargin)
 %       audio sequence(s) contained in the audio object test, along the
 %       analytic feature(s) features_test, following the supervised
 %       learning of a training set defined by the audio object train and
-%       the corresponding analytic feature(s) features_train. Multiple 
-%       analytic features have to be grouped into one array of cells.
+%       the corresponding analytic feature(s) features_train.
+%           * The analytic feature(s) features_test should *not* be frame 
+%               decomposed. Frame-decomposed data should first be 
+%               summarized, using for instance mirmean or mirstd.
+%           * Multiple analytic features have to be grouped into one array 
+%               of cells.
 %   Example:
 %       mirclassify(test, mfcc(test), train, mfcc(train))
 %       mirclassify(test, {mfcc(test), centroid(test)}, ...
@@ -163,7 +167,7 @@ end
 c = class(c,'mirclassify');
 
 
-function vt = integrate(vt,v,lvt,norml);
+function vt = integrate(vt,v,lvt,norml)
 vtl = [];
 for l = 1:lvt
     vl = v{l};
@@ -172,6 +176,9 @@ for l = 1:lvt
     end
     if iscell(vl)
         vl = vl{1};
+    end
+    if size(vl,2) > 1
+        mirerror('MIRCLASSIFY','The analytic features guiding the classification should not be frame-decomposed.');
     end
     vtl(:,l) = vl;
 end
