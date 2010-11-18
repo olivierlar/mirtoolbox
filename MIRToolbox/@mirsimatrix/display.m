@@ -8,6 +8,7 @@ cha = get(m,'Channels');
 t = get(m,'Title');
 tp = get(m,'TrackPos');
 tv = get(m,'TrackVal');
+pp = get(m,'PeakPos');
 for i = 1:length(d)
     if iscell(d{i})
         d{i} = d{i}{1};
@@ -50,6 +51,14 @@ for i = 1:length(d)
                         end
                         prej = j;
                     end
+                end
+            end
+        elseif not(isempty(pp)) && not(isempty(pp{i}))
+            hold on
+            for k = 1:length(pp{i}{1})
+                for j = 1:length(pp{i}{1}{k})
+                    plot(fpi(k),fpi(pp{i}{1}{k}(j)) - fpi(1), ...
+                                 'w+','MarkerSize',10)
                 end
             end
         end
