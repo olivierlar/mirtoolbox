@@ -136,6 +136,12 @@ function varargout = mirpeaks(orig,varargin)
         smthr.type = 'Integer';
         smthr.default = NaN;
     option.smthr = smthr;
+    
+        graph.key = 'Graph';
+        graph.type = 'Integer';
+        graph.default = 0;
+        graph.keydefault = .25;
+    option.graph = graph;
         
         interpol.key = 'Interpol';
         interpol.type = 'String';
@@ -808,6 +814,67 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
+        if isa(x,'mirsimatrix') && option.graph
+            g{i}{h} = cell(1,nc,np);
+            for l = 1:np
+                wait = waitbar(0,['Creating peaks graph...']);
+                for k = 1:nc
+                    g{i}{h}{1,k,l} = cell(size(mx{1,k,l}));
+                    if wait && not(mod(k,50))
+                        waitbar(k/(nc-1),wait);
+                    end
+                    mxk = mx{1,k,l};
+                    for j = max(1,k-100):k-1
+                        mxj = mx{1,j,l};
+                        for kk = 1:length(mxk)
+                            mxkk = mxk(kk);
+                            for jj = 1:length(mxj)
+                                mxjj = mxj(jj);
+                                if abs(mxkk-mxjj) <= k-j
+                                    dist = 0;
+                                    for m = j:k
+                                        mxm = mxjj + (mxkk-mxjj)*(m-j)/(k-j);
+                                        %if m>j
+                                        %    from = min(old,floor(mxm));
+                                        %    to = max(old,floor(mxm));
+                                        %    leap = from+1:to-1;
+                                        %    if not(isempty(leap))
+                                        %        zone = dh(leap,m-1:m,l);
+                                        %        dist = dist + ...
+                                        %            sum(max(1-zone,[],2));
+                                        %    end
+                                        %end
+                                        if mxm == floor(mxm)
+                                            dist = dist + 1-dh(mxm,m,l);
+                                        else
+                                            dhm0 = dh(floor(mxm),m,l);
+                                            dhm1 = dh(ceil(mxm),m,l);
+                                            dist = dist + 1-...
+                                                (dhm0 + ...
+                                                 (dhm1-dhm0)*(mxm-floor(mxm)));
+                                        end
+                                        if dist > option.graph
+                                            break
+                                        end
+                                        old = ceil(mxm);
+                                    end
+                                    if dist < option.graph
+                                        %disp([j,k,mxjj,mxkk,dist])
+                                        g{i}{h}{1,j,l}{jj} = [k kk;...
+                                                        g{i}{h}{1,j,l}{jj}];
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                if wait
+                    waitbar(1,wait);
+                    close(wait);
+                    drawnow
+                end
+            end
+        end
         for l = 1:np % Orders the peaks and select the best ones
             for k = 1:nc
                 mxk = mx{1,k,l};
@@ -825,76 +892,6 @@ for i = 1:length(d) % For each audio file,...
                     mx{1,k,l} = mxk(idx);
                 end
             end
-        end
-        if 0 %isa(x,'mirsimatrix')
-           ax{i}{h} = cell(1,nc,np);
-           rx{i}{h} = cell(1,nc,np);
-           for l = 1:np
-               for k = 1:nc
-                   for j = 1:length(mx{1,k,l})
-                       prio = dh(mx{1,k,l}(j)-1:-1:2,k,l);
-                       post = dh(mx{1,k,l}(j)+1:end-k,k,l);
-                       prio = find(prio < option.smthr | isnan(prio),1);
-                       if isempty(prio)
-                           ax{i}{h}{1,k,l}(end+1) = 1;
-                       else
-                           ax{i}{h}{1,k,l}(end+1) = mx{1,k,l}(j) - prio;
-                       end
-                       post = find(post < option.smthr | isnan(post),1);
-                       if isempty(post)
-                           rx{i}{h}{1,k,l}(end+1) = size(dh,1)-1-k;
-                       else
-                           rx{i}{h}{1,k,l}(end+1) = mx{1,k,l}(j) + post;
-                       end
-                       if j>1 && ...
-                               (ax{i}{h}{1,k,l}(end) == ax{i}{h}{1,k,l}(end-1))
-                           ax{i}{h}{1,k,l}(end) = [];
-                           rx{i}{h}{1,k,l}(end) = [];
-                       end
-                   end
-               end
-               erase_k = [];
-               erase_j = [];
-               for k = 1:nc-1
-                   j = 0;
-                   stop = 0;
-                   while j < length(ax{i}{h}{1,k,l})
-                       j = j+1;
-                       jj = 0;
-                       while jj < length(ax{i}{h}{1,k+1,l})
-                           jj = jj+1;
-                           if not(isempty(ax{i}{h}{1,k,l}(j)) || ...
-                                  isempty(ax{i}{h}{1,k+1,l}(jj)) || ...
-                                  isempty(intersect(ax{i}{h}{1,k,l}(j)-10:...
-                                                    rx{i}{h}{1,k,l}(j)+10,...
-                                                    ax{i}{h}{1,k+1,l}(jj)-10:...
-                                                    rx{i}{h}{1,k+1,l}(jj)+10)))
-                                if dh(mx{1,k,l}(j),k,l) > ...
-                                       dh(mx{1,k+1,l}(jj),k+1,l)
-                                    erase_k = [erase_k,k+1];
-                                    erase_j = [erase_j,jj];
-                                else
-                                    erase_k = [erase_k,k];
-                                    erase_j = [erase_j,j];
-                                end
-                                stop = 1;
-                           end
-                       end
-                   end
-               end
-               [erase_j ord] = sort(erase_j,'descend');
-               erase_k = erase_k(ord);
-               for k = 1:length(erase_k)
-                   if length(ax{i}{h}{1,erase_k(k),l}) >= erase_j(k)
-                       ax{i}{h}{1,erase_k(k),l}(erase_j(k)) = [];
-                       rx{i}{h}{1,erase_k(k),l}(erase_j(k)) = [];
-                       mx{1,erase_k(k),l}(erase_j(k)) = [];
-                   end
-               end
-               ax{i}{h}{1,1,l} = [];
-               rx{i}{h}{1,1,l} = [];
-               mx{1,1,l} = [];
-           end
         end
         if option.extract % Extracting the positive part of the curve containing the peaks
             if isa(x,'mirtemporal')
@@ -1057,8 +1054,8 @@ if option.delta
        p = set(p,'TrackPrecisePos',tpp,'TrackPreciseVal',tpv);
     end
 end
-if isa(x,'mirsimatrix')
-    p = set(p,'AttackPos',pp,'ReleasePos',pp);
+if isa(x,'mirsimatrix') && option.graph
+    p = set(p,'Graph',g);
 end
 
 
