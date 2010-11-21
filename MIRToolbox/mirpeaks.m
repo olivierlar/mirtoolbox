@@ -816,34 +816,29 @@ for i = 1:length(d) % For each audio file,...
         end
         if isa(x,'mirsimatrix') && option.graph
             g{i}{h} = cell(1,nc,np);
+            br{i}{h} = {};
+            scog{i}{h} = cell(1,nc,np);
+            scob{i}{h} = [];
             for l = 1:np
                 wait = waitbar(0,['Creating peaks graph...']);
                 for k = 1:nc
                     g{i}{h}{1,k,l} = cell(size(mx{1,k,l}));
+                    scog{i}{h}{1,k,l} = zeros(size(mx{1,k,l}));
                     if wait && not(mod(k,50))
                         waitbar(k/(nc-1),wait);
                     end
                     mxk = mx{1,k,l};
-                    for j = max(1,k-100):k-1
+                    for j = k-1:-1:max(1,k-100)
                         mxj = mx{1,j,l};
                         for kk = 1:length(mxk)
                             mxkk = mxk(kk);
                             for jj = 1:length(mxj)
                                 mxjj = mxj(jj);
-                                if abs(mxkk-mxjj) <= k-j
+                                sco = k-j - abs(mxkk-mxjj);
+                                if sco >= 0
                                     dist = 0;
                                     for m = j:k
                                         mxm = mxjj + (mxkk-mxjj)*(m-j)/(k-j);
-                                        %if m>j
-                                        %    from = min(old,floor(mxm));
-                                        %    to = max(old,floor(mxm));
-                                        %    leap = from+1:to-1;
-                                        %    if not(isempty(leap))
-                                        %        zone = dh(leap,m-1:m,l);
-                                        %        dist = dist + ...
-                                        %            sum(max(1-zone,[],2));
-                                        %    end
-                                        %end
                                         if mxm == floor(mxm)
                                             dist = dist + 1-dh(mxm,m,l);
                                         else
@@ -859,15 +854,49 @@ for i = 1:length(d) % For each audio file,...
                                         old = ceil(mxm);
                                     end
                                     if dist < option.graph
-                                        %disp([j,k,mxjj,mxkk,dist])
-                                        g{i}{h}{1,j,l}{jj} = [k kk;...
-                                                        g{i}{h}{1,j,l}{jj}];
+                                        gj = g{i}{h}{1,j,l}{jj};
+                                        gk = g{i}{h}{1,k,l}{kk};
+                                        if isempty(gk) || ...
+                                                sco > scog{i}{h}{1,k,l}(kk)
+                                            if isempty(gj)
+                                                % new branch starting
+                                                % from scratch
+                                                newsco = sco;
+                                                scob{i}{h}(end+1) = newsco;
+                                                bid = length(scob{i}{h});
+                                                g{i}{h}{1,j,l}{jj} = ...
+                                                    [k kk bid newsco];
+                                                br{i}{h}{bid} = [j jj;k kk];
+                                            elseif length(gj) == 1
+                                                % simple branch extension
+                                                bid = gj;
+                                                newsco = scog{i}{h}{1,j,l}(jj)+sco;
+                                                scob{i}{h}(bid) = newsco;
+                                                g{i}{h}{1,j,l}{jj} = ...
+                                                    [k kk bid newsco];
+                                                br{i}{h}{bid}(end+1,:) = [k kk];
+                                            else
+                                                % branching
+                                                newsco = scog{i}{h}{1,j,l}(jj)+sco;
+                                                scob{i}{h}(end+1) = newsco;
+                                                bid = length(scob{i}{h});
+                                                g{i}{h}{1,j,l}{jj} = ...
+                                                    [k kk bid newsco; gj];
+                                                other = br{i}{h}{gj(1,3)};
+                                                other(other(:,1)>j,:) = [];
+                                                br{i}{h}{bid} = [other;k kk];
+                                            end
+                                            g{i}{h}{1,k,l}{kk} = bid;
+                                            scog{i}{h}{1,k,l}(kk) = newsco;
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                 end
+                [scob{i}{h} IX] = sort(scob{i}{h},'descend');
+                br{i}{h} = br{i}{h}(IX);
                 if wait
                     waitbar(1,wait);
                     close(wait);
@@ -1055,7 +1084,7 @@ if option.delta
     end
 end
 if isa(x,'mirsimatrix') && option.graph
-    p = set(p,'Graph',g);
+    p = set(p,'Graph',g,'Branch',br);
 end
 
 

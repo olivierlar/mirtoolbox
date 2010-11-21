@@ -7,6 +7,8 @@ switch propName
         val = a.diagwidth;
     case 'Graph'
         val = a.graph;
+    case 'Branch'
+        val = a.branch;
     otherwise
         val = get(mirdata(a),propName);
 end

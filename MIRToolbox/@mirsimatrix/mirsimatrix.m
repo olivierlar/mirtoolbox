@@ -96,6 +96,7 @@ if isnumeric(x)
     m.view = 's';
     m.similarity = NaN;
     m.graph = {};
+    m.branch = {};
     m = class(m,'mirsimatrix',mirdata);
     m = set(m,'Title','Dissimilarity matrix');
     fp = repmat(((1:size(x,1))-.5)/option.rate,[2,1]);
@@ -279,6 +280,7 @@ else
     end
     m.similarity = 0;
     m.graph = {};
+    m.branch = {};
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix');
