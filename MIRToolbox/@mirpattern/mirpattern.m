@@ -21,25 +21,21 @@ type = 'mirpattern';
 
 function p = main(orig,option,postoption)
 if not(isamir(orig,'mirpattern'))
-    ap = get(orig,'AttackPos');
-    rp = get(orig,'ReleasePos');
+    b = get(orig,'Branch');
     fp = get(orig,'FramePos');
-    p.pattern = {};
-    for i = 1:length(ap)
-        for j = 1:size(ap{i}{1},2)
-            for k = 1:size(ap{i}{1},3)
-                for l = 1:length(ap{i}{1}{1,j,k})
-                    p.pattern{end+1}.occurrence{1}.start = ...
-                        fp{i}{1}(1,ap{i}{1}{1,j,k}(l));
-                    p.pattern{end}.occurrence{2}.start = ...
-                        fp{i}{1}(1,ap{i}{1}{1,j,k}(l)) + mean(fp{i}{1}(1:2,j));
-                    p.pattern{end}.occurrence{1}.end = ...
-                        fp{i}{1}(2,rp{i}{1}{1,j,k}(l));
-                    p.pattern{end}.occurrence{2}.end = ...
-                        fp{i}{1}(2,rp{i}{1}{1,j,k}(l)) + mean(fp{i}{1}(1:2,j));
-                end
-            end
-        end
+    pp = get(orig,'PeakPos');
+    for i = 1:length(b)
+        bi = b{i}{1}{1};
+        pi1 = sort(pp{i}{1}{bi(1,1)});
+        pi2 = sort(pp{i}{1}{bi(end,1)}); 
+        p.pattern{1}.occurrence{1}.start = ...
+            fp{i}{1}(1,bi(1,1)) - mean(fp{i}{1}(1:2,pi1(bi(1,2))));
+        p.pattern{end}.occurrence{2}.start = ...
+            fp{i}{1}(1,bi(1,1));
+        p.pattern{end}.occurrence{1}.end = ...
+            fp{i}{1}(1,bi(end,1)) - mean(fp{i}{1}(1:2,pi2(bi(end,2))));
+        p.pattern{end}.occurrence{2}.end = ...
+            fp{i}{1}(1,bi(end,1));
     end
     p = class(p,'mirpattern',mirdata(orig));
 end
