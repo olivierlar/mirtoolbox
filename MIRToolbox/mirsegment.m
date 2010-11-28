@@ -221,8 +221,8 @@ elseif isa(x,'mirdata')
                                   'Measure',option.measure,...
                                   'KernelSize',option.K);
             p = mirpeaks(n,'Total',option.tot,...
-                            'Contrast',option.cthr,...
-                            'Chrono','NoBegin','NoEnd');
+                           'Contrast',option.cthr,...
+                           'Chrono','NoBegin','NoEnd');
         elseif strcmpi(option.strat,'HCDF')
             if not(option.frame.length.val)
                 option.frame.length.val = .743;
@@ -296,7 +296,7 @@ elseif isa(x,'mirdata')
                         dsm = dsm{1};
                     end
                     dsm(:,find(dsm(1,:) < dtk(1))) = [];
-                    dsm(:,find(dsm(2,:) > dtk(end))) = [];
+                    dsm(:,find(dsm(end,:) > dtk(end))) = [];
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
