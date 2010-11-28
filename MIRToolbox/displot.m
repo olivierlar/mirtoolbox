@@ -222,7 +222,7 @@ else
     % 2-dimensional image
     displayseg = 0;
     if iscell(x) && ischar(x{1})
-        if size(y,4) > 1
+        if size(y,4) > 1 || size(y,1) > size(x,1)
             ticky = 0.5:23.5;
             tickylab = {'CM','C#M','DM','D#M','EM','FM','F#M',...
             'GM','G#M','AM','A#M','BM','Cm','C#m','Dm','D#m','Em',...
@@ -232,7 +232,7 @@ else
             tickylab = x;
             displayseg = 1;
         end
-        x = (1:size(x,1))';
+        x = (1:size(y,1))';
     elseif iscell(x) && iscell(x{1}) && ischar(x{1}{1})
         if size(y{1},4) > 1
             ticky = 0.5:23.5;
