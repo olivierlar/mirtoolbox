@@ -930,8 +930,33 @@ if isa(old,'miremotion')
     ceo = get(old,'ClassData');
     den = get(new,'DimData');
     cen = get(new,'ClassData');
+    afo = get(old,'ActivityFactors');
+    vfo = get(old,'ValenceFactors');
+    tfo = get(old,'TensionFactors');
+    hfo = get(old,'HappyFactors');
+    sfo = get(old,'SadFactors');
+    tdo = get(old,'TenderFactors');
+    ago = get(old,'AngerFactors');
+    ffo = get(old,'FearFactors');
+    afn = get(new,'ActivityFactors');
+    vfn = get(new,'ValenceFactors');
+    tfn = get(new,'TensionFactors');
+    hfn = get(new,'HappyFactors');
+    sfn = get(new,'SadFactors');
+    tdn = get(new,'TenderFactors');
+    agn = get(new,'AngerFactors');
+    ffn = get(new,'FearFactors');
     y = set(y,'DimData',{[deo{1},den{1}{1}]},...
-            'ClassData',{[ceo{1},cen{1}{1}]});
+            'ClassData',{[ceo{1},cen{1}{1}]},...
+            'ActivityFactors',{[afo{1},afn{1}{1}]},...
+            'ValenceFactors',{[vfo{1},vfn{1}{1}]},...
+            'TensionFactors',{[tfo{1},tfn{1}{1}]},...
+            'HappyFactors',{[hfo{1},hfn{1}{1}]},...
+            'SadFactors',{[sfo{1},sfn{1}{1}]},...
+            'TenderFactors',{[tdo{1},tdn{1}{1}]},...
+            'AngerFactors',{[ago{1},agn{1}{1}]},...
+            'FearFactors',{[ffo{1},ffn{1}{1}]}...
+        );
 end
  
 
