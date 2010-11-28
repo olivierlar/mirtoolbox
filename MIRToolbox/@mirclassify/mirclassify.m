@@ -9,6 +9,10 @@ function c = mirclassify(a,da,t,dt,varargin)
 %               summarized, using for instance mirmean or mirstd.
 %           * Multiple analytic features have to be grouped into one array 
 %               of cells.
+%       You can also integrate your own arrays of numbers computed outside
+%           MIRtoolbox as part of the features. These arrays should be 
+%           given as matrices where each successive column is the analysis 
+%           of each successive file.
 %   Example:
 %       mirclassify(test, mfcc(test), train, mfcc(train))
 %       mirclassify(test, {mfcc(test), centroid(test)}, ...
@@ -40,7 +44,15 @@ end
 lvt = length(get(t,'Data'));
 vt = [];
 for i = 1:length(dt)
-    vt = integrate(vt,get(dt{i},'Data'),lvt,norml);
+    if isnumeric(dt{i})
+        d = cell(1,size(dt{i},2));
+        for j = 1:size(dt{i},2)
+            d{j} = dt{i}(:,j);
+        end
+    else
+        d = get(dt{i},'Data');
+    end
+    vt = integrate(vt,d,lvt,norml);
     if isa(dt{i},'scalar')
         m = mode(dt{i});
         if not(isempty(m))
@@ -55,8 +67,16 @@ if not(iscell(da))
 end
 lva = length(get(a,'Data'));
 va = [];
-for i = 1:length(dt)
-    va = integrate(va,get(da{i},'Data'),lva,norml);
+for i = 1:length(da)
+    if isnumeric(da{i})
+        d = cell(1,size(da{i},2));
+        for j = 1:size(da{i},2)
+            d{j} = da{i}(:,j);
+        end
+    else
+        d = get(da{i},'Data');
+    end
+    va = integrate(va,d,lva,norml);
     if isa(da{i},'scalar')
         m = mode(da{i});
         if not(isempty(m))
