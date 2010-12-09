@@ -815,10 +815,16 @@ for i = 1:length(d) % For each audio file,...
             end
         end
         if isa(x,'mirsimatrix') && option.graph
+            % Finding the best branch inside a graph constructed out of a
+            % similarity matrix
             g{i}{h} = cell(1,nc,np);
+                % Branch info related to each peak
             br{i}{h} = {};
+                % Info related to each branch
             scog{i}{h} = cell(1,nc,np);
+                % Score related to each peak
             scob{i}{h} = [];
+                % Score related to each branch
             for l = 1:np
                 wait = waitbar(0,['Creating peaks graph...']);
                 for k = 1:nc
@@ -827,17 +833,25 @@ for i = 1:length(d) % For each audio file,...
                     if wait && not(mod(k,50))
                         waitbar(k/(nc-1),wait);
                     end
-                    mxk = mx{1,k,l};
-                    for j = k-1:-1:max(1,k-100)
-                        mxj = mx{1,j,l};
+                    mxk = mx{1,k,l}; % Peaks in current frame
+                    for j = k-1:-1:max(1,k-100) % Recent frames
+                        mxj = mx{1,j,l};        % Peaks in one recent frame
                         for kk = 1:length(mxk)
-                            mxkk = mxk(kk);
+                            mxkk = mxk(kk);     % For each of current peaks
                             for jj = 1:length(mxj)
-                                mxjj = mxj(jj);
+                                mxjj = mxj(jj); % For each of recent peaks
                                 sco = k-j - abs(mxkk-mxjj);
-                                if sco >= 0
+                                    % Crossprogression from recent to
+                                    % current peak
+                                if sco >= 0 
+                                        % Negative crossprogression excluded
                                     dist = 0;
+                                    % The distance between recent and
+                                    % current peak is the sum of all the
+                                    % simatrix values when joining the two
+                                    % peaks with a straight line.
                                     for m = j:k
+                                        % Each point in that straight line.
                                         mxm = mxjj + (mxkk-mxjj)*(m-j)/(k-j);
                                         if mxm == floor(mxm)
                                             dist = dist + 1-dh(mxm,m,l);
@@ -851,15 +865,23 @@ for i = 1:length(d) % For each audio file,...
                                         if dist > option.graph
                                             break
                                         end
-                                        old = ceil(mxm);
                                     end
                                     if dist < option.graph
+                                        % If the distance between recent
+                                        % and current peak is not too high,
+                                        % a new edge is formed between the
+                                        % peaks, and added to the graph.
                                         gj = g{i}{h}{1,j,l}{jj};
+                                            % Branch information associated
+                                            % with recent peak
                                         gk = g{i}{h}{1,k,l}{kk};
+                                            % Branch information associated
+                                            % with current peak
                                         if isempty(gk) || ...
                                                 sco > scog{i}{h}{1,k,l}(kk)
+                                            % Current peak branch to be updated
                                             if isempty(gj)
-                                                % new branch starting
+                                                % New branch starting
                                                 % from scratch
                                                 newsco = sco;
                                                 scob{i}{h}(end+1) = newsco;
@@ -867,26 +889,39 @@ for i = 1:length(d) % For each audio file,...
                                                 g{i}{h}{1,j,l}{jj} = ...
                                                     [k kk bid newsco];
                                                 br{i}{h}{bid} = [j jj;k kk];
-                                            elseif length(gj) == 1
-                                                % simple branch extension
-                                                bid = gj;
-                                                newsco = scog{i}{h}{1,j,l}(jj)+sco;
-                                                scob{i}{h}(bid) = newsco;
-                                                g{i}{h}{1,j,l}{jj} = ...
-                                                    [k kk bid newsco];
-                                                br{i}{h}{bid}(end+1,:) = [k kk];
                                             else
-                                                % branching
                                                 newsco = scog{i}{h}{1,j,l}(jj)+sco;
-                                                scob{i}{h}(end+1) = newsco;
-                                                bid = length(scob{i}{h});
-                                                g{i}{h}{1,j,l}{jj} = ...
-                                                    [k kk bid newsco; gj];
-                                                other = br{i}{h}{gj(1,3)};
-                                                other(other(:,1)>j,:) = [];
-                                                br{i}{h}{bid} = [other;k kk];
+                                                if length(gj) == 1
+                                                    % Recent peak not
+                                                    % associated with other
+                                                    % branch
+                                                    % -> Branch extension
+                                                    bid = gj;
+                                                    g{i}{h}{1,j,l}{jj} = ...
+                                                        [k kk bid newsco];
+                                                    br{i}{h}{bid}(end+1,:) = [k kk];
+                                                else
+                                                    % Recent peak already
+                                                    % associated with other
+                                                    % branch
+                                                    % -> Branch fusion
+                                                    bid = length(scob{i}{h})+1;
+                                                    g{i}{h}{1,j,l}{jj} = ...
+                                                        [k kk bid newsco; gj];
+                                                    other = br{i}{h}{gj(1,3)};
+                                                        % Other branch
+                                                        % info
+                                                        % Let's copy its
+                                                        % prefix to the new
+                                                        % branch:
+                                                    other(other(:,1)>j,:) = [];
+                                                    br{i}{h}{bid} = [other;k kk];
+                                                end
+                                                scob{i}{h}(bid) = newsco;
                                             end
                                             g{i}{h}{1,k,l}{kk} = bid;
+                                                % New peak associated with
+                                                % branch
                                             scog{i}{h}{1,k,l}(kk) = newsco;
                                         end
                                     end
@@ -896,6 +931,7 @@ for i = 1:length(d) % For each audio file,...
                     end
                 end
                 [scob{i}{h} IX] = sort(scob{i}{h},'descend');
+                    % Branch are ordered from best score to lowest
                 br{i}{h} = br{i}{h}(IX);
                 if wait
                     waitbar(1,wait);
