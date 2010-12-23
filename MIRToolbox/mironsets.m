@@ -299,8 +299,10 @@ function varargout = mironsets(x,varargin)
     option.attack = attack;
         
         release.key = {'Release','Releases'};
-        release.type = 'Boolean';
-        release.default = 0;
+        release.type = 'String';
+        release.choice = {'Olivier','Valeri',0,'no','off'};
+        release.default = '';
+        release.keydefault = 'Olivier';
         release.when = 'After';
     option.release = release;
 
@@ -529,8 +531,9 @@ if (isfield(postoption,'attack') && postoption.attack) || ...
     if postoption.attack
         [st p pm] = mircompute(@startattack,d,p,pm);
     end
-    if postoption.release
-        [rl p pm st] = mircompute(@endrelease,d,p,pm,st);
+    if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
+                                  && ~strcmpi(postoption.release,'Off')
+        [rl p pm st] = mircompute(@endrelease,d,p,pm,st,postoption.release);
         o = set(o,'ReleasePos',rl);
     end
     o = set(o,'AttackPos',st,'PeakPos',p,'PeakMode',pm);
@@ -578,7 +581,7 @@ end
 st = {{st} {z} {pm}};
 
 
-function rt = endrelease(d,z,pm,st)
+function rt = endrelease(d,z,pm,st,meth)
 z = sort(z{1});
 pm = pm{1};
 if not(isempty(st))
@@ -590,38 +593,50 @@ dd = diff(d,1,1);       % d'
 ddd = diff(dd,1,1);     % d''
 dddd = diff(ddd,1,1);   % d'''
 while i<=length(z)
-    % Release attack is identified to next (sufficiently positive) peak 
-    % in d''.
-    l = find(ddd((z(i)-1):end)<min(ddd)/100,1); 
-        % next d'' sufficiently negative
-    if isempty(l)
-        rt(i) = length(d);
-    else
-        p = find(ddd((z(i)-1)+(l-1)+1:end)>max(ddd)/100,1); % next increasing d''
-        if isempty(p)
+    if strcmpi(meth,'Olivier')
+        % Release attack is identified to next (sufficiently positive) peak 
+        % in d''.
+        l = find(ddd((z(i)-1):end)<min(ddd)/100,1); 
+            % next d'' sufficiently negative
+        if isempty(l)
             rt(i) = length(d);
         else
-            n = find(dddd((z(i)-1)+(l-1)+p+1:end)<0,1); % next decreasing d''
-            if isempty(n)
+            p = find(ddd((z(i)-1)+(l-1)+1:end)>max(ddd)/100,1); % next increasing d''
+            if isempty(p)
                 rt(i) = length(d);
             else
-                rt(i) = ((z(i)-1)+(l-1)+p+n)+1;
-            end
-            if i>1 && rt(i-1)==rt(i)
-                if d(z(i))>d(z(i-1))
-                    del = i-1;
+                n = find(dddd((z(i)-1)+(l-1)+p+1:end)<0,1); % next decreasing d''
+                if isempty(n)
+                    rt(i) = length(d);
                 else
-                    del = i;
+                    rt(i) = ((z(i)-1)+(l-1)+p+n)+1;
                 end
-                rt(del) = [];
-                z(del) = [];
-                pm(del) = [];
-                if not(isempty(st))
-                    st(del) = [];
-                end
-                i = i-1;
             end
         end
+    elseif strcmpi(meth,'Valeri')
+        p = find(dd((z(i)-1)+1:end)>min(dd)/100,1); % find point nearest to min(dd)/100 from current peak. 
+        if isempty(p)
+            rt(i) = length(d);
+        elseif p<=3                                 %that means if p is less than 3 points away from the peak then it can not be considered as the end point of release.
+                                                  %Assumption is that the whole DSR(decay sustain release) section can not be shorter than 30 ms (sampling rate is 100 Hz), also, no successive note can be nearer than 30ms.
+            rt(i) = z(i)+3;
+        else
+            rt(i) = (z(i)-1)+(p-1);
+        end
+    end
+    if i>1 && rt(i-1)==rt(i)
+        if d(z(i))>d(z(i-1))
+            del = i-1;
+        else
+            del = i;
+        end
+        rt(del) = [];
+        z(del) = [];
+        pm(del) = [];
+        if not(isempty(st))
+            st(del) = [];
+        end
+        i = i-1;
     end
     i = i+1;
 end

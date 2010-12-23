@@ -1,6 +1,7 @@
 function display(m)
 % MIRMIDI/DISPLAY display of MIDI representation
 
+figure
 disp(' ');
 d = get(m,'Data');
 n = get(m,'Name');

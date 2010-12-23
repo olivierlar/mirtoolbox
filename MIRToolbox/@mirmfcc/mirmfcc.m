@@ -15,7 +15,7 @@ function varargout = mirmfcc(orig,varargin)
 %           delta-delta-MFCC (for d = 2).
 %       mirmfcc(...,'Delta') corresponds to mirmfcc(...,'Delta',1)
 %   Optional arguments related to the delta computation:
-%       mirmfcc(...,'Radius') specifies, for each frame, the number of
+%       mirmfcc(...,'Radius',r) specifies, for each frame, the number of
 %           successive and previous neighbouring frames taken into
 %           consideration for the least-square approximation.
 %           Usually 1 or 2.
@@ -141,8 +141,8 @@ if option.delta
                 nc = size(d{h}{i},2)-2*M;
                 di = zeros(size(d{h}{i},1),nc);
                 for j = 1:M
-                    di = di + j * (d{h}{i}(:,M+1+j:nc+M+j) ...
-                                 - d{h}{i}(:,M+1-j:nc+M-j));
+                    di = di + j * (d{h}{i}(:,M+j+(1:nc)) ...
+                                 - d{h}{i}(:,M-j+(1:nc)));
                 end
                 di = di / 2 / sum((1:M).^2); % MULTIPLY BY 2 INSTEAD OF SQUARE FOR NORMALIZATION ?
                 d{h}{i} = di;

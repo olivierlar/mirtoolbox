@@ -13,6 +13,12 @@ option.thr = thr;
     mono.default = 1;
 option.mono = mono;
 
+    release.key = {'Release','Releases'};
+    release.type = 'String';
+    release.choice = {'Olivier','Valeri',0,'no','off'};
+    release.default = 'Valeri';
+option.release = release;
+
 specif.option = option;
 
 varargout = mirfunction(@mirmidi,orig,varargin,nargout,specif,@init,@main);
@@ -28,7 +34,7 @@ if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
     if isa(x,'mirdesign') && not(option.mono)
         x = set(x,'SeparateChannels',1);
     end
-    o = mironsets(x,'Attacks','Releases');
+    o = mironsets(x,'Attacks','Releases',option.release);
     x = {o x};
 end
 type = 'mirmidi';
