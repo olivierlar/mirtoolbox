@@ -187,6 +187,7 @@ type = {'miremotion','mirscalar','mirscalar',...
 %%
 function e = main(x,option,postoption)
 
+warning('WARNING IN MIRENOTION: The current model of miremotion is not correctly calibrated with this version of MIRtoolbox (but with version 1.3 only).');
 
 option = process(option);
 rm = get(x{1},'Data');
