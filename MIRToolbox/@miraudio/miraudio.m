@@ -3,8 +3,8 @@ function varargout = miraudio(orig,varargin)
 %       format) into a miraudio object.
 %   a = miraudio('Folder') loads all the sound files in the CURRENT folder
 %       into a miraudio object.
-%   a = miraudio(v,sr), where v is a vector, translates the vector v into a
-%       miraudio object. The sampling frequency is set to sr Hertz.
+%   a = miraudio(v,sr), where v is a column vector, translates the vector v
+%       into a miraudio object. The sampling frequency is set to sr Hertz.
 %           Default value for sr: 44100 Hz.
 %   a = miraudio(b, ...), where b is already a miraudio object, performs 
 %       operations on b specified by the optional arguments (see below).
@@ -51,6 +51,9 @@ function varargout = miraudio(orig,varargin)
 
 
 if isnumeric(orig)
+    if size(orig,2) > 1 || size(orig,3) > 1
+        mirerror('MIRAUDIO','Only column vectors can be imported into mirtoolbox.');
+    end
     if nargin == 1
         f = 44100;
     else
