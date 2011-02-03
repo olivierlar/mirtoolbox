@@ -67,13 +67,17 @@ else
             else
                 cha = [];
             end
-            flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i});
-            if flag
-                fig = get(0,'CurrentFigure');
-                disp(['Its content is displayed in Figure ',num2str(fig),'.']);
+            if nargin<3
+                flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
+                    cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i});
+                if flag
+                    fig = get(0,'CurrentFigure');
+                    disp(['Its content is displayed in Figure ',num2str(fig),'.']);
+                else
+                    disp('It does not contain any data.');
+                end
             else
-                disp('It does not contain any data.');
+                disp('To display its content in a figure, evaluate this variable directly in the Command Window.');
             end
         end
     end
