@@ -122,9 +122,11 @@ for i = 1:length(v)  % For each audio file
         else
             xlab = 'Temporal location of events (in s.)';
         end
-
+        
         varpeaks = 0; % Variable data size over frames?
-        if iscell(vi{1})
+        if ~isempty(mi)
+            varpeaks = 1;
+        elseif iscell(vi{1})
             for j = 1:length(vi)
                 for k = 1:l 
                     for h = 1:size(vi{j},2)
