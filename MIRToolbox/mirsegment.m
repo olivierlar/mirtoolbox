@@ -286,7 +286,7 @@ elseif isa(x,'mirdata')
                 for m = 1:length(dsj)
                     % segmentation times in mth bank channel
                     if isa(option.strat,'mirscalar')
-                        dsm = fp{k}{m}(1,dsj{m});
+                        dsm = mean(fp{k}{m}(:,dsj{m}));
                     elseif isa(option.strat,'mirdata')
                         dsm = xx{k}{m}(dsj{m});
                     else
