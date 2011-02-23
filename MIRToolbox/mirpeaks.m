@@ -51,6 +51,11 @@ function varargout = mirpeaks(orig,varargin)
 %               resolution, the highest of them is selected by default.
 %           mirpeaks(...,'Reso',r,'First') specifies on the contrary that
 %               the first of them is selected by default.
+%           When a peak p1 is too close to another higher peak p2, p1 is
+%               removed even if p2 is removed as well. If you want to
+%               filter out p1 only if p2 remains in the end, add the option
+%               'Loose'.
+%           mirpeaks(...,'Reso',r,'Loose') specifies instead that 
 %       mirpeaks(...,'Nearest',t,s): takes the peak nearest a given abscisse
 %           values t. The distance is computed either on a linear scale
 %           (s = 'Lin') or logarithmic scale (s = 'Log'). In this case,
@@ -159,6 +164,11 @@ function varargout = mirpeaks(orig,varargin)
         resofirst.type = 'Boolean';
         resofirst.default = 0;
     option.resofirst = resofirst;
+    
+        resoloose.key = 'Loose';
+        resoloose.type = 'Boolean';
+        resoloose.default = 0;
+    option.resoloose = resoloose;
         
         c.key = 'Pref';
         c.type = 'Integer';
@@ -564,23 +574,30 @@ for i = 1:length(d) % For each audio file,...
             end
             for l = 1:np
                 for k = 1:nc
-                    mxlk = sort(mx{1,k,l});
+                    [unused ind] = sort(dh(mx{1,k,l}),'descend');
+                    mxlk = mx{1,k,l}(ind);
+                    del = [];
                     j = 1;
-                    while j < length(mxlk)-1
-                        if compar(th(mxlk(j+1),k,l),th(mxlk(j),k,l),option.reso)
-                            decreas = option.resofirst || ...
-                                dh(mxlk(j+1),k,l)<dh(mxlk(j),k,l);
-                            mxlk(j + decreas) = [];
-                        else
-                            j = j+1;
+                    while j < length(mxlk)
+                        jj = j+1;
+                        while jj <= length(mxlk)
+                            if compar(th(mxlk(jj),k,l),th(mxlk(j),k,l),...
+                                    option.reso)
+                                if option.resoloose
+                                    mxlk(jj) = [];
+                                    jj = jj-1;
+                                elseif option.resofirst && mxlk(j)>mxlk(jj)
+                                    del = [del j];
+                                else
+                                    del = [del jj];
+                                end
+                            end
+                            jj = jj+1;
                         end
+                        j = j+1;
                     end
-                    if length(mxlk)>1 && compar(th(mxlk(end),k,l),...
-                                                 th(mxlk(end-1),k,l),...
-                                                 option.reso)
-                        decreas = not(option.resofirst) &&...
-                            dh(mxlk(end),k,l)>dh(mxlk(end-1),k,l);
-                        mxlk(end-decreas) = [];
+                    if ~option.resoloose
+                        mxlk(del) = [];
                     end
                     mx{1,k,l} = mxlk;
                 end
@@ -1125,8 +1142,8 @@ end
 
 
 function y = semitone_compar(p1,p2,thres)
-y = p1/p2 < 2^(1/12);
+y = max(p1,p2)/min(p1,p2) < 2^(1/12);
 
 
 function y = dist_compar(p1,p2,thres)
-y = p1-p2 < thres;
+y = abs(p1-p2) < thres;
