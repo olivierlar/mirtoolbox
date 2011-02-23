@@ -29,6 +29,10 @@ if ischar(sg)
     error('ERROR in MIREVAL: mirsegment of design object accepts only array of numbers as second argument.');
 end
 if not(isempty(sg))
+    if ~isnumeric(sg)
+        sg = sort(mirgetdata(sg));
+        sg = [0 sg';sg' len];
+    end
     over = find(sg(2,:) > len);
     if not(isempty(over))
         sg = sg(:,1:over-1);
@@ -68,14 +72,7 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
 elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % No frame or segment decomposition in the design to evaluate
     % (Or particular frame decomposition, where chunks are not distributed to children (frnochunk).)
-        
-    if not(isfield(specif,'eachchunk')) ...
-            || d.nochunk ...
-            || (not(isempty(single)) && isnumeric(single) && single > 1 ...
-                && isfield(specif,'combinechunk') ...
-                && iscell(specif.combinechunk))
-        chunks = [];
-    elseif not(isempty(sg))
+    if not(isempty(sg))
         meth = 'Segment ';
         if size(sg,1) == 1
             chunks = floor(sg(1:end-1)*sr)+1;
@@ -84,6 +81,12 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             chunks = floor(sg*sr);
             chunks(1,:) = chunks(1,:)+1;
         end
+    elseif not(isfield(specif,'eachchunk')) ...
+            || d.nochunk ...
+            || (not(isempty(single)) && isnumeric(single) && single > 1 ...
+                && isfield(specif,'combinechunk') ...
+                && iscell(specif.combinechunk))
+        chunks = [];
     else
         meth = 'Chunk ';
         if isempty(fr)
@@ -127,6 +130,9 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                         % afterpostoption will be used for the final call
                         % to the method after the chunk decomposition.
         method = d.method;
+        if ~isfield(specif,'eachchunk')
+            specif.eachchunk = 'Normal';
+        end
         if ischar(specif.eachchunk) && strcmpi(specif.eachchunk,'Normal')
             if not(isempty(d.postoption))
                 pof = fieldnames(d.postoption);
@@ -888,11 +894,13 @@ rpn = get(new,'ReleasePos');
 tpn = get(new,'TrackPos');
 tvn = get(new,'TrackVal');
 
+y = old;
+
 if not(isempty(do))
-    y = set(old,'Data',{{do{1}{:},dn{1}{:}}});
+    y = set(y,'Data',{{do{1}{:},dn{1}{:}}});
 end
 
-y = set(old,'FramePos',{{fpo{1}{:},fpn{1}{:}}}); 
+y = set(y,'FramePos',{{fpo{1}{:},fpn{1}{:}}}); 
         
 if not(isempty(to)) && size(do{1},2) == size(to{1},2)
     y = set(y,'Pos',{{to{1}{:},tn{1}{:}}}); 
