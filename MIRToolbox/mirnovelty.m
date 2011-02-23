@@ -16,6 +16,8 @@ function varargout = mirnovelty(orig,varargin)
 %           default value: s = 64.
 %       mirnovelty(...,'Normal',0) does not normalize the novelty curve
 %           between the values 0 and 1.
+%       mirnovelty(...,'Horizontal') uses the 'Horizontal' option in
+%           mirsimatrix instead of 'TimeLag' used here by default.
 %
 %   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
 % Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
