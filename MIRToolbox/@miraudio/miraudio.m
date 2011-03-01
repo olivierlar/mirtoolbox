@@ -71,6 +71,7 @@ if isnumeric(orig)
                     'Title','Audio signal',...
                     'PeakPos',{{{}}},'PeakVal',{{{}}},'PeakMode',{{{}}});
     aa.fresh = 1;
+    aa.extracted = 0;
     varargout = {class(aa,'miraudio',t)};
     return
 end
@@ -196,6 +197,7 @@ if ischar(orig)
                        'Channels',ch,'Centered',0,'NBits',b);
     t = set(t,'Title','Audio waveform');
     a.fresh = 1;
+    a.extracted = 1;
     a = class(a,'miraudio',t);
 else
     if not(isempty(option)) && not(isempty(option.extract))
@@ -208,6 +210,7 @@ else
         a = orig;
     else
         a.fresh = 1;
+        a.extracted = 0;
         a = class(a,'miraudio',orig);
     end
 end      
@@ -235,7 +238,8 @@ for h = 1:length(d)
     for k = 1:length(d{h})
         tk = t{h}{k};
         dk = d{h}{k};
-        if isfield(para,'extract') && not(isempty(para.extract))
+        if isfield(para,'extract') && not(isempty(para.extract)) ...
+                && ~a.extracted
             t1 = para.extract(1);
             t2 = para.extract(2);
             if para.extract(4)

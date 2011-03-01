@@ -74,7 +74,9 @@ while length(propertyArgIn) >= 2,
        case 'TmpFile'
            a.tmpfile = val;
        case 'Index'
-           a.index = val;
+           a.index = val;  
+       case 'Extracted'
+           a.extracted = val;
        otherwise
            error(['Unknown MIRdata property: ' prop])
    end

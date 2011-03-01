@@ -62,6 +62,7 @@ if ischar(a)
         y = miraudio(y,'Mono',1);
     end
     y = set(y,'AcrossChunks',get(d,'AcrossChunks'));
+    y = set(y,'Extracted',1);
     d2 = d;
     
 elseif d.chunkdecomposed && isempty(d.tmpfile)
