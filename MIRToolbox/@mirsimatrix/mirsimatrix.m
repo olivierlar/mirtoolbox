@@ -126,31 +126,27 @@ if isa(orig,'mirsimatrix')
         if iscell(option) && isfield(option,'K') && option.K < orig.diagwidth
             nl = size(d{k},1);
             if strcmp(orig.view,'h')
-                dl = (nl - option.K)/2;
-                dk = d{k}(ceil(dl):nl-floor(dl),:);
+                dl = floor((nl - option.K)/2);
+                dk = d{k}(dl:nl-dl,:);
             else
-                [spA,spd] = spdiags(d{k},-ceil(option.K/2):ceil(option.K/2));
+                [spA,spd] = spdiags(d{k},-floor(option.K/2):floor(option.K/2));
                 dk = full(spdiags(spA,spd,nl,size(d{k},2)));
             end
             d{k} = dk;
-            orig.diagwidth = option.K;
+            orig.diagwidth = 2*floor(option.K/2)+1;
         end
     end
     m = set(orig,'Data',d);
 else
     v = get(orig,'Data');
     d = cell(1,length(v));
+    lK = 2*floor(option.K/2)+1;
     for k = 1:length(v)
         vk = v{k};
         if mirwaitbar
             handle = waitbar(0,'Computing dissimilarity matrix...');
         else
             handle = 0;
-        end
-        if 0 %iscell(vk)
-            try
-                vk = cell2mat(vk);
-            end
         end
         if 0 %iscell(vk) %&& length(vk) > 1 %%% ATTENTION KL!!<<<<<<<<<<<<
             l = length(vk);
@@ -181,7 +177,6 @@ else
                 nd = size(vz,4);
                 if not(isempty(postoption)) && ...
                     strcmpi(postoption.view,'TimeLag')
-                    lK = ceil(option.K/2);
                     if isinf(lK)
                         lK = l;
                     end
@@ -217,16 +212,7 @@ else
                         try
                             manually = 0;
                             dk{z}(:,:,g) = squareform(pdist(vv',option.distance));
-                            if option.K < Inf
-                                [spA,spd] = spdiags(dk{z},...
-                                    -ceil(option.K/2):ceil(option.K/2));
-                                dk{z}(:,:,g) = full(spdiags(spA,spd,size(dk,1),size(dk{z},2)));
-                            end
                         catch
-                            %err = lasterror;
-                            %warning(err.message)
-                            %disp('Statistics Toolbox does not seem to be
-                            %installed. Recompute the distance matrix manually.');
                             manually = 1;
                         end
                     else
@@ -241,15 +227,20 @@ else
                         end
                         if not(isempty(postoption)) && ...
                                 strcmpi(postoption.view,'TimeLag')
-                            lK = ceil(option.K/2);
+                            hK = ceil(lK/2);
                             for i = 1:l
                                 if mirwaitbar && (mod(i,100) == 1 || i == l)
                                     waitbar(i/l,handle);
                                 end
                                 ij = min(i+lK-1,l);
                                 dkij = disf(vv(:,i),vv(:,i:ij));
-                                for j = 1:ij-i+1
-                                    dk{z}(j,i+j-1,g) = dkij(j);
+                                for j = 0:ij-i
+                                    if hK-j>0
+                                        dk{z}(hK-j,i,g) = dkij(j+1);   
+                                    end
+                                    if hK+j<=lK
+                                        dk{z}(hK+j,i+j,g) = dkij(j+1);
+                                    end
                                 end
                             end
                         else
@@ -257,7 +248,7 @@ else
                                 if mirwaitbar && (mod(i,100) == 1 || i == l)
                                     waitbar(i/l,handle);
                                 end
-                                j = min(i+option.K-1,l);
+                                j = min(i+lK-1,l);
                                 dkij = disf(vv(:,i),vv(:,i:j));
                                 dk{z}(i,i:j,g) = dkij;
                                 dk{z}(i:j,i,g) = dkij';
@@ -272,7 +263,7 @@ else
             delete(handle)
         end
     end
-    m.diagwidth = option.K;
+    m.diagwidth = lK;
     if not(isempty(postoption)) && strcmpi(postoption.view,'TimeLag')
         m.view = 'l';
     else
@@ -286,25 +277,26 @@ else
     m = set(m,'Title','Dissimilarity matrix');
     m = set(m,'Data',d,'Pos',[]);
 end
+lk = option.K;
 if not(isempty(postoption))
     if strcmpi(m.view,'s')
         if strcmpi(postoption.view,'Horizontal')
             for k = 1:length(d)
                 for z = 1:length(d{k})
                     d{k}{z} = rotatesim(d{k}{z},m.diagwidth);
-                    if option.K < m.diagwidth
+                    if lK < m.diagwidth
                         W = size(d{k}{z},1);
                         hW = ceil(W/2);
-                        hK = ceil(option.K/2);
+                        hK = floor(lK/2);
                         d{k}{z} = d{k}{z}(hW-hK:hW+hK,:);
-                        m.diagwidth = option.K;
+                        m.diagwidth = lK;
                     end
                 end
             end
             m = set(m,'Data',d);
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
-            W = ceil(m.diagwidth/2);
+            W = m.diagwidth;
             for k = 1:length(d)
                 for z = 1:length(d{k})
                     if isinf(W)
@@ -315,9 +307,12 @@ if not(isempty(postoption))
                     for l = 1:size(dz,1)
                         dz(l,l:end) = diag(d{k}{z},l-1)';
                     end
-                    if option.K < m.diagwidth
-                        dz = dz(1:ceil(option.K/2),:);
-                        m.diagwidth = option.K;
+                    if lK < m.diagwidth
+                        W = size(dz,1);
+                        hW = ceil(W/2);
+                        hK = floor(lK/2);
+                        dz = dz(hW-hK:hW+hK,:);
+                        m.diagwidth = lK;
                     end
                     d{k}{z}= dz;
                 end
@@ -367,12 +362,12 @@ function S = rotatesim(d,K)
 if length(d) == 1;
     S = d;
 else
-    K = min(K,size(d,1)*2);
+    K = min(K,size(d,1)*2+1);
     lK = floor(K/2);
     S = NaN(K,size(d,2),size(d,3));
     for k = 1:size(d,3)
         for j = -lK:lK
-            S(lK+1+j,:,k) = [NaN(1,floor(abs(j)/2)) diag(d(:,:,k),j)' ...
+            S(lK+j+1,:,k) = [NaN(1,floor(abs(j)/2)) diag(d(:,:,k),j)' ...
                                                     NaN(1,ceil(abs(j)/2))];
         end
     end

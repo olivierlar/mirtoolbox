@@ -88,10 +88,11 @@ if not(isa(orig,'mirscalar'))
         disp('Computing convolution, please wait...')
         for z = 1:length(s{k})
             sz = s{k}{z};
-            szm = max(max(sz));
-            for i = find(isnan(sz))
-                sz(i) = szm;
-            end
+            szma = max(max(sz));
+            szmi = min(min(sz));
+            sz = (sz-szmi)/(szma-szmi);
+            sz = 2*sz-1;
+            sz(isnan(sz)) = 0;
             cv = convolve2(sz,cg,'same');
             nl = size(cv,1);
             nc = size(cv,2);
@@ -184,14 +185,16 @@ end
 function y = checkergauss(N,transf)
 hN = ceil(N/2);
 if strcmpi(transf,'TimeLag')
-    y = zeros(hN,N);
+    y = zeros(2*N,N);
     for j = 1:N
-        for i = 1:hN
-            g = exp(-((i/hN)^2 + (((j-hN)/hN)^2))*4);
-            if j>hN && j<hN+i
-                y(hN-i+1,j) = -g;
+        for i = 1:2*N+1
+            g = exp(-((((i-N)-(j-hN))/hN)^2 + (((j-hN)/hN)^2))*4);
+            if xor(j>hN,j-hN>i-N)
+                y(i,j) = -g;
+            elseif j>hN+i || j-hN<i-2*N
+                y(i,j) = 0;
             else
-                y(hN-i+1,j) = g;
+                y(i,j) = g;
             end
         end
     end
@@ -200,7 +203,7 @@ else
     for i = 1:N
         for j = 1:N
             g = exp(-(((i-hN)/hN)^2 + (((j-hN)/hN)^2))*4);
-            if xor(j>i,j>N-i)
+            if xor(j-hN>floor((i-hN)/2),j-hN>floor((hN-i)/2))
                 y(i,j) = -g;
             else
                 y(i,j) = g;
