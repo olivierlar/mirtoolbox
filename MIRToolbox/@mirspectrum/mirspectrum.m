@@ -887,7 +887,7 @@ end
 if option.aver
     for k = 1:length(m)
         for i = 1:length(m{k})
-            m{k}{i} = filter(ones(1,option.aver),1,m{k}{i});
+            m{k}{i} = filter(ones(1,option.aver)/option.aver,1,m{k}{i});
         end
     end
 end
