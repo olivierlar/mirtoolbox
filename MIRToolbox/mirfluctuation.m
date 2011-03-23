@@ -39,8 +39,13 @@ f = mirspectrum(m,'AlongBands','Max',10,'Window',0,...
 if option.sum
     f = mirsummary(f);
 end
-type = 'mirspectrum';
+f = {f,mirlength(x,'Global')};
+type = {'mirspectrum','mirscalar'};
 
 
-function f = main(f,option,postoption)
-f = set(f,'Title','Fluctuation');
+function f = main(x,option,postoption)
+f = set(x{1},'Data',mircompute(@normalize,x{1},x{2}),'Title','Fluctuation');
+
+
+function f = normalize(f,l)
+f = f/l;
