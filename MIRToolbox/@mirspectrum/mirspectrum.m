@@ -851,11 +851,6 @@ if option.collapsed
 end
 if option.log || option.db
     if not(isa(s,'mirspectrum') && s.log)
-        if option.db
-            s = set(s,'log',10);
-        else
-            s = set(s,'log',1);
-        end
         for k = 1:length(m)
             if not(iscell(m{k}))
                 m{k} = {m{k}};
@@ -865,15 +860,27 @@ if option.log || option.db
                 m{k}{l} = log10(m{k}{l}+1e-16);
                 if option.db
                     m{k}{l} = 10*m{k}{l};
+                    if get(s,'Power') == 1
+                        m{k}{l} = m{k}{l}*2;
+                    end
                 end
             end
         end
-    elseif isa(s,'mirspectrum') && s.log<10
+    elseif isa(s,'mirspectrum') && option.db && s.log<10
         for k = 1:length(m)
             for l = 1:length(m{k})
                 m{k}{l} = 10*m{k}{l};
+                if get(s,'Power') == 1
+                    m{k}{l} = m{k}{l}*2;
+                end
             end
         end
+    end
+    if option.db
+        s = set(s,'log',10);
+        s = set(s,'Power',2);
+    else
+        s = set(s,'log',1);
     end
     if option.db>0 && option.db < Inf
         for k = 1:length(m)
