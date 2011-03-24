@@ -537,7 +537,7 @@ if get(s,'Power') == 1 && ...
             m{h}{l} = m{h}{l}.^2;
         end
     end
-    s = set(s,'Power',2,'Title',['Power ',get(s,'Title')]);
+    s = set(s,'Power',2,'Title',['Power ',get(s,'Title')],'Phase',[]);
 end
 if any(option.mprod)
     for h = 1:length(m)
@@ -738,7 +738,8 @@ if strcmp(s.xscale,'Freq')
             nch{h} = (1:totalFilters)';
         end
         m = e;
-        s = set(s,'XScale','Mel','Title','Mel-Spectrum','Abs','Mel bands','Channels',nch);
+        s = set(s,'XScale','Mel','Title','Mel-Spectrum',...
+                  'Abs','Mel bands','Channels',nch,'Phase',[]);
     elseif strcmpi(option.band,'Bark')
         sr = get(s,'Sampling');
         % Code taken from Pampalk's MA Toolbox.
@@ -765,7 +766,8 @@ if strcmp(s.xscale,'Freq')
             nch{h} = (1:length(bark_upper))';
            end
         m = e;
-        s = set(s,'XScale','Bark','Title','Bark-Spectrum','Abs','Bark bands','Channels',nch);
+        s = set(s,'XScale','Bark','Title','Bark-Spectrum',...
+                  'Abs','Bark bands','Channels',nch,'Phase',[]);
     elseif strcmpi(option.band,'Cents') || option.collapsed
         for h = 1:length(m)
             for i = 1:length(m{h})
@@ -805,7 +807,7 @@ if strcmp(s.xscale,'Freq')
                     % Now the cent range is expressed in midicent
             end
         end
-        s = set(s,'Abs','pitch (in midicents)','XScale','Cents');
+        s = set(s,'Abs','pitch (in midicents)','XScale','Cents','Phase',[]);
     end
 end
 if option.mask
@@ -890,6 +892,7 @@ if option.log || option.db
             end
         end
     end
+    s = set(s,'Phase',[]);
 end
 if option.aver
     for k = 1:length(m)
@@ -897,6 +900,7 @@ if option.aver
             m{k}{i} = filter(ones(1,option.aver)/option.aver,1,m{k}{i});
         end
     end
+    s = set(s,'Phase',[]);
 end
 if option.gauss
     for k = 1:length(m)
@@ -909,6 +913,7 @@ if option.gauss
             m{k}{i} = y(1:size(m{k}{i},1),:,:);
         end
     end
+    s = set(s,'Phase',[]);
 end
 s = set(s,'Magnitude',m,'Frequency',f);
 
