@@ -44,8 +44,10 @@ type = {'mirspectrum','mirscalar'};
 
 
 function f = main(x,option,postoption)
-f = set(x{1},'Data',mircompute(@normalize,x{1},x{2}),'Title','Fluctuation');
+d1 = get(x{1},'Data');
+d2 = get(x{2},'Data');
+f = set(x{1},'Data',mircompute(@normalize,d1,d2),'Title','Fluctuation');
 
 
 function f = normalize(f,l)
-f = f/l;
+%f = f/l;

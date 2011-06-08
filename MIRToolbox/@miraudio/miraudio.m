@@ -287,7 +287,9 @@ for h = 1:length(d)
             else
                 ee = sqrt(sum(ac.sqrsum.^2)/ac.samples);
             end
-            dk = dk./repmat(ee,[nl,1,nc]);
+            if ee
+                dk = dk./repmat(ee,[nl,1,nc]);
+            end
         end
         if isfield(para,'trim') && not(isequal(para.trim,0)) ...
                 && not(strcmpi(para.trim,'NoTrim'))

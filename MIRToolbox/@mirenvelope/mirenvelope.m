@@ -347,10 +347,14 @@ elseif strcmpi(option.method,'Spectro')
         for i = 1:length(d{h})
             if size(d{h}{i},3)>1 % Already in bands (channels in 3d dim)
                 d{h}{i} = permute(sum(d{h}{i}),[2 1 3]);
-                ph{h}{i} = permute(ph{h}{i},[2 1 3]);
+                if ~isempty(ph)
+                    ph{h}{i} = permute(ph{h}{i},[2 1 3]);
+                end
             else % Simple spectrogram, frequency range sent to 3d dim
                 d{h}{i} = permute(d{h}{i},[2 3 1]);
-                ph{h}{i} = permute(ph{h}{i},[2 3 1]);
+                if ~isempty(ph)
+                    ph{h}{i} = permute(ph{h}{i},[2 3 1]);
+                end
             end
             p{h}{i} = mean(fp{h}{i})';
             if not(sr{h}) && size(fp{h}{i},2)>1
