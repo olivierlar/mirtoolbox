@@ -373,7 +373,7 @@ if isfield(para,'label')
             idx = length(para.label);
         end
         a = set(a,'Label',para.label{idx});
-    elseif ischar(para.label)
+    elseif ischar(para.label) && ~isempty(para.label)
         l = cell(1,length(d));
         for k = 1:length(d)
             l{k} = para.label;
