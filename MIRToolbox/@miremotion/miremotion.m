@@ -37,7 +37,7 @@ function varargout = miremotion(orig,varargin)
         frame.type = 'Integer';
         frame.number = 2;
         frame.default = [0 0];
-        frame.keydefault = [1 1];
+        frame.keydefault = [2 .5];
     option.frame = frame;
 
         dim.key = 'Dimensions';
@@ -97,7 +97,7 @@ function varargout = miremotion(orig,varargin)
     option.fear = fear;
     
 specif.option = option;
-specif.defaultframelength = 1;
+specif.defaultframelength = 2;
 %specif.defaultframehop = .5;
 
 specif.combinechunk = {'Average',@nothing};
