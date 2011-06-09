@@ -277,7 +277,7 @@ else
     m = set(m,'Title','Dissimilarity matrix');
     m = set(m,'Data',d,'Pos',[]);
 end
-lk = option.K;
+lK = option.K;
 if not(isempty(postoption))
     if strcmpi(m.view,'s')
         if strcmpi(postoption.view,'Horizontal')
