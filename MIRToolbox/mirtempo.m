@@ -141,7 +141,7 @@ function varargout = mirtempo(x,varargin)
         option.lambda = lambda;
 
             mu.key = 'Mu'; 
-            mu.type = 'Boolean'; 
+            mu.type = 'Integer'; 
             mu.default = 0; 
 	        option.mu = mu; 
         
