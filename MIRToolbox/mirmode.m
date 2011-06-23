@@ -40,7 +40,7 @@ o = {b,s};
 
 
 function v = algosum(m)
-v = sum(abs(m(:,:,:,1))) - sum(abs(m(:,:,:,2)));
+v = sum(abs(m(:,:,:,1) - m(:,:,:,2)));
 
 
 function v = algobest(m)
