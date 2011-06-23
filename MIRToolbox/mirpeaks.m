@@ -10,9 +10,10 @@ function varargout = mirpeaks(orig,varargin)
 %                   (Default choice.)
 %               'Abscissa': orders the peaks along the abscissa axis.
 %       mirpeaks(...,'Contrast',cthr): a threshold value. A given local
-%           maximum will be considered as a peak if its distance with the
-%           previous and successive local minima (if any) is higher than 
-%           this threshold. This distance is expressed with respect to the
+%           maximum will be considered as a peak if the difference of 
+%           amplitude with respect to both the previous and successive 
+%           local minima (when they exist) is higher than the threshold 
+%           cthr. This distance is expressed with respect to the
 %           total amplitude of x: a distance of 1, for instance, is
 %           equivalent to the distance between the maximum and the minimum
 %           of x.
@@ -40,8 +41,8 @@ function varargout = mirpeaks(orig,varargin)
 %               '', 'no', 'off', 0: no interpolation
 %               'Quadratic': quadratic interpolation. (default value).
 %       mirpeaks(...,'Valleys'): detect valleys instead of peaks.
-%       mirpeaks(...,'Reso',r): removes peaks whose distance to one or
-%           several higher peaks is lower than a given threshold.
+%       mirpeaks(...,'Reso',r): removes peaks whose abscissa distance to 
+%           one or several higher peaks is lower than a given threshold.
 %           Possible value for the threshold r:
 %               'SemiTone': ratio between the two peak positions equal to
 %                   2^(1/12)
