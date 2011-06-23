@@ -17,9 +17,6 @@ function v = mireval(d,file,single,export)
 %   The evaluation starts with a top-down traversal of the design flowchart
 %       (evaleach).
 
-%if not(isa(d,'mirdesign'))
-%    error('ERROR IN MIREVAL: the first input should be a flowchart (using ''Design'')')
-%end
 if not(ischar(file))
     error('ERROR IN MIREVAL: the second input should be a file name or ''Folder''')
 end
@@ -193,11 +190,7 @@ else
     end
 end
 
-%if isempty(export)
-    v = combineaudiofile(a,isstat,y{:});
-%else
-%    v = [];
-%end
+v = combineaudiofile(a,isstat,y{:});
     
 
 function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name,ch)
@@ -256,26 +249,24 @@ elseif iscell(d)
     end
 elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
     mirerror('MIRSTRUCT','You should always use tmp fields when using mirstruct. Else, just use struct.');
-else
-    if get(d,'SeparateChannels')
-        v = cell(1,ch);
-        for i = 1:ch
-            d = set(d,'File',file,'Sampling',sampling,'Size',size,...
-                      'Eval',1,'Index',index,'Struct',struc,'Channel',i);
-            % For that particular file or this particular feature, let's begin the
-            % actual evaluation process.
-            v{i} = evaleach(d,single,name);    
-            % evaleach performs a top-down traversal of the design flowchart.
-        end
-        v = combinechannels(v);
-    else
+elseif get(d,'SeparateChannels')
+    v = cell(1,ch);
+    for i = 1:ch
         d = set(d,'File',file,'Sampling',sampling,'Size',size,...
-                  'Eval',1,'Index',index,'Struct',struc);
+                  'Eval',1,'Index',index,'Struct',struc,'Channel',i);
         % For that particular file or this particular feature, let's begin the
         % actual evaluation process.
-        v = evaleach(d,single,name);    
+        v{i} = evaleach(d,single,name);    
         % evaleach performs a top-down traversal of the design flowchart.
     end
+    v = combinechannels(v);
+else
+    d = set(d,'File',file,'Sampling',sampling,'Size',size,...
+              'Eval',1,'Index',index,'Struct',struc);
+    % For that particular file or this particular feature, let's begin the
+    % actual evaluation process.
+    v = evaleach(d,single,name);    
+    % evaleach performs a top-down traversal of the design flowchart.
 end
 
 
@@ -304,7 +295,6 @@ if isempty(c)
     return
 end
 if isstruct(c)
-    %fields = fieldnames(c);
     for j = 1:length(varargin)
         if j == 1
             fields = fieldnames(varargin{1});
@@ -467,10 +457,6 @@ for i = 1:length(dd);
         if not(strcmp(nf(1),'.'))
             cd(dd(i).name)
             [l w sr a] = evalfolder([path nf],s,l,w,sr,a,1);
-            %l = l + l2;
-            %w = [w w2];
-            %sr = [sr sr2];
-            %a = [a a2];
             cd ..
         end
     else

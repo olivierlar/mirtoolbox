@@ -72,8 +72,8 @@ if load
     else
         [unused,f,b] = reader(file,1);
         s = reader(file,extract(1:2));
-        if length(extract) > 3
-            s = s(:,extract(4));
+        if length(extract) > 2
+            s = s(:,extract(3));
         end
     end
     if verbose
@@ -81,7 +81,7 @@ if load
     end
     d{1} = reshape(s,size(s,1),1,size(s,2)); %channels along dim 3
     ch = 1:size(s,2);
-    if isempty(extract) || extract(3)
+    if isempty(extract)
         tp{1} = (0:size(s,1)-1)'/f;
     else
         tp{1} = (extract(1)-1+(0:size(s,1)-1))'/f;

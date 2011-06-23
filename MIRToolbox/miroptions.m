@@ -30,14 +30,6 @@ if not(isempty(varg)) && (isstruct(varg{1}) || isempty(varg{1}))
         after = [];
     end
     return
-%elseif length(varg) > 1 && isstruct(varg{2})
-%    during = varg{1};
-%    after = varg{2};
-%    return
-%elseif length(varg) >= 1 && isempty(varg{1})
-%    during = [];
-%    after = [];
-%    return
 end
 
 

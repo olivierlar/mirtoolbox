@@ -53,10 +53,10 @@ if ischar(a)
     
     if isempty(ch)
         % No chunk decomposition
-        y = miraudio(f,'Now',[w(:)' 0 chan]);
+        y = miraudio(f,'Now',[w(:)' chan]);
     else
         % Chunk decomposition
-        y = miraudio(f,'Now',[ch(1),ch(2) 0 chan]);
+        y = miraudio(f,'Now',[ch(1),ch(2) chan]);
     end
     if not(isempty(d.postoption)) && d.postoption.mono
         y = miraudio(y,'Mono',1);
