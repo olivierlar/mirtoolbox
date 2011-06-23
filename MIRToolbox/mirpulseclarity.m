@@ -107,8 +107,8 @@ function varargout = mirpulseclarity(orig,varargin)
         option.log = oplog;
         
             mu.key = 'Mu';
-            mu.type = 'Boolean';
-            mu.default = 1;
+            mu.type = 'Integer';
+            mu.default = 100;
         option.mu = mu;
 
     %% options related to 'SpectralFlux'
