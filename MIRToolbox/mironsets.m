@@ -142,9 +142,9 @@ function varargout = mironsets(x,varargin)
     option.chwr = chwr;
     
         mu.key = 'Mu';
-        mu.type = 'Boolean';
+        mu.type = 'Integer';
         mu.default = 0;
-        mu.when = 'After';
+        mu.keydefault = 100;
     option.mu = mu;
     
         oplog.key = 'Log';
@@ -355,6 +355,7 @@ if ischar(option.presel)
         option.filter = 'HalfHann';
         option.envmeth = 'Filter';
         option.decim = 180;
+        option.mu = 100;
     end
 end
 if option.diffenv
@@ -378,7 +379,8 @@ if isamir(x,'miraudio')
                           'Frame',option.specframe(1),option.specframe(2),...
                           'FilterType',option.filter,...
                           'Tau',option.tau,'UpSample',option.up,...
-                          'PreDecim',option.decim,'PostDecim',0);
+                          'PreDecim',option.decim,'PostDecim',0,...
+                          'Mu',option.mu);
         type = 'mirenvelope';
     elseif option.flux
         x = mirframenow(x,option);
@@ -413,7 +415,6 @@ if not(isempty(option)) && ischar(option.presel)
         option.sum = 0;
         postoption.detect = 0;
     elseif strcmpi(option.presel,'Klapuri99')
-        postoption.mu = 1;
         postoption.diffhwr = 1;
         option.sum = 0;
         postoption.ds = 0;
@@ -444,9 +445,6 @@ if isa(o,'mirenvelope')
 end
 if isfield(postoption,'cthr')
     if isa(o,'mirenvelope')
-        if postoption.mu
-            o = mirenvelope(o,'Mu');
-        end
         if postoption.log
             o = mirenvelope(o,'Log');
         end
