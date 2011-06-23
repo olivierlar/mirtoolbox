@@ -402,8 +402,12 @@ else
     sr = get(e,'Sampling');
     disp('Extracting envelope...')
     d = cell(1,length(sig));
-    [state e] = gettmp(orig,e);
     for k = 1:length(sig)
+        if length(sig)==1
+            [state e] = gettmp(orig,e);
+        else
+            state = [];
+        end
         if option.decim
             sr{k} = sr{k}/option.decim;
         end
@@ -471,7 +475,9 @@ else
         end
     end
     e = set(e,'Data',d,'Pos',x,'Sampling',sr); %,'ToDelete',td
-    e = settmp(e,state);
+    if length(sig)==1
+        e = settmp(e,state);
+    end
     if not(option.zp == 2)
         e = post(e,postoption);
     end
