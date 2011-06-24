@@ -50,7 +50,6 @@ function varargout = mirnovelty(orig,varargin)
     option.normal = normal;
     
 specif.option = option;
-specif.combineframes = @combineframes;
 specif.nochunk = 1;
 varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
     
@@ -142,44 +141,6 @@ if not(isempty(postoption)) && postoption.normal
 end
 n = mirscalar(orig,'Data',score,'Title','Novelty'); 
 y = {n orig};
-
-
-function old = combineframes(old,new)
-if not(iscell(old))
-    old = {old};
-end
-if not(iscell(new))
-    new = {new};
-end
-for var = 1:length(new)
-    ov = old{var};
-    nv = new{var};
-    ofp = get(ov,'FramePos');
-    ofp = ofp{1}{1};
-    nfp = get(nv,'FramePos');
-    nfp = nfp{1}{1};
-    od = get(ov,'Data');
-    od = od{1}{1};
-    onan = find(isnan(od));
-    od(onan) = [];
-    ofp(:,onan) = [];
-    nd = get(nv,'Data');
-    nd = nd{1}{1};
-    nnan = find(isnan(nd));
-    nd(nnan) = [];
-    nfp(:,nnan) = [];
-    [unused omatch nmatch] = intersect(ofp(1,:),nfp(1,:));
-    if isempty(omatch)
-        ov = set(ov,'FramePos',{{[ofp nfp]}},'Data',{{[od nd]}});
-    else
-        lm = length(omatch);
-        ov = set(ov,'FramePos',{{[ofp(:,1:omatch(1)-1) nfp]}},...
-            'Data',{{[od(1:omatch(1)-1),...
-                      (od(omatch).*(lm:-1:1) + nd(nmatch).*(1:lm))/(lm+1),...
-                      nd(nmatch(end)+1:end)]}});
-    end
-    old{var} = ov;
-end
 
 
 function y = checkergauss(N,transf)
