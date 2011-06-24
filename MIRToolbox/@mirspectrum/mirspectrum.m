@@ -763,7 +763,7 @@ if strcmp(s.xscale,'Freq')
                 end
                 f{h}{i} = zeros(1,size(mi,2),cb);
             end
-            nch{h} = (1:length(bark_upper))';
+            nch{h} = (1:cb)';
            end
         m = e;
         s = set(s,'XScale','Bark','Title','Bark-Spectrum',...
