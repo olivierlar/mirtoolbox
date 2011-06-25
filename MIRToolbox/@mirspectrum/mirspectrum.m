@@ -35,6 +35,7 @@ function varargout = mirspectrum(orig,varargin)
 %           mirspectrum(...,'Mask'): Models masking phenomena in each band.
 %               (Code based on Pampalk's MA toolbox).
 %       mirspectrum(...,'Normal'): normalizes with respect to energy.
+%       mirspectrum(...,'NormalLength'): normalizes with respect to input length.
 %       mirspectrum(...,'NormalInput'): input signal is normalized from 0 to 1.
 %       mirspectrum(...,'Power'): squares the energy.
 %       mirspectrum(...,'dB'): represents the spectrum energy in decibel scale.
@@ -153,6 +154,12 @@ function varargout = mirspectrum(orig,varargin)
         ni.type = 'Boolean';
         ni.default = 0;
     option.ni = ni;
+    
+        nl.key = 'NormalLength';
+        nl.type = 'Boolean';
+        nl.default = 0;
+        nl.when = 'After';
+    option.nl = nl;
     
         norm.key = 'Normal';
         norm.type = 'Integer';
@@ -575,34 +582,6 @@ if any(option.msum)
     end
     s = set(s,'Title','Spectral sum');
 end
-%for i = option.e  % Enhancing procedure %%%% TO CHECK, t IS NOT DEFINED!
-%    for h = 1:length(m)
-%        for l = 1:length(m{k})
-%            c = m{h}{l};
-%            % option.e is the list of scaling factors
-%            % i is the scaling factor
-%            if i
-%                ic = zeros(size(c));
-%                for g = 1:size(c,2)
-%                    for h2 = 1:size(c,3)
-%                        beg = find(t(:,g,h2)/i >= t(1,g,h2))
-%                        if not(isempty(beg))
-%                            ic(:,g,h2) = interp1(t(:,g,h2),c(:,g,h2),t(:,g,h2)/i); %,'cubic'); 
-                                % The scaled autocorrelation
-%                            ic(1:beg(1)-1,g,h2) = 0;
-%                        end
-%                    end
-%                end
-%                ic(find(isnan(ic))) = Inf;    % All the NaN values are changed into 0 in the resulting curve
-%                ic = max(ic,0);
-%                c = c - ic;       % The scaled autocorrelation is substracted to the initial one
-%                c = max(c,0);               % Half-wave rectification
-                %figure
-                %plot(c)
-%            end
-%        end
-%    end
-%end
 if option.norm
     for k = 1:length(m)
         for l = 1:length(m{k})
@@ -614,6 +593,14 @@ if option.norm
                 end
             end
             m{k}{l} = mkl./repmat(nkl,[size(m{k}{k},1),1,1]);
+        end
+    end
+end
+if option.nl
+    lg = get(s,'Length');
+    for k = 1:length(m)
+        for l = 1:length(m{k})
+            m{k}{l} = m{k}{l}/lg{k}{l};
         end
     end
 end
@@ -639,9 +626,6 @@ if option.reso
             option.reso = 'ToiviainenSnyder';
         end
     end
-    %if strcmpi(option.reso,'ToiviainenSnyder') || ...
-    %   strcmpi(option.reso,'Meter') || ...
-    %   strcmpi(option.reso,'Fluctuation')
     for k = 1:length(m)
         for l = 1:length(m{k})
             if strcmpi(option.reso,'ToiviainenSnyder') || strcmpi(option.reso,'Meter')
