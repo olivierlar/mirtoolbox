@@ -42,7 +42,7 @@ elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
     a = importdata(file);
     l = length(a);
     for i = 1:l
-        [di,tpi,fpi,fi] = mirread([],a{i},0,0,0);
+        [di,tpi,fpi,fi,lg] = mirread([],a{i},0,0,0);
         if not(isempty(s))
             interval = s(1:2);
             if s(3)
@@ -65,7 +65,7 @@ elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
     end
 else
     l = 1;
-    [d1,tp1,fp1,f1,b,n,ch] = mirread([],file,0,0,0);
+    [d1,tp1,fp1,f1,lg,b,n,ch] = mirread([],file,0,0,0);
     if length(s)>1
         interval = s(1:2)';
         if s(3)
@@ -168,7 +168,7 @@ else
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
         end
         tic
-        yf = evalaudiofile(d,a{f},sr(f),w(:,f),{},0,f,single,'',ch);
+        yf = evalaudiofile(d,a{f},sr(f),lg(f),w(:,f),{},0,f,single,'',ch);
         toc
         y{f} = yf;
         if not(isempty(export))
@@ -193,7 +193,7 @@ end
 v = combineaudiofile(a,isstat,y{:});
     
 
-function v = evalaudiofile(d,file,sampling,size,struc,istmp,index,single,name,ch)
+function v = evalaudiofile(d,file,sampling,lg,size,struc,istmp,index,single,name,ch)
 % Now let's perform the analysis (or analyses) on the different files.
 %   If d is a structure or a cell array, evaluate each component
 %       separately.
@@ -220,7 +220,7 @@ if isstruct(d)
                 field.Stat = 1;
             end
         end
-        res = evalaudiofile(field,file,sampling,size,struc,istmp,index,...
+        res = evalaudiofile(field,file,sampling,lg,size,struc,istmp,index,...
                                                      single,fieldname,ch);
         if not(isempty(single)) && not(isequal(single,0)) && ...
                 iscell(res) && isa(field,'mirdesign')
@@ -244,7 +244,7 @@ elseif iscell(d)
     l = length(d);
     v = cell(1,l);
     for j = 1:l
-        v{j} = evalaudiofile(d{j},file,sampling,size,struc,istmp,index,...
+        v{j} = evalaudiofile(d{j},file,sampling,lg,size,struc,istmp,index,...
                                        single,[name,num2str(j)],ch);
     end
 elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
@@ -252,7 +252,7 @@ elseif isa(d,'mirstruct') && isempty(get(d,'Argin'))
 elseif get(d,'SeparateChannels')
     v = cell(1,ch);
     for i = 1:ch
-        d = set(d,'File',file,'Sampling',sampling,'Size',size,...
+        d = set(d,'File',file,'Sampling',sampling,'Length',lg,'Size',size,...
                   'Eval',1,'Index',index,'Struct',struc,'Channel',i);
         % For that particular file or this particular feature, let's begin the
         % actual evaluation process.
@@ -261,7 +261,7 @@ elseif get(d,'SeparateChannels')
     end
     v = combinechannels(v);
 else
-    d = set(d,'File',file,'Sampling',sampling,'Size',size,...
+    d = set(d,'File',file,'Sampling',sampling,'Length',lg,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
     % For that particular file or this particular feature, let's begin the
     % actual evaluation process.

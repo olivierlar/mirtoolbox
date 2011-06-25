@@ -8,6 +8,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.framepos = orig.framepos;
     d.framed = orig.framed;
     d.sr = orig.sr;
+    d.length = orig.length;
     d.nbits = orig.nbits;
     d.name = orig.name;
     d.name2 = orig.name2;
@@ -35,6 +36,7 @@ else
     d.framepos = {};
     d.framed = 0;
     d.sr = {};
+    d.length = {};
     d.nbits = {};
     d.name = {};
     d.name2 = {};

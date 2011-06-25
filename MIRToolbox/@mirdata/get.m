@@ -15,6 +15,8 @@ switch propName
         val = a.framed;
     case 'Sampling'
         val = a.sr;
+    case 'Length'
+        val = a.length;
     case 'NBits'
         val = a.nbits;
     case 'Name'

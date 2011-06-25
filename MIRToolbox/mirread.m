@@ -1,4 +1,4 @@
-function [d,tp,fp,f,b,n,ch] = mirread(extract,orig,load,folder,verbose)
+function [d,tp,fp,f,l,b,n,ch] = mirread(extract,orig,load,folder,verbose)
 % Read the audio file ORIG, at temporal position indicated by EXTRACT. If
 % EXTRACT is empty, all the audio file is loaded.
 %   If LOAD is set to 0, just the meta-data is collected, and the actual
@@ -12,6 +12,7 @@ function [d,tp,fp,f,b,n,ch] = mirread(extract,orig,load,folder,verbose)
 %   TP are the temporal positions,
 %   FP are the two extreme temporal positions (used for frame positions),
 %   F is the sampling rate,
+%   L is the duration in seconds,
 %   B is the resolution in number of bits,
 %   N is the file name.
 %   CH are the channel index.
@@ -21,30 +22,31 @@ if nargin < 5
 end
 d = {};
 f = {};
+l = {};
 b = {};
 tp = {};
 fp = {};
 n = {};
 ch = {};
 try
-    [d,f,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
+    [d,f,l,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
 catch
     err.wav = lasterr;
     try
-       [d,f,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
+       [d,f,l,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
     catch
         err.au = lasterr;
         try
-            [d,f,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
+            [d,f,l,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
         catch
             err.mp3 = lasterr;
             try
-                [d,f,b,tp,fp,n,ch] = audioread(extract,@aiffread,orig,load,verbose,folder);
+                [d,f,l,b,tp,fp,n,ch] = audioread(extract,@aiffread,orig,load,verbose,folder);
             catch
                 err.aiff = lasterr;
                 if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
                     try
-                       [d,f,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
+                       [d,f,l,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
                     catch
                         if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
                             misread(orig, err);
@@ -61,7 +63,7 @@ catch
 end
 
         
-function [d,f,b,tp,fp,n,ch] = audioread(extract,reader,file,load,verbose,folder)
+function [d,f,l,b,tp,fp,n,ch] = audioread(extract,reader,file,load,verbose,folder)
 n = file;
 if folder
     file = ['./',file];
@@ -86,6 +88,7 @@ if load
     else
         tp{1} = (extract(1)-1+(0:size(s,1)-1))'/f;
     end
+    l{1} = (size(s,1)-1)/f;
     if isempty(s)
         fp{1} = 0;
     else
@@ -95,6 +98,7 @@ else
     [unused,f,b] = reader(file,1);
     dsize = reader(file,'size');
     d = dsize(1);
+    l = d/f;
     tp = {};
     fp = {};
     ch = dsize(2);

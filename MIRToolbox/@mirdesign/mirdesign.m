@@ -14,6 +14,7 @@ if isa(orig,'mirdesign')
     d.file = orig.file;
     d.channel = orig.channel;
     d.sampling = orig.sampling;
+    d.length = orig.length;
     d.resampling = orig.resampling;
     d.nochunk = orig.nochunk;
     d.ascending = orig.ascending;
@@ -44,6 +45,7 @@ else
         d.file = '';
         d.channel = [];
         d.sampling = 0;
+        d.length = 0;
         d.resampling = 0;
         d.nochunk = 0;
         if not(isempty(orig)) && ...
@@ -84,6 +86,7 @@ else
         d.file = argin.file;
         d.channel = argin.channel;
         d.sampling = argin.sampling;
+        d.length = argin.length;
         d.resampling = argin.resampling;
         if (isfield(specif,'nochunk') && specif.nochunk) 
             d.nochunk = 1; % was previously 2

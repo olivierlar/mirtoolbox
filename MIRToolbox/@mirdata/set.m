@@ -21,6 +21,8 @@ while length(propertyArgIn) >= 2,
            a.framepos = val;
        case 'Sampling'
            a.sr = val;
+       case 'Length'
+           a.length = val;
        case 'NBits'
            a.nbits = val;
        case 'Name'
