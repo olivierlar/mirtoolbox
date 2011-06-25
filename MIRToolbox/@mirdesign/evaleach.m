@@ -375,8 +375,6 @@ if isstruct(old)
 end
 if fri == 1
     res = new;
-elseif isfield(d2,'specif') && isfield(d2.specif,'combineframes')
-    res = d2.specif.combineframes(old{1},new{1});
 else
     res = combineframes(old,new);
 end
