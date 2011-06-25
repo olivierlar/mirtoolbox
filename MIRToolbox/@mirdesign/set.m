@@ -14,6 +14,8 @@ while length(propertyArgIn) >= 2,
            a.file = val;
        case 'Sampling'
            a.sampling = val;
+       case 'Length'
+           a.length = val;
        case 'Size'
            a.size = val;
        case 'Chunk'
