@@ -34,20 +34,13 @@ if isamir(x,'miraudio') && not(isframed(x))
     x = mirframe(x,.023,.5);
 end
 m = mirspectrum(x,'Power','Terhardt','Bark','dB','Mask');
-f = mirspectrum(m,'AlongBands','Max',10,'Window',0,...
+f = mirspectrum(m,'AlongBands','Max',10,'Window',0,'NormalLength',...
                   'Resonance','Fluctuation','MinRes',option.mr);
 if option.sum
     f = mirsummary(f);
 end
-f = {f,mirlength(x,'Global')};
-type = {'mirspectrum','mirscalar'};
+type = 'mirspectrum';
 
 
 function f = main(x,option,postoption)
-d1 = get(x{1},'Data');
-d2 = get(x{2},'Data');
-f = set(x{1},'Data',mircompute(@normalize,d1,d2),'Title','Fluctuation');
-
-
-function f = normalize(f,l)
-%f = f/l;
+f = set(x,'Title','Fluctuation');
