@@ -34,7 +34,7 @@ w = [];    % Array containing the index positions of the starting and ending dat
 s = getsize(d);
 ch = 1;
 if strcmpi(file,'Folder') || strcmpi(file,'Folders')
-    [l w sr a] = evalfolder('',s,0,[],[],{},strcmpi(file,'Folders'));
+    [l w sr lg a] = evalfolder('',s,0,[],[],[],{},strcmpi(file,'Folders'));
     if l == 0
         disp('No sound file detected in this folder.')
     end
@@ -427,7 +427,7 @@ while i<length(n)
 end
 
 
-function [l w sr a] = evalfolder(path,s,l,w,sr,a,folders)
+function [l w sr lg a] = evalfolder(path,s,l,w,sr,lg,a,folders)
 if not(isempty(path))
     path = [path '/'];
 end
@@ -456,11 +456,11 @@ for i = 1:length(dd);
     if folders && dd(i).isdir
         if not(strcmp(nf(1),'.'))
             cd(dd(i).name)
-            [l w sr a] = evalfolder([path nf],s,l,w,sr,a,1);
+            [l w sr a lg] = evalfolder([path nf],s,l,w,sr,lg,a,1);
             cd ..
         end
     else
-        [di,tpi,fpi,fi,bi,ni] = mirread([],nf,0,1,0);
+        [di,tpi,fpi,fi,li,bi,ni] = mirread([],nf,0,1,0);
         if not(isempty(ni))
             l = l+1;
             if not(isempty(s))
@@ -478,6 +478,7 @@ for i = 1:length(dd);
                 w(:,l) = [1;di];
             end
             sr(l) = fi;
+            lg(l) = li;
             a{l} = [path ni];
         end
     end
