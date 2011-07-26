@@ -34,7 +34,6 @@ end
 
 
 during = struct;
-after = struct;
 if isfield(specif,'option')
     option = specif.option;
 else

@@ -479,7 +479,7 @@ else
                 % Here is the spectrum computation itself
                 transf = fft(dj,N);
 
-                len = ceil(size(transf,1)/2+1);
+                len = floor(N/2+1);
                 fj = fsi/2 * linspace(0,1,len)';
                 if option.max
                     maxf = find(fj>=option.max,1);
