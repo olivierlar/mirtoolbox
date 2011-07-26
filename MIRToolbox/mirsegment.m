@@ -295,8 +295,8 @@ elseif isa(x,'mirdata')
                     if iscell(dsm)
                         dsm = dsm{1};
                     end
-                    dsm(:,find(dsm(1,:) < dtk(1))) = [];
-                    dsm(:,find(dsm(end,:) > dtk(end))) = [];
+                    dsm(:,find(dsm(1,:) <= dtk(1))) = [];
+                    dsm(:,find(dsm(end,:) >= dtk(end))) = [];
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
