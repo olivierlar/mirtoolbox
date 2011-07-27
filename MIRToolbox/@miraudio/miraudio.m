@@ -356,6 +356,7 @@ for h = 1:length(d)
     end
 end
 a = set(a,'Data',d,'Time',t,'Sampling',f,'Clusters',cl);
+a = set(a,'Extracted',0);
 if isfield(para,'label') 
     if isnumeric(para.label)
         n = get(a,'Name');
