@@ -131,9 +131,6 @@ else
                     c{j}.covar(:,ii) = [];
                 else
                     c{j}.weight(ii) = size(clus,2)/size(va,2);
-                    if c{j}.weight(ii) == 0
-                        pause
-                    end
                     c{j}.covar(:,ii) = mean((clus'-ones(1,size(clus,1))*c{j}.centr(:,ii)).^2);
                     ii = ii+1;
                 end

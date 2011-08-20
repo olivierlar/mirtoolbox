@@ -96,9 +96,6 @@ if not(l)
     return
 end
 
-if isempty(export)
-    y = cell(1,l);
-end
 order = 1:l;
 if isa(d,'mirdesign') && isequal(get(d,'Method'),@mirplay)
     op = get(d,'Option');
@@ -132,34 +129,10 @@ end
 if parallel
     %   The evaluation is carried out for each audio file successively
     %       (or in parallel).
-    parfor i = 1:l
-        if l > 1
-            fprintf('\n')
-            display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);
-        end
-        tic
-        yi = evalaudiofile(d,a{i},sr(i),w(:,i),{},0,i,single,'',ch);
-        toc
-        y{i} = yi;
-        if not(isempty(export))
-            if strncmpi(export,'Separately',10)
-                filename = a{i};
-                filename(filename == '/') = '.';
-                filename = [filename export(11:end)];
-                if i == 1
-                    mkdir('Backup');
-                end
-                mirexport(filename,yi);
-            elseif i==1
-                mirexport(export,yi);
-            else
-                mirexport(export,yi,'#add');
-            end
-        end
-        clear yi
-    end
+    y = mirevalparallel(a,sr,w,single,ch,export);
 else
     %   The evaluation is carried out for each audio file successively.
+    y = cell(1,l);
     isstat = isfield(d,'Stat');
     for i = 1:length(order)
         f = order(i);
