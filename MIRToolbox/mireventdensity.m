@@ -25,6 +25,8 @@ specif.defaultframehop = 0.5;
 %specif.eachchunk = 'Normal';
 specif.combinechunk = {'Average','Concat'};
 
+specif.nochunk = 1;
+
 varargout = mirfunction(@mireventdensity,x,varargin,nargout,specif,@init,@main);
 
 
