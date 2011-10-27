@@ -48,12 +48,12 @@ catch
                     try
                        [d,f,l,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
                     catch
-                        if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
+                        if not(strcmp(err.wav(1:11),'Error using') && folder)
                             misread(orig, err);
                         end
                     end
                 else
-                    if not(strcmp(err.wav(1:16),'Error using ==> ') && folder)
+                    if not(strcmp(err.wav(1:11),'Error using') && folder)
                         misread(orig, err);
                     end
                 end
