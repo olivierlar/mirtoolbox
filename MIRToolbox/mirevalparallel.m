@@ -11,7 +11,7 @@ parfor i = 1:l
         display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);
     end
     tic
-    yi = evalaudiofile(d,a{i},sr(i),w(:,i),{},0,i,single,'',ch);
+    yi = evalaudiofile(d,a{i},sr(i),lg(i),w(:,i),{},0,i,single,'',ch);
     toc
     y{i} = yi;
     if not(isempty(export))
