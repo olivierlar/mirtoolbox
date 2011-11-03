@@ -1,6 +1,36 @@
-function d = mirdesign(orig,argin,option,postoption,specif,type); %,nout)
+function d = mirdesign(orig,argin,option,postoption,specif,type)
 
-if isa(orig,'mirdesign')
+if nargin == 0
+    d.method = {};
+    d.argin = '';
+    d.option = {};
+    d.postoption = {};
+    d.specif = struct;
+    d.type = '';
+    d.frame = {};
+    d.segment = {};
+    d.chunkdecomposed = 0;
+    d.size = {};
+    d.file = '';
+    d.channel = [];
+    d.sampling = 0;
+    d.length = 0;
+    d.resampling = 0;
+    d.nochunk = 0;
+    d.ascending = 0;
+    d.overlap = 0;
+    d.separate = 0;
+    d.chunk = [];
+    d.eval = 0;
+    d.interchunk = [];
+    d.acrosschunks = [];
+    d.ready = 0;
+    d.struct = [];
+    d.stored = [];
+    d.index = NaN;
+    d.tmpfile = [];
+    d.tmpof = [];
+elseif isa(orig,'mirdesign')
     d.method = orig.method;
     d.argin = orig.argin;
     d.option = orig.option;
