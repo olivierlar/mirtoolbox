@@ -116,39 +116,78 @@ elseif isa(x,'mirdata')
             dx2k = cell(1,length(dxk));
             dt2k = cell(1,length(dxk));
             fpk = cell(1,length(dxk));
-            for j = 1:length(dxk)   % For each segment, ...
-                dxj = dxk{j};
-                dtj = dtk{j};
-                if not(isa(x,'mirtemporal'))
-                    dxj = dxj';
-                    dtj = dtj(1,:)';
-                end
-
-                n = floor((size(dxj,1)-l)/h)+1; % Number of frames
-                dx2j = zeros(l,n,size(dxj,3));
-                dt2j = zeros(l,n);
-                fpj = zeros(2,n);
-                if n < 1
-                    disp('Frame length longer than total sequence size. No frame decomposition.');
-                    dx2j = dxj(:,1,:);
-                    dt2j = dtj;
-                    fpj = [dtj(1) ; dtj(end)];
-                else
-                    for i = 1:n % For each frame, ...
-                        st = floor((i-1)*h+1);
-                        stend = st+l-1;
-                        dx2j(:,i,:) = dxj(st:stend,1,:);
-                        dt2j(:,i) = dtj(st:stend);
-                        fpj(:,i) = [dtj(st) dtj(stend)];
+            if size(l)==1
+                for j = 1:length(dxk)   % For each segment, ...
+                    dxj = dxk{j};
+                    dtj = dtk{j};
+                    if not(isa(x,'mirtemporal'))
+                        dxj = dxj';
+                        dtj = dtj(1,:)';
                     end
+
+                    n = floor((size(dxj,1)-l)/h)+1; % Number of frames
+                    dx2j = zeros(l,n,size(dxj,3));
+                    dt2j = zeros(l,n);
+                    fpj = zeros(2,n);
+                    if n < 1
+                        disp('Frame length longer than total sequence size. No frame decomposition.');
+                        dx2j = dxj(:,1,:);
+                        dt2j = dtj;
+                        fpj = [dtj(1) ; dtj(end)];
+                    else
+                        for i = 1:n % For each frame, ...
+                            st = floor((i-1)*h+1);
+                            stend = st+l-1;
+                            dx2j(:,i,:) = dxj(st:stend,1,:);
+                            dt2j(:,i) = dtj(st:stend);
+                            fpj(:,i) = [dtj(st) dtj(stend)];
+                        end
+                    end
+                    dx2k{j} = dx2j;
+                    dt2k{j} = dt2j;
+                    fpk{j} = fpj;
                 end
-                dx2k{j} = dx2j;
-                dt2k{j} = dt2j;
-                fpk{j} = fpj;
+                dx2{k} = dx2k;
+                dt2{k} = dt2k;
+                fp{k} = fpk;
+            else % Multi-scale version
+                if size(h) == 1
+                    h = repmat(h,size(l));
+                end
+                for j = 1:length(l)   % For each scale, ...
+                    dxj = dxk{1};
+                    dtj = dtk{1};
+                    if not(isa(x,'mirtemporal'))
+                        dxj = dxj';
+                        dtj = dtj(1,:)';
+                    end
+
+                    n = floor((size(dxj,1)-l(j))/h(j))+1; % Number of frames
+                    dx2j = zeros(l(j),n,size(dxj,3));
+                    dt2j = zeros(l(j),n);
+                    fpj = zeros(2,n);
+                    if n < 1
+                        disp('Frame length longer than total sequence size. No frame decomposition.');
+                        dx2j = dxj(:,1,:);
+                        dt2j = dtj;
+                        fpj = [dtj(1) ; dtj(end)];
+                    else
+                        for i = 1:n % For each frame, ...
+                            st = floor((i-1)*h(j)+1);
+                            stend = st+l(j)-1;
+                            dx2j(:,i,:) = dxj(st:stend,1,:);
+                            dt2j(:,i) = dtj(st:stend);
+                            fpj(:,i) = [dtj(st) dtj(stend)];
+                        end
+                    end
+                    dx2k{j} = dx2j;
+                    dt2k{j} = dt2j;
+                    fpk{j} = fpj;
+                end
+                dx2{k} = dx2k;
+                dt2{k} = dt2k;
+                fp{k} = fpk;
             end
-            dx2{k} = dx2k;
-            dt2{k} = dt2k;
-            fp{k} = fpk;
         end
         if isa(x,'mirtemporal')
             f = set(x,'Time',dt2,'Data',dx2,'FramePos',fp);
