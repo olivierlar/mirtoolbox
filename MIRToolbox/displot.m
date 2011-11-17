@@ -298,7 +298,7 @@ else
                         set(gca,'yticklabel',tickylab);
                     end
                     set(gca,'YDir','normal')
-                    if (exist('pp') == 1) && not(isempty(pp))
+                    if (exist('pp') == 1) && length(pp)>=j
                         if not(isempty(pp{j}))
                             for k = 1:length(pp{j})
                                 ppj = pp{j}{k};

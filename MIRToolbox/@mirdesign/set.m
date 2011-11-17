@@ -75,6 +75,8 @@ while length(propertyArgIn) >= 2,
            a.separate = val;
        case 'Channel'
            a.channel = val;
+       case 'Scale'
+           a.scale = val;
        otherwise
            error(['Unknown MIRdesign property: ' prop])
    end

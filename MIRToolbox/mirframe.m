@@ -73,6 +73,13 @@ elseif isa(x,'mirdesign')
         if isempty(mirgetdata(e))
             f = e;
         else
+            sc = get(x,'Scale');
+            if ~isempty(sc)
+                varargin{1}.wlength.val = varargin{1}.wlength.val(sc);
+                if length(varargin{1}.hop.val)>1
+                    varargin{1}.hop.val = varargin{1}.hop.val(sc);
+                end
+            end
             f = mirframe(e,varargin{:});
         end
     end

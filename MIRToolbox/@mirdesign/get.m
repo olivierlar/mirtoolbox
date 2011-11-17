@@ -112,7 +112,10 @@ if ischar(varargin{1})
             return            
         case 'Channel'
             varargout = {a.channel};
-            return            
+            return
+        case 'Scale'
+            varargout = {a.scale};
+            return 
     end
 end
 

@@ -236,10 +236,24 @@ elseif get(d,'SeparateChannels')
 else
     d = set(d,'File',file,'Sampling',sampling,'Length',lg,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
-    % For that particular file or this particular feature, let's begin the
-    % actual evaluation process.
-    v = evaleach(d,single,name);    
-    % evaleach performs a top-down traversal of the design flowchart.
+    dl = get(d,'FrameLength');
+    dh = get(d,'FrameHop');
+    if length(dl)>1
+        v = cell(1,length(dl));
+        if length(dh) == 1
+            dh = repmat(dh,1,length(dl));
+        end
+        for i = 1:length(dl)
+            d = set(d,'Scale',i);
+            v{i} = evaleach(d,single,name);
+        end
+        v = combinescales(v);
+    else
+        % For that particular file or this particular feature, let's begin the
+        % actual evaluation process.
+        v = evaleach(d,single,name);    
+        % evaleach performs a top-down traversal of the design flowchart.
+    end
 end
 
 
@@ -260,6 +274,26 @@ for h = 2:length(c)
     end
 end
 y = set(y,'Data',v);
+
+
+function y = combinescales(s)
+y = s{1};
+fp = get(y{1},'FramePos');
+fp = fp{1};
+for j = 1:length(y)
+    v = get(y{j},'Data');
+    for h = 2:length(s)
+        d = get(s{h}{j},'Data');
+        for i = 1:length(d)
+            v{i}{h} = d{i}{1};
+        end
+        if j == 1
+            fph = get(s{h}{j},'FramePos');
+            fp{h} = fph{1}{1};
+        end
+    end
+    y{j} = set(y{j},'Data',v,'FramePos',{fp});
+end
 
 
 function c = combineaudiofile(filename,isstat,varargin) % Combine output from several audio files into one single

@@ -17,6 +17,12 @@ end
 CHUNKLIM = mirchunklim;
 f = d.file;
 fr = d.frame;
+if ~isempty(fr) && length(fr.length.val)>1
+    fr.length.val = fr.length.val(d.scale);
+    if length(fr.hop.val)>1
+        fr.hop.val = fr.hop.val(d.scale);
+    end
+end
 frnochunk = isfield(d.frame,'dontchunk');
 frchunkbefore = isfield(d.frame,'chunkbefore');
 sg = d.segment;
@@ -663,6 +669,7 @@ for i = 1:length(argin)
             a.chunk = d.chunk;
             a.file = d.file;
             a.channel = d.channel;
+            a.scale = d.scale;
             a.eval = 1;
             a.interchunk = d.interchunk;
             a.sampling = d.sampling;

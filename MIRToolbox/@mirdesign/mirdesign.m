@@ -13,6 +13,7 @@ if nargin == 0
     d.size = {};
     d.file = '';
     d.channel = [];
+    d.scale = [];
     d.sampling = 0;
     d.length = 0;
     d.resampling = 0;
@@ -43,6 +44,7 @@ elseif isa(orig,'mirdesign')
     d.size = orig.size;
     d.file = orig.file;
     d.channel = orig.channel;
+    d.scale = orig.scale;
     d.sampling = orig.sampling;
     d.length = orig.length;
     d.resampling = orig.resampling;
@@ -74,6 +76,7 @@ else
         d.size = {};
         d.file = '';
         d.channel = [];
+        d.scale = [];
         d.sampling = 0;
         d.length = 0;
         d.resampling = 0;
@@ -115,6 +118,7 @@ else
         d.size = argin.size;
         d.file = argin.file;
         d.channel = argin.channel;
+        d.scale = argin.scale;
         d.sampling = argin.sampling;
         d.length = argin.length;
         d.resampling = argin.resampling;
