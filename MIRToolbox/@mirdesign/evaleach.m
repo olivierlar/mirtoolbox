@@ -495,36 +495,25 @@ else
 end
 
 
-function res = afterchunk_noframe(input,lsz,d,afterpostoption,d2)
-if isstruct(input)
-    %mirerror('MIREVAL','Sorry, mirstruct only accepts frame-decomposed objects as ''tmp'' fields.');
-    res = input;
-    %f = fields(input);
-    %for i = 1:length(f)
-    %    index.type = '.';
-    %    index.subs = f{i};
-    %    res.(f{i}) = afterchunk_noframe(input.(f{i}),lsz,...
-    %                  subsref(d,index),afterpostoption,subsref(d2,index));
-    %end
+function data = afterchunk_noframe(data,lsz,d,afterpostoption,d2)
+if isstruct(data)
     return
 end
 if isfield(d2.specif,'afterchunk')
-    res{1} = d2.specif.afterchunk(input{1},lsz,d.postoption);
+    data{1} = d2.specif.afterchunk(data{1},lsz,d.postoption);
 elseif isaverage(d2.specif)
-    res{1} = divideweightchunk(input{1},lsz);
+    data{1} = divideweightchunk(data{1},lsz);
 elseif not(isempty(afterpostoption)) && isempty(d2.tmpfile)
-    res{1} = d.method(input{1},[],afterpostoption);
-else
-    res = input;
+    data{1} = d.method(data{1},[],afterpostoption);
 end
 if not(isempty(d2.tmpfile))
     adr = ftell(d2.tmpfile.fid);
     fclose(d2.tmpfile.fid);
     ytmpfile.fid = fopen('tmpfile.mirtoolbox');
     fseek(ytmpfile.fid,adr,'bof');
-    ytmpfile.data = input{1};
+    ytmpfile.data = data{1};
     ytmpfile.layer = 0;
-    res{1} = set(input{1},'TmpFile',ytmpfile);
+    data{1} = set(data{1},'TmpFile',ytmpfile);
 end
             
 
