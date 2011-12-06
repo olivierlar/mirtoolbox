@@ -122,111 +122,97 @@ else
         else
             handle = 0;
         end
-        if 0 %iscell(vk) %&& length(vk) > 1 %%% ATTENTION KL!!<<<<<<<<<<<<
-            l = length(vk);
-            dk = NaN(l,l);
-            hK = floor(option.K/2);
-            for i = 1:l
-                if handle
-                    waitbar(i/l,handle);
-                end
-                for j = max(1,i-hK):min(l,i+hK)
-                    dk(i,j) = KL(vk{i},vk{j});
-                end
+        if not(iscell(vk))
+            vk = {vk};
+        end    
+        for z = 1:length(vk)
+            vz = vk{z};
+            ll = size(vz,1);
+            l = size(vz,2);
+            nc = size(vz,3);
+            if ll==1 && nc>1
+                vz = squeeze(vz)';
+                ll = nc;
+                nc = 1;
             end
-        else
-            if not(iscell(vk))
-                vk = {vk};
-            end    
-            for z = 1:length(vk)
-                vz = vk{z};
-                ll = size(vz,1);
-                l = size(vz,2);
-                nc = size(vz,3);
-                if ll==1 && nc>1
-                    vz = squeeze(vz)';
-                    ll = nc;
-                    nc = 1;
+            nd = size(vz,4);
+            if not(isempty(postoption)) && ...
+                strcmpi(postoption.view,'TimeLag')
+                if isinf(lK)
+                    lK = l;
                 end
-                nd = size(vz,4);
-                if not(isempty(postoption)) && ...
-                    strcmpi(postoption.view,'TimeLag')
-                    if isinf(lK)
-                        lK = l;
-                    end
-                    dk{z} = NaN(lK,l,nc);
+                dk{z} = NaN(lK,l,nc);
+            else
+                dk{z} = NaN(l,l,nc);
+            end
+            for g = 1:nc
+                if nd == 1
+                    vv = vz;
                 else
-                    dk{z} = NaN(l,l,nc);
-                end
-                for g = 1:nc
-                    if nd == 1
-                        vv = vz;
-                    else
-                        vv = zeros(ll*nd,l);
-                        for h = 1:nd
-                            if iscell(vz)
-                                for i = 1:ll
-                                    for j = 1:l
-                                        vj = vz{i,j,g,h};
-                                        if isempty(vj)
-                                            vv((h-1)*ll+i,j) = NaN;
-                                        else
-                                            vv((h-1)*ll+i,j) = vj;
-                                        end
-                                    end
-                                end
-                            else
-                                tic
-                                vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
-                                toc
-                            end
-                        end
-                    end
-                    if isinf(option.K) && not(strcmpi(postoption.view,'TimeLag'))
-                        try
-                            manually = 0;
-                            dk{z}(:,:,g) = squareform(pdist(vv',option.distance));
-                        catch
-                            manually = 1;
-                        end
-                    else
-                        manually = 1;
-                    end
-                    if manually
-                        disf = str2func(option.distance);
-                        if strcmpi(option.distance,'cosine')
-                            for i = 1:l
-                                vv(:,i) = vv(:,i)/norm(vv(:,i));
-                            end
-                        end
-                        if not(isempty(postoption)) && ...
-                                strcmpi(postoption.view,'TimeLag')
-                            hK = ceil(lK/2);
-                            for i = 1:l
-                                if mirwaitbar && (mod(i,100) == 1 || i == l)
-                                    waitbar(i/l,handle);
-                                end
-                                ij = min(i+lK-1,l);
-                                dkij = disf(vv(:,i),vv(:,i:ij));
-                                for j = 0:ij-i
-                                    if hK-j>0
-                                        dk{z}(hK-j,i,g) = dkij(j+1);   
-                                    end
-                                    if hK+j<=lK
-                                        dk{z}(hK+j,i+j,g) = dkij(j+1);
+                    vv = zeros(ll*nd,l);
+                    for h = 1:nd
+                        if iscell(vz)
+                            for i = 1:ll
+                                for j = 1:l
+                                    vj = vz{i,j,g,h};
+                                    if isempty(vj)
+                                        vv((h-1)*ll+i,j) = NaN;
+                                    else
+                                        vv((h-1)*ll+i,j) = vj;
                                     end
                                 end
                             end
                         else
-                            for i = 1:l
-                                if mirwaitbar && (mod(i,100) == 1 || i == l)
-                                    waitbar(i/l,handle);
-                                end
-                                j = min(i+lK-1,l);
-                                dkij = disf(vv(:,i),vv(:,i:j));
-                                dk{z}(i,i:j,g) = dkij;
-                                dk{z}(i:j,i,g) = dkij';
+                            tic
+                            vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
+                            toc
+                        end
+                    end
+                end
+                if isinf(option.K) && not(strcmpi(postoption.view,'TimeLag'))
+                    try
+                        manually = 0;
+                        dk{z}(:,:,g) = squareform(pdist(vv',option.distance));
+                    catch
+                        manually = 1;
+                    end
+                else
+                    manually = 1;
+                end
+                if manually
+                    disf = str2func(option.distance);
+                    if strcmpi(option.distance,'cosine')
+                        for i = 1:l
+                            vv(:,i) = vv(:,i)/norm(vv(:,i));
+                        end
+                    end
+                    if not(isempty(postoption)) && ...
+                            strcmpi(postoption.view,'TimeLag')
+                        hK = ceil(lK/2);
+                        for i = 1:l
+                            if mirwaitbar && (mod(i,100) == 1 || i == l)
+                                waitbar(i/l,handle);
                             end
+                            ij = min(i+lK-1,l);
+                            dkij = disf(vv(:,i),vv(:,i:ij));
+                            for j = 0:ij-i
+                                if hK-j>0
+                                    dk{z}(hK-j,i,g) = dkij(j+1);   
+                                end
+                                if hK+j<=lK
+                                    dk{z}(hK+j,i+j,g) = dkij(j+1);
+                                end
+                            end
+                        end
+                    else
+                        for i = 1:l
+                            if mirwaitbar && (mod(i,100) == 1 || i == l)
+                                waitbar(i/l,handle);
+                            end
+                            j = min(i+lK-1,l);
+                            dkij = disf(vv(:,i),vv(:,i:j));
+                            dk{z}(i,i:j,g) = dkij;
+                            dk{z}(i:j,i,g) = dkij';
                         end
                     end
                 end
