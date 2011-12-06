@@ -31,12 +31,6 @@ function varargout = mirsimatrix(orig,varargin)
 %           a time-lag matrix, making the first diagonal horizontal as well
 %           (corresponding to the zero-lag line).
 %
-%       mirsimatrix(M,r) creates a mirsimatrix similarity matrix based on
-%           the Matlab square matrix M, of frame rate r (in Hz.)
-%               By default r = 20 Hz.
-%           mirsimatrix(M,r,'Dissimilarity') creates instead a mirsimatrix
-%               dissimilarity matrix.
-%
 %   Foote, J. & Cooper, M. (2003). Media Segmentation using Self-Similarity
 % Decomposition,. In Proc. SPIE Storage and Retrieval for Multimedia
 % Databases, Vol. 5021, pp. 167-75.
@@ -80,37 +74,17 @@ function varargout = mirsimatrix(orig,varargin)
         view.when = 'After';
     option.view = view;
     
-        rate.type = 'Integer';
-        rate.position = 2;
-        rate.default = 20;
-    option.rate = rate;
-    
 specif.option = option;
 specif.nochunk = 1;
 varargout = mirfunction(@mirsimatrix,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-if isnumeric(x)
-    m.diagwidth = Inf;
-    m.view = 's';
-    m.similarity = NaN;
-    m.graph = {};
-    m.branch = {};
-    m = class(m,'mirsimatrix',mirdata);
-    m = set(m,'Title','Dissimilarity matrix');
-    fp = repmat(((1:size(x,1))-.5)/option.rate,[2,1]);
-    x = set(m,'Data',{x},'Pos',[],...
-              'FramePos',{{fp}},'Name',{inputname(1)});
-else
-    if not(isamir(x,'mirsimatrix'))
-        if (isamir(x,'miraudio'))
-            if isframed(x)
-                x = mirspectrum(x);
-            else
-                x = mirspectrum(x,'Frame',0.05,1);
-            end
-        end
+if isamir(x,'miraudio')
+    if isframed(x)
+        x = mirspectrum(x);
+    else
+        x = mirspectrum(x,'Frame',0.05,1);
     end
 end
 type = 'mirsimatrix';
