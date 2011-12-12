@@ -357,7 +357,16 @@ if max(fpsz,fpsz2) > CHUNKLIM
     chbeg = (frch-frov)*(0:nch-1)+1;    % First frame in the chunk
     chend = (frch-frov)*(0:nch-1)+frch; % Last frame in the chunk
     chend = min(chend,nfr);
-    if frov > 1
+    if chend(end) == chbeg(end)
+        lszend = fp(2,end)-fp(1,end)+1;  % Size of last chunk
+        nend = floor((lszend-fl)/h)+1;   % Number of frames in the last chunk
+        if nend < 2 % Last chunk is too short (only one frame),
+            chend(end-1) = chend(end); % concatenated to previous one.
+            chbeg(end) = [];
+            chend(end) = [];
+        end
+    end
+    if frov > 1 % If case of overlap
         chbeg = chend-frch+1;
     end
     chunks = [fp(1,chbeg) ; fp(2,chend)+1]; % After resampling, one sample may be missing, leading to a complete frame drop.
