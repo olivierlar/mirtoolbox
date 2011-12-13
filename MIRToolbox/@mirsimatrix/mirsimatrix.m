@@ -74,6 +74,9 @@ function varargout = mirsimatrix(orig,varargin)
         view.when = 'After';
     option.view = view;
     
+        arg2.position = 2;
+    option.arg2 = arg2;
+    
 specif.option = option;
 specif.nochunk = 1;
 varargout = mirfunction(@mirsimatrix,orig,varargin,nargout,specif,@init,@main);
@@ -111,7 +114,7 @@ if isa(orig,'mirsimatrix')
         end
     end
     m = set(orig,'Data',d);
-else
+elseif isempty(option.arg2)
     v = get(orig,'Data');
     d = cell(1,length(v));
     lK = 2*floor(option.K/2)+1;
@@ -236,10 +239,43 @@ else
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix');
     m = set(m,'Data',d,'Pos',[]);
+else
+    v1 = get(orig,'Data');
+    v2 = get(option.arg2,'Data');
+    v1 = v1{1}{1};
+    v2 = v2{1}{1};
+    nf1 = size(v1,2);
+    nf2 = size(v2,2);
+    d = NaN(nf1,nf2);
+    disf = str2func(option.distance);
+    if strcmpi(option.distance,'cosine')
+        for i = 1:nf1
+            v1(:,i) = v1(:,i)/norm(v1(:,i));
+        end
+        for i = 1:nf2
+            v2(:,i) = v2(:,i)/norm(v2(:,i));
+        end
+    end
+    for i = 1:nf1
+        %if mirwaitbar && (mod(i,100) == 1 || i == nf1)
+        %    waitbar(i/nf1,handle);
+        %end
+        d(i,:) = disf(v1(:,i),v2);
+    end
+    d = {{d}};
+    m.diagwidth = NaN;
+    m.view = 's';
+    m.similarity = 0;
+    m.graph = {};
+    m.branch = {};
+    m = class(m,'mirsimatrix',mirdata(orig));
+    m = purgedata(m);
+    m = set(m,'Title','Dissimilarity matrix');
+    m = set(m,'Data',d,'Pos',[]);
 end
 lK = option.K;
 if not(isempty(postoption))
-    if strcmpi(m.view,'s')
+    if strcmpi(m.view,'s') && isempty(option.arg2)
         if strcmpi(postoption.view,'Horizontal')
             for k = 1:length(d)
                 for z = 1:length(d{k})
