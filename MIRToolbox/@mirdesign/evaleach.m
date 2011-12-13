@@ -350,9 +350,6 @@ if max(fpsz,fpsz2) > CHUNKLIM
     nfr = size(fp,2);                     % Total number of frames
     frch = max(ceil(CHUNKLIM/(fp(2,1)-fp(1,1))),2); % Number of frames per chunk
     frch = max(frch,frov*2);
-    [unused cut] = min(abs(fpe(1,frch:-1:1)));
-    %frch = frch - cut;
-        % this correspond to the  frame with less rounding error
     nch = ceil((nfr-frch)/(frch-frov))+1; % Number of chunks
     chbeg = (frch-frov)*(0:nch-1)+1;    % First frame in the chunk
     chend = (frch-frov)*(0:nch-1)+frch; % Last frame in the chunk

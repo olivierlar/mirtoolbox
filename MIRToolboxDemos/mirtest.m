@@ -171,3 +171,8 @@ f.tonal.chromagram.centroid{:}
 f.tonal.keyclarity{:}
 f.tonal.mode{:}
 f.tonal.hcdf{:}
+
+%pause
+close all
+
+mirfeatures('Folder')
