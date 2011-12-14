@@ -23,6 +23,12 @@ function varargout = mirkeystrength(orig,varargin)
         tri.type = 'Boolean';
         tri.default = 0;
     option.tri = tri;
+    
+        transp.key = 'Transpose';
+        transp.type = 'Integer';
+        transp.default = 0;
+        transp.when = 'After';
+    option.transp = transp;
 
 specif.option = option;
 specif.defaultframelength = .1;
@@ -32,10 +38,12 @@ varargout = mirfunction(@mirkeystrength,orig,varargin,nargout,specif,@init,@main
 
 
 function [x type] = init(x,option)
-if not(isamir(x,'mirchromagram'))
-    x = mirchromagram(x,'Weight',option.wth,'Triangle',option.tri,'Normal');
-else
-    x = mirchromagram(x,'Wrap','Normal');
+if not(isamir(x,'mirkeystrength'))
+    if not(isamir(x,'mirchromagram'))
+        x = mirchromagram(x,'Weight',option.wth,'Triangle',option.tri,'Normal');
+    else
+        x = mirchromagram(x,'Wrap','Normal');
+    end
 end
 type = 'mirkeystrength';
 
@@ -64,6 +72,7 @@ else
         for j = 1:length(mi)
             mj = mi{j};
             sj = zeros(12,size(mj,2),size(mj,3),2);
+            kj = cell(12,size(mj,2),size(mj,3));
             for k = 1:size(mj,2)
                 for l = 1:size(mj,3)
                     tmp = corrcoef([mj(:,k,l) gomezprofs']);
@@ -83,4 +92,15 @@ else
     k = set(k,'Title','Key strength','Abs','tonal center','Ord','strength',...
               'Tonic',kk,'Strength',st,'MultiData',{'maj','min'},'Interpolable',0);
 end
+k = after(k,postoption);
 k = {k c};
+
+
+function k = after(k,postoption)
+if postoption.transp
+    transp = mod(postoption.transp,12);
+    k = purgedata(k);
+    d = mirgetdata(k);
+    d = [d(13-transp:end,:,:,:);d(1:12-transp,:,:,:)];
+    k = set(k,'Data',{{d}});
+end
