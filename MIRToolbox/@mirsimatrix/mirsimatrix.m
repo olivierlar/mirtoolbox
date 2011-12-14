@@ -75,6 +75,7 @@ function varargout = mirsimatrix(orig,varargin)
     option.view = view;
     
         arg2.position = 2;
+        arg2.default = [];
     option.arg2 = arg2;
     
 specif.option = option;
@@ -166,9 +167,7 @@ elseif isempty(option.arg2)
                                 end
                             end
                         else
-                            tic
                             vv((h-1)*ll+1:h*ll,:) = vz(:,:,g,h);
-                            toc
                         end
                     end
                 end
@@ -242,10 +241,30 @@ elseif isempty(option.arg2)
 else
     v1 = get(orig,'Data');
     v2 = get(option.arg2,'Data');
+    n1 = get(orig,'Name');
+    n2 = get(option.arg2,'Name');
+    fp1 = get(orig,'FramePos');
+    fp2 = get(option.arg2,'FramePos');
     v1 = v1{1}{1};
     v2 = v2{1}{1};
     nf1 = size(v1,2);
     nf2 = size(v2,2);
+    nd = size(v1,4);
+    if nd>1
+        l1 = size(v1,1);
+        vv = zeros(l1*nd,nf1);
+        for h = 1:nd
+            vv((h-1)*l1+1:h*l1,:) = v1(:,:,1,h);
+        end
+        v1 = vv;
+        l2 = size(v2,1);
+        vv = zeros(l2*nd,nf2);
+        for h = 1:nd
+            vv((h-1)*l2+1:h*l2,:) = v2(:,:,1,h);
+        end
+        v2 = vv;
+        clear vv
+    end
     d = NaN(nf1,nf2);
     disf = str2func(option.distance);
     if strcmpi(option.distance,'cosine')
@@ -270,8 +289,8 @@ else
     m.branch = {};
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
-    m = set(m,'Title','Dissimilarity matrix');
-    m = set(m,'Data',d,'Pos',[]);
+    m = set(m,'Title','Dissimilarity matrix','Data',d,'Pos',[],...
+              'Name',{n1{1},n2{1}},'FramePos',{fp1{1},fp2{1}});
 end
 lK = option.K;
 if not(isempty(postoption))
