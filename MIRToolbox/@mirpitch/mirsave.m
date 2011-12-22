@@ -22,7 +22,7 @@ for k = 1:length(d)
             if isa(a,'mirpitch')
                 ampi = amp{k}{i};
             end
-            synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
+            synth = zeros(ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1,1);
             for j = 1:size(di,2)
                 if iscell(di)
                     dj = di{j};
@@ -45,13 +45,13 @@ for k = 1:length(d)
                         ampj = ones(size(dj),k2-k1+1);
                     end
                     synth(k1:k2) = synth(k1:k2) ...
-                        + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1) ...
-                                .*hann(k2-k1+1)';
+                        + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1)' ...
+                                .*hann(k2-k1+1);
                 end
             end
-            out = [out synth];
+            out = [out;synth];
             if size(dk{1},3)>1
-                out = [out rand(1,10)];
+                out = [out;rand(1,10)];
             end
         end
     end
