@@ -36,7 +36,9 @@ for i = 1:nf
     di = d{i};
     fsi = fs{i};
     nmi = nm{i};
-    chi = ch{i};
+    if length(ch)>=i
+        chi = ch{i};
+    end
     out = [];
     for j = 1:length(di)
         di{j} = di{j}./repmat(maxd,size(di{j}))*.9999;
