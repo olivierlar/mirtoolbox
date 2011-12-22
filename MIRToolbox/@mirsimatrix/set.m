@@ -5,6 +5,7 @@ function mm = set(m,varargin)
 propertyArgIn = varargin;
 graph = m.graph;
 branch = m.branch;
+warp = m.warp;
 d = mirdata(m);
 while length(propertyArgIn) >= 2,
    prop = propertyArgIn{1};
@@ -15,6 +16,8 @@ while length(propertyArgIn) >= 2,
            graph = val;
        case 'Branch'
            branch = val;
+       case 'Warp'
+           warp = val;
        otherwise
            d = set(d,prop,val);
    end
@@ -24,4 +27,5 @@ mm.view = m.view;
 mm.similarity = m.similarity;
 mm.graph = graph;
 mm.branch = branch;
+mm.warp = warp;
 mm = class(mm,'mirsimatrix',d);

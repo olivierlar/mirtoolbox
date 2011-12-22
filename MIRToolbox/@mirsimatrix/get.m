@@ -9,6 +9,8 @@ switch propName
         val = a.graph;
     case 'Branch'
         val = a.branch;
+    case 'Warp'
+        val = a.warp;
     otherwise
         val = get(mirdata(a),propName);
 end

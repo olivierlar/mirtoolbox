@@ -74,6 +74,12 @@ function varargout = mirsimatrix(orig,varargin)
         view.when = 'After';
     option.view = view;
     
+        warp.key = 'Warp';
+        warp.type = 'Boolean';
+        warp.default = 0;
+        warp.when = 'After';
+    option.warp = warp;
+    
         arg2.position = 2;
         arg2.default = [];
     option.arg2 = arg2;
@@ -287,6 +293,7 @@ else
     m.similarity = 0;
     m.graph = {};
     m.branch = {};
+    m.warp = [];
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix','Data',d,'Pos',[],...
@@ -368,6 +375,36 @@ if not(isempty(postoption))
             end
         end
         m = set(m,'Data',d,'FramePos',fp);
+    end
+    if postoption.warp
+        thres = .5;
+        for k = 1:length(d)
+            for z = 1:length(d{k})
+                dz = exp(-100*d{k}{z});
+                bests = zeros(size(dz)+1);
+                bests(1,2:end) = Inf;
+                bests(2:end,1) = Inf;
+                paths = cell(size(dz)+1);
+                for i = 1:size(dz,1)
+                    for j = 1:size(dz,2)
+                        [best,index] = min([bests(i,j),...
+                                            bests(i+1,j),...
+                                            bests(i,j+1)]);
+                        bests(i+1,j+1) = best + dz(i,j);
+                        switch index
+                            case 1
+                                path = paths{i,j};
+                            case 2
+                                path = paths{i+1,j};
+                            case 3
+                                path = paths{i,j+1};
+                        end
+                        paths{i+1,j+1} = [path;i j]; 
+                    end
+                end
+            end
+        end
+        m = set(m,'Warp',paths{end});
     end
 end
 
