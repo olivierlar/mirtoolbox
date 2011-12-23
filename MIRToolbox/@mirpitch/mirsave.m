@@ -1,27 +1,26 @@
-function mirsave(a)
+function mirsave(a,f)
 
 d = get(a,'Data');
-if isa(a,'mirpitch')
-    amp = get(a,'Amplitude');
-end
+amp = get(a,'Amplitude');
 n = get(a,'Name');
-t = get(a,'Title');
-c = get(a,'Channels');
 fp = get(a,'FramePos');
-out = cell(1,length(d));
 
-for k = 1:length(d)
+if nargin == 1
+    f = '.mirpitch.wav';
+end
+
+nf = length(d);
+for k = 1:nf
     dk = d{k};
     if not(iscell(dk))
         dk = {dk};
     end
+    nk = n{k};
     out = [];
     for l = 1:size(dk{1},3)
         for i = 1:length(dk)
             di = dk{i};
-            if isa(a,'mirpitch')
-                ampi = amp{k}{i};
-            end
+            ampi = amp{k}{i};
             synth = zeros(ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1,1);
             for j = 1:size(di,2)
                 if iscell(di)
@@ -39,11 +38,7 @@ for k = 1:length(d)
                 if not(isempty(dj))
                     k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
                     k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
-                    if isa(a,'mirpitch')
-                        ampj = repmat(ampj,1,k2-k1+1);
-                    else
-                        ampj = ones(size(dj),k2-k1+1);
-                    end
+                    ampj = repmat(ampj,1,k2-k1+1);
                     synth(k1:k2) = synth(k1:k2) ...
                         + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1)' ...
                                 .*hann(k2-k1+1);
@@ -56,35 +51,11 @@ for k = 1:length(d)
         end
     end
     fout = miraudio(out,44100);
-    mirsave(fout,[n{k},'.',t]);
-end
-
-
-function oldmirsave % not used anymore
-d = get(a,'Data');
-nf = length(d);
-fp = get(a,'FramePos');
-nm = get(a,'Name');
-t = get(a,'Title');
-for i = 1:nf
-    nmi = nm{i};
-    di = d{i}{1};
-    fpi = fp{i}{1};
     
-    %Let's remove the extension from the original files
-    if length(nmi)>3 && strcmpi(nmi(end-3:end),'.wav')
-        nmi(end-3:end) = [];
-    elseif length(nmi)>2 && strcmpi(nmi(end-2:end),'.au')
-        nmi(end-2:end) = [];
-    end    
-    n = [nmi,'.',lower(t),'.txt'];
-    
-    fid = fopen(n, 'wt');
-    fprintf(fid,'Frame_start Frame_end Data \n');
-
-    for j = 1:length(di)
-        fprintf(fid,'%g %g %g \n',fpi(1,j),fpi(2,j),di(j));
+    if nf>1 || strcmp(f(1),'.')
+        nk = [nk f];
+    else
+        nk = f;
     end
-    fclose(fid);
-    disp([n,' saved.']);
+    mirsave(fout,nk);
 end

@@ -21,7 +21,6 @@ fs = get(e,'Sampling');
 nm = get(e,'Name');
 for i = 1:nf
     di = d{i}{1};
-    fsi = fs{i};
     nmi = nm{i};
     di = resample(di,11025,round(fs{i}));
     di = rand(size(di)).*di;

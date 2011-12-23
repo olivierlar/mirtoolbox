@@ -1,14 +1,18 @@
-function mirsave(a)
+function mirsave(a,f)
 
 d = get(a,'Data');
 n = get(a,'Name');
-t = get(a,'Title');
-c = get(a,'Channels');
 fp = get(a,'FramePos');
-out = cell(1,length(d));
 
-for k = 1:length(d)
+if nargin == 1
+    t = get(a,'Title');
+    f = ['.' t '.mir'];
+end
+
+nf = length(d);
+for k = 1:nf
     dk = d{k};
+    nk = n{k};
     if not(iscell(dk))
         dk = {dk};
     end
@@ -37,35 +41,11 @@ for k = 1:length(d)
         end
     end
     fout = miraudio(out,44100);
-    mirsave(fout,[n{k},'.',t]);
-end
-
-
-function oldmirsave % not used anymore
-d = get(a,'Data');
-nf = length(d);
-fp = get(a,'FramePos');
-nm = get(a,'Name');
-t = get(a,'Title');
-for i = 1:nf
-    nmi = nm{i};
-    di = d{i}{1};
-    fpi = fp{i}{1};
     
-    %Let's remove the extension from the original files
-    if length(nmi)>3 && strcmpi(nmi(end-3:end),'.wav')
-        nmi(end-3:end) = [];
-    elseif length(nmi)>2 && strcmpi(nmi(end-2:end),'.au')
-        nmi(end-2:end) = [];
-    end    
-    n = [nmi,'.',lower(t),'.txt'];
-    
-    fid = fopen(n, 'wt');
-    fprintf(fid,'Frame_start Frame_end Data \n');
-
-    for j = 1:length(di)
-        fprintf(fid,'%g %g %g \n',fpi(1,j),fpi(2,j),di(j));
+    if nf>1 || strcmp(f(1),'.')
+        nk = [nk f];
+    else
+        nk = f;
     end
-    fclose(fid);
-    disp([n,' saved.']);
+    mirsave(fout,nk);
 end
