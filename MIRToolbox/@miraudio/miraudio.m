@@ -303,9 +303,8 @@ for h = 1:length(d)
             rms = zeros(1,nframes);
             for j = 1:nframes
                 st = floor((j-1)*trimhop)+1;
-                for z = 1:size(dk,3)
-                    rms(1,j,z) = norm(dk(st:st+trimframe-1,1,z))/sqrt(trimframe);
-                end
+                ss = sum(dk(st:st+trimframe-1,1,:),3);
+                rms(j) = norm(ss)/sqrt(trimframe);
             end
             rms = (rms-repmat(min(rms),[1,size(rms,2),1]))...
                      ./repmat(max(rms)-min(rms),[1,size(rms,2),1]);
