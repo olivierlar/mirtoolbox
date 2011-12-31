@@ -301,13 +301,12 @@ for h = 1:length(d)
             trimhop = 10;
             nframes = floor((length(tk)-trimframe)/trimhop)+1;
             rms = zeros(1,nframes);
+            ss = sum(dk,3);
             for j = 1:nframes
                 st = floor((j-1)*trimhop)+1;
-                ss = sum(dk(st:st+trimframe-1,1,:),3);
-                rms(j) = norm(ss)/sqrt(trimframe);
+                rms(j) = norm(ss(st:st+trimframe-1))/sqrt(trimframe);
             end
-            rms = (rms-repmat(min(rms),[1,size(rms,2),1]))...
-                     ./repmat(max(rms)-min(rms),[1,size(rms,2),1]);
+            rms = (rms-min(rms))./(max(rms)-min(rms));
             nosil = find(rms>para.trimthreshold);
             if strcmpi(para.trim,'Trim') || strcmpi(para.trim,'TrimStart') ...
                                          || strcmpi(para.trim,'TrimBegin')
