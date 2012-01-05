@@ -51,20 +51,26 @@ if iscell(x) %not(isamir(x,'mirmidi'))
     dr = get(o,'ReleasePos');
     df = get(o,'FramePos');
 else
-    do = NaN;
+    df = get(x,'FramePos');
+    do = [];
 end
 dp = get(x,'Data');
-%fp = get(x,'FramePos');
 nmat = cell(1,length(dp));
 for i = 1:length(dp)
     nmat{i} = [];
     for j = 2:length(dp{i})
-        tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
-        dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
-        if not(iscell(do))
+        if isempty(do)
+            tij = df{i}{j}(1);
+            dij = df{i}{j}(2)- tij;
             vij = 120;
         else
-            vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
+            tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
+            dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
+            if not(iscell(do))
+                vij = 120;
+            else
+                vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
+            end
         end
         for k = 1:size(dp{i}{j},3)
             for l = 1:size(dp{i}{j},2)
