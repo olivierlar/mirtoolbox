@@ -250,7 +250,7 @@ else
                                      strcmpi(option.nw,'Yes')
             option.win = 'hanning';
         else
-            option.win = postoption.nw;
+            option.win = option.nw;
         end
     end
 
