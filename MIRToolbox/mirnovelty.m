@@ -60,9 +60,6 @@ if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
                       'Width',option.K,option.transf);
 end
-if isa(x,'mirdesign')
-    x = set(x,'Overlap',ceil(option.K));
-end
 
 
 function y = main(orig,option,postoption)
