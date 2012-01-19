@@ -140,9 +140,13 @@ else
             fprintf('\n')
             display(['*** File # ',num2str(i),'/',num2str(l),': ',a{f}]);
         end
-        tic
+        if mirverbose
+            tic
+        end
         yf = evalaudiofile(d,a{f},sr(f),lg(f),w(:,f),{},0,f,single,'',ch);
-        toc
+        if mirverbose
+            toc
+        end
         y{f} = yf;
         if not(isempty(export))
             if strncmpi(export,'Separately',10)
