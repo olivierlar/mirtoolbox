@@ -92,6 +92,11 @@ function varargout = mirpitch(orig,varargin)
             filtertype.default = '2Channels';
         option.filtertype = filtertype;
 
+            sum.key = 'Sum';
+            sum.type = 'Boolean';
+            sum.default = 1;
+        option.sum = sum;
+
             gener.key = {'Generalized','Compress'};
             gener.type = 'Integer';
             gener.default = .5;
@@ -182,11 +187,6 @@ function varargout = mirpitch(orig,varargin)
         frame.default = [0 0];
         frame.keydefault = [NaN NaN];
     option.frame = frame;
-
-        sum.key = 'Sum';
-        sum.type = 'Boolean';
-        sum.default = 1;
-    option.sum = sum;
     
 %% preset model
 
