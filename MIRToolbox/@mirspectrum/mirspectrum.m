@@ -531,6 +531,7 @@ if option.collapsed
 end
 m = get(s,'Magnitude');
 f = get(s,'Frequency');
+sr = get(s,'Sampling');
 for k = 1:length(m)
     if not(iscell(m{k}))
         m{k} = {m{k}};
@@ -600,7 +601,7 @@ if option.nl
     lg = get(s,'Length');
     for k = 1:length(m)
         for l = 1:length(m{k})
-            m{k}{l} = m{k}{l}/lg{k}{l};
+            m{k}{l} = m{k}{l}/(lg{k}{l}/sr{k});
         end
     end
 end

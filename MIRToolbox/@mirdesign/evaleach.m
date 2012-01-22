@@ -48,7 +48,7 @@ a = d.argin;
 ch = d.chunk;
 chan = d.channel;
 specif = d.specif;
-if isaverage(specif)
+if iscombinemethod(specif,'Average') || iscombinemethod(specif,'Sum')
     specif.eachchunk = 'Normal';
 end
 
@@ -207,8 +207,23 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             end
         end
         
-        y = afterchunk_noframe(y,lsz,d,afterpostoption,d2);
+        if ~isstruct(y)
         % Final operations to be executed after the chunk decomposition
+            if iscombinemethod(d2.specif,'Average')
+                y{1} = divideweightchunk(y{1},lsz);
+            elseif not(isempty(afterpostoption)) && isempty(d2.tmpfile)
+                y{1} = d.method(y{1},[],afterpostoption);
+            end
+            if not(isempty(d2.tmpfile))
+                adr = ftell(d2.tmpfile.fid);
+                fclose(d2.tmpfile.fid);
+                ytmpfile.fid = fopen('tmpfile.mirtoolbox');
+                fseek(ytmpfile.fid,adr,'bof');
+                ytmpfile.data = y{1};
+                ytmpfile.layer = 0;
+                y{1} = set(y{1},'TmpFile',ytmpfile);
+            end
+        end
                 
         if isa(d,'mirstruct') && ...
                 (isempty(d.frame) || isfield(d.frame,'dontchunk'))
@@ -421,7 +436,8 @@ if ischar(single) && not(isempty(old))
     old = {old{1}};
 end
 if isempty(sg)
-    if isaverage(d2.specif)
+    if iscombinemethod(d2.specif,'Average') || ...
+            iscombinemethod(d2.specif,'Sum')
         % Measure total size for later averaging
         if iscell(new)
             new1 = new{1};
@@ -429,7 +445,9 @@ if isempty(sg)
             new1 = new;
         end
         dnew = get(new1,'Data');
-        dnew = mircompute(@multweight,dnew,chunks(2,i)-chunks(1,i)+1);
+        if iscombinemethod(d2.specif,'Average')
+            dnew = mircompute(@multweight,dnew,chunks(2,i)-chunks(1,i)+1);
+        end
         if iscell(new)
             new{1} = set(new1,'Data',dnew);
         else
@@ -456,6 +474,7 @@ if isempty(sg)
         if i == 1
             res = new;
         else
+            res = cell(1,length(old));
             if isfield(d2.specif,'combinechunk')
                 if not(iscell(d2.specif.combinechunk))
                     method = {d2.specif.combinechunk};
@@ -465,18 +484,48 @@ if isempty(sg)
                 for z = 1:length(old)
                     if isframed(old{z})
                         res(z) = combineframes(old{z},new{z});
-                    elseif ischar(method{z})
-                        if strcmpi(method{z},'Concat')
-                            res{z} = concatchunk(old{z},new{z},d2.ascending);
-                        elseif strcmpi(method{z},'Average')
-                            res{z} = sumchunk(old{z},new{z});
-                        else
-                            error(['SYNTAX ERROR: ',...
-                                method{z},...
-                        ' is not a known keyword for combinechunk.']);
-                        end
                     else
-                        res{z} = method{z}(old{z},new{z});
+                        if ischar(method{z})
+                            if strcmpi(method{z},'Concat')
+                                do = get(old{z},'Data');
+                                dn = get(new{z},'Data');
+                                fpo = get(old{z},'FramePos');
+                                fpn = get(new{z},'FramePos');
+                                if isa(old,'mirscalar')
+                                    res{z} = set(old{z},...
+                                        'Data',{{[do{1}{1},dn{1}{1}]}},...
+                                        'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                else
+                                    to = get(old{z},'Pos');
+                                    tn = get(new{z},'Pos');
+                                    if d2.ascending
+                                        res{z} = set(old{z},...
+                                            'Data',{{[do{1}{1};dn{1}{1}]}},...
+                                            'Pos',{{[to{1}{1};tn{1}{1}]}},...
+                                            'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                    else
+                                        res{z} = set(old{z},...
+                                            'Data',{{[dn{1}{1};do{1}{1}]}},...
+                                            'Pos',{{[tn{1}{1};to{1}{1}]}},...
+                                            'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                    end
+                                end
+                            elseif strcmpi(method{z},'Average') || ...
+                                    strcmpi(method{z},'Sum')
+                                do = get(old{z},'Data');
+                                dn = get(new{z},'Data');
+                                res{z} = set(old{z},...
+                                            'ChunkData',do{1}{1}+dn{1}{1});
+                            else
+                                error(['SYNTAX ERROR: ',method{z},...
+                            ' is not a known keyword for combinechunk.']);
+                            end
+                        else
+                            res{z} = method{z}(old{z},new{z});
+                        end
+                        lo = get(old{z},'Length');
+                        ln = get(new{z},'Length');
+                        res{z} = set(res{z},'Length',{{lo{1}{1}+ln{1}{1}}});
                     end
                 end
             else
@@ -484,7 +533,8 @@ if isempty(sg)
                     if isframed(old{z})
                         res(z) = combineframes(old{z},new{z});
                     else
-                        mirerror('MIREVAL','Chunk recombination in non-framed mode is not available for all features yet. Please turn off the chunk decomposition.');
+                        mirerror('MIREVAL',...
+'Chunk recombination in non-framed mode is not available for all features yet. Please turn off the chunk decomposition.');
                     end
                 end
             end
@@ -498,28 +548,6 @@ else
             res{z} = combinesegment(old{z},new{z});
         end
     end
-end
-
-
-function data = afterchunk_noframe(data,lsz,d,afterpostoption,d2)
-if isstruct(data)
-    return
-end
-if isfield(d2.specif,'afterchunk')
-    data{1} = d2.specif.afterchunk(data{1},lsz,d.postoption);
-elseif isaverage(d2.specif)
-    data{1} = divideweightchunk(data{1},lsz);
-elseif not(isempty(afterpostoption)) && isempty(d2.tmpfile)
-    data{1} = d.method(data{1},[],afterpostoption);
-end
-if not(isempty(d2.tmpfile))
-    adr = ftell(d2.tmpfile.fid);
-    fclose(d2.tmpfile.fid);
-    ytmpfile.fid = fopen('tmpfile.mirtoolbox');
-    fseek(ytmpfile.fid,adr,'bof');
-    ytmpfile.data = data{1};
-    ytmpfile.layer = 0;
-    data{1} = set(data{1},'TmpFile',ytmpfile);
 end
             
 
@@ -793,13 +821,13 @@ else
 end
 
 
-function res = isaverage(specif)
+function res = iscombinemethod(specif,method)
 res = isfield(specif,'combinechunk') && ...
         ((ischar(specif.combinechunk) && ...
-          strcmpi(specif.combinechunk,'Average')) || ...
+          strcmpi(specif.combinechunk,method)) || ...
          (iscell(specif.combinechunk) && ...
           ischar(specif.combinechunk{1}) && ...
-          strcmpi(specif.combinechunk{1},'Average')));
+          strcmpi(specif.combinechunk{1},method)));
       
 
 function d0 = callbeforechunk(d0,d,w,lsz)
@@ -841,29 +869,6 @@ if not(ischar(d)) && not(iscell(d))
         drawnow
     else
         d0 = callbeforechunk(d0,d.argin,w,lsz);
-    end
-end
-
-
-function y = concatchunk(old,new,ascending)
-do = get(old,'Data');
-dn = get(new,'Data');
-fpo = get(old,'FramePos');
-fpn = get(new,'FramePos');
-if isa(old,'mirscalar')
-    y = set(old,'Data',{{[do{1}{1},dn{1}{1}]}},...
-                'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
-else
-    to = get(old,'Pos');
-    tn = get(new,'Pos');
-    if ascending
-        y = set(old,'Data',{{[do{1}{1};dn{1}{1}]}},...
-                    'Pos',{{[to{1}{1};tn{1}{1}]}},...
-                    'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
-    else
-        y = set(old,'Data',{{[dn{1}{1};do{1}{1}]}},...
-                    'Pos',{{[tn{1}{1};to{1}{1}]}},...
-                    'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
     end
 end
 
@@ -968,16 +973,6 @@ if isa(old,'miremotion')
         );
 end
  
-
-function y = sumchunk(old,new,order)
-%do = mirgetdata(old);
-%dn = mirgetdata(new);
-do = get(old,'Data');
-do = do{1}{1};
-dn = get(new,'Data');
-dn = dn{1}{1};
-y = set(old,'ChunkData',do+dn);
-        
 
 function y = divideweightchunk(orig,length)
 d = get(orig,'Data');
