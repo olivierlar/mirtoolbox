@@ -295,6 +295,9 @@ elseif isa(x,'mirdata')
                     if iscell(dsm)
                         dsm = dsm{1};
                     end
+                    if size(dsm,2) == 1
+                        dsm = dsm';
+                    end
                     dsm(:,find(dsm(1,:) <= dtk(1))) = [];
                     dsm(:,find(dsm(end,:) >= dtk(end))) = [];
                     % It is presupposed here that the segmentations times
@@ -304,9 +307,6 @@ elseif isa(x,'mirdata')
                     % Practically, the peak picking for instance is based 
                     % therefore on a frame analysis (such as novelty), and
                     % segmentation are inferred between these frames...
-                    if size(dsm,2) == 1
-                        dsm = dsm';
-                    end
                     fsk = [fsk dsm];
                 end
             end

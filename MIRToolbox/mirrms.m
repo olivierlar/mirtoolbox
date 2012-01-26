@@ -31,7 +31,8 @@ if ~isamir(x,'mirscalar')
     v = mircompute(@algo,d);
     x = mirscalar(x,'Data',v,'Title','RMS energy');
 end
-if isstruct(postoption) && isfield(postoption,'notchunking') && postoption.notchunking
+if isstruct(postoption) && isfield(postoption,'notchunking') ...
+        && postoption.notchunking
     x = after(x);
 end
 
