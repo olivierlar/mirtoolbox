@@ -50,38 +50,17 @@ else
     d = get(f,'Data');
 end
 l = length(d);
+m = cell(1,l);
 for i = 1:l
-    if iscell(d{i})
-        if length(d{i}) > 1
-            error('ERROR IN MIRMEAN: segmented data not accepted yet.');
-        else
-            dd = d{i}{1};
-        end
-    else
-        dd = d{i};
-    end
-    %dd = uncell(dd);
-    if 0 %iscell(dd)
-        j = 0;
-        singul = 1;
-        ddd = [];
-        while j<length(dd) && singul
-            j = j+1;
-            if length(dd{j}) > 1
-                singul = 0;
-            elseif length(dd{j}) == 1
-                ddd(end+1) = dd{j};
-            end
-        end
-        if singul
-            dd = ddd;
-        end
-    end
+    dd = d{i};
     if iscell(dd)
-        m{i} = {zeros(1,length(dd))};
+        m{i} = zeros(1,length(dd));
+        fpi = zeros(2,length(dd));
         for j = 1:length(dd)
-            m{i}{1}(j) = mean(dd{j});
+            m{i}(j) = mean(dd{j});
+            fpi(:,j) = [fp{i}{j}(1);fp{i}{j}(end)];
         end
+        fp{i} = fpi;
     elseif size(dd,2) < 2
         nonan = find(not(isnan(dd)));
         dn = dd(nonan);
@@ -108,4 +87,4 @@ for i = 1:l
         end
     end
 end
-m = mirscalar(f,'Data',m,'Title',['Average of ',ti]);
+m = mirscalar(f,'Data',m,'Title',['Average of ',ti],'FramePos',fp);
