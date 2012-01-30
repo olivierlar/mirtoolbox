@@ -17,7 +17,8 @@ if isempty(x)
     return
 end
 
-if ischar(x) % The input is a file name.
+if ischar(x) || ...
+        (iscell(x) && ischar(x{1})) % The input is a file name.
     % Starting point of the design process
     design_init = 1;
     filename = x;
@@ -62,7 +63,8 @@ if isa(orig,'mirdesign')
                 
         o = mirdesign(method,orig,during,after,specif,type);
                     
-        if design_init && not(strcmpi(filename,'Design'))
+        if design_init && ...
+                not(ischar(filename) && strcmpi(filename,'Design'))
             % Now the design flowchart has been completed created.
             % If the 'Design' keyword not used,
             % the function is immediately evaluated

@@ -17,7 +17,7 @@ function v = mireval(d,file,single,export)
 %   The evaluation starts with a top-down traversal of the design flowchart
 %       (evaleach).
 
-if not(ischar(file))
+if not(ischar(file) || (iscell(file) && ischar(file{1})))
     error('ERROR IN MIREVAL: the second input should be a file name or ''Folder''')
 end
 
@@ -33,16 +33,23 @@ end
 w = [];    % Array containing the index positions of the starting and ending dates.
 s = getsize(d);
 ch = 1;
-if strcmpi(file,'Folder') || strcmpi(file,'Folders')
+if ~iscell(file) && (strcmpi(file,'Folder') || strcmpi(file,'Folders'))
     [l w sr lg a] = evalfolder('',s,0,[],[],[],{},strcmpi(file,'Folders'));
     if l == 0
         disp('No sound file detected in this folder.')
     end
-elseif length(file)>3 && strcmpi(file(end-3:end),'.txt')
-    a = importdata(file);
+elseif iscell(file) || (length(file)>3 && strcmpi(file(end-3:end),'.txt'))
+    if iscell(file)
+        a = file;
+    else
+        a = importdata(file);
+    end
     l = length(a);
+    w = zeros(2,l);
+    sr = zeros(1,l);
+    lg = zeros(1,l);
     for i = 1:l
-        [di,tpi,fpi,fi,lg] = mirread([],a{i},0,0,0);
+        [di,tpi,fpi,fi,lg(i)] = mirread([],a{i},0,0,0);
         if not(isempty(s))
             interval = s(1:2);
             if s(3)
