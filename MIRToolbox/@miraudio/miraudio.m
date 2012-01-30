@@ -50,6 +50,11 @@ function varargout = miraudio(orig,varargin)
 %           whole file name.
 
 
+if isempty(orig)
+    varargout = {{}};
+    return
+end
+
 if isnumeric(orig)
     if size(orig,2) > 1 || size(orig,3) > 1
         mirerror('MIRAUDIO','Only column vectors can be imported into mirtoolbox.');

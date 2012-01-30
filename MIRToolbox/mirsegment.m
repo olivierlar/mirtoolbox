@@ -157,6 +157,11 @@ p = {};
 m = {};
 fe = {};
 
+if isempty(x)
+    f = {};
+    return
+end
+
 if isa(x,'mirdesign')
     if not(get(x,'Eval'))
         % During bottom-up construction of the general design
@@ -264,6 +269,7 @@ elseif isa(x,'mirdata')
         st = cell(1,length(dx));
         sx = cell(1,length(dx));
         cl = cell(1,length(dx));
+        l = cell(1,length(dx));
         for k = 1:length(dx)
             dxk = dx{k}{1}; % values in kth audio file
             dtk = dt{k}{1}; % time positions in kth audio file
@@ -314,9 +320,10 @@ elseif isa(x,'mirdata')
             fsk = sort(fsk); % Here is the chronological ordering
             
             if isempty(fsk)
-                ffsk = {[0;dtk(end)]};
+                ffsk = {[dtk(1);dtk(end)]};
                 sxk = {dxk};
                 stk = {dtk};
+                lk = {dtk(end)-dtk(1)};
                 n = 1;
             elseif size(fsk,1) == 1
                 ffsk = cell(1,length(fsk)+1);
@@ -340,10 +347,11 @@ elseif isa(x,'mirdata')
                 sxk = cell(1,n); % each cell contains a segment
                 stk = cell(1,n); % each cell contains
                                  % the corresponding time positions
-
+                lk = cell(1,n);  % each cell containing the segment length
                 for i = 1:n
                     sxk{i} = dxk(crd(i):crd(i+1)-1,1,:);
                     stk{i} = dtk(crd(i):crd(i+1)-1);
+                    lk{i} = size(stk{i},1);
                 end
 
             elseif size(fsk,1) == 2
@@ -364,17 +372,21 @@ elseif isa(x,'mirdata')
                 sxk = cell(1,n); % each cell contains a segment
                 stk = cell(1,n); % each cell contains
                                  % the corresponding time positions
+                lk = cell(1,n);  % each cell containing the segment length
                 for i = 1:n
                     sxk{i} = dxk(crd(i,1):crd(i,2),1,:);
                     stk{i} = dtk(crd(i,1):crd(i,2));
+                    lk{i} = size(stk{i},1);
                 end
             end
             sx{k} = sxk;
             st{k} = stk;
             fp{k} = ffsk;
+            l{k} = lk;
             cl{k} = 1:n;
         end
-        f = set(x,'Data',sx,'Time',st,'FramePos',fp,'Clusters',cl);
+        f = set(x,'Data',sx,'Time',st,'FramePos',fp,...
+                  'Length',l,'Clusters',cl);
         p = strat;
         m = {};
         fe = {};
