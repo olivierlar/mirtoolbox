@@ -275,6 +275,8 @@ elseif isa(x,'mirdata')
             dtk = dt{k}{1}; % time positions in kth audio file
             if isa(option.strat,'mirdata')
                 dsk = ds{k}{1}; % segmentation times in kth audio file
+            elseif size(ds,2) > 1
+                dsk = {ds(:,k)};
             else
                 dsk = {ds};
             end
@@ -284,7 +286,7 @@ elseif isa(x,'mirdata')
                 if isa(option.strat,'mirdata')
                     dsj = dsk{j}; % segmentation times in jth segment
                 else
-                    dsj = ds;
+                    dsj = dsk;
                 end
                 if not(iscell(dsj))
                     dsj = {dsj};
