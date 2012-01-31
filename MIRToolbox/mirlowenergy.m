@@ -22,11 +22,6 @@ function varargout = mirlowenergy(x,varargin)
         asr.default = 0;
     option.asr = asr;
     
-        root.key = 'Root';
-        root.type = 'Boolean';
-        root.default = 1;
-    option.root = root;
-    
         thr.key = 'Threshold';
         thr.type = 'Integer';
         thr.default = NaN;
@@ -52,11 +47,10 @@ if option.asr
 end
 if isamir(x,'miraudio')
     if isframed(x)
-        x = mirrms(x,'Root',option.root);
+        x = mirrms(x);
     else
         x = mirrms(x,'Frame',option.frame.length.val,option.frame.length.unit,...
-                             option.frame.hop.val,option.frame.hop.unit,...
-                             'Root',option.root);
+                             option.frame.hop.val,option.frame.hop.unit);
     end
 end
 type = 'mirscalar';
