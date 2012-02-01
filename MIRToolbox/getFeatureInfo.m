@@ -54,6 +54,10 @@ end
                     getData(newField{1});
                     
                 end
+            elseif isequal(class(newField),'mirscalar') %reached the end of branch and found a mirscalar feature
+                    getData(newField);
+                    
+                   
             elseif isstruct(newField)
                 fieldBranch{fieldInd}=fieldName;
                 recursiveCheck(fieldBranch,newField);
