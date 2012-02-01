@@ -1166,7 +1166,7 @@ uistack(fig,'top');
             if strcmp(PPSstate,'play')
                 pausePlayer();
             end
-            set(peakH{featureInd},'XData',peakPos([1,2,2,1],:),'YData',[zeros(2,size(peakPos,2))+ylim(1);.9*(ylim(2)-ylim(1))*repmat(features.peaks{featureInd}{songInd},2,1)] + min(features.data{featureInd}{songInd}{1}), ...
+            set(peakH{featureInd},'XData',peakPos([1,2,2,1],:),'YData',[zeros(2,size(peakPos,2))+ylim(1);.9*(ylim(2)-ylim(1))*repmat(features.peaks{featureInd}{songInd},2,1) + abs(min(features.data{featureInd}{songInd}{1})-ylim(1))],...%min(features.data{featureInd}{songInd}{1})], ...
                 'FaceColor',peakColors(peakState,:),'EdgeColor',peakColors(peakState,:),'Visible','on');
             
             %%if play button is activated
