@@ -1,12 +1,9 @@
-function MIRplayer(a, varargin)
+function MIRplayer(arg,select)
 %Usage:
 %MIRplayer(a, varargin)
 %where
 %a= either session data saved by previous execution of MIRplayer,
-%   mirstruct (features and audio),
-%   or miraudio object
-%If a=miraudio, the second input argument should be mirstruct or mirscalar
-%with features.
+%   or struct or mirstruct (features),
 %------
 
 %TODO
@@ -21,66 +18,37 @@ function MIRplayer(a, varargin)
 
 
 
-if ischar(a) %session data given in a file
-    if (exist(strcat(a,'/featureInfo.mat'),'file') ~=2) || ~exist(strcat(a,'/1.wav'),'file')
+if ischar(arg) %session data given in a file
+    if (exist(strcat(arg,'/featureInfo.mat'),'file') ~=2) || ~exist(strcat(arg,'/1.wav'),'file')
         error('Session data file not found in a MATLAB file.');
     end
     disp('Loading the session. Please wait...');
-    load(strcat(a,'/featureInfo.mat'));
+    load(strcat(arg,'/featureInfo.mat'));
     if ~exist('features','var') || ~exist('songNames','var') || ~exist('xlims','var') || ~exist('songSampling','var')
         error('Session feature data file is not compatible with MIRplayer');
     end
-    withMiraudio=0;
     nBins=size(features.distribution,2);
     songs=1:length(songNames);
-elseif not(isequal(class(a),'miraudio'))
-    error('The first input input argument should be an miraudio object.');
 else
-    withMiraudio=1;
-    %the second argument should be the feature set
-    if ~isempty(varargin)
-        f=varargin{1};
+    %the first argument should be the feature set
+    if ~isstruct(arg) && ~iscell(arg) && ~isequal(class(arg),'mirscalar')
+        error('The first input argument should be struct or mirscalar variable.');
     end
-    
-    if ~isstruct(f) && ~iscell(f) && ~isequal(class(f),'mirscalar')
-        error('The second input argument should be struct or mirscalar variable.');
-    end
-    
-    %the third argument should be the song indices in variable a
-    songNames=get(a,'Name');
-    songData=get(a,'Data');    
-    songPos=get(a,'Pos');
-    songSampling=get(a,'Sampling');
-    
-    if length(varargin)>1
-        songs=int8(unique(varargin{2}));
         
-        if any(songs)<1 || any(songs)>length(songNames)
-            error('The third input argument should be an integer array of songs to be included in the analysis.');
-        end
+    if nargin>1
+        songs=int8(unique(select));
+        
+        %if any(songs)<1 || any(songs)>length(songNames)
+        %    error('The second input argument should be an integer array of songs to be included in the analysis.');
+        %end
     else
-        songs=1:length(songNames);
+        songs=[];
     end
-    
-    %get rid of useless data
-    songNames=songNames(songs);
-    songData=songData(songs);
-    songPos=songPos(songs);
-    xlims=zeros(length(songPos),2);
-    for i=1:length(songPos) %get rid of useless data (a huge amount of data in songPos and a variables)
-        xlims(i,1:2)=songPos{i}{1}([1,end]);
-    end
-    songSampling=songSampling(songs);
-    clear('a');
-    clear('songPos');
-    
+        
     nBins=100; %resolution of the feature distributions (for visualization)
     smoothingFactor=2;%round(max(3,nBins/10)); %for median filtering the distribution
-    features=getFeatureInfo(f, nBins,smoothingFactor,songs);
-    clear('f');
-    if ~isequal(features.songNames,songNames)
-        error('Song and feature sets must contain information on the same songs.')
-    end
+    features=getFeatureInfo(arg, nBins,smoothingFactor,songs);
+    clear('arg');
     
     %TODO: Audio could also be shown without features. Just to be able to check
     %out the songs before extracting features.
@@ -193,11 +161,11 @@ uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Call
         
         for i=1:length(songs)
             ind=songs(i);
-        if withMiraudio
-            wavwrite(songData{ind}{1},songSampling{ind},16,strcat(folderName{1},'/',num2str(i),'.wav'));
-        else
-            copyfile(strcat(a,'/',num2str(ind),'.wav'), strcat(folderName{1},'/',num2str(i),'.wav'));
-        end
+        %if withMiraudio
+        %    wavwrite(songData{ind}{1},songSampling{ind},16,strcat(folderName{1},'/',num2str(i),'.wav'));
+        %else
+        %    copyfile(strcat(a,'/',num2str(ind),'.wav'), strcat(folderName{1},'/',num2str(i),'.wav'));
+        %end
         end
             
         
@@ -316,7 +284,7 @@ audioPopupmenuH=   uicontrol(...    % list of available audio
     'Position',[.25 .7 .5 .1],...
     'Callback', @selectSong, ...
     'HandleVisibility','callback', ...
-    'String',songNames,...
+    'String',features.songNames,...
     'TooltipString','Available audio files', ...
     'Style','popupmenu');
 
@@ -805,21 +773,17 @@ uistack(fig,'top');
         end
         
         songInd=get(audioPopupmenuH, 'Value');
-        if withMiraudio
-        song=songData{songInd};
-        song=song{1};
-        else
-            song=wavread(strcat(a,'/',num2str(songInd),'.wav'));
-        end
-            
+        song = miraudio(features.songNames{songInd});    
         
         %start and end in seconds
-        xlim=xlims(songInd,:);
+        xlim=get(song,'Pos');
+        xlim = xlim{1}{1}([1 end]);
         ylim=[0,1];
-        Fs=songSampling{songInd};
+        Fs=get(song,'Sampling');
+        Fs = Fs{1};
         
         try
-            player = audioplayer(song, Fs);
+            player = audioplayer(mirgetdata(song), Fs);
         catch exception
             fixException(exception)
         end
@@ -832,7 +796,7 @@ uistack(fig,'top');
         set(aH,'Xlim',xlim);
         set(sliderAxes,'Xlim',[0,1]);
         
-        songImage=resample(song,1,round(Fs/downSampleRate));
+        songImage=mirgetdata(miraudio(song,'Sampling',downSampleRate));
         %songImage=.5+.5*(songImage-mean(songImage))/max(abs(songImage));
         
         songImage=(songImage-min(songImage))/(max(songImage)-min(songImage))-.5; %normalize to [-.5,.5], mean=0

@@ -81,7 +81,9 @@ end
     function getData(scalarFeature)
         
         featureData_tmp=get(scalarFeature,'Data');
-        featureData_tmp=featureData_tmp(songs);
+        if ~isempty(songs)
+            featureData_tmp=featureData_tmp(songs);
+        end
         
         
         %read the branch of fieldnames to get summarized
@@ -105,7 +107,9 @@ end
         end
         
         songNames{nFeatures}=get(scalarFeature,'Name'); %just to check that each feature is extracted from the same song. (what if the first song feature is empty due to the feature characteristics?)
-        songNames{nFeatures}=songNames{nFeatures}(songs);
+        if ~isempty(songs)
+            songNames{nFeatures}=songNames{nFeatures}(songs);
+        end
         if nFeatures>1 && ~isequal(songNames{1},songNames{nFeatures})
             error('%s: all features must relate to the same set of songs.',featureName);
         end
@@ -201,7 +205,10 @@ end
         
         features.data{nFeatures}=featureData_tmp;
         framePos=get(scalarFeature,'FramePos');
-        features.framePos{nFeatures}=framePos(songs);
+        if ~isempty(songs)
+            framePos = framePos(songs);
+        end
+        features.framePos{nFeatures}=framePos;
     end
 
 end
