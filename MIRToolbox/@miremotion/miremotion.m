@@ -128,7 +128,7 @@ if option.frame.length.val
         hop = hop*option.frame.length.val;
     end
     frames = 0:hop:1000000;
-    x = mirsegment(x,[frames;frames+option.frame.length.val]);
+    x = mirsegment(x,frames');
 elseif isa(x,'mirdesign')
     x = set(x,'NoChunk',1);
 end
