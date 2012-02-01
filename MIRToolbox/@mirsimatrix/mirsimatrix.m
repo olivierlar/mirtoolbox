@@ -240,6 +240,7 @@ elseif isempty(option.arg2)
     m.similarity = 0;
     m.graph = {};
     m.branch = {};
+    m.warp = [];
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix');
