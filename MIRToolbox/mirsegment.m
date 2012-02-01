@@ -275,7 +275,7 @@ elseif isa(x,'mirdata')
             dtk = dt{k}{1}; % time positions in kth audio file
             if isa(option.strat,'mirdata')
                 dsk = ds{k}{1}; % segmentation times in kth audio file
-            elseif size(ds,2) > 1
+            elseif size(ds,2) == length(dx)
                 dsk = {ds(:,k)};
             else
                 dsk = {ds};
@@ -303,11 +303,12 @@ elseif isa(x,'mirdata')
                     if iscell(dsm)
                         dsm = dsm{1};
                     end
-                    if size(dsm,2) == 1
-                        dsm = dsm';
+                    if size(dsm,1)>1 && size(dsm,2)>1
+                        mirerror('MIRSEGMENT',...
+                            'Segmentation matrix is not of required size.');
                     end
-                    dsm(:,find(dsm(1,:) <= dtk(1))) = [];
-                    dsm(:,find(dsm(end,:) >= dtk(end))) = [];
+                    dsm(dsm <= dtk(1)) = [];
+                    dsm(dsm >= dtk(end)) = [];
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
@@ -327,7 +328,7 @@ elseif isa(x,'mirdata')
                 stk = {dtk};
                 lk = {dtk(end)-dtk(1)};
                 n = 1;
-            elseif size(fsk,1) == 1
+            else
                 ffsk = cell(1,length(fsk)+1);
                 ffsk{1} = [dtk(1);fsk(1)];
                 for h = 1:length(fsk)-1
@@ -353,31 +354,6 @@ elseif isa(x,'mirdata')
                 for i = 1:n
                     sxk{i} = dxk(crd(i):crd(i+1)-1,1,:);
                     stk{i} = dtk(crd(i):crd(i+1)-1);
-                    lk{i} = size(stk{i},1);
-                end
-
-            elseif size(fsk,1) == 2
-                ffsk = cell(1,size(fsk,2));
-                for h = 1:length(fsk)
-                    ffsk{h} = [fsk(1,h);fsk(2,h)];
-                end
-                n = length(ffsk);
-                crd = zeros(2,n); % the sample positions of the
-                                  % segmentations in the channel
-                crd0 = 0;
-                for i = 1:n
-                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(1),1);
-                    crd(i,1) = crd0;
-                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(2),1);
-                    crd(i,2) = crd0;                    
-                end
-                sxk = cell(1,n); % each cell contains a segment
-                stk = cell(1,n); % each cell contains
-                                 % the corresponding time positions
-                lk = cell(1,n);  % each cell containing the segment length
-                for i = 1:n
-                    sxk{i} = dxk(crd(i,1):crd(i,2),1,:);
-                    stk{i} = dtk(crd(i,1):crd(i,2));
                     lk{i} = size(stk{i},1);
                 end
             end
