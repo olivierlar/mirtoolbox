@@ -31,7 +31,7 @@ if ischar(arg) %session data given in a file
     songs=1:length(songNames);
 else
     %the first argument should be the feature set
-    if ~isstruct(arg) && ~iscell(arg) && ~isequal(class(arg),'mirscalar')
+    if ~isstruct(arg) && ~iscell(arg) && ~isa(arg,'mirscalar')
         error('The first input argument should be struct or mirscalar variable.');
     end
         
@@ -1005,14 +1005,18 @@ uistack(fig,'top');
                 ydata = [];
                 for k = 1:length(features.data{featureInd}{songInd}{1})
                     xdata = [xdata repmat(mean(framePos(:,k)),[1 length(features.data{featureInd}{songInd}{1}{k})])];
-                    ydata = [ydata features.data{featureInd}{songInd}{1}{k}];
+                    ydata = [ydata features.data{featureInd}{songInd}{1}{k}(:)'];
                 end
+                linestyle = 'none';
+                marker = '+';
             else
                 xdata = mean(framePos);
                 ydata = features.data{featureInd}{songInd}{1};
+                linestyle = '?';
+                marker = 'none';
             end
             set(featureH{featureInd},'XData', xdata, ...
-                'YData',ydata,'Color','k','LineWidth',1,'Visible','on');
+                'YData',ydata,'Color','k','LineWidth',1,'Visible','on','LineStyle',linestyle,'Marker',marker);
         else
 
             set(featureH{featureInd},'XData', xlim, ...

@@ -23,11 +23,11 @@ songNames={};
 
 if isstruct(f)
     recursiveCheck(fieldBranch,f);
-elseif isequal(class(f),'mirscalar')
+elseif isa(f,'mirscalar')
     fieldInd=1;
     fieldName=get(f,'Title');
     getData(f);
-elseif iscell(f) && isequal(class(f{1}),'mirscalar')
+elseif iscell(f) && isa(f{1},'mirscalar')
         fieldInd=1;
         fieldName=get(f{1},'Title');
         getData(f{1});
@@ -136,7 +136,7 @@ end
             if iscell(featureData_tmp{song}{1})
                 tmp2 = [];
                 for i = 1:length(tmp)
-                    tmp2 = [tmp2 tmp{i}];
+                    tmp2 = [tmp2 tmp{i}(:)'];
                 end
                 tmp = tmp2;
             end
