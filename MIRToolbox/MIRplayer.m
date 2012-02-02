@@ -854,7 +854,7 @@ uistack(fig,'top');
             
             featureInd=str2num(get(hObject,'Tag'));
             
-            if isempty(features.data{featureInd}{songInd}{1}) || all(isnan(features.data{featureInd}{songInd}{1}))
+            if features.emptysong(songInd)
                 showFeatureStats([],[],featureInd);
                 if ~mainFeature
                     setAudioBackground();
@@ -943,12 +943,12 @@ uistack(fig,'top');
         %showFeatureStats([],[],featureInd, featureSongDistribution);
         
         %center feature to [-.5,.5]
-        if ~features.isSongLevel(featureInd) && (min(features.data{featureInd}{songInd}{1}) ~= max(features.data{featureInd}{songInd}{1}))
-            minValue=min(features.data{featureInd}{songInd}{1});
-            maxValue=max(features.data{featureInd}{songInd}{1});
+        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
+            %minValue=features.minsong(featureInd,songInd);
+            %maxValue=features.maxsong(featureInd,songInd);
             
-            set(featureH{featureInd},'XData',mean(features.framePos{featureInd}{songInd}{1}), ...
-                'YData',((features.data{featureInd}{songInd}{1}-minValue)/(maxValue-minValue)-.5)*.9*(ylim(2)-ylim(1))+mean(ylim), ...
+            set(featureH{featureInd},...'XData',mean(features.framePos{featureInd}{songInd}{1}), ...
+                ...'YData',((features.data{featureInd}{songInd}{1}-minValue)/(maxValue-minValue)-.5)*.9*(ylim(2)-ylim(1))+mean(ylim), ...
                 'Color',featureColors(featureState,:),'LineWidth',1,'Visible','on');            
         else
             
@@ -977,16 +977,18 @@ uistack(fig,'top');
         
         
         %compute feature information for visualization
-        if ~features.isSongLevel(featureInd) && (min(features.data{featureInd}{songInd}{1}) ~= max(features.data{featureInd}{songInd}{1}))
+        
+        
+        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
             framePos=features.framePos{featureInd}{songInd}{1};
             %add 5% overhead in aH
-            ylim=[min(features.data{featureInd}{songInd}{1}),max(features.data{featureInd}{songInd}{1})];
+            ylim=[features.minsong(featureInd,songInd),features.maxsong(featureInd,songInd)];
             ylim=ylim+.05*[ylim(1)-ylim(2),ylim(2)-ylim(1)];
         else
             framediff=maxFrameUpdateFrequency; %play audio normally
             framePos=[xlim(1):framediff:xlim(2);(xlim(1)+framediff):framediff:(xlim(2)+framediff)];
             %feature will be in the center of aH (in y-direction)
-            ylim=[min([0,features.data{featureInd}{songInd}{1}]),2*max([0,features.data{featureInd}{songInd}{1}])];
+            ylim=[min([0,features.minsong(featureInd,songInd)]),2*max([0,features.maxsong(featureInd,songInd)])];
             if all(ylim)==0
                 ylim=ylim+[-.05,.05];
             end
@@ -997,9 +999,20 @@ uistack(fig,'top');
         
         set(aH,'Ylim',ylim);
         
-        if ~features.isSongLevel(featureInd) && (min(features.data{featureInd}{songInd}{1}) ~= max(features.data{featureInd}{songInd}{1}))
-            set(featureH{featureInd},'XData', mean(framePos), ...
-                'YData',features.data{featureInd}{songInd}{1},'Color','k','LineWidth',1,'Visible','on');
+        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
+            if iscell(features.data{featureInd}{songInd}{1})
+                xdata = [];
+                ydata = [];
+                for k = 1:length(features.data{featureInd}{songInd}{1})
+                    xdata = [xdata repmat(mean(framePos(:,k)),[1 length(features.data{featureInd}{songInd}{1}{k})])];
+                    ydata = [ydata features.data{featureInd}{songInd}{1}{k}];
+                end
+            else
+                xdata = mean(framePos);
+                ydata = features.data{featureInd}{songInd}{1};
+            end
+            set(featureH{featureInd},'XData', xdata, ...
+                'YData',ydata,'Color','k','LineWidth',1,'Visible','on');
         else
 
             set(featureH{featureInd},'XData', xlim, ...
@@ -1170,7 +1183,7 @@ uistack(fig,'top');
             ticklabels{3}=num2str(features.valueRange(featureInd,2),'%1.2e');
         end
         
-        if isempty(features.data{featureInd}{songInd}{1}) || all(isnan(features.data{featureInd}{songInd}{1}))
+        if features.emptysong(songInd)
             set(noDataText,'Visible','on')
         else
             set(noDataText,'Visible','off')
@@ -1178,7 +1191,9 @@ uistack(fig,'top');
         set(DistPanel,'Title',upper(features.names{featureInd}));
         set(distAxes,'Xtick',[0,.5,1],'XTickLabel',ticklabels);
         set(featureDistPatch,'YData',[features.distribution(featureInd,:),0,0]);
-        set(songDistPatch,'YData',[features.songDistributions{featureInd}(songInd,:),0,0]/2);
+        if ~isempty(features.songDistributions{featureInd})
+            set(songDistPatch,'YData',[features.songDistributions{featureInd}(songInd,:),0,0]/2);
+        end
         
     end
 

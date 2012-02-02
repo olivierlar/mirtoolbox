@@ -94,10 +94,6 @@ end
         end
         featureName=strcat(featureName,fieldBranch{fieldInd});
         
-        if not(isnumeric(featureData_tmp{1}{1}))  %workaround for the problem of handling all but 1-D mirscalar data: exclude (for now)
-            warning('%s: not mirscalar feature vector, skipping...',featureName);
-            return
-        end
         nFeatures=nFeatures+1; %add feature
         
         if length(featureData_tmp{1}{1})==1
@@ -133,19 +129,31 @@ end
         %get value range of the feature (summarize its overal distribution)
         features.valueRange(nFeatures,1:2)=[Inf,-Inf];
         features.distribution(nFeatures,1:nBins)=zeros(1,nBins);
+        features.emptysong = zeros(1,length(featureData_tmp));
         
         for song=1:length(featureData_tmp)
-            if ~isempty(featureData_tmp{song}{1}) && ~all(isnan(featureData_tmp{song}{1}))
-                minValue=min(featureData_tmp{song}{1});
-                maxValue=max(featureData_tmp{song}{1});
+            tmp = featureData_tmp{song}{1};
+            if iscell(featureData_tmp{song}{1})
+                tmp2 = [];
+                for i = 1:length(tmp)
+                    tmp2 = [tmp2 tmp{i}];
+                end
+                tmp = tmp2;
+            end
+            if ~isempty(tmp) && ~all(isnan(tmp))
+                features.minsong(nFeatures,song) = min(tmp);
+                minValue = min(tmp);
+                features.maxsong(nFeatures,song) = max(tmp);
+                maxValue = max(tmp);
             else
                 warning('%s, song %d: No feature extracted. Check if there was some error in feature extraction. Including an empty feature...',featureName, song);
-                minValue=NaN;
-                maxValue=NaN;
+                features.minsong(nFeatures,song) = NaN;
+                features.maxsong(nFeatures,song) = NaN;
+                features.emptysong(song) = 1;
                 continue
             end
             
-            features.valueRange(nFeatures,1:2)=[ min(minValue,features.valueRange(nFeatures,1)), max(maxValue,features.valueRange(nFeatures,2)) ];
+            features.valueRange(nFeatures,1:2)=[ min(features.minsong(nFeatures,song),features.valueRange(nFeatures,1)), max(features.maxsong(nFeatures,song),features.valueRange(nFeatures,2)) ];
             
             
             
@@ -186,23 +194,27 @@ end
             
         end
         
-        for song=1:length(featureData_tmp)
-            %compute distribution of in one song, related to
-            %the featureValueRange
-            features.songDistributions{nFeatures}(song,1:nBins)=medfilt1(histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges),smoothingFactor); %histogram, values related to the featureValueRange
-            
-            if isequal(features.songDistributions{nFeatures}(song,1:nBins),zeros(1,nBins)) %if filtering was too harsh due to small number of feature values
-                features.songDistributions{nFeatures}(song,1:nBins)=histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges);
+        if iscell(featureData_tmp{song}{1})
+            features.songDistributions{nFeatures} = [];
+        else
+            for song=1:length(featureData_tmp)
+                %compute distribution of in one song, related to
+                %the featureValueRange
+                features.songDistributions{nFeatures}(song,1:nBins)=medfilt1(histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges),smoothingFactor); %histogram, values related to the featureValueRange
+
+                if isequal(features.songDistributions{nFeatures}(song,1:nBins),zeros(1,nBins)) %if filtering was too harsh due to small number of feature values
+                    features.songDistributions{nFeatures}(song,1:nBins)=histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges);
+                end
+
+                features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)+features.songDistributions{nFeatures}(song,1:nBins);
+
             end
-            
-            features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)+features.songDistributions{nFeatures}(song,1:nBins);
-            
+        
+            %map feature distributions to [0,1]
+            features.songDistributions{nFeatures}=features.songDistributions{nFeatures}./repmat(max(features.songDistributions{nFeatures},[],2),1,nBins);
+            features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)./repmat(max(features.distribution(nFeatures,1:nBins),[],2),1,nBins);
         end
-        
-        %map feature distributions to [0,1]
-        features.songDistributions{nFeatures}=features.songDistributions{nFeatures}./repmat(max(features.songDistributions{nFeatures},[],2),1,nBins);
-        features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)./repmat(max(features.distribution(nFeatures,1:nBins),[],2),1,nBins);
-        
+            
         features.data{nFeatures}=featureData_tmp;
         framePos=get(scalarFeature,'FramePos');
         if ~isempty(songs)
