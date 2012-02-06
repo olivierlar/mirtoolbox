@@ -523,18 +523,22 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
 end
 if (isfield(postoption,'attack') && postoption.attack) || ...
         (isfield(postoption,'release') && postoption.release)
-    p = get(o,'PeakPos');
+    pp = get(o,'PeakPos');
+    pv = get(o,'PeakVal');
     pm = get(o,'PeakMode');
+    ppp = get(o,'PeakPrecisePos');
+    ppv = get(o,'PeakPreciseVal');
     d = get(o,'Data');
     if postoption.attack
-        [st p pm] = mircompute(@startattack,d,p,pm);
+        [st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
     end
     if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
                                   && ~strcmpi(postoption.release,'Off')
-        [rl p pm st] = mircompute(@endrelease,d,p,pm,st,postoption.release);
+        [rl pp pv pm ppp ppv st] = mircompute(@endrelease,d,pp,pv,pm,ppp,ppv,st,postoption.release);
         o = set(o,'ReleasePos',rl);
     end
-    o = set(o,'AttackPos',st,'PeakPos',p,'PeakMode',pm);
+    o = set(o,'AttackPos',st,'PeakPos',pp,'PeakVal',pv,'PeakMode',pm,...
+              'PeakPrecisePos',ppp,'PeakPreciseVal',ppv);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
@@ -542,95 +546,107 @@ if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
 end
 
 
-function st = startattack(d,z,pm)
-z = sort(z{1});
+function st = startattack(d,pp,pv,pm,ppp,ppv)
+pp = sort(pp{1});
+pv = pv{1};
 pm = pm{1};
-st = zeros(size(z));
+ppp = ppp{1};
+ppv = ppv{1};
+st = zeros(size(pp));
 i = 1;
 dd = diff(d,1,1);       % d'
 ddd = diff(dd,1,1);     % d''
 dddd = diff(ddd,1,1);   % d'''
-while i<=length(z)
+while i<=length(pp)
     % Start attack is identified to previous peak in d''.
-    p = find(dddd((z(i)-1)-1:-1:1)<0,1); % previous decreasing d''
+    p = find(dddd((pp(i)-1)-1:-1:1)<0,1); % previous decreasing d''
     if isempty(p)
         st(i) = 1;
     else
-        n = find(dddd((z(i)-1)-p-1:-1:1)>0,1); % previous increasing d''
+        n = find(dddd((pp(i)-1)-p-1:-1:1)>0,1); % previous increasing d''
         if isempty(n)
             st(i) = 1;
         else
-            st(i) = ((z(i)-1)-p-(n-1))+1;
+            st(i) = ((pp(i)-1)-p-(n-1))+1;
         end
         if i>1 && st(i-1)==st(i)
-            if d(z(i))>d(z(i-1))
+            if d(pp(i))>d(pp(i-1))
                 del = i-1;
             else
                 del = i;
             end
             st(del) = [];
-            z(del) = [];
+            pp(del) = [];
+            pv(del) = [];
             pm(del) = [];
+            ppp(del) = [];
+            ppv(del) = [];
             i = i-1;
         end
     end
     i = i+1;
 end
-st = {{st} {z} {pm}};
+st = {{st} {pp} {pv} {pm} {ppp} {ppv}};
 
 
-function rt = endrelease(d,z,pm,st,meth)
-z = sort(z{1});
+function rt = endrelease(d,pp,pv,pm,ppp,ppv,st,meth)
+pp = sort(pp{1});
+pv = pv{1};
 pm = pm{1};
+ppp = ppp{1};
+ppv = ppv{1};
 if not(isempty(st))
     st = st{1};
 end
-rt = zeros(size(z));
+rt = zeros(size(pp));
 i = 1;
 dd = diff(d,1,1);       % d'
 ddd = diff(dd,1,1);     % d''
 dddd = diff(ddd,1,1);   % d'''
-while i<=length(z)
+while i<=length(pp)
     if strcmpi(meth,'Olivier')
         % Release attack is identified to next (sufficiently positive) peak 
         % in d''.
-        l = find(ddd((z(i)-1):end)<min(ddd)/100,1); 
+        l = find(ddd((pp(i)-1):end)<min(ddd)/100,1); 
             % next d'' sufficiently negative
         if isempty(l)
             rt(i) = length(d);
         else
-            p = find(ddd((z(i)-1)+(l-1)+1:end)>max(ddd)/100,1); % next increasing d''
+            p = find(ddd((pp(i)-1)+(l-1)+1:end)>max(ddd)/100,1); % next increasing d''
             if isempty(p)
                 rt(i) = length(d);
             else
-                n = find(dddd((z(i)-1)+(l-1)+p+1:end)<0,1); % next decreasing d''
+                n = find(dddd((pp(i)-1)+(l-1)+p+1:end)<0,1); % next decreasing d''
                 if isempty(n)
                     rt(i) = length(d);
                 else
-                    rt(i) = ((z(i)-1)+(l-1)+p+n)+1;
+                    rt(i) = ((pp(i)-1)+(l-1)+p+n)+1;
                 end
             end
         end
     elseif strcmpi(meth,'Valeri')
-        p = find(dd((z(i)-1)+1:end)>min(dd)/100,1); % find point nearest to min(dd)/100 from current peak. 
+        p = find(dd((pp(i)-1)+1:end)>min(dd)/100,1); % find point nearest to min(dd)/100 from current peak. 
         if isempty(p)
             rt(i) = length(d);
         elseif p<=3                                 %that means if p is less than 3 points away from the peak then it can not be considered as the end point of release.
                                                   %Assumption is that the whole DSR(decay sustain release) section can not be shorter than 30 ms (sampling rate is 100 Hz), also, no successive note can be nearer than 30ms.
-            rt(i) = z(i)+3;
+            rt(i) = pp(i)+3;
         else
-            rt(i) = (z(i)-1)+(p-1);
+            rt(i) = (pp(i)-1)+(p-1);
         end
     end
     if i>1 && rt(i-1)==rt(i)
-        if d(z(i))>d(z(i-1))
+        if d(pp(i))>d(pp(i-1))
             del = i-1;
         else
             del = i;
         end
         rt(del) = [];
-        z(del) = [];
+        pp(del) = [];
+        pv(del) = [];
         pm(del) = [];
+        ppp(del) = [];
+        ppv(del) = [];
         if not(isempty(st))
             st(del) = [];
         end
@@ -638,4 +654,4 @@ while i<=length(z)
     end
     i = i+1;
 end
-rt = {{rt} {z} {pm} {st}};
+rt = {{rt} {pp} {pv} {pm} {ppp} {ppv} {st}};
