@@ -56,6 +56,8 @@ mirsummary(s)
 mirauditory('ragtime')
 mirauditory('ragtime','Filterbank',20)
 
+close all
+
 mirpeaks(mirspectrum('ragtime','mel'))
 mirpeaks(mirspectrum('ragtime','mel','frame'),'total',1)
 
