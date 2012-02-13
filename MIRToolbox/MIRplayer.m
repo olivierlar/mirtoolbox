@@ -1012,7 +1012,7 @@ uistack(fig,'top');
             else
                 xdata = mean(framePos);
                 ydata = features.data{featureInd}{songInd}{1};
-                linestyle = '?';
+                linestyle = '-';
                 marker = 'none';
             end
             set(featureH{featureInd},'XData', xdata, ...
