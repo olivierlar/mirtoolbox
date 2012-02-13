@@ -36,7 +36,7 @@ end
 % DYNAMICS
 % --------
 
-r.dynamics.rms = mirpeaks(mirrms(a,'Frame'));
+r.dynamics.rms = mirrms(a,'Frame');
 % Perceived dynamics: spectral slope?
 
 % RHYTHM
