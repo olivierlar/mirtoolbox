@@ -1,6 +1,9 @@
-function mirdisplay(d,varargin)
+function mirdisplay(d,va,axis)
 % MIRDATA/DISPLAY display of a MIR data
 
+if nargin<3
+    fig = [];
+end
 disp(' ');
 v = d.data;
 f = d.sr;
@@ -34,8 +37,6 @@ else
     for i = 1:length(v)
         if nargin < 2
             va = inputname(1);
-        else
-            va = varargin{1};
         end
         if isempty(va)
             va = 'ans';
@@ -67,17 +68,13 @@ else
             else
                 cha = [];
             end
-            if nargin<3
-                flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                    cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i});
-                if flag
-                    fig = get(0,'CurrentFigure');
-                    disp(['Its content is displayed in Figure ',num2str(fig),'.']);
-                else
-                    disp('It does not contain any data.');
-                end
+            flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
+                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i},axis);
+            if flag
+                fig = get(0,'CurrentFigure');
+                disp(['Its content is displayed in Figure ',num2str(fig),'.']);
             else
-                disp('To display its content in a figure, evaluate this variable directly in the Command Window.');
+                disp('It does not contain any data.');
             end
         end
     end

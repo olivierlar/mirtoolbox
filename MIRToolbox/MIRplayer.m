@@ -31,8 +31,8 @@ if ischar(arg) %session data given in a file
     songs=1:length(songNames);
 else
     %the first argument should be the feature set
-    if ~isstruct(arg) && ~iscell(arg) && ~isa(arg,'mirscalar')
-        error('The first input argument should be struct or mirscalar variable.');
+    if ~isstruct(arg) && ~iscell(arg) && ~isa(arg,'mirdata')
+        error('The first input argument should be struct or mirdata variable.');
     end
         
     if nargin>1
