@@ -154,51 +154,28 @@ else
     end
     nCh = option.nCh;
     Ch = option.Ch;
-    if strcmpi(option.filtertype, 'Gammatone');
-        [tmp x] = gettmp(x);
-        if not(Ch)
-            Ch = 1:nCh;
-        end
-        erb = cell(1,length(d));
-        for i = 1:length(d)
-            erb{i} = cell(1,length(d{i}));
-            nch{i} = Ch;
-            if isempty(tmp)
-                Hd = ERBFilters(f{i},nCh,Ch,option.lowF);
-            else
-                Hd = tmp;
-            end
-
-            for j = 1:length(d{i})
-                for k = 1:size(Hd,2)
-                    erb{i}{j}(:,:,k) = Hd(4,k).filter(Hd(3,k).filter(...
-                                        Hd(2,k).filter(Hd(1,k).filter(...
-                                         d{i}{j}))));
+    
+    [tmp x] = gettmp(x);
+    output = cell(1,length(d));
+    nch = cell(1,length(d));
+    for i = 1:length(d)
+        if isempty(tmp) && i == 1
+            if strcmpi(option.filtertype,'Gammatone')
+                if not(Ch)
+                    Ch = 1:nCh;
                 end
-            end
-        end
-        b = set(x,'Data',erb,'Channels',nch);
-        clear erb
-        b = settmp(b,Hd);
-    elseif strcmpi(option.filtertype, '2Channels');
-        if not(Ch)
-            Ch = 1:2;
-        end
-        output = cell(1,length(d));
-        try
-            for i = 1:length(d)
-                output{i} = cell(1,length(d{i}));
+                Hd = ERBFilters(f{i},nCh,Ch,option.lowF);
+                nch{i} = Ch;
+            elseif strcmpi(option.filtertype,'2Channels')
+                if not(Ch)
+                    Ch = 1:2;
+                end
                 [bl,al] = butter(4,[70 1000]/f{i}*2);
-                k = 1;
                 if ismember(1,Ch)
-                    Hdl = dfilt.df2t(bl,al);
-                    %fvtool(Hdl)
-                    Hdl.PersistentMemory = true;
-                    for j = 1:length(d{i})
-                        low = filter(Hdl,d{i}{j});
-                        output{i}{j}(:,:,k) = low;
-                    end
-                    k = k+1;
+                    Hd{1} = dfilt.df2t(bl,al);
+                    k = 2;
+                else
+                    k = 1;
                 end
                 if ismember(2,Ch)
                     if f{i} < 20000
@@ -206,69 +183,83 @@ else
                     else
                         [bh,ah] = butter(2,[1000 10000]/f{i}*2);
                     end
-                    Hdlh = dfilt.df2t(bl,al);
-                    %fvtool(Hdlh)
-                    Hdh = dfilt.df2t(bh,ah);
-                    %fvtool(Hdh)
-                    Hdlh.PersistentMemory = true;
-                    Hdh.PersistentMemory = true;
-                    for j = 1:length(d{i})
-                        high = filter(Hdh,d{i}{j});
-                        high = max(high,0);
-                        high = filter(Hdlh,high);
-                        output{i}{j}(:,:,k) = high;
-                    end
+                    Hd{k} = {dfilt.df2t(bl,al),...
+                             @(x) max(x,0),...
+                             dfilt.df2t(bh,ah)};
                 end
                 nch{i} = Ch;
-            end
-            b = set(x,'Data',output,'Channels',nch);
-        catch
-            warning(['WARNING IN MIRFILTERBANK: Signal Processing Toolbox (version 6.2.1, or higher) not installed: no filterbank decomposition.']);
-            b = x;
-        end
-    elseif strcmpi(option.filtertype,'Manual');
-        output = cell(1,length(d));
-        for i = 1:length(d)
-            freqi = option.freq;
-            j = 1;
-            while j <= length(freqi)
-                if not(isinf(freqi(j))) && freqi(j)>f{i}/2
-                    if j == length(freqi)
-                        freqi(j) = Inf;
+            elseif strcmpi(option.filtertype,'Manual')
+                freqi = option.freq;
+                j = 1;
+                while j <= length(freqi)
+                    if not(isinf(freqi(j))) && freqi(j)>f{i}/2
+                        if j == length(freqi)
+                            freqi(j) = Inf;
+                        else
+                            freqi(j) = [];
+                            j = j-1;
+                        end
+                    end
+                    j = j+1;
+                end
+                step = option.overlap;
+                for j = 1:length(freqi)-step
+                    if isinf(freqi(j))
+                        [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
+                                            freqi(j+step)/f{i}*2);
+                    elseif isinf(freqi(j+step))
+                        [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
+                                            freqi(j)/f{i}*2,'high');
                     else
-                        freqi(j) = [];
-                        j = j-1;
+                        [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
+                                            freqi([j j+step])/f{i}*2);
                     end
                 end
-                j = j+1;
+                for j = 1:length(z)
+                    [sos,g] = zp2sos(z{j},p{j},k{j});
+                    Hd{j} = dfilt.df2tsos(sos,g);
+                end
+                nch{i} = 1:length(freqi)-step;
             end
-            output{i} = cell(1,length(d{i}));
-            step = option.overlap;
-            for j = 1:length(freqi)-step
-                if isinf(freqi(j))
-                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
-                                    freqi(j+step)/f{i}*2);
-                elseif isinf(freqi(j+step))
-                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
-                                    freqi(j)/f{i}*2,'high');
-                else
-                    [z{j},p{j},k{j}] = ellip(option.filterorder,3,40,...
-                                    freqi([j j+step])/f{i}*2);
+            
+            if length(d) == 1
+                for k = 1:length(Hd)
+                    Hdk = Hd{k};
+                    if ~iscell(Hdk)
+                        Hdk = {Hdk};
+                    end
+                    for h = 1:length(Hdk)
+                        if ~isa(Hdk{h},'function_handle')
+                            Hdk{h}.PersistentMemory = true;
+                        end
+                    end
                 end
             end
-            for j = 1:length(z)
-                [sos,g] = zp2sos(z{j},p{j},k{j});
-                Hd(j) = dfilt.df2tsos(sos,g);
-                Hd(j).PersistentMemory = true;
-                for h = 1:length(d{i})
-                    output{i}{h}(:,:,j) = filter(Hd(j),d{i}{h});
+        else
+            Hd = tmp;
+        end 
+        
+        output{i} = cell(1,length(d{i}));
+        for j = 1:length(d{i})
+            for k = 1:length(Hd)
+                dk = d{i}{j};
+                Hdk = Hd{k};
+                if ~iscell(Hdk)
+                    Hdk = {Hdk};
                 end
+                for h = 1:length(Hdk)
+                    if isa(Hdk{h},'function_handle')
+                        dk = Hdk{h}(dk);
+                    else
+                        dk = Hdk{h}.filter(dk);
+                    end
+                end
+                output{i}{j}(:,:,k) = dk;
             end
-            %fvtool(Hd)
-            nch{i} = 1:length(freqi)-step;
         end
-        b = set(x,'Data',output,'Channels',nch);
     end
+    b = set(x,'Data',output,'Channels',nch);   
+    b = settmp(b,Hd);
 end
 
 %%
@@ -364,11 +355,8 @@ for i = 1:length(chans)
     bb3 = [B0(chan) B1(chan) B2(chan)];
     aa4 = [A0(chan) A14(chan) A2(chan)];
     bb4 = [B0(chan) B1(chan) B2(chan)];
-    Hd(:,i) = [dfilt.df2t(aa1,bb1);dfilt.df2t(aa2,bb2);...
-               dfilt.df2t(aa3,bb3);dfilt.df2t(aa4,bb4)];
-    for j = 1:4
-        Hd(j,i).PersistentMemory = true;
-    end
+    Hd{i} = {dfilt.df2t(aa1,bb1);dfilt.df2t(aa2,bb2);...
+             dfilt.df2t(aa3,bb3);dfilt.df2t(aa4,bb4)};
 end
 
 
