@@ -235,7 +235,7 @@ else
                     end
                 end
             end
-        else
+        elseif i == 1
             Hd = tmp;
         end 
         
