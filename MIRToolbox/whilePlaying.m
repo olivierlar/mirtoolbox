@@ -1,41 +1,46 @@
 function whilePlaying
 global fig
 global Fs
-global pointerH
+global aH
+global playheads
 global framePos
 global player
 global CurrentSample
 global CurrentFrame
 global xlim
-global PauseButton
-global PPSstate
+global PlayPauseButton
+global playIcon
 global smallPointerH
 global sliderH
-global aH
+global featureAxes
 global followPointerButton
+global frameSummary
 
 if not(ishandle(fig))
     return
 end
 
 CurrentSample=get(player,'CurrentSample');
-if CurrentSample<=1
-    return
-elseif CurrentSample>player.TotalSamples
-    set(PauseButton,'Value',1);
-    PPSstate='pause';
-    stop(player);
+if CurrentSample<1 || CurrentSample>player.TotalSamples
+    set(PlayPauseButton,'Tag','play','cdata',playIcon);
+    %stop(player);
     CurrentSample=1;
-    CurrentFrame=1;
-    %set(pointerH,'XData',xlim(2)+[-.5*frameLength*ones(2,1),zeros(2,1)]); %place pointer in the end of the song (good when followPointer option is activated)
-    %drawnow
-    return
+    CurrentFrame(1:end)=1;
+    
 else
-    [tmp, CurrentFrame]=min(framePos(1,:)<(xlim(1)+CurrentSample/Fs));
-    %pointerX=framePos([1,2,2,1],CurrentFrame); %[framePos(1,CurrentFrame), framePos(2,CurrentFrame), framePos(2,CurrentFrame), framePos(1,CurrentFrame)];
-
-    set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame));
+    
     set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
+    CurrentFrame_tmp=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
+    
+    gothru=find(CurrentFrame_tmp~=CurrentFrame);
+    CurrentFrame=CurrentFrame_tmp;
+    
+    for plInd=1:length(gothru)   
+            x=framePos{gothru(plInd)}(:,CurrentFrame(gothru(plInd)));
+            set(playheads{gothru(plInd)},'xdata',getxdata(x));
+    end
+    
+    
     
     sliderHLim=get(sliderH,'XData');
     sliderWidth=sliderHLim(2)-sliderHLim(1);
@@ -46,12 +51,19 @@ else
         sliderHLim([2,3])=min(1,sliderHLim(1)+sliderWidth);
         set(sliderH,'XData',sliderHLim);
         set(aH,'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
+        for i=1:length(featureAxes)
+            set(featureAxes{i},'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
+        end
         
     end
     
-    %set(sliderAx)
-    
     drawnow
 end
+
+    function res = getxdata(xdata)
+        s=xdata(2)-xdata(1);
+        m=mean(xdata);
+        res=[xdata([1,2,2])',m+.05*s,m,m-.05*s,xdata([1,1])'];
+    end
 
 end
