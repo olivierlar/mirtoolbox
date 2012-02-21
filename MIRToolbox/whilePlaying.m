@@ -19,15 +19,15 @@ global frameSummary
 if not(ishandle(fig))
     return
 end
-
 CurrentSample=get(player,'CurrentSample');
-if CurrentSample<1 || CurrentSample>player.TotalSamples
-    set(PlayPauseButton,'Tag','play','cdata',playIcon);
+%fprintf('Current time: %s\n',num2str(CurrentSample/Fs));
+%if CurrentSample<1 || CurrentSample>player.TotalSamples
+    %set(PlayPauseButton,'Tag','play','cdata',playIcon);
     %stop(player);
-    CurrentSample=1;
-    CurrentFrame(1:end)=1;
+    %CurrentSample=1;
+    %CurrentFrame(1:end)=1;
     
-else
+if CurrentSample>1
     
     set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
     CurrentFrame_tmp=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
@@ -42,10 +42,11 @@ else
     
     
     
+    
     sliderHLim=get(sliderH,'XData');
     sliderWidth=sliderHLim(2)-sliderHLim(1);
     
-    if ((CurrentSample-1)/player.TotalSamples> (sliderHLim(1)+sliderWidth*.75) || (CurrentSample-1)/player.TotalSamples< sliderHLim(1)) && get(followPointerButton,'Value') % follow pointer
+    if get(followPointerButton,'Value') && ((CurrentSample-1)/player.TotalSamples > (sliderHLim(1)+sliderWidth*.75) || (CurrentSample-1)/player.TotalSamples< sliderHLim(1)) % follow pointer
         
         sliderHLim([1,4])=max(0,min((CurrentSample-1)/player.TotalSamples-sliderWidth*.25,1-sliderWidth));
         sliderHLim([2,3])=min(1,sliderHLim(1)+sliderWidth);
@@ -57,7 +58,6 @@ else
         
     end
     
-    drawnow
 end
 
     function res = getxdata(xdata)
