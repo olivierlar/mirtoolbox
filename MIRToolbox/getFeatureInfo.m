@@ -26,7 +26,7 @@ if isstruct(f)
     recursiveCheck(fieldBranch,f);
 elseif isa(f,'mirdata')
     fieldInd=1;
-    fieldName=get(f,'Title');
+    fieldName='';%get(f,'Title');
     getData(f,{fieldName},0);
 elseif iscell(f)
     for cellind=1:length(f)
@@ -94,6 +94,8 @@ end
             featureData_tmp=featureData_tmp(songs);
         end
         
+
+        
         
         %read the branch of fieldnames to get summarized
         fieldBranch{fieldInd}=fieldName;
@@ -127,16 +129,16 @@ end
         features.types{nFeatures}=class(scalarFeature);
         
         %peaks...
-        peakPos=get(scalarFeature,'PeakPos');
-        peakPos=peakPos{1};
-        peakPos=peakPos{1};
+        %peakPos=get(scalarFeature,'PeakPos');
+        %peakPos=peakPos{1};
+        %peakPos=peakPos{1};
         
         %if feature hasn't got peaks detected
-        if isempty(peakPos) %not empty
-            features.hasPeaks(nFeatures)=0;
-        else
-            features.hasPeaks(nFeatures)=1;
-        end
+        %if 0 && isempty(peakPos) %not empty
+        %    features.hasPeaks(nFeatures)=0;
+        %else
+        %    features.hasPeaks(nFeatures)=1;
+        %end
         
         %get value range of the feature (summarize its overal distribution)
         features.valueRange(nFeatures,1:2)=[Inf,-Inf];
@@ -150,13 +152,14 @@ end
                 for i = 1:length(tmp)
                     tmp2 = [tmp2 tmp{i}(:)'];
                 end
-                tmp = tmp2;
+                featureData_tmp{song}{1} = tmp2;
             end
-            if ~isempty(tmp) && ~all(isnan(tmp(:)))
-                features.minsong(nFeatures,song) = min(tmp(:));
-                minValue = min(tmp(:));
-                features.maxsong(nFeatures,song) = max(tmp(:));
-                maxValue = max(tmp(:));
+            
+            if ~isempty(featureData_tmp{song}{1}) && ~all(isnan(featureData_tmp{song}{1}(:)))
+                features.minsong(nFeatures,song) = min(featureData_tmp{song}{1}(:));
+                minValue = min(featureData_tmp{song}{1}(:));
+                features.maxsong(nFeatures,song) = max(featureData_tmp{song}{1}(:));
+                maxValue = max(featureData_tmp{song}{1}(:));
             else
                 warning('%s, song %d: No feature extracted. Check if there was some error in feature extraction. Including an empty feature...',featureName, song);
                 features.minsong(nFeatures,song) = NaN;
@@ -166,39 +169,13 @@ end
             end
             
             features.valueRange(nFeatures,1:2)=[ min(features.minsong(nFeatures,song),features.valueRange(nFeatures,1)), max(features.maxsong(nFeatures,song),features.valueRange(nFeatures,2)) ];
-            
-            
-            
-            %only sufficiently static frame length and diff allowed
-            resolution=10000;
-            allowedDiscrepancy=.5; %seconds
-            
-            %features.framediff(nFeatures,song)=mode(round((framePos(1,2:end)-framePos(1,1:end-1))*resolution)/resolution);
-            %if max(abs((framePos(1,:)-features.framediff(nFeatures,song)*(0:length(framePos)-1))))>allowedDiscrepancy
-            %    warning('%s, song %d: Frames are not equidistant. Check if there was some error in feature extraction. Including still...',featureName, song);
-            %end
-            %
-            % if any(framePos(2,:)-framePos(1,:)<=0)
-            %    warning('%s, song %d: Bad frame lengths (zero or negative). Check if there was some error in feature extraction. Including still...',featureName, song);
-            %end
-            
-            %features.frameLength(nFeatures,song)=mode(round((framePos(2,:)-framePos(1,:))*resolution)/resolution);
-            
-            %features.frameStart(nFeatures,song)=framePos(1,1);
-            %features.frameEnd(nFeatures,song)=framePos(2,end);
-            
-            %if features.isSongLevel(nFeatures)
-            %    features.framediff(nFeatures,song)=features.frameEnd(nFeatures,song)-features.frameStart(nFeatures,song);
-            %    features.frameLength(nFeatures,song)=features.frameEnd(nFeatures,song)-features.frameStart(nFeatures,song);
-            %end
+
             
             
             %frames with peaks
-            if features.hasPeaks(nFeatures)
+            if 0 && features.hasPeaks(nFeatures)
                 peakFrames=get(scalarFeature,'PeakPos');
                 features.peakPos{nFeatures}{song}=peakFrames{song}{1}{1};
-                
-                %features.peakPos{nFeatures}{song}=features.frameStart(nFeatures,song)+features.framediff(nFeatures,song)*(peakPos-1);
                 
                 %get peak strength relative to feature value span
                 features.peaks{nFeatures}{song}=(featureData_tmp{song}{1}(features.peakPos{nFeatures}{song})-minValue)/(maxValue-minValue);
@@ -223,11 +200,12 @@ end
             end
             
             %map feature distributions to [0,1]
+            
             features.songDistributions{nFeatures}=features.songDistributions{nFeatures}./repmat(max(features.songDistributions{nFeatures},[],2),1,nBins);
             features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)./repmat(max(features.distribution(nFeatures,1:nBins),[],2),1,nBins);
         end
         
-        features.data{nFeatures}=featureData_tmp;
+        %features.data{nFeatures}=featureData_tmp;
         framePos=get(scalarFeature,'FramePos');
         if ~isempty(songs)
             framePos = framePos(songs);
@@ -235,7 +213,7 @@ end
         if size(framePos{1}{1},2) == 1
             features.isSongLevel(nFeatures)=1;
         end        
-        features.framePos{nFeatures}=framePos;
+        %features.framePos{nFeatures}=framePos;
     end
 
 end
