@@ -1,4 +1,4 @@
-function MIRplayer(arg,select)
+function mirplayer(arg,select)
 %Usage:
 %MIRplayer(a, varargin)
 %where
@@ -79,45 +79,45 @@ global featureAxes
 global frameSummary
 
 
-framediff=0;
+%framediff=0;
 song=0;
 songImage=0;
 playheads=[];
 featureAxes={};
 selectedFeatures=[];
-pointerY=[];
+%pointerY=[];
 ylim=[0,1];
-CurrentFrameStartPosition=0;
+%CurrentFrameStartPosition=0;
 
 pointOnSlider=[];
 
-mirchunklim=5000000;
+%mirchunklim=5000000;
 
 nFeatures=length(features.names);
 
 guiColor=[.9,.9,.9];
 pointerColor1='k'; %Black
-peakColor='r'; %Red
-featureColors=[0,0,0;guiColor;0,.6,0;.9,.7,0;0,0,.9;.8,0,0];%0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
-peakColors=[guiColor;0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
+%peakColor='r'; %Red
+%featureColors=[0,0,0;guiColor;0,.6,0;.9,.7,0;0,0,.9;.8,0,0];%0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
+%peakColors=[guiColor;0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
 pointerColor=pointerColor1;
 playheadAlpha=.3;
-peakAlphaDefault=.1;
+%peakAlphaDefault=.1;
 %downsample a to save memory when plotting audio
-downSampleRate=1000; %Could be nice resolution
+%downSampleRate=1000; %Could be nice resolution
 
 songColor=[.85,.85,.85];
-maxFrameUpdateFrequency=.05; %seconds
+maxFrameUpdateFrequency=.1; %seconds
 zoomFactorDefault=2/3;
 %feature=cell(nFeatures,1);
 %featureCurvePos=cell(nFeatures,1);
-selectFeatureButtons=cell(nFeatures,1);
-selectPeaksButtons=cell(nFeatures,1);
-mainFeature=0;
+%selectFeatureButtons=cell(nFeatures,1);
+%selectPeaksButtons=cell(nFeatures,1);
+%mainFeature=0;
 %selectedFeatures=2*ones(nFeatures,1);
 %selectedFeatureInd=0;
 
-selectedPeaks=ones(nFeatures,1);
+%selectedPeaks=ones(nFeatures,1);
 
 frameSummary=[];
 
@@ -200,7 +200,7 @@ MainPanel = uipanel(...
     'Clipping', 'off', ...
     'HandleVisibility', 'callback', ...
     'Position',mainPanelPos, ...
-    'BorderType','none', ...
+    'BorderType','line', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
 ControlPanel = uipanel(...
@@ -218,14 +218,14 @@ ControlPanel = uipanel(...
     'Visible','on');
 FeaturePanel = uipanel(...
     'Parent', fig, ...
-    'Title', 'SELECT FEATURES AND PEAKS', ...
+    'Title', 'SELECT FEATURES', ...
     'FontSize', 10, ...
     'FontUnits', 'normalized', ...
     'Units', 'normalized', ...
     'Clipping', 'on', ...
     'HandleVisibility', 'callback', ...
     'Position',[.01, 0.23, mainPanelPos(1)-.05, 0.77], ...
-    'BorderType','none', ...
+    'BorderType','line', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
 DistPanel = uipanel(...
@@ -430,7 +430,6 @@ vertRect=[.1,.15;.9,.15;.9,.85;.1,.85];
 vrCreate=[0;1;1;0];
 
 for featureInd=1:nFeatures
-    
     selectFeatureButton{featureInd}  =   uicontrol(...
         'Parent', FeaturePanel, ...
         'Style','CheckBox', ...
@@ -740,6 +739,7 @@ uistack(fig,'top');
         %player.StartFcn = 'startPlaying';
         player.TimerPeriod = maxFrameUpdateFrequency;
         player.TimerFcn = 'whilePlaying';
+        player.StopFcn = 'stopPlaying';
         set(aH,'Xlim',xlim);
         for featureInd=1:length(featureAxes)
             set(featureAxes{featureInd},'Xlim',xlim);
@@ -846,9 +846,13 @@ uistack(fig,'top');
         if features.cellinds(selectedFeature)>0 
             display(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
             framePos_tmp=get(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),'FramePos');
+        elseif features.cellinds(selectedFeature)==0
+            tmp=['arg',sprintf('.%s',features.fields{selectedFeature}{1:end})];
+            if strcmp(tmp(end),'.'), tmp=tmp(1:(end-1)); end
+            display(eval(tmp),featureAxes{nAxes},songInd);
+            framePos_tmp=get(eval(tmp),'FramePos');
         else
-            display(arg,featureAxes{nAxes},songInd); 
-            framePos_tmp=get(arg,'FramePos');
+            error('Check the feature importing.');
         end
         framePos(nAxes)=framePos_tmp{songInd};
         
