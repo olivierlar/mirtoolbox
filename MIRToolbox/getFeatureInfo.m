@@ -21,16 +21,21 @@ maxFieldNameLength=3;
 binEdges=0:1/(nBins-1):1; %when visualizing the feature distributions, map feature values in the range of 0 and 1
 songNames={};
 
+
 if isstruct(f)
     recursiveCheck(fieldBranch,f);
-elseif isa(f,'mirscalar')
+elseif isa(f,'mirdata')
     fieldInd=1;
     fieldName=get(f,'Title');
-    getData(f);
-elseif iscell(f) && isa(f{1},'mirscalar')
-        fieldInd=1;
-        fieldName=get(f{1},'Title');
-        getData(f{1});
+    getData(f,{fieldName},0);
+elseif iscell(f)
+    for cellind=1:length(f)
+        if isa(f{cellind},'mirdata')
+            fieldInd=1;
+            fieldName=get(f{cellind},'Title');
+            getData(f{1},{fieldName},cellind);
+        end
+    end
 else
     error('Feature set must be struct or mirscalar variable.');
 end
@@ -50,14 +55,18 @@ end
             newField = f.(fieldName);
             
             if iscell(newField)
-                if isequal(class(newField{1}),'mirscalar') %reached the end of branch and found a mirscalar feature
-                    getData(newField{1});
-                    
+                for cellind=1:length(newField)
+                    if isa(newField{cellind},'mirdata') %reached the end of branch and found a mirscalar feature
+                        fieldBranch{fieldInd}=fieldName;
+                        getData(newField{cellind},fieldBranch,cellind);
+                        
+                    end
                 end
-            elseif isequal(class(newField),'mirscalar') %reached the end of branch and found a mirscalar feature
-                    getData(newField);
-                    
-                   
+            elseif isa(newField,'mirdata') %reached the end of branch and found a mirscalar feature
+                fieldBranch{fieldInd}=fieldName;
+                getData(newField,fieldBranch,0);
+                
+                
             elseif isstruct(newField)
                 fieldBranch{fieldInd}=fieldName;
                 recursiveCheck(fieldBranch,newField);
@@ -78,7 +87,7 @@ end
 
 
 
-    function getData(scalarFeature)
+    function getData(scalarFeature,fieldBranch,ci)
         
         featureData_tmp=get(scalarFeature,'Data');
         if ~isempty(songs)
@@ -92,7 +101,8 @@ end
         for i=1:fieldInd-1
             featureName=strcat(featureName,fieldBranch{i}(1:min(end,maxFieldNameLength)),'/');
         end
-        featureName=strcat(featureName,fieldBranch{fieldInd});
+        %featureName=strcat(featureName,fieldBranch{fieldInd});
+        featureName=strcat(featureName,get(scalarFeature,'Title'));
         
         nFeatures=nFeatures+1; %add feature
         
@@ -113,6 +123,8 @@ end
         
         features.fields{nFeatures}=fieldBranch;
         features.names{nFeatures}=featureName;
+        features.cellinds(nFeatures)=ci;
+        features.types{nFeatures}=class(scalarFeature);
         
         %peaks...
         peakPos=get(scalarFeature,'PeakPos');
@@ -140,11 +152,11 @@ end
                 end
                 tmp = tmp2;
             end
-            if ~isempty(tmp) && ~all(isnan(tmp))
-                features.minsong(nFeatures,song) = min(tmp);
-                minValue = min(tmp);
-                features.maxsong(nFeatures,song) = max(tmp);
-                maxValue = max(tmp);
+            if ~isempty(tmp) && ~all(isnan(tmp(:)))
+                features.minsong(nFeatures,song) = min(tmp(:));
+                minValue = min(tmp(:));
+                features.maxsong(nFeatures,song) = max(tmp(:));
+                maxValue = max(tmp(:));
             else
                 warning('%s, song %d: No feature extracted. Check if there was some error in feature extraction. Including an empty feature...',featureName, song);
                 features.minsong(nFeatures,song) = NaN;
@@ -200,26 +212,29 @@ end
             for song=1:length(featureData_tmp)
                 %compute distribution of in one song, related to
                 %the featureValueRange
-                features.songDistributions{nFeatures}(song,1:nBins)=medfilt1(histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges),smoothingFactor); %histogram, values related to the featureValueRange
-
+                features.songDistributions{nFeatures}(song,1:nBins)=medfilt1(histc((featureData_tmp{song}{1}(:)-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges),smoothingFactor); %histogram, values related to the featureValueRange
+                
                 if isequal(features.songDistributions{nFeatures}(song,1:nBins),zeros(1,nBins)) %if filtering was too harsh due to small number of feature values
                     features.songDistributions{nFeatures}(song,1:nBins)=histc((featureData_tmp{song}{1}-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges);
                 end
-
+                
                 features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)+features.songDistributions{nFeatures}(song,1:nBins);
-
+                
             end
-        
+            
             %map feature distributions to [0,1]
             features.songDistributions{nFeatures}=features.songDistributions{nFeatures}./repmat(max(features.songDistributions{nFeatures},[],2),1,nBins);
             features.distribution(nFeatures,1:nBins)=features.distribution(nFeatures,1:nBins)./repmat(max(features.distribution(nFeatures,1:nBins),[],2),1,nBins);
         end
-            
+        
         features.data{nFeatures}=featureData_tmp;
         framePos=get(scalarFeature,'FramePos');
         if ~isempty(songs)
             framePos = framePos(songs);
         end
+        if size(framePos{1}{1},2) == 1
+            features.isSongLevel(nFeatures)=1;
+        end        
         features.framePos{nFeatures}=framePos;
     end
 
