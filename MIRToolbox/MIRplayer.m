@@ -34,8 +34,8 @@ else
     if ~isstruct(arg) && ~iscell(arg) && ~isa(arg,'mirdata')
         error('The first input argument should be struct or mirdata variable.');
     end
-        
-    if nargin>1
+    
+    if nargin>2
         songs=int8(unique(select));
         
         %if any(songs)<1 || any(songs)>length(songNames)
@@ -44,11 +44,11 @@ else
     else
         songs=[];
     end
-        
+    
     nBins=100; %resolution of the feature distributions (for visualization)
     smoothingFactor=2;%round(max(3,nBins/10)); %for median filtering the distribution
     features=getFeatureInfo(arg, nBins,smoothingFactor,songs);
-    clear('arg');
+    %clear('arg');
     
     %TODO: Audio could also be shown without features. Just to be able to check
     %out the songs before extracting features.
@@ -62,22 +62,29 @@ end
 global fig
 global Fs
 global pointerH
+global playheads
 global player
 global CurrentSample
 global CurrentFrame
 global framePos
 global xlim
-global PauseButton
+global PlayPauseButton
+global playIcon
 global PPSstate
 global smallPointerH
 global sliderH
 global aH
 global followPointerButton
+global featureAxes
+global frameSummary
 
 
 framediff=0;
 song=0;
 songImage=0;
+playheads=[];
+featureAxes={};
+selectedFeatures=[];
 pointerY=[];
 ylim=[0,1];
 CurrentFrameStartPosition=0;
@@ -94,23 +101,25 @@ peakColor='r'; %Red
 featureColors=[0,0,0;guiColor;0,.6,0;.9,.7,0;0,0,.9;.8,0,0];%0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
 peakColors=[guiColor;0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
 pointerColor=pointerColor1;
-pointerAlphaDefault=.2;
+playheadAlpha=.3;
 peakAlphaDefault=.1;
 %downsample a to save memory when plotting audio
 downSampleRate=1000; %Could be nice resolution
 
 songColor=[.85,.85,.85];
-maxFrameUpdateFrequency=.1; %seconds
+maxFrameUpdateFrequency=.05; %seconds
 zoomFactorDefault=2/3;
 %feature=cell(nFeatures,1);
 %featureCurvePos=cell(nFeatures,1);
 selectFeatureButtons=cell(nFeatures,1);
 selectPeaksButtons=cell(nFeatures,1);
 mainFeature=0;
-selectedFeatures=2*ones(nFeatures,1);
-selectedFeatureInd=0;
+%selectedFeatures=2*ones(nFeatures,1);
+%selectedFeatureInd=0;
 
 selectedPeaks=ones(nFeatures,1);
+
+frameSummary=[];
 
 %this is the rugged player implemented in MATLAB
 %create play, pause and stop icons for buttons
@@ -146,10 +155,6 @@ menuItems = uimenu('Parent',fig,'Label','File');
 uimenu(menuItems,'Label','Save session','Callback',@saveSession);
 uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Callback',@quitSession);
 
-
-
-
-
     function saveSession(hObject,eventdata)
         folderName=inputdlg('Folder name','Save session');
         if isempty(folderName{1})
@@ -161,13 +166,13 @@ uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Call
         
         for i=1:length(songs)
             ind=songs(i);
-        %if withMiraudio
-        %    wavwrite(songData{ind}{1},songSampling{ind},16,strcat(folderName{1},'/',num2str(i),'.wav'));
-        %else
-        %    copyfile(strcat(a,'/',num2str(ind),'.wav'), strcat(folderName{1},'/',num2str(i),'.wav'));
-        %end
+            %if withMiraudio
+            %    wavwrite(songData{ind}{1},songSampling{ind},16,strcat(folderName{1},'/',num2str(i),'.wav'));
+            %else
+            %    copyfile(strcat(a,'/',num2str(ind),'.wav'), strcat(folderName{1},'/',num2str(i),'.wav'));
+            %end
         end
-            
+        
         
     end
 
@@ -178,8 +183,8 @@ uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Call
         elseif isequal(quitting,'Save')
             java.lang.Runtime.getRuntime.gc; %Java garbage collection
             saveSession;
-            if ishandle(fig) 
-                close(fig); 
+            if ishandle(fig)
+                close(fig);
             end
         else
             if ishandle(fig)
@@ -219,19 +224,19 @@ FeaturePanel = uipanel(...
     'Units', 'normalized', ...
     'Clipping', 'on', ...
     'HandleVisibility', 'callback', ...
-    'Position',[.01, .98-length(features.names)*.035, mainPanelPos(1)-.05, length(features.names)*.035], ...
+    'Position',[.01, 0.23, mainPanelPos(1)-.05, 0.77], ...
     'BorderType','none', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
 DistPanel = uipanel(...
     'Parent', fig, ...
     'Title', 'FEATURE DISTRIBUTION', ...
-    'FontSize', 10, ...
+    'FontSize', 8, ...
     'FontUnits', 'normalized', ...
     'Units', 'normalized', ...
     'Clipping', 'off', ...
     'HandleVisibility', 'callback', ...
-    'Position',[.01,.08,mainPanelPos(1)-.05,.15], ...
+    'Position',[.01,.08,mainPanelPos(1)-.05,.14], ...
     'BackGroundColor', guiColor, ...
     'BorderType','none', ...
     'Visible','on');
@@ -241,43 +246,30 @@ aH      =   axes(...         % the axes for plotting
     'Parent', MainPanel, ...
     'Units', 'normalized', ...
     'HandleVisibility','callback', ...
+    'Visible','off', ...
     'Position',[0 0 1 1]);
 xlabel(aH,'Time (s)');
 ylabel(aH,'Feature value');
-PPSsize=[.15,.45];
+PPSsize=[.15,.3];
 
-% Create the button group.
-PPSbuttons = uibuttongroup('Parent',ControlPanel, ...
-    'Position',[0,.4,PPSsize], ...
-    'BorderType','none', ...
-    'Visible','on', ...
-    'BackGroundColor', guiColor, ...
-    'SelectionChangeFcn',@selectPPS);
-
-PlayButton  =   uicontrol(...
-    'Parent', PPSbuttons, ...
-    'Style','Toggle', ...
+PlayPauseButton  =   uicontrol(...
+    'Parent', ControlPanel, ...
+    'Style','PushButton', ...
     'CData',playIcon, ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[0 0 .3 1], ...%[.1,0.85,buttonSize],...
-    'Tag','play');
-PauseButton  =   uicontrol(...
-    'Parent', PPSbuttons, ...
-    'Style','Toggle', ...
-    'CData',pauseIcon, ...
-    'Units','normalized',...
-    'HandleVisibility','callback', ...
-    'Position',[.35 0 .3 1],...
-    'Tag','pause');
+    'Position',[0,.4,.05 .5], ...%[.1,0.85,buttonSize],...
+    'Tag','play', ...
+    'CallBack',@playPausePlayer);
 StopButton  =   uicontrol(...
-    'Parent', PPSbuttons, ...
-    'Style','Toggle', ...
+    'Parent', ControlPanel, ...
+    'Style','PushButton', ...
     'CData',stopIcon, ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[.7 0 .3 1],...
-    'Tag','stop');
+    'Position',[.06,.4,.05 .5],...
+    'Tag','stop', ...
+    'CallBack',@stopPlayer);
 audioPopupmenuH=   uicontrol(...    % list of available audio
     'Parent', ControlPanel, ...
     'Units','normalized',...
@@ -289,13 +281,6 @@ audioPopupmenuH=   uicontrol(...    % list of available audio
     'Style','popupmenu');
 
 
-%initialize graphics in aH
-songH=line( ...
-    'Parent',aH, ...
-    'XData',[0,0], ...
-    'YData',[0,0], ...
-    'Color',[1,1,1]);
-
 
 pointerH=patch( ...
     'Parent',aH, ...
@@ -304,8 +289,8 @@ pointerH=patch( ...
     'LineWidth',1, ...
     'FaceColor',pointerColor, ...
     'EdgeColor',pointerColor, ...
-    'FaceAlpha',0, ...
-    'EdgeAlpha',0);
+    'FaceAlpha',playheadAlpha, ...
+    'EdgeAlpha',playheadAlpha);
 
 % Create zoom button group.
 axesPos=get(aH,'Position');
@@ -329,6 +314,7 @@ zoomInButton  =   uicontrol(...
     'Position',[.943 .5 .03 .5], ...%[.1,0.85,buttonSize],...
     'CData',zoomInIcon, ...
     'Tag', 'in', ...
+    'TooltipString','Horizontally zoom in the feature axes', ...
     'CallBack',@zoomAxes);
 zoomOutButton  =   uicontrol(...
     'Parent', zoomButtons, ...
@@ -338,6 +324,7 @@ zoomOutButton  =   uicontrol(...
     'Position',[.973 .5 .03 .5], ...%[.1,0.85,buttonSize],...
     'CData',zoomOutIcon, ...
     'Tag', 'out', ...
+    'TooltipString','Horizontally zoom out the feature axes', ...
     'CallBack',@zoomAxes);
 %figPos=get(fig,'Position');
 sliderAxes  =   axes(...
@@ -365,8 +352,9 @@ followPointerButton  =   uicontrol(...
     'Style','CheckBox', ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'TooltipString','Follow pointer position', ...
-    'Position',[.915 .5 .03 .5]);%, ...
+    'String', 'Follow playhead', ...
+    'TooltipString','Follow playhead position when playing', ...
+    'Position',[.82 .5 .12 .5]);%, ...
 %'CallBack',@followPointer);
 songThumbnailH=line( ...
     'Parent',sliderAxes, ...
@@ -377,7 +365,7 @@ smallPointerH=line( ...
     'Parent',sliderAxes, ...
     'XData',[0,0], ...
     'YData',[0,1], ...
-    'LineWidth',1, ...
+    'LineWidth',3, ...
     'Color',[1, .5, .5]);
 z=zoom(aH);
 setAxesZoomMotion(z,aH,'horizontal');
@@ -435,103 +423,40 @@ noDataText=text('Parent',distAxes, ...
     'Color',[0,.5,0], ...
     'Visible', 'off');
 
-FeatureActionsH = axes(...
-    'Parent', FeaturePanel, ...
-    'Units', 'normalized', ...
-    'Clipping', 'on', ...
-    'HandleVisibility', 'callback', ...
-    'Position',[0,0,1,1], ...
-    'Xlim',[-.01,10], ...
-    'Ylim',[-.01,length(features.names)], ...
-    'Xtick',[], ...
-    'Ytick',[], ...
-    'LineWidth', .00001, ...
-    'Color', guiColor, ...
-    'Visible','on');
+
 
 vertRect=[.1,.15;.9,.15;.9,.85;.1,.85];
 
 vrCreate=[0;1;1;0];
-colorVertices=[[vertRect(:,1)+1+vrCreate;vertRect(:,1)+3+vrCreate;vertRect(:,1)+5;vertRect(:,1)+6;vertRect(:,1)+7;vertRect(:,1)+8],[repmat(vertRect(:,2),6,1)];1.5,.25;2,.25;2.5,.25;2,.75;3.5,.75;4,.75;4.5,.75;4,.25];
-colorFaces=[1,2,3,4;5,6,7,8;9,10,11,12;13,14,15,16;17,18,19,20;21,22,23,24;25,26,27,28;29,30,31,32];
-colorCdata=[zeros(4,3);ones(4,3);repmat(featureColors(3,:),4,1);repmat(featureColors(4,:),4,1);repmat(featureColors(5,:),4,1);repmat(featureColors(6,:),4,1);ones(4,3);repmat(guiColor,4,1)];
-peakColorVertices=[[vertRect(:,1)+3;vertRect(:,1)+4;vertRect(:,1)+5;vertRect(:,1)+6;vertRect(:,1)+7+vrCreate], [repmat(vertRect(:,2),5,1)];7.5,.25;8,.25;8.5,.25;8,.75];
-peakColorFaces=[1,2,3,4;5,6,7,8;9,10,11,12;13,14,15,16;17,18,19,20;21,22,23,24];
-peakColorCdata=[repmat(peakColors(2,:),4,1);repmat(peakColors(3,:),4,1);repmat(peakColors(4,:),4,1);repmat(peakColors(5,:),4,1);ones(4,3);repmat(guiColor,4,1)];
 
-colorPatch=patch('Parent',FeatureActionsH, ...
-    'Vertices',colorVertices, ...
-    'Faces',colorFaces, ...
-    'FaceColor','flat','EdgeColor','flat',...
-    'FaceVertexCData',colorCdata, ...
-    'Visible','off','LineWidth',.01,'ButtonDownFcn', @setFeature);
-
-
-for i=1:nFeatures
+for featureInd=1:nFeatures
     
-    featureH{i}=line( ...
-        'Parent',aH, ...
-        'XData',[0,0], ...
-        'YData',[0,0], ...
-        'Color','k');
+    selectFeatureButton{featureInd}  =   uicontrol(...
+        'Parent', FeaturePanel, ...
+        'Style','CheckBox', ...
+        'Units','normalized',...
+        'HandleVisibility','callback', ...
+        'TooltipString',[sprintf('%s/',features.fields{featureInd}{1:(end-1)}),regexprep(features.names{featureInd},'.*/','')], ...
+        'CallBack', @selectFeatureCallback, ...
+        'String',features.names{featureInd}, ...
+        'Tag',num2str(featureInd), ...
+        'Position',[0 (nFeatures-featureInd)/nFeatures 1 .85/nFeatures]);%, ...
+    if features.isSongLevel(featureInd), set(selectFeatureButton{featureInd},'ForegroundColor',[.5,.5,.5], ...
+            'TooltipString',[get(selectFeatureButton{featureInd},'TooltipString'), ' (song-level feature, only distribution shown)']); end %,'Enable','off'); end
     
-    selectFeatureButtons{i}=patch('Parent',FeatureActionsH,'XData',[.1,.9,.1],'YData',nFeatures-i+[.15, .5,.85],'FaceColor',guiColor,'EdgeColor','k','Tag', int2str(i),'ButtonDownFcn', @selectFeature,'Visible','on');
     
-    featureText{i}=text( ...
-        'Parent',FeatureActionsH, ...
-        'Units','data', ...
-        'String',features.names{i}, ...
-        'Position',[1.5 nFeatures-i+.15], ...
-        'HorizontalAlignment','Left', ...
-        'VerticalAlignment','Bottom', ...
-        'FontSize',10, ...
-        'Color','k', ...
-        'Tag', int2str(i), ...
-        'ButtonDownFcn', @selectFeature, ...
-        'Visible','on');
-    
-    if features.hasPeaks(i)
-        %selectPeaksButtons{i}=patch('Parent',FeatureActionsH,'XData',[9.2,9.8,9.8,9.2],'YData',nFeatures-i+[.2, .2,.8,.8],'FaceColor',guiColor,'EdgeColor','k','EdgeAlpha',.5','Tag', int2str(i),'ButtonDownFcn', @selectPeaks,'Visible','on');
-        selectPeaksButtons{i}=text('Parent',FeatureActionsH,'Units','data','FontSize',10,'VerticalAlignment','Bottom','HorizontalAlignment','Left','String','\bfP','Position',[9.1,nFeatures-i+.15],'BackGroundColor',guiColor,'Tag', int2str(i),'ButtonDownFcn', @selectPeaks,'Visible','on');
-        peakH{i}=patch( ...
-            'Parent',aH, ...
-            'XData',[0,0,0,0], ...
-            'YData',[0,0,0,0], ...
-            'LineWidth',1, ...
-            'FaceColor',peakColor, ...
-            'EdgeColor',peakColor, ...
-            'FaceAlpha',peakAlphaDefault, ...
-            'EdgeAlpha',peakAlphaDefault*2);
-        
-    end
 end
 
-%set(mainFeatureButtons,'SelectedObject',[]);
-set(PPSbuttons,'SelectedObject',[]);
-%set(FeatureStatsButtons,'SelectedObject',[]);
-PPSstate='';
 selectSong();
 uistack(fig,'top');
+
+
+
+
+
+
 %%
 
-%PPS ACTIONS
-    function selectPPS(hObject,eventdata)
-        PPSstate=get(eventdata.NewValue,'Tag'); % Get Tag of the selected object.
-        switch PPSstate
-            case 'play'
-                % Code for when radiobutton1 is selected.
-                playPlayer()
-            case 'pause'
-                % Code for when radiobutton2 is selected.?
-                pausePlayer()
-            case 'stop'
-                % Code for when togglebutton1 is selected.
-                stopPlayer()
-                
-            otherwise
-                % Code for when there is no match.
-        end
-    end
 %ZOOM
     function zoomAxes(hObject,eventdata)
         if not(ishandle(fig))
@@ -547,7 +472,7 @@ uistack(fig,'top');
         
         sliderWidth=zoomFactor*(sliderHLim(2)-sliderHLim(1));
         if get(followPointerButton,'Value') %is activated -> go to pointer location
-            sliderPosition=get(pointerH,'XData');
+            sliderPosition=get(playheads{1},'XData');
             sliderPosition=mean(sliderPosition(1:2))/(xlim(2)-xlim(1));
         else
             sliderPosition=mean(sliderHLim);
@@ -557,6 +482,9 @@ uistack(fig,'top');
         sliderHLim([2,3])=min(1,sliderHLim(1)+sliderWidth);
         set(sliderH,'XData',sliderHLim);
         set(aH,'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
+        for i=1:length(featureAxes)
+            set(featureAxes{i},'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
+        end
         
     end
 
@@ -574,9 +502,10 @@ uistack(fig,'top');
             sliderLim(1)=max(0, min(CurrentPoint(1,1)-pointOnSlider, 1-sliderWidth));
             sliderLim(2)=min(1,sliderLim(1)+sliderWidth);
             set(sliderH,'XData',[sliderLim(1), sliderLim(2), sliderLim(2), sliderLim(1)]);
-            
             set(aH,'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
-            
+            for i=1:length(featureAxes)
+                set(featureAxes{i},'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
+            end
         end
     end
 
@@ -598,43 +527,41 @@ uistack(fig,'top');
             sliderLim(1)=max(0, min(CurrentPoint(1,1)-pointOnSlider, 1-sliderWidth));
             sliderLim(2)=min(1,sliderLim(1)+sliderWidth);
             set(sliderH,'XData',[sliderLim(1), sliderLim(2), sliderLim(2), sliderLim(1)]);
-            
             set(aH,'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
-            
+            for i=1:length(featureAxes)
+                set(featureAxes{i},'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
+            end
         end
     end
 
 %PLAY
-    function playPlayer(hObject, eventdata)
+    function playPausePlayer(hObject, eventdata)
+        
+        
         
         if not(ishandle(fig))
             return
         end
-        if not(isplaying(player))
-            
-            %start playing from the last frame beginning before CurrentSample (with novelty curves this is the frame center) position
-            pointerAlpha=pointerAlphaDefault;
-            set(pointerH,'FaceAlpha',pointerAlpha,'EdgeAlpha',pointerAlpha);
-            set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
+        
+        state=get(PlayPauseButton,'Tag');
+        
+        CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
+        
+        for featureInd=1:length(playheads)
+            set(playheads{featureInd},'XData',getxdata(framePos{featureInd}(:,CurrentFrame(featureInd))));
+        end
+        
+        set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
+        
+        if strcmp(state,'play') && not(isplaying(player))
+            set(PlayPauseButton,'Tag','pause','cdata',pauseIcon);
             play(player,CurrentSample);
+        elseif strcmp(state,'pause') && isplaying(player)
+            set(PlayPauseButton,'Tag','play','cdata',playIcon);
+            pause(player);
         else
             %do nothing
         end
-    end
-
-%PAUSE
-    function pausePlayer(hObject, eventdata)
-        
-        if not(ishandle(fig))
-            return
-        end
-        
-        %if strcmp(PPSstate,'play')
-        pause(player);
-
-        set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame));
-        set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
-        drawnow
     end
 
 %STOP
@@ -644,10 +571,13 @@ uistack(fig,'top');
             return
         end
         stop(player);
+        set(PlayPauseButton,'Tag','play','cdata',playIcon);
         CurrentSample=get(player,'CurrentSample');
-        CurrentFrame=1;
-        
-        set(pointerH,'XData',xlim([1,1,1,1]));
+        CurrentFrame(:)=1;
+        for featureInd=1:length(playheads)
+            
+            set(playheads{featureInd},'XData',xlim([1,1,1,1]));
+        end
         set(smallPointerH,'XData',[0,0]);
         drawnow
         
@@ -660,28 +590,31 @@ uistack(fig,'top');
         end
         
         CurrentPointAxes=get(aH, 'CurrentPoint');
+        
         CurrentPointSlider=get(sliderAxes,'CurrentPoint');
         
         if CurrentPointAxes(1,1)>=xlim(1) && CurrentPointAxes(1,1)<=xlim(2) && CurrentPointAxes(1,2)>=ylim(1) && CurrentPointAxes(1,2)<=ylim(2) %mouse clicked inside aH
-            if strcmp(PPSstate,'play')
+            
+            if strcmp(get(PlayPauseButton,'Tag'),'pause')
                 pause(player);
             end
             
             
             
-            
-        [tmp, CurrentFrame]=min(framePos(1,:)<(xlim(1)+CurrentPointAxes(1,1)));
-            
             %CurrentFrame=length(find(framePos(1,:)<=CurrentPointAxes(1,1)));
             %pointerX=[framePos(1,CurrentFrame),framePos(2,CurrentFrame),framePos(2,CurrentFrame),framePos(1,CurrentFrame)];
-            pointerAlpha=pointerAlphaDefault;
-            set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame),'FaceAlpha',pointerAlpha,'EdgeAlpha',pointerAlpha);
+            %pointerAlpha=pointerAlphaDefault;
+            
+            %CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentPointAxes(1,1)),2));
+            for featureInd=1:length(playheads)
+                set(playheads{featureInd},'XData',getxdata(framePos{featureInd}(:,CurrentFrame(featureInd))));
+            end
             set(fig, 'WindowButtonMotionFcn', @draggingFcn)
             set(fig, 'WindowButtonUpFcn', @stopDragFcn)
         elseif all(CurrentPointSlider(1,1:2)<=1) && all(CurrentPointSlider(1,1:2)>=0) %mouse clicked inside sliderAxes
             %disable sliding during playback if followPointerButton
             %selected
-            if strcmp(PPSstate,'play') && get(followPointerButton,'Value')
+            if strcmp(get(PlayPauseButton,'Tag'),'pause') && get(followPointerButton,'Value')
                 return
             else
                 axesLim=get(aH,'Xlim');
@@ -695,16 +628,24 @@ uistack(fig,'top');
                     sliderLim(1)=max(0, min(CurrentPointSlider(1,1)-sliderWidth/2, 1-sliderWidth));
                     sliderLim(2)=min(1,sliderLim(1)+sliderWidth);
                     set(sliderH,'XData',[sliderLim(1), sliderLim(2), sliderLim(2), sliderLim(1)]);
-                    
                     set(aH,'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse click
+                    for featureInd=1:length(featureAxes)
+                        set(featureAxes{featureInd},'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse click
+                    end
                     set(smallPointerH,'XData',(player.CurrentSample-1)/player.TotalSamples*[1,1]);
                 end
                 pointOnSlider=CurrentPointSlider(1,1)-sliderLim(1);
+                if isequal(axesLim(:),xlim(:))
+                    set(fig, 'WindowButtonMotionFcn', @draggingFcn);
+                    set(fig, 'WindowButtonUpFcn', @stopDragFcn);
+                else
                 set(fig, 'WindowButtonMotionFcn', @slideAxes);
-                set(fig, 'WindowButtonUpFcn', @stopSlide)
+                set(fig, 'WindowButtonUpFcn', @stopSlide);
+                end
             end
             
         else
+            
             return
         end
         
@@ -716,33 +657,44 @@ uistack(fig,'top');
         %used while mouse button is held down
         CurrentPoint= get(aH, 'CurrentPoint');
         
-        if CurrentPoint(1,1)<xlim(1) || CurrentPoint(1,1)>xlim(2) || CurrentPoint(1,2)<ylim(1) || CurrentPoint(1,2)>ylim(2)
+        if CurrentPoint(1,1)<xlim(1) || CurrentPoint(1,1)>xlim(2)% || CurrentPoint(1,2)<ylim(1) || CurrentPoint(1,2)>ylim(2)
             return
         end
-        
-        
-        [tmp, CurrentFrame]=min(framePos(1,:)<(xlim(1)+CurrentPoint(1,1)));
-        %pointerX =framePos([1,2,2,1],CurrentFrame);% [framePos(1,CurrentFrame), framePos(2,CurrentFrame), framePos(2,CurrentFrame), framePos(1,CurrentFrame)];
-        
-        %CurrentFrame=length(find(framePos(1,:)<=CurrentPoint(1,1)));
-        
-        %pointerX=[framePos(1,CurrentFrame),framePos(2,CurrentFrame),framePos(2,CurrentFrame),framePos(1,CurrentFrame)];
-        set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame));
+        CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentPoint(1,1)),2));
+        for featureInd=1:length(selectedFeatures)
+            set(playheads{featureInd},'XData',getxdata(framePos{featureInd}(:,CurrentFrame(featureInd))));
+        end
         set(smallPointerH,'XData',CurrentPoint(:,1));
     end
 
     function stopDragFcn(varargin)
         set(fig,'WindowButtonMotionFcn', '');
+        CurrentPoint= get(aH, 'CurrentPoint');
+        if CurrentPoint(1,1)<xlim(1) || CurrentPoint(1,1)>xlim(2)% || CurrentPoint(1,2)<ylim(1) || CurrentPoint(1,2)>ylim(2)
+            return
+        end
         
-        %pointerX=[framePos(1,CurrentFrame),framePos(2,CurrentFrame),framePos(2,CurrentFrame),framePos(1,CurrentFrame)];
-        set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame));
-        set(smallPointerH,'XData',CurrentFrame/length(framePos)*[1,1]);
-        
+        if strcmp(get(PlayPauseButton,'Tag'),'pause')
+            pause(player);
+            
+        end
         %get current sample from current frame
-        CurrentSample=max(1,floor(Fs*(framePos(1,CurrentFrame)-xlim(1))));
+        CurrentSample=floor(player.TotalSamples * (CurrentPoint(1,1)-xlim(1))/(xlim(2)-xlim(1)));
+        
+        CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentPoint(1,1)),2));
+        for featureInd=1:length(playheads)
+            set(playheads{featureInd},'XData',getxdata(framePos{featureInd}(:,CurrentFrame(featureInd))));
+            
+            %CurrentSample=min(CurrentSample,max(1,floor(Fs*(framePos{featureInd}(1,CurrentFrame(featureInd))-xlim(1))));
+        end
+        set(smallPointerH,'XData',(CurrentPoint(1,1)-xlim(1))/(xlim(2)-xlim(1))*[1,1]);
+        
+        
+        
         %%if play button is activated
-        if strcmp(PPSstate,'play')
+        if strcmp(get(PlayPauseButton,'Tag'),'pause')
             play(player,CurrentSample);
+            
         end
         
     end
@@ -755,6 +707,11 @@ uistack(fig,'top');
             return
         end
         
+        %prevent distracting pushes of buttons
+        for fi=selectFeatureButton(features.isSongLevel==0)
+            set(fi{1},'Enable','off');
+        end
+        
         if isequal(class(player),'audioplayer')
             stopPlayer();  % No selection
             player=[];
@@ -764,21 +721,13 @@ uistack(fig,'top');
             CurrentSample=1;
         end
         
-        if isequal(get(colorPatch,'Visible'),'on')
-            openedFeature=str2num(get(colorPatch,'Tag'));
-            set(colorPatch,'Visible','off');
-            set(featureText{openedFeature},'Visible','on');
-            set(selectFeatureButtons{openedFeature},'XData',[.1,.9,.1],'YData',nFeatures-openedFeature+[.15,.5,.85],'ButtonDownFcn',@selectFeature);
-            set(selectPeaksButtons{openedFeature},'ButtonDownFcn',@selectPeaks);
-        end
-        
         songInd=get(audioPopupmenuH, 'Value');
-        song = miraudio(features.songNames{songInd});    
+        song = miraudio(features.songNames{songInd});
         
         %start and end in seconds
         xlim=get(song,'Pos');
         xlim = xlim{1}{1}([1 end]);
-        ylim=[0,1];
+        ylim=get(aH,'YLim');
         Fs=get(song,'Sampling');
         Fs = Fs{1};
         
@@ -791,400 +740,190 @@ uistack(fig,'top');
         %player.StartFcn = 'startPlaying';
         player.TimerPeriod = maxFrameUpdateFrequency;
         player.TimerFcn = 'whilePlaying';
-        
-        
         set(aH,'Xlim',xlim);
+        for featureInd=1:length(featureAxes)
+            set(featureAxes{featureInd},'Xlim',xlim);
+        end
         set(sliderAxes,'Xlim',[0,1]);
         
-        songImage=mirgetdata(miraudio(song,'Sampling',downSampleRate));
+        %songImage=mirgetdata(miraudio(song,'Sampling',downSampleRate));
+        songImage=mirgetdata(song);
         %songImage=.5+.5*(songImage-mean(songImage))/max(abs(songImage));
         
-        songImage=(songImage-min(songImage))/(max(songImage)-min(songImage))-.5; %normalize to [-.5,.5], mean=0
+        songImage=(songImage-min(songImage))/(max(songImage)-min(songImage)); %normalize to [0,1], mean=0
         
-        songImagePos=(0:length(songImage)-1)./downSampleRate;
+        %songImagePos=(0:length(songImage)-1)./downSampleRate;
         
         %could handle stereo wave -> take mean across channels?
         
-        set(songThumbnailH,'XData',(0:length(songImage)-1)/(length(songImage)-1),'YData', songImage+.5, 'Color', songColor);
-        set(songH,'XData',songImagePos,'YData',.75*(ylim(2)-ylim(1))*songImage+mean(ylim),'Color',songColor);
-        selectedFeatureInds=find(selectedFeatures~=2);  %2 means hidden feature
+        set(songThumbnailH,'XData',(0:length(songImage)-1)/(length(songImage)-1),'YData', songImage, 'Color', songColor);
+        %set(songH,'XData',songImagePos,'YData',.75*(ylim(2)-ylim(1))*songImage+mean(ylim),'Color',songColor);
+        %selectedFeatureInds=find(selectedFeatures~=2);  %2 means hidden feature
+        CurrentSample=1;
+        for featureInd=1:length(selectedFeatures)
+            cla(featureAxes{featureInd});
+            set(featureAxes{featureInd},'Visible','off');
+        end
+        featureAxes={};
+        framePos={};
+        playheads={};
+        frameSummary=[];
         
-        if isempty(selectedFeatureInds)
-            CurrentSample=1;
-            setAudioBackground();
-            
-        else
-            for sFI=1:length(selectedFeatureInds)
-                selectFeature([],[],selectedFeatureInds(sFI),selectedFeatures(selectedFeatureInds(sFI)));
-            end
-            
+        
+        for selectedFeature=selectedFeatures
+            selectFeature(songInd,selectedFeature);
         end
         
+        %prevent distracting pushes of buttons
+        for fi=selectFeatureButton(features.isSongLevel==0)
+            set(fi{1},'Enable','on');
+        end
         
         
     end
 
-
-    function selectFeature(hObject, eventdata, featureInd, featureState)
-        songInd=get(audioPopupmenuH, 'Value');
-        
-        if isequal(get(colorPatch,'Visible'),'on')
-            openedFeature=str2num(get(colorPatch,'Tag'));
-            set(colorPatch,'Visible','off');
-            set(featureText{openedFeature},'Visible','on');
-            set(selectFeatureButtons{openedFeature},'XData',[.1,.9,.1],'YData',nFeatures-openedFeature+[.15,.5,.85],'ButtonDownFcn',@selectFeature);
-            set(selectPeaksButtons{openedFeature},'ButtonDownFcn',@selectPeaks);
+    function selectFeatureCallback(hObject, eventData)
+        %prevent distracting pushes of buttons
+        for fi=selectFeatureButton
+            set(fi{1},'Enable','off');
         end
-        
-        set(noDataText,'Visible', 'off');
-        
-        if isempty(hObject)
-            if isempty(features.data{featureInd}{songInd}{1})
-                set(noDataText,'Visible', 'on');
-                set(featureH{featureInd},'XData',[0,0],'YData',[0,0],'Visible','off');
-                if ~mainFeature
-                    setAudioBackground();
-                end
-                return
-            else
-                setFeature([],[],featureInd,featureState);
+        songInd=get(audioPopupmenuH, 'Value');
+        featureState=get(hObject,'Value');
+        selectedFeature=str2double(get(hObject,'Tag'));
+        if features.isSongLevel(selectedFeature), set(hObject,'Value',false); end
+        if featureState
+            if features.isSongLevel(selectedFeature)==0,
+                selectedFeatures=[selectedFeatures,selectedFeature];
+                selectFeature(songInd, selectedFeature);
             end
-            
+            showFeatureStats(selectedFeature);
         else
-            
-            featureInd=str2num(get(hObject,'Tag'));
-            
-            if features.emptysong(songInd)
-                showFeatureStats([],[],featureInd);
-                if ~mainFeature
-                    setAudioBackground();
-                end
-                return
+            %remove feature
+            if features.isSongLevel(selectedFeature)==0
+                removed=find(selectedFeatures==selectedFeature);
+                cla(featureAxes{removed});
+                set(featureAxes{removed},'Visible','off');
+                %set(playheads{removed},'Visible','off');
+                featureAxes(removed)=[];
+                framePos(removed)=[];
+                playheads(removed)=[];
+                CurrentFrame(removed)=[];
+                selectedFeatures(removed)=[];
+                frameSummary(removed,:)=[];
+                frameSummary=frameSummary(:,any(isfinite(frameSummary),1));
                 
+                scaleAxes(length(selectedFeatures));
+                if ~isempty(selectedFeatures)
+                    set(get(featureAxes{end},'XLabel'),'visible','on');
+                end
             end
-            
-            
-            set(colorPatch,'Visible','on','Vertices',[colorVertices(:,1),colorVertices(:,2)+nFeatures-featureInd],'Faces',colorFaces,'FaceVertexCdata',colorCdata,'Tag',get(hObject,'Tag'),'ButtonDownFcn',@setFeature);
-            set(selectFeatureButtons{featureInd},'XData',[.1,.9,.9],'YData',nFeatures-featureInd+[.5,.15,.85],'ButtonDownFcn',@setFeature);
-            set(featureText{featureInd},'Visible','off');
-            
-            showFeatureStats([],[],featureInd);
-            
-            set(fig,'WindowButtonDownFcn','','WindowButtonUpFcn', '');
-        end
-    end
-
-
-
-    function setFeature(hObject, eventdata, featureInd,featureState)
-        %if isempty(hObject)
-        %    featureColor=featureColors(featureState,:);
-        if not(isempty(hObject))
-            clickedPoint=get(FeatureActionsH,'CurrentPoint');
-            featureInd=str2num(get(hObject,'Tag'));
-            
-            clickedPoint=ceil(clickedPoint(1,1));
-            
-            featureStates=[0,1,1,2,2,3,4,5,6];
-            featureState=featureStates(clickedPoint);
-            
-            set(colorPatch,'Visible','off');
-            set(featureText{featureInd},'Visible','on');
-            set(selectFeatureButtons{featureInd},'XData',[.1,.9,.1],'YData',nFeatures-featureInd+[.15, .5,.85],'ButtonDownFcn',@selectFeature);
         end
         
-        if featureState>0
-            set(selectFeatureButtons{featureInd},'FaceColor',featureColors(featureState,:));
+        %prevent distracting pushes of buttons
+        for fi=selectFeatureButton
+            set(fi{1},'Enable','on');
         end
         
-        if featureState==0
-            set(selectFeatureButtons{featureInd},'ButtonDownFcn',@selectFeature);
-            %only hide the colorpatch etc.
-        elseif featureState==1
-            selectedFeatures(featureInd)=1;
-            if mainFeature>0 && mainFeature~=featureInd  %Hide the previous main feature. There can be only one at a time.
-                set(selectFeatureButtons{mainFeature},'FaceColor',featureColors(2,:));
-                selectedFeatures(mainFeature)=1;
-                %feature{mainFeature}=[];
-                %featureCurvePos{mainFeature}=[];
-                set(featureH{mainFeature},'XData',[0,0],'YData',[0,0],'Visible','off');
-            end
-            mainFeature=featureInd;
-            setMainFeature(featureInd);
-        elseif featureState==2
-            selectedFeatures(featureInd)=2;
-            %feature{featureInd}=[];
-            %featureCurvePos{featureInd}=[];
-            set(featureH{featureInd},'XData',[0,0],'YData',[0,0],'Visible','off');
-                        if featureInd==mainFeature
-                mainFeature=0;
-            end
-        elseif featureState>=3
-            selectedFeatures(featureInd)=featureState;
-            setSecondaryFeature(featureInd,featureState);
-            if featureInd==mainFeature
-                mainFeature=0;
-            end
-            
-        end
-        %set(FeatureActionsH,'ButtonDownFcn','');
-        set(fig,'WindowButtonDownFcn', @startDragFcn);
     end
 
-
-    function setSecondaryFeature(featureInd,featureState)
+    function selectFeature(songInd, selectedFeature)
+        
+        
         if not(ishandle(fig))
             return
         end
-        
-        songInd=get(audioPopupmenuH, 'Value');
-        %[feature{featureInd} featureCurvePos{featureInd}, featureSongDistribution]= ...
-        %    getSongFeatureData(f,featureFields{featureInd},songInd,featureValueRange(featureInd,:),nBins,smoothingFactor);
-        %showFeatureStats([],[],featureInd, featureSongDistribution);
-        
-        %center feature to [-.5,.5]
-        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
-            %minValue=features.minsong(featureInd,songInd);
-            %maxValue=features.maxsong(featureInd,songInd);
-            
-            set(featureH{featureInd},...'XData',mean(features.framePos{featureInd}{songInd}{1}), ...
-                ...'YData',((features.data{featureInd}{songInd}{1}-minValue)/(maxValue-minValue)-.5)*.9*(ylim(2)-ylim(1))+mean(ylim), ...
-                'Color',featureColors(featureState,:),'LineWidth',1,'Visible','on');            
-        else
-            
-
-            set(featureH{featureInd},'XData',xlim,'YData',mean(ylim)*ones(1,2),'Color',featureColors(featureState,:),'LineWidth',1,'Visible','on');
-        end
-        
-    end
-
-
-    function setMainFeature(featureInd)
-        %Select a feature in popupmenu. Plot the feature curve. At this
-        %point only mirscalars are allowed.
-        if not(ishandle(fig))
-            return
-        end
-        
         
         %%if play button is activated
-        if strcmp(PPSstate,'play')
-            pausePlayer();
+        if strcmp(get(PlayPauseButton,'Tag'),'pause')
+            pause(player);
         end
         
-        songInd=get(audioPopupmenuH, 'Value');
-        showFeatureStats([],[],featureInd);
-        
-        
-        %compute feature information for visualization
-        
-        
-        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
-            framePos=features.framePos{featureInd}{songInd}{1};
-            %add 5% overhead in aH
-            ylim=[features.minsong(featureInd,songInd),features.maxsong(featureInd,songInd)];
-            ylim=ylim+.05*[ylim(1)-ylim(2),ylim(2)-ylim(1)];
+        %create new axis and place the feature
+        featureAxes{length(featureAxes)+1}=copy(handle(aH));
+        nAxes=length(featureAxes);
+        scaleAxes(nAxes);
+        axes(featureAxes{nAxes});
+        if features.cellinds(selectedFeature)>0 
+            display(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
+            framePos_tmp=get(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),'FramePos');
         else
-            framediff=maxFrameUpdateFrequency; %play audio normally
-            framePos=[xlim(1):framediff:xlim(2);(xlim(1)+framediff):framediff:(xlim(2)+framediff)];
-            %feature will be in the center of aH (in y-direction)
-            ylim=[min([0,features.minsong(featureInd,songInd)]),2*max([0,features.maxsong(featureInd,songInd)])];
-            if all(ylim)==0
-                ylim=ylim+[-.05,.05];
-            end
+            display(arg,featureAxes{nAxes},songInd); 
+            framePos_tmp=get(arg,'FramePos');
         end
+        framePos(nAxes)=framePos_tmp{songInd};
         
-        CurrentSample=get(player,'CurrentSample');
-        [tmp, CurrentFrame]=min(framePos(1,:)<(xlim(1)+CurrentSample/Fs));
+        set(featureAxes{nAxes},'Visible','on','Xlim',get(aH,'Xlim'));%,'ButtonDownFcn', @startDragFcn);
+        %set(get(featureAxes{nAxes},'Children'),'AlphaData',.5)
+        ttl=get(featureAxes{nAxes},'Title');
+        set(ttl,'String',regexprep(get(ttl,'String'),',.*',''));
+        playheads{nAxes}=copy(handle(pointerH));
+        ydata=get(featureAxes{nAxes},'ylim');
+        set(playheads{nAxes},'Parent',featureAxes{nAxes},'YData',getydata(ydata));
         
-        set(aH,'Ylim',ylim);
         
-        if ~features.isSongLevel(featureInd) && features.minsong(featureInd,songInd) ~= features.maxsong(featureInd,songInd)
-            if iscell(features.data{featureInd}{songInd}{1})
-                xdata = [];
-                ydata = [];
-                for k = 1:length(features.data{featureInd}{songInd}{1})
-                    xdata = [xdata repmat(mean(framePos(:,k)),[1 length(features.data{featureInd}{songInd}{1}{k})])];
-                    ydata = [ydata features.data{featureInd}{songInd}{1}{k}(:)'];
-                end
-                linestyle = 'none';
-                marker = '+';
-            else
-                xdata = mean(framePos);
-                ydata = features.data{featureInd}{songInd}{1};
-                linestyle = '-';
-                marker = 'none';
-            end
-            set(featureH{featureInd},'XData', xdata, ...
-                'YData',ydata,'Color','k','LineWidth',1,'Visible','on','LineStyle',linestyle,'Marker',marker);
-        else
-
-            set(featureH{featureInd},'XData', xlim, ...
-                'YData',mean(ylim) * ones(1,2),'Color','k','LineWidth',1,'Visible','on');            
-        end
         
-
         
-        %scale secondary features and peaks to ylim
-        for j=1:length(selectedFeatures)
-            if selectedFeatures(j)>2
-                
-                minValue=min(features.data{j}{songInd}{1});
-                maxValue=max(features.data{j}{songInd}{1});
-                
-                set(featureH{j},'YData',((features.data{j}{songInd}{1}-minValue)/(maxValue-minValue)-.5)*.9*(ylim(2)-ylim(1))+mean(ylim));
-            end
-            if selectedPeaks(j)>1
-                set(peakH{j},'YData',[zeros(2,length(features.peaks{j}{songInd}));0.945*(ylim(2)-ylim(1))*repmat(features.peaks{j}{songInd},2,1)] + ylim(1));
-            end
-        end
-        
-        uistack(featureH{featureInd},'top');
-        
-        set(songH,'YData',.75*(ylim(2)-ylim(1))*songImage+mean(ylim));
-        
-        set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame),'YData',ylim([1,1,2,2])+[-.1,-.1,.1,.1]);
-        set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
-        
-        %the pointer update freq will be an integer [1,2,3,...]
-        %multiplication of the feature framediff, at least
-        %maxFrameUpdateFrequency (to reduce the computational burden with short frame lengths)
-        %nFramesWhenUpdate=ceil(maxFrameUpdateFrequency/framediff);  
-        %updateFreq=framediff*nFramesWhenUpdate;
-        %player.TimerPeriod = updateFreq;
-        
+        frameSummary(nAxes,1:size(framePos{nAxes},2))=mean(framePos{nAxes});
+        frameSummary(frameSummary==0)=inf;
+        CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
+        set(playheads{nAxes},'XData',getxdata(framePos{nAxes}(:,CurrentFrame(nAxes))),'Visible','on');
+        drawnow
         %%if play button is activated
-        if strcmp(PPSstate,'play')
-            playPlayer();
+        if strcmp(get(PlayPauseButton,'Tag'),'pause')
+            
+            play(player,CurrentSample);
         end
         
     end
 
-    function setAudioBackground()
-        framediff=maxFrameUpdateFrequency; %play audio normally
-        framePos=[xlim(1):framediff:xlim(2);(xlim(1)+framediff):framediff:(xlim(2)+framediff)];
-        
-        %pointerX=[framePos(1,CurrentFrame),framePos(2,CurrentFrame),frameP
-        %os(2,CurrentFrame),framePos(1,CurrentFrame)];
-        set(aH,'Ylim',ylim);
-        set(songH,'YData',.75*(ylim(2)-ylim(1))*songImage+mean(ylim));
-        
-        pointerY=[ylim(1), ylim(1), ylim(2), ylim(2)]+[-.1,-.1,.1,.1];
-        set(pointerH,'XData',framePos([1,2,2,1],CurrentFrame),'YData',pointerY);
-        set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
+
+    function res = getydata(ydata)
+        res=[ydata([1,1,2,2]),ydata(2)-.1*(ydata(2)-ydata(1)),ydata([2,2,1])];
     end
 
-
-    function selectPeaks(hObject, eventdata, featureInd,peakState)
-        %select peaks in popupmenu. Called usually each time when peak popupmenu
-        %called or song selected (if there are peaks at all in the feature set)
-        
-        if not(ishandle(fig))
-            return
-        end
-        
-        
-        if isempty(hObject)
-            setPeaks([],[],featureInd,peakState);
-        else
-            if isequal(get(colorPatch,'Visible'),'on')
-                openedFeature=str2num(get(colorPatch,'Tag'));
-                set(colorPatch,'Visible','off');
-                set(featureText{openedFeature},'Visible','on');
-                set(selectFeatureButtons{openedFeature},'XData',[.1,.9,.1],'YData',nFeatures-openedFeature+[.15,.5,.85],'ButtonDownFcn',@selectFeature);
-                set(selectPeaksButtons{openedFeature},'ButtonDownFcn',@selectPeaks);
-            end
-            peakInd=str2num(get(hObject,'Tag'));
-            set(colorPatch,'Visible','on','Vertices',[peakColorVertices(:,1),peakColorVertices(:,2)+nFeatures-peakInd], ...
-                'Faces',peakColorFaces,'FaceVertexCdata',peakColorCdata,'Tag',get(hObject,'Tag'),'ButtonDownFcn',@setPeaks);
-            %set(FeatureActionsH,'ButtonDownFcn',@setFeature);
-            set(selectPeaksButtons{peakInd},'ButtonDownFcn',@setPeaks);
-            set(featureText{peakInd},'Visible','off');
-            songInd=get(audioPopupmenuH, 'Value');
-            %[tmp,tmp, featureSongDistribution]=getSongFeatureData(f,featureFields{featureInd},songInd,featureValueRange(featureInd,:),nBins);
-            %showFeatureStats([],[],featureInd, featureSongDistribution);
-            
-            set(fig,'WindowButtonDownFcn','','WindowButtonUpFcn', '');
-        end
-        
+    function res = getxdata(xdata)
+        s=xdata(2)-xdata(1);
+        m=mean(xdata);
+        res=[xdata([1,2,2])',m+.05*s,m,m-.05*s,xdata([1,1])'];
     end
 
-    function setPeaks(hObject, eventdata, featureInd,peakState)
-        %if isempty(hObject)
-        %    peakColor=featureColors(peakState,:);
-        %else
-        if not(isempty(hObject))
-            clickedPoint=get(FeatureActionsH,'CurrentPoint');
-            featureInd=str2num(get(hObject,'Tag'));
+    function scaleAxes(nAxes)
+        apos=get(aH,'Position');
+        scaling=(1.5./(1+nAxes))^.25;
+        for axisInd=1:nAxes;
             
-            clickedPoint=ceil(clickedPoint(1,1));
-            
-            peakStates=[0,0,0,2,3,4,5,1,1,0];
-            peakState=peakStates(clickedPoint);
-            
-            set(colorPatch,'Visible','off');
-            set(featureText{featureInd},'Visible','on');
-            set(selectPeaksButtons{featureInd},'ButtonDownFcn',@selectPeaks);
-            
-            if peakState>0
-                set(selectPeaksButtons{featureInd},'BackGroundColor',peakColors(peakState,:));
+            set(featureAxes{axisInd},'Position',[apos(1), apos(2)+(nAxes-axisInd)/(nAxes),apos(3),scaling*apos(4)*1/nAxes]);
+            if axisInd<nAxes,
+                xl=get(featureAxes{axisInd},'XLabel');
+                set(xl,'visible','off');
+                ydata=get(featureAxes{axisInd},'ylim');
+                set(playheads{axisInd},'YData',getydata(ydata));
+            else
+                xl=get(featureAxes{axisInd},'XLabel');
+                
             end
-            
         end
-        
-        if peakState==0
-            set(selectFeatureButtons{featureInd},'ButtonDownFcn',@selectPeaks);
-            %only hide the colorpatch etc.
-        elseif peakState==1
-            selectedPeaks(featureInd)=1;
-            set(peakH{featureInd},'XData',[0,0],'YData',[0,0],'Visible','off');
-        elseif peakState>=2
-            songInd=get(audioPopupmenuH, 'Value');
-            selectedPeaks(featureInd)=peakState;
-            %update patch data: each column in matrices are one patch
-            peakPos=features.framePos{featureInd}{songInd}{1}(:,features.peakPos{featureInd}{songInd});
-
-            if strcmp(PPSstate,'play')
-                pausePlayer();
-            end
-            set(peakH{featureInd},'XData',peakPos([1,2,2,1],:),'YData',[zeros(2,size(peakPos,2))+ylim(1);.9*(ylim(2)-ylim(1))*repmat(features.peaks{featureInd}{songInd},2,1) + abs(min(features.data{featureInd}{songInd}{1})-ylim(1))],...%min(features.data{featureInd}{songInd}{1})], ...
-                'FaceColor',peakColors(peakState,:),'EdgeColor',peakColors(peakState,:),'Visible','on');
-            
-            %%if play button is activated
-            if strcmp(PPSstate,'play')
-                playPlayer();
-            end
-            
-            
-        end
-        %set(FeatureActionsH,'ButtonDownFcn','');
-        set(fig,'WindowButtonDownFcn', @startDragFcn, 'WindowButtonUpFcn', @stopDragFcn);
         
         
     end
 
 
-
-    function showFeatureStats(hObject,eventdata,featureInd)
+    function showFeatureStats(featureInd_stats)
         songInd=get(audioPopupmenuH, 'Value');
         
-        if not(isempty(hObject))
-            featureInd=str2num(get(eventdata.NewValue, 'Tag'));
-            %[~,~,featureSongDistribution]=getSongFeatureData(f,featureFields{featureInd},songInd,featureValueRange(featureInd,:),nBins,smoothingFactor);
-        end
         
-        ticklabels{1}=num2str(features.valueRange(featureInd,1));
-        ticklabels{2}=num2str(mean(features.valueRange(featureInd,:)));
-        ticklabels{3}=num2str(features.valueRange(featureInd,2));
+        ticklabels{1}=num2str(features.valueRange(featureInd_stats,1));
+        ticklabels{2}=num2str(mean(features.valueRange(featureInd_stats,:)));
+        ticklabels{3}=num2str(features.valueRange(featureInd_stats,2));
         
         if length(ticklabels{1})>4
-            ticklabels{1}=num2str(features.valueRange(featureInd,1),'%1.2e');
+            ticklabels{1}=num2str(features.valueRange(featureInd_stats,1),'%1.2e');
         end
         if length(ticklabels{2})>4
-            ticklabels{2}=num2str(mean(features.valueRange(featureInd,:)),'%1.2e');
+            ticklabels{2}=num2str(mean(features.valueRange(featureInd_stats,:)),'%1.2e');
         end
         if length(ticklabels{3})>4
-            ticklabels{3}=num2str(features.valueRange(featureInd,2),'%1.2e');
+            ticklabels{3}=num2str(features.valueRange(featureInd_stats,2),'%1.2e');
         end
         
         if features.emptysong(songInd)
@@ -1192,11 +931,11 @@ uistack(fig,'top');
         else
             set(noDataText,'Visible','off')
         end
-        set(DistPanel,'Title',upper(features.names{featureInd}));
+        set(DistPanel,'Title',upper(regexprep(features.names{featureInd_stats},'.*/','')));
         set(distAxes,'Xtick',[0,.5,1],'XTickLabel',ticklabels);
-        set(featureDistPatch,'YData',[features.distribution(featureInd,:),0,0]);
-        if ~isempty(features.songDistributions{featureInd})
-            set(songDistPatch,'YData',[features.songDistributions{featureInd}(songInd,:),0,0]/2);
+        set(featureDistPatch,'YData',[features.distribution(featureInd_stats,:),0,0]);
+        if ~isempty(features.songDistributions{featureInd_stats})
+            set(songDistPatch,'YData',[features.songDistributions{featureInd_stats}(songInd,:),0,0]/2);
         end
         
     end
