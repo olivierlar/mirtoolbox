@@ -15,11 +15,14 @@ global sliderH
 global featureAxes
 global followPointerButton
 global frameSummary
+global loopingButton
 
 if not(ishandle(fig))
     return
 end
 CurrentSample=get(player,'CurrentSample');
+
+
 %fprintf('Current time: %s\n',num2str(CurrentSample/Fs));
 %if CurrentSample<1 || CurrentSample>player.TotalSamples
     %set(PlayPauseButton,'Tag','play','cdata',playIcon);
@@ -45,6 +48,20 @@ if CurrentSample>1
     
     sliderHLim=get(sliderH,'XData');
     sliderWidth=sliderHLim(2)-sliderHLim(1);
+    
+    if get(loopingButton,'Value')
+    
+    CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
+    CurrentSelection(1)=max(1,CurrentSelection(1));
+    CurrentSelection(2)=min(player.TotalSamples,CurrentSelection(2));
+    
+    if CurrentSample>=CurrentSelection(2)
+        pause(player);
+        play(player,CurrentSelection(1));
+    end
+    
+    end
+    
     
     if get(followPointerButton,'Value') && ((CurrentSample-1)/player.TotalSamples > (sliderHLim(1)+sliderWidth*.75) || (CurrentSample-1)/player.TotalSamples< sliderHLim(1)) % follow pointer
         
