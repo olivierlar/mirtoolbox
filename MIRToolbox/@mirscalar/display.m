@@ -1,4 +1,4 @@
-function display(s,varargin)
+function display(s,ax,songs,varargin)
 % SCALAR/DISPLAY display the values of a scalar object
 
 ST = dbstack;
@@ -20,7 +20,14 @@ pp = get(s,'PeakPos');
 leg = get(s,'Legend');
 legm = get(s,'MultiData');
 cha = get(s,'Channels');
-for i = 1:length(v)  % For each audio file
+
+%% PS
+if ~exist('songs','var') || isempty(songs), songs=1:length(v); end
+for song = 1:length(songs)  %For each audio file
+    i=songs(song);
+    %% PS
+    
+    %for i = 1:length(v)  % For each audio file
     vi = v{i};
     if isempty(m)
         mi = [];
@@ -36,7 +43,7 @@ for i = 1:length(v)  % For each audio file
     
     if isempty(vi)
         disp(['The ',t,' related to file ',n{i},...
-                    ' does not contain any data.']);
+            ' does not contain any data.']);
         return
     end
     
@@ -46,18 +53,18 @@ for i = 1:length(v)  % For each audio file
     
     if size(vi,1) == 1 && size(vi,2) == 1 && size(vi,3) == 1 && ...
             (not(iscell(vi)) || (size(vi{1},1) == 1 && ...
-                    size(vi{1},2) == 1 && size(vi{1},3) == 1)) && ...
+            size(vi{1},2) == 1 && size(vi{1},3) == 1)) && ...
             (not(iscell(vi{1})) || (size(vi{1}{1},1) == 1 && ...
-                    size(vi{1}{1},2) == 1 && size(vi{1},3) == 1))
+            size(vi{1}{1},2) == 1 && size(vi{1},3) == 1))
         % Simple results, returned directly in the Command Window
         
-        if iscell(vi) 
+        if iscell(vi)
             vi = vi{1}; % There is only one segment, so let's look at it
             if not(isempty(mi))
                 mi = mi{1};
             end
         end
-        if iscell(vi) 
+        if iscell(vi)
             if size(vi,2) > 1
                 error('BUG IN DISPLAY'); %test if this condition exists
             end
@@ -84,7 +91,7 @@ for i = 1:length(v)  % For each audio file
             end
             if not(isempty(n2))
                 disp(['The ',t,' between files ',n{1},' and ',n2{i},...
-                        ' is ',r,' ',u]);
+                    ' is ',r,' ',u]);
             else
                 disp(['The ',t,' related to file ',n{i},' is ',r,' ',u]);
             end
@@ -110,7 +117,9 @@ for i = 1:length(v)  % For each audio file
         
     else
         %Graphical display
-        figure
+        %% PS
+        if ~exist('ax','var') || isempty(ax), figure; else axes(ax); end
+        %% PS
         
         if not(iscell(vi))
             vi = {vi};
@@ -135,7 +144,7 @@ for i = 1:length(v)  % For each audio file
             varpeaks = 1;
         elseif iscell(vi{1})
             for j = 1:length(vi)
-                for k = 1:l 
+                for k = 1:l
                     for h = 1:size(vi{j},2)
                         if length(vi{j}{1,h,k}) > 1
                             varpeaks = 1;
@@ -146,7 +155,7 @@ for i = 1:length(v)  % For each audio file
             if not(varpeaks)
                 for j = 1:length(vi)
                     vj = zeros(size(vi{j}));
-                    for k = 1:l 
+                    for k = 1:l
                         for h = 1:size(vi{j},2)
                             if isempty(vi{j}{1,h,k})
                                 vj(1,h,k) = NaN;
@@ -159,7 +168,7 @@ for i = 1:length(v)  % For each audio file
                 end
             end
         end
-                
+        
         if varpeaks         % Peaks displayed with diamonds
             diamond = 1;
             set(gca,'NextPlot','replacechildren')
@@ -168,7 +177,7 @@ for i = 1:length(v)  % For each audio file
             diamond = 0;
             hold all
         end
-
+        
         for k = 1:l         % For each channel
             if l>1
                 subplot('Position',[0.1 (k-1)*il+0.1 0.89 il-0.02])
@@ -187,7 +196,7 @@ for i = 1:length(v)  % For each audio file
                 else
                     ppj = ppi{j};
                 end
-
+                
                 if strcmp(xlab,'Channels')
                     %vj = squeeze(vj); % does not work with lowenergy
                     %ppj = squeeze(ppj);
@@ -212,7 +221,7 @@ for i = 1:length(v)  % For each audio file
                             fpj = fpi(:,j);
                         end
                     end
-                                        
+                    
                     for h = 1:size(vj,2)    % for each frame
                         if not(isempty(vj{1,h,k}))
                             if isempty(mi)
@@ -249,9 +258,9 @@ for i = 1:length(v)  % For each audio file
                             maxvi = max(maxvi,max(vj{1,h,k}));
                         end
                     end
-
+                    
                     if (exist('legm') == 1) && not(isempty(legm))
-                        legend(legobj,legm{legval},'Location','Best') 
+                        legend(legobj,legm{legval},'Location','Best')
                     end
                     
                 else
@@ -259,28 +268,28 @@ for i = 1:length(v)  % For each audio file
                     
                     for h = 1:nl    % For each dimension represented
                         %if not(isempty(vj(h,:,k)))
-                            if isnan(vold)
-                                plot(mean(fpj,1),vj(h,:,k)',...
-                                    '+-','Color',num2col(h))
+                        if isnan(vold)
+                            plot(mean(fpj,1),vj(h,:,k)',...
+                                '+-','Color',num2col(h))
+                        else
+                            plot([fold mean(fpj,1)],[vold(h) vj(h,:,k)]',...
+                                '+-','Color',num2col(h))
+                            % Current curve linked with curve from
+                            % previous segment
+                        end
+                        if h == nl
+                            if isempty(vj)
+                                vold = NaN;
+                                fold = NaN;
                             else
-                                plot([fold mean(fpj,1)],[vold(h) vj(h,:,k)]',...
-                                    '+-','Color',num2col(h))
-                                % Current curve linked with curve from
-                                % previous segment
+                                vold = vj(:,end,k);
+                                fold = mean(fpj(:,end),1);
                             end
-                            if h == nl
-                                if isempty(vj)
-                                    vold = NaN;
-                                    fold = NaN;
-                                else
-                                    vold = vj(:,end,k);
-                                    fold = mean(fpj(:,end),1);
-                                end
-                            end
-                       % else
-                       %     vold = NaN;
-                       %     fold = NaN;
-                       % end
+                        end
+                        % else
+                        %     vold = NaN;
+                        %     fold = NaN;
+                        % end
                     end
                     
                     if not(isempty(ppj))                % Peaks display
@@ -289,7 +298,7 @@ for i = 1:length(v)  % For each audio file
                             plot(mean(fpj(:,ppj)),vj(h,ppj,k),'or')
                         end
                     end
-                                        
+                    
                     minvi = min(minvi,min(min(vj(h,:,k))));
                     maxvi = max(maxvi,max(max(vj(h,:,k))));
                 end
@@ -314,7 +323,7 @@ for i = 1:length(v)  % For each audio file
             if l > 1
                 pos = get(gca,'Position');
                 hfig = axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],...
-                            'Visible','off');
+                    'Visible','off');
                 text(0,0,num2str(cha{i}(k)),'FontSize',12,'Color','r')
             end
         end
@@ -341,8 +350,8 @@ for i = 1:length(v)  % For each audio file
         end
         fig = get(0,'CurrentFigure');
         disp(['The ',t,' related to file ',n{i},...
-                    ' is displayed in Figure ',num2str(fig),'.']);
-        if nargin>1
+            ' is displayed in Figure ',num2str(fig),'.']);
+        if nargin>3 %>1 PS
             saveas(fig,[n{i},varargin{1}]);
             disp(['and is saved in file ',n{i},varargin{1}]);
         end
