@@ -77,7 +77,7 @@ global aH
 global followPointerButton
 global featureAxes
 global frameSummary
-
+global loopingButton
 
 %framediff=0;
 song=0;
@@ -354,8 +354,18 @@ followPointerButton  =   uicontrol(...
     'HandleVisibility','callback', ...
     'String', 'Follow playhead', ...
     'TooltipString','Follow playhead position when playing', ...
-    'Position',[.82 .5 .12 .5]);%, ...
-%'CallBack',@followPointer);
+    'Position',[.82 .5 .12 .5], ...
+    'CallBack', @followPointer);%, ...
+
+loopingButton  =   uicontrol(...
+    'Parent', zoomButtons, ...
+    'Style','CheckBox', ...
+    'Units','normalized',...
+    'HandleVisibility','callback', ...
+    'String', 'Looping', ...
+    'TooltipString','Loop play in the selected time limits', ...
+    'Position',[.70 .5 .12 .5], ...
+    'CallBack',@setLooping);
 songThumbnailH=line( ...
     'Parent',sliderAxes, ...
     'XData',[0,0], ...
@@ -485,6 +495,8 @@ uistack(fig,'top');
             set(featureAxes{i},'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
         end
         
+        CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
+        
     end
 
 %SLIDE
@@ -536,7 +548,17 @@ uistack(fig,'top');
 %PLAY
     function playPausePlayer(hObject, eventdata)
         
-        
+        if get(loopingButton,'Value')
+            sliderHLim=get(sliderH,'XData');
+            CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
+            CurrentSelection(1)=max(1,CurrentSelection(1));
+            CurrentSelection(2)=min(player.TotalSamples,CurrentSelection(2));
+            
+            if CurrentSample<CurrentSelection(1)
+                CurrentSample=max(CurrentSelection(1),CurrentSample);
+            end
+            
+        end
         
         if not(ishandle(fig))
             return
@@ -638,8 +660,8 @@ uistack(fig,'top');
                     set(fig, 'WindowButtonMotionFcn', @draggingFcn);
                     set(fig, 'WindowButtonUpFcn', @stopDragFcn);
                 else
-                set(fig, 'WindowButtonMotionFcn', @slideAxes);
-                set(fig, 'WindowButtonUpFcn', @stopSlide);
+                    set(fig, 'WindowButtonMotionFcn', @slideAxes);
+                    set(fig, 'WindowButtonUpFcn', @stopSlide);
                 end
             end
             
@@ -694,6 +716,20 @@ uistack(fig,'top');
         if strcmp(get(PlayPauseButton,'Tag'),'pause')
             play(player,CurrentSample);
             
+        end
+        
+    end
+
+    function setLooping(hObject, eventData)
+        if get(hObject,'Value')
+            set(followPointerButton,'Value',false);
+        end
+        
+    end
+
+    function followPointer(hObject, eventData)
+        if get(hObject,'Value')
+            set(loopingButton,'Value',false);
         end
         
     end
@@ -843,7 +879,7 @@ uistack(fig,'top');
         nAxes=length(featureAxes);
         scaleAxes(nAxes);
         axes(featureAxes{nAxes});
-        if features.cellinds(selectedFeature)>0 
+        if features.cellinds(selectedFeature)>0
             display(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
             framePos_tmp=get(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),'FramePos');
         elseif features.cellinds(selectedFeature)==0
