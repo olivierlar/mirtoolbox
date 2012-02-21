@@ -1,4 +1,4 @@
-function display(d)
+function display(d,axis,songs)
 % MIRDATA/DISPLAY display of a MIRenvelope
 
 ST = dbstack;
@@ -7,11 +7,22 @@ if strcmp(ST(end).file,'arrayviewfunc.m')
     return
 end
 
+
+%% PS
 if nargin<2
     axis = [];
 end
 
+if nargin<3
+    songs = [];
+end
+
+%if nargin<2
+%    axis = [];
+%end
+%% PS
+
 if d.hwr
     d = set(d,'Title',[get(d,'Title'),' (half-wave rectified)']);
 end
-mirdisplay(mirtemporal(d),inputname(1),[]);
+mirdisplay(mirtemporal(d),inputname(1),axis,songs);
