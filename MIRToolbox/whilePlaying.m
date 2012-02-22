@@ -17,6 +17,8 @@ global followPointerButton
 global frameSummary
 global loopingButton
 
+
+
 if not(ishandle(fig))
     return
 end
@@ -33,6 +35,7 @@ CurrentSample=get(player,'CurrentSample');
 if CurrentSample>1
     
     set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
+    
     CurrentFrame_tmp=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
     
     gothru=find(CurrentFrame_tmp~=CurrentFrame);
@@ -74,6 +77,7 @@ if CurrentSample>1
         end
         
     end
+    drawnow
     
 end
 
