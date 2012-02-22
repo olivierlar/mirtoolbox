@@ -1,9 +1,9 @@
-function mirplayer(arg,select)
+function MIRplayer(arg,select)
 %Usage:
-%MIRplayer(a, varargin)
+%MIRplayer(arg,select)
 %where
-%a= either session data saved by previous execution of MIRplayer,
-%   or struct or mirstruct (features),
+%arg = features extracted with mirtoolbox
+%select = songs indices to display
 %------
 
 %TODO
@@ -15,7 +15,6 @@ function mirplayer(arg,select)
 % display help in a toolbar
 % visualize multidimensional data: mfcc, tempo, chromagram
 % print the current figure in a file (good for presentations)
-
 
 
 if ischar(arg) %session data given in a file
@@ -121,7 +120,6 @@ zoomFactorDefault=2/3;
 
 frameSummary=[];
 
-%this is the rugged player implemented in MATLAB
 %create play, pause and stop icons for buttons
 %s=30;
 
@@ -134,6 +132,22 @@ playIcon=zeros(s,s); playIcon(1:s/2,1:2:s)=tri;
 playIcon(1:s/2,2:2:s)=tri;
 playIcon=repmat(playIcon+playIcon(s:-1:1,:),[1,1,3]);
 playIcon(playIcon==1)=NaN;
+
+%read logo
+try
+    S=dbstack('-completenames');
+    logo=double(imread(regexprep(S(1).file,[S(1).name,'.m'],'../UsersManual/logo.png'), 'PNG'));
+    %logo=squeeze(logo(:,:,1));
+    %logo = imresize(logo, .5,'bilinear');
+    logo(logo~=255)=.87;%guiColor/2;
+    logo(logo==255)=guiColor(1);
+    
+    
+    
+catch
+    
+end
+
 
 %% CREATE GUI
 
@@ -200,7 +214,7 @@ MainPanel = uipanel(...
     'Clipping', 'off', ...
     'HandleVisibility', 'callback', ...
     'Position',mainPanelPos, ...
-    'BorderType','line', ...
+    'BorderType','none', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
 ControlPanel = uipanel(...
@@ -225,7 +239,7 @@ FeaturePanel = uipanel(...
     'Clipping', 'on', ...
     'HandleVisibility', 'callback', ...
     'Position',[.01, 0.23, mainPanelPos(1)-.05, 0.77], ...
-    'BorderType','line', ...
+    'BorderType','none', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
 DistPanel = uipanel(...
@@ -449,19 +463,31 @@ for featureInd=1:nFeatures
         'CallBack', @selectFeatureCallback, ...
         'String',features.names{featureInd}, ...
         'Tag',num2str(featureInd), ...
-        'Position',[0 (nFeatures-featureInd)/nFeatures 1 .85/nFeatures]);%, ...
+        'Position',[0 (nFeatures-featureInd)/nFeatures 1 1]);%, ...
     if features.isSongLevel(featureInd), set(selectFeatureButton{featureInd},'ForegroundColor',[.5,.5,.5], ...
             'TooltipString',[get(selectFeatureButton{featureInd},'TooltipString'), ' (song-level feature, only distribution shown)']); end %,'Enable','off'); end
     
-    
+    extent=get(selectFeatureButton{featureInd},'Extent');
+    set(selectFeatureButton{featureInd},'Position', [0,.94*((nFeatures+1)-featureInd)/nFeatures,1,2*extent(4)]);
 end
 
 selectSong();
 uistack(fig,'top');
 
-
-
-
+if exist('logo','var')
+    logoaxes=axes(...
+        'Parent',MainPanel, ...
+        'Units','normalized',...
+        'Position', [.1,.1,.8,.8], ...
+        'Xlim',[0,1], ...
+        'Ylim',[0,1], ...
+        'Xtick',[], ...
+        'Ytick',[], ...
+        'LineWidth', .1, ...
+        'Color', guiColor);
+    
+    imshow(logo,'Parent',logoaxes,'Border','tight');
+end
 
 
 %%
@@ -613,7 +639,7 @@ uistack(fig,'top');
             return
         end
         
-        CurrentPointAxes=get(aH, 'CurrentPoint')
+        CurrentPointAxes=get(aH, 'CurrentPoint');
         
         CurrentPointSlider=get(sliderAxes,'CurrentPoint');
         
