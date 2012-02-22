@@ -107,7 +107,7 @@ playheadAlpha=.3;
 %downSampleRate=1000; %Could be nice resolution
 
 songColor=[.85,.85,.85];
-maxFrameUpdateFrequency=.1; %seconds
+maxFrameUpdateFrequency=.05; %seconds
 zoomFactorDefault=2/3;
 %feature=cell(nFeatures,1);
 %featureCurvePos=cell(nFeatures,1);
@@ -496,7 +496,7 @@ uistack(fig,'top');
         end
         
         CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
-        
+        drawnow
     end
 
 %SLIDE
@@ -518,6 +518,7 @@ uistack(fig,'top');
                 set(featureAxes{i},'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
             end
         end
+        drawnow
     end
 
     function stopSlide(hObject,eventdata)
@@ -543,6 +544,7 @@ uistack(fig,'top');
                 set(featureAxes{i},'Xlim',xlim(1)+sliderLim*(xlim(2)-xlim(1))); % slider at the center of mouse movement
             end
         end
+        drawnow
     end
 
 %PLAY
@@ -583,6 +585,7 @@ uistack(fig,'top');
         else
             %do nothing
         end
+        drawnow
     end
 
 %STOP
@@ -610,7 +613,7 @@ uistack(fig,'top');
             return
         end
         
-        CurrentPointAxes=get(aH, 'CurrentPoint');
+        CurrentPointAxes=get(aH, 'CurrentPoint')
         
         CurrentPointSlider=get(sliderAxes,'CurrentPoint');
         
@@ -670,7 +673,7 @@ uistack(fig,'top');
             return
         end
         
-        
+        drawnow
         
     end
 
@@ -686,6 +689,7 @@ uistack(fig,'top');
             set(playheads{featureInd},'XData',getxdata(framePos{featureInd}(:,CurrentFrame(featureInd))));
         end
         set(smallPointerH,'XData',CurrentPoint(:,1));
+        drawnow
     end
 
     function stopDragFcn(varargin)
@@ -717,7 +721,7 @@ uistack(fig,'top');
             play(player,CurrentSample);
             
         end
-        
+        drawnow
     end
 
     function setLooping(hObject, eventData)
@@ -815,7 +819,7 @@ uistack(fig,'top');
             set(fi{1},'Enable','on');
         end
         
-        
+        drawnow
     end
 
     function selectFeatureCallback(hObject, eventData)
@@ -859,7 +863,7 @@ uistack(fig,'top');
         for fi=selectFeatureButton
             set(fi{1},'Enable','on');
         end
-        
+        drawnow
     end
 
     function selectFeature(songInd, selectedFeature)
@@ -977,7 +981,7 @@ uistack(fig,'top');
         if ~isempty(features.songDistributions{featureInd_stats})
             set(songDistPatch,'YData',[features.songDistributions{featureInd_stats}(songInd,:),0,0]/2);
         end
-        
+        drawnow
     end
 
     function fixException(exception)
