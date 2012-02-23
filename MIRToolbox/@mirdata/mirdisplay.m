@@ -1,4 +1,4 @@
-function mirdisplay(d,va,axis)
+function mirdisplay(d,va,axis,songs)
 % MIRDATA/DISPLAY display of a MIR data
 
 if nargin<3
@@ -34,7 +34,13 @@ end
 if ld == 0
     disp('No data.');
 else
-    for i = 1:length(v)
+    %% PS
+    if ~exist('songs','var') || isempty(songs), songs=1:length(v); end
+    for song = 1:length(songs)  %For each audio file
+        i=songs(song);
+        %for i = 1:length(v)
+        %% PS
+        
         if nargin < 2
             va = inputname(1);
         end
