@@ -491,10 +491,13 @@ if isempty(sg)
                                 dn = get(new{z},'Data');
                                 fpo = get(old{z},'FramePos');
                                 fpn = get(new{z},'FramePos');
+                                if size(fpo{1}{1},2)>1
+                                    error('Fatal error. Please contact Olivier.');
+                                end
                                 if isa(old,'mirscalar')
                                     res{z} = set(old{z},...
                                         'Data',{{[do{1}{1},dn{1}{1}]}},...
-                                        'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                        'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                 else
                                     to = get(old{z},'Pos');
                                     tn = get(new{z},'Pos');
@@ -502,12 +505,12 @@ if isempty(sg)
                                         res{z} = set(old{z},...
                                             'Data',{{[do{1}{1};dn{1}{1}]}},...
                                             'Pos',{{[to{1}{1};tn{1}{1}]}},...
-                                            'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                            'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                     else
                                         res{z} = set(old{z},...
                                             'Data',{{[dn{1}{1};do{1}{1}]}},...
                                             'Pos',{{[tn{1}{1};to{1}{1}]}},...
-                                            'FramePos',{{[fpo{1}{1},fpn{1}{1}]}});
+                                            'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                     end
                                 end
                             elseif strcmpi(method{z},'Average') || ...
@@ -664,19 +667,20 @@ for i = 1:length(argin)
             channels = get(a,'Channels');
             channels = length(channels{1});
             if not(channels)
-                channels = 1;
+                da = get(a,'Data');
+                channels = size(da{1}{1},3);
             end
-            size = (ch(2)-ch(1)+1);
+            sz = (ch(2)-ch(1)+1);
             current = ftell(tmpfile.fid);
-            fseek(tmpfile.fid,current-size*(channels+1)*8,'bof');
+            fseek(tmpfile.fid,current-sz*(channels+1)*8,'bof');
             %ftell(tmpfile.fid)
-            [data count] = fread(tmpfile.fid,[size,channels],'double');
+            [data count] = fread(tmpfile.fid,[sz,channels],'double');
             %count
-            data = reshape(data,[size,1,channels]);
-            [pos count] = fread(tmpfile.fid,size,'double');
+            data = reshape(data,[sz,1,channels]);
+            [pos count] = fread(tmpfile.fid,sz,'double');
             %count
            % ftell(tmpfile.fid)
-            fseek(tmpfile.fid,current-size*(channels+1)*8,'bof');
+            fseek(tmpfile.fid,current-sz*(channels+1)*8,'bof');
             a = set(a,'Data',{{data}},'Pos',{{pos}});
             if ch(3)
                 fclose(tmpfile.fid);

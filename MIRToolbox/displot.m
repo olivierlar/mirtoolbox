@@ -68,7 +68,11 @@ if not(iscell(y)) && l > 20 %&& size(y,3) == 1
         fp2 = fp;
         c = l;
         l = 1;
-        x = ch';
+        if isempty(ch)
+            x = 1:size(y,1);
+        else
+            x = ch';
+        end
     end
 end
 curve = (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
