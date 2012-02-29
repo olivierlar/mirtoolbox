@@ -842,6 +842,9 @@ end
         for selectedFeature=selectedFeatures
             selectFeature(songInd,selectedFeature);
         end
+        if length(selectedFeatures)>0
+            showFeatureStats(selectedFeatures(end));
+        end
         
         %prevent distracting pushes of buttons
         for fi=selectFeatureButton(features.isSongLevel==0)
@@ -918,12 +921,29 @@ end
         elseif features.cellinds(selectedFeature)==0
             tmp=['arg',sprintf('.%s',features.fields{selectedFeature}{1:end})];
             if strcmp(tmp(end),'.'), tmp=tmp(1:(end-1)); end
+            
+            
+            if features.isMirdata(selectedFeature)
             display(eval(tmp),featureAxes{nAxes},songInd);
             framePos_tmp=get(eval(tmp),'FramePos');
+            else
+                
+                
+                
+                %display(eval(tmp),featureAxes{nAxes},songInd);
+                framePos_tmp=eval([tmp,'.framepos']);
+                plot(mean(framePos_tmp{songInd}),eval([tmp,'.data{songInd}']));
+            end
         else
             error('Check the feature importing.');
         end
+        if length(framePos_tmp{songInd})>1 %|| isequal(features.types{selectedFeature},'miraudio')
+            framePos(nAxes)={[NaN;NaN]};
+        elseif iscell(framePos_tmp{songInd})
         framePos(nAxes)=framePos_tmp{songInd};
+        else
+            framePos(nAxes)=framePos_tmp(songInd);
+        end
         
         set(featureAxes{nAxes},'Visible','on','Xlim',get(aH,'Xlim'));%,'ButtonDownFcn', @startDragFcn);
         %set(get(featureAxes{nAxes},'Children'),'AlphaData',.5)
