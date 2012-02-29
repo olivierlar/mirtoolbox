@@ -20,10 +20,9 @@ global loopingButton
 
 
 if not(ishandle(fig))
-    return
+   return
 end
 CurrentSample=get(player,'CurrentSample');
-
 
 %fprintf('Current time: %s\n',num2str(CurrentSample/Fs));
 %if CurrentSample<1 || CurrentSample>player.TotalSamples
@@ -32,7 +31,7 @@ CurrentSample=get(player,'CurrentSample');
     %CurrentSample=1;
     %CurrentFrame(1:end)=1;
     
-if CurrentSample>1
+if  CurrentSample>1
     
     set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
     
@@ -41,12 +40,13 @@ if CurrentSample>1
     gothru=find(CurrentFrame_tmp~=CurrentFrame);
     CurrentFrame=CurrentFrame_tmp;
     
-    for plInd=1:length(gothru)   
-            x=framePos{gothru(plInd)}(:,CurrentFrame(gothru(plInd)));
-            set(playheads{gothru(plInd)},'xdata',getxdata(x));
-    end
     
+     for plInd=1:length(gothru)   
+             x=framePos{gothru(plInd)}(:,CurrentFrame(gothru(plInd)));
+             set(playheads{gothru(plInd)},'xdata',getxdata(x));
+     end
     
+    drawnow
     
     
     sliderHLim=get(sliderH,'XData');
@@ -77,7 +77,7 @@ if CurrentSample>1
         end
         
     end
-    drawnow
+    
     
 end
 
