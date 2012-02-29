@@ -1,4 +1,4 @@
-function display(d)
+function display(d,axis,songs)
 % MIRDATA/DISPLAY display of a MIRtemporal
 
 ST = dbstack;
@@ -10,8 +10,16 @@ end
 if nargin<2
     axis = [];
 end
+%% PS
+if nargin<3
+    songs = [];
+end
 
+%if nargin<2
+%    axis = [];
+%end
+%% PS
 if d.centered
     d = set(d,'Title',[get(d,'Title'),' (centered)']);
 end
-mirdisplay(mirdata(d),inputname(1),[]);
+mirdisplay(mirdata(d),inputname(1),axis,songs);
