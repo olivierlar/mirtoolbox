@@ -186,6 +186,9 @@ end
             tmp = tmp{1};
             end
             if iscell(tmp)
+            tmp = tmp{1};
+            end
+            if iscell(tmp)
                 tmp2 = [];
                 for i = 1:length(tmp)
                     tmp2 = [tmp2 tmp{i}(:)'];
