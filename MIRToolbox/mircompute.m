@@ -22,7 +22,11 @@ for i = 1:l
         vk = v;
         for j = 1:length(vk)
             if iscell(vk{j})
-                vk{j} = vk{j}{k};
+                if k>length(vk{j})
+                    vk{j} = vk{j}{1};
+                else
+                    vk{j} = vk{j}{k};
+                end
             end
         end
         if 1 %nargout == 1 
