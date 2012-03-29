@@ -95,8 +95,13 @@ if load
         fp{1} = tp{1}([1 end]);
     end
 else
-    [unused,f,b] = reader(file,1);
-    dsize = reader(file,'size');
+    if isequal(reader,@mp3read)
+        [dd,f,b] = reader(file);
+        dsize = size(dd);
+    else
+        [unused,f,b] = reader(file,1);
+        dsize = reader(file,'size');
+    end
     d = dsize(1);
     l = d/f;
     tp = {};
