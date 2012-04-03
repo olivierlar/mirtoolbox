@@ -18,11 +18,11 @@ if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     fp2 = cell2mat(fp{2});
     fp1 = (fp1(1,:,:,:)+fp1(2,:,:,:))/2;
     fp2 = (fp2(1,:,:,:)+fp2(2,:,:,:))/2;
-    imagesc(fp1,fp2,d{1}{1});
+    imagesc(fp2,fp1,d{1}{1});
     if not(isempty(wr))
         hold on
         for k = 1:size(wr,1)
-            plot(fp1(wr(k,1)),fp2(wr(k,2)),'w+','MarkerSize',10)
+            plot(fp2(wr(k,2)),fp1(wr(k,1)),'w+','MarkerSize',10)
         end
     end
     set(gca,'YDir','normal')
