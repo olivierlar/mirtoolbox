@@ -378,34 +378,42 @@ if not(isempty(postoption))
         m = set(m,'Data',d,'FramePos',fp);
     end
     if postoption.warp
-        thres = .5;
-        for k = 1:length(d)
-            for z = 1:length(d{k})
-                dz = exp(-100*d{k}{z});
-                bests = zeros(size(dz)+1);
-                bests(1,2:end) = Inf;
-                bests(2:end,1) = Inf;
-                paths = cell(size(dz)+1);
-                for i = 1:size(dz,1)
-                    for j = 1:size(dz,2)
-                        [best,index] = min([bests(i,j),...
-                                            bests(i+1,j),...
-                                            bests(i,j+1)]);
-                        bests(i+1,j+1) = best + dz(i,j);
-                        switch index
-                            case 1
-                                path = paths{i,j};
-                            case 2
-                                path = paths{i+1,j};
-                            case 3
-                                path = paths{i,j+1};
-                        end
-                        paths{i+1,j+1} = [path;i j]; 
+        dz = 1 - (d{1}{1} - min(min(d{1}{1}))) / (max(max(d{1}{1})) - min(min(d{1}{1})));
+        dz(dz>.33) = Inf;
+        bests = zeros(size(dz)+1);
+        bests(1,2:end) = Inf;
+        bests(2:end,1) = Inf;
+        paths = cell(size(dz)+1);
+        for i = 1:size(dz,1)
+            for j = 1:size(dz,2)
+                [best,index] = min([bests(i,j),...
+                                    bests(i+1,j),...
+                                    bests(i,j+1)]);
+                bests(i+1,j+1) = best + dz(i,j);
+                if ~isinf(bests(i+1,j+1))
+                    switch index
+                        case 1
+                            path = paths{i,j};
+                        case 2
+                            path = paths{i+1,j};
+                        case 3
+                            path = paths{i,j+1};
                     end
+                    paths{i+1,j+1} = [path;i j];
                 end
             end
         end
-        m = set(m,'Warp',paths{end});
+        scod = repmat(((1:size(dz,1))/size(dz,1))',[1 size(dz,2)]) .* ...
+               repmat(((1:size(dz,2))/size(dz,2)),[size(dz,1) 1]);
+        [unused sord] = sort(scod(:),'descend');
+        paths(1,:) = [];
+        paths(:,1) = [];
+        for i = 1:length(sord)
+            if ~isempty(paths{sord(i)})
+                m = set(m,'Warp',paths{sord(i)});
+                break
+            end
+        end
     end
 end
 
