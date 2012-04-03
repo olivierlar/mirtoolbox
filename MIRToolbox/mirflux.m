@@ -194,7 +194,7 @@ else
     f = mirscalar(s,'Data',ff,'FramePos',fp,'Sampling',newsr,...
                         'Title',t,'Parameter',param); %,'Tmp',tmp);
     %f = settmp(f,tmp);
-    if not(isempty(postoption))
+    if not(isequal(postoption,struct))
         f = modif(f,postoption);
     end
 end
