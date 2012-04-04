@@ -4,6 +4,10 @@ function pp = set(p,varargin)
 
 propertyArgIn = varargin;
 a = p.amplitude;
+ps = p.start;
+pe = p.end;
+pm = p.mean;
+deg = p.degrees;
 s = mirscalar(p);
 while length(propertyArgIn) >= 2,
    prop = propertyArgIn{1};
@@ -17,4 +21,8 @@ while length(propertyArgIn) >= 2,
    end
 end
 pp.amplitude = a;
+pp.start = ps;
+pp.end = pe;
+pp.mean = pm;
+pp.degrees = deg;
 pp = class(pp,'mirpitch',s);

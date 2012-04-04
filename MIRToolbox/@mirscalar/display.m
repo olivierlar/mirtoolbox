@@ -46,11 +46,7 @@ for song = 1:length(songs)  %For each audio file
             ' does not contain any data.']);
         return
     end
-    
-    %if iscell(ppi)
-    %    ppi = ppi{i};
-    %end
-    
+        
     if size(vi,1) == 1 && size(vi,2) == 1 && size(vi,3) == 1 && ...
             (not(iscell(vi)) || (size(vi{1},1) == 1 && ...
             size(vi{1},2) == 1 && size(vi{1},3) == 1)) && ...
@@ -292,10 +288,30 @@ for song = 1:length(songs)  %For each audio file
                         % end
                     end
                     
+                    if isa(s,'mirpitch')
+                        ps = get(s,'Start');
+                        pe = get(s,'End');
+                        pm = get(s,'Mean');
+                        deg = get(s,'Degrees');
+                        if not(isempty(ps))                % Note display
+                            for h = 1:nl;
+                                psh = ps{i}{j}{1,h,k};
+                                peh = pe{i}{j}{1,h,k};
+                                pmh = pm{i}{j}{1,h,k};
+                                plot([mean(fpj(:,psh));mean(fpj(:,peh))],...
+                                     [pmh;pmh],'rd-','LineWidth',2)
+                                for hh = 1:length(pmh)
+                                    text(mean(fpj(:,psh(hh))),pmh(hh)+40,...
+                                         num2str(deg{i}{j}{1,h,k}(hh)),...
+                                         'FontSize',15,'Color','r');
+                                end
+                            end
+                        end
+                    end
                     if not(isempty(ppj))                % Peaks display
                         for h = 1:nl;
-                            ppj = ppj{1,h,k};
-                            plot(mean(fpj(:,ppj)),vj(h,ppj,k),'or')
+                            pph = ppj{1,h,k};
+                            plot(mean(fpj(:,pph)),vj(h,pph,k),'or')
                         end
                     end
                     

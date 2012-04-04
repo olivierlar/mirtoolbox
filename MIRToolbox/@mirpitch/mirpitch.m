@@ -144,11 +144,16 @@ function varargout = mirpitch(orig,varargin)
         ma.default = 2400;
     option.ma = ma;
         
-        thr.key = 'Contrast';
+        cthr.key = 'Contrast';
+        cthr.type = 'Integer';
+        cthr.default = .1;
+    option.cthr = cthr;
+
+        thr.key = 'Threshold';
         thr.type = 'Integer';
-        thr.default = .1;
+        thr.default = .4;
     option.thr = thr;
-    
+
         order.key = 'Order';
         order.type = 'String';
         order.choice = {'Amplitude','Abscissa'};
@@ -168,6 +173,21 @@ function varargout = mirpitch(orig,varargin)
 
 %% post-processing options
         
+        cent.key = 'Cent';
+        cent.type = 'Boolean';
+        cent.default = 0;
+    option.cent = cent;
+    
+        segm.key = 'Segment';
+        segm.type = 'Boolean';
+        segm.default = 0;
+    option.segm = segm;
+
+        ref.key = 'Ref';
+        ref.type = 'Integer';
+        ref.default = 0;
+    option.ref = ref;
+
         stable.key = 'Stable';
         stable.type = 'Integer';
         stable.number = 2;
@@ -257,6 +277,9 @@ else
                 y = ce;
             end
         end
+        if option.s
+            y = orig;
+        end
     else
         if option.ac
             x = orig;
@@ -264,18 +287,19 @@ else
                 x = mirfilterbank(x,option.filtertype);
             end
             x = mirframenow(x,option);
-            y = mirautocor(x,'Generalized',option.gener,...
-                                'Min',option.mi,'Hz','Max',option.ma,'Hz');
+            y = mirautocor(x,'Generalized',option.gener);%,...
+                               % 'Min',option.mi,'Hz','Max',option.ma,'Hz');
             if option.sum
                 y = mirsummary(y);
             end
             y = mirautocor(y,'Enhanced',option.enh,'Freq');
+            y = mirautocor(y,'Min',option.mi,'Hz','Max',option.ma,'Hz');
         end
         if option.as || option.ce || option.s
             x = mirframenow(orig,option);
-            y = mirspectrum(x);
+            s = mirspectrum(x,'Min',option.mi,'Max',option.ma);
             if option.as
-                as = mirautocor(y,...
+                as = mirautocor(s,...
                                 'Min',option.mi,'Hz','Max',option.ma,'Hz');
                 if option.ac
                     y = y*as;
@@ -284,12 +308,19 @@ else
                 end
             end
             if option.ce
-                ce = mircepstrum(y,'freq',...
+                ce = mircepstrum(s,'freq',...
                                 'Min',option.mi,'Hz','Max',option.ma,'Hz');
                 if option.ac || option.as
                     y = y*ce;
                 else
                     y = ce;
+                end
+            end
+            if option.s
+                if option.ac || option.as
+                    y = y*s;
+                else
+                    y = s;
                 end
             end
         end
@@ -306,11 +337,17 @@ if option.mono && option.m == Inf
     option.m = 1;
 end
 if iscell(x)
+    if length(x)>1
+        x2 = get(x{2},'Data');
+        f2 = get(x{2},'Pos');
+    end
     x = x{1};
+else
+    x2 = [];
 end
 if not(isa(x,'mirpitch'))
     x = mirpeaks(x,'Total',option.m,'Track',option.track,...
-                   'Contrast',option.thr,'Threshold',.4,...
+                   'Contrast',option.cthr,'Threshold',option.thr,...
                    'Reso',option.reso,'NoBegin','NoEnd',...
                    'Order',option.order);
 end
@@ -321,6 +358,167 @@ else
     pa = get(x,'PeakPreciseVal');
 end
 fp = get(x,'FramePos');
+
+if option.cent
+    for i = 1:length(pf)
+        for j = 1:length(pf{i})
+            for k = 1:size(pf{i}{j},3)
+                for l = 1:size(pf{i}{j},2)    
+                    pf{i}{j}{1,l,k} = 1200*log2(pf{i}{j}{1,l,k});
+                end
+            end
+        end
+    end
+end
+
+if option.segm
+    for i = 1:length(pf)
+        for j = 1:length(pf{i})
+            for k = 1:size(pf{i}{j},3)
+                startp = [];
+                meanp = [];
+                endp = [];
+                deg = [];
+                buffer = [];
+                breaks = [];
+                ref = option.ref;
+                for l = 2:size(pf{i}{j},2)-1
+                    if isempty(pf{i}{j}{1,l,k})
+                        % Segment interrupted by no-pitch
+                        if ~isempty(buffer)
+                            meanp(end+1) = mean(buffer);
+                            endp(end+1) = l-1;
+                            [deg(end+1) ref] = cent2deg(meanp(end),ref);
+                        end
+                        buffer = [];
+                        breaks(end+1) = l;
+                    elseif isempty(buffer)
+                        if 1 % abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
+                            % New segment starting
+                            startp(end+1) = l;
+                            buffer = pf{i}{j}{1,l,k};
+                        end
+                    elseif abs(pf{i}{j}{1,l,k}-mean(buffer)) > 65
+                        % Segment interrupted by pitch gap
+                        meanp(end+1) = mean(buffer);
+                        endp(end+1) = l-1;
+                        [deg(end+1) ref] = cent2deg(meanp(end),ref);
+                        if abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
+                            % New segment starting
+                            startp(end+1) = l;
+                            buffer = pf{i}{j}{1,l,k};
+                        else
+                            buffer = [];
+                        end
+                    else
+                        buffer(end+1) = pf{i}{j}{1,l,k};
+                    end
+                end
+                
+                if length(startp) > length(meanp)
+                    startp(end) = [];
+                end
+                
+                l = 1;
+                while l <= length(endp)
+                    if ~isempty(intersect(startp(l)-(1:5),breaks)) && ...
+                            ~isempty(intersect(endp(l)+(1:5),breaks))
+                        minlength = 8;
+                    else
+                        minlength = 2;
+                    end
+                    if endp(l)-startp(l) >= minlength
+                    % Segment sufficiently long
+                        found = 0;
+                        pointer = startp(l);
+                        for h = l-1:-1:max(l-10,1)
+                            if deg(l) == deg(h)
+                                if isempty(x2) % old version...
+                                    test = ~isempty(pointer) && ...
+                                            startp(l)-endp(h)<12 && ...
+                                           ~any(intersect(startp(h):pointer-1,breaks));
+                                    if test
+                                        pointer = startp(h);
+                                        test = abs(meanp(l)-meanp(h)) < 40;
+                                    else
+                                        pointer = [];
+                                    end
+                                else
+                                    if 1 %abs(meanp(l)-meanp(h)) < 40;
+                                        minp = min(meanp(l),meanp(h));
+                                        maxp = max(meanp(l),meanp(h));
+                                        minp = find(1200*log2(f2{i}{j}(:,1)) > minp,1);
+                                        maxp = find(1200*log2(f2{i}{j}(:,1)) > maxp,1);
+                                        zone = x2{i}{j}(minp:maxp,endp(h):startp(l));
+                                        test = all(max(zone)>max(zone(:,1))*.05);
+                                    end
+                                    if test && size(zone,2)>2
+                                        test = max(zone(:,end)) < max(max(zone(:,2:end-1)));
+                                    end
+                                end
+                                if 0 %test
+                                    % Segment close in frequency with recent one
+                                    startp(l) = [];
+                                    meanp(h) = mean(meanp([h l]));
+                                    meanp(l) = [];
+                                    deg(l) = [];
+                                    endp(h) = endp(l);
+                                    endp(l) = [];
+                                    found = 1;
+                                end
+                                break
+                            end
+                        end
+                        if ~found
+                            l = l+1;
+                        end
+                    % Other cases: Segment too short
+                    elseif l>1 && ...
+                            startp(l) == endp(l-1)+1 && ...
+                            abs(meanp(l)-meanp(l-1)) < 50
+                        % Segment fused with previous one
+                        startp(l) = [];
+                        meanp(l-1) = mean(meanp(l-1:l));
+                        meanp(l) = [];
+                        deg(l) = [];
+                        endp(l-1) = [];
+                    elseif l < length(meanp) && ...
+                            startp(l+1) == endp(l)+1 && ...
+                            abs(meanp(l+1)-meanp(l)) < 50
+                        % Segment fused with next one
+                        startp(l+1) = [];
+                        meanp(l) = mean(meanp(l:l+1));
+                        meanp(l+1) = [];
+                        deg(l+1) = [];
+                        endp(l) = [];
+                    else
+                        % Segment removed
+                        startp(l) = [];
+                        meanp(l) = [];
+                        deg(l) = [];
+                        endp(l) = [];
+                    end
+                end
+                
+                ps{i}{j}{k} = startp;
+                pe{i}{j}{k} = endp;
+                pm{i}{j}{k} = meanp;
+                dg{i}{j}{k} = deg;
+            end
+        end
+    end
+elseif isa(x,'mirpitch')
+    ps = get(x,'Start');
+    pe = get(x,'End');
+    pm = get(x,'Mean');
+    dg = get(x,'Degrees');
+else
+    ps = {};
+    pe = {};
+    pm = {};
+    dg = {};
+end
+
 if option.stable(1) < Inf
     for i = 1:length(pf)
         for j = 1:length(pf{i})
@@ -373,6 +571,15 @@ if isa(x,'mirscalar')
 else
     p.amplitude = pa;
 end
+p.start = ps;
+p.end = pe;
+p.mean = pm;
+p.degrees = dg;
 s = mirscalar(x,'Data',pf,'Title','Pitch','Unit','Hz');
 p = class(p,'mirpitch',s);
 o = {p,x};
+
+
+function [deg ref] = cent2deg(cent,ref)
+deg = round((cent-ref)/100);
+%ref = cent - deg*100
