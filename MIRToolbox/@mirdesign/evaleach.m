@@ -39,9 +39,9 @@ if not(isempty(sg))
         sg = sort(mirgetdata(sg));
         sg = [0 sg';sg' len];
     end
-    over = find(sg(2,:) > len);
+    over = find(sg > len);
     if not(isempty(over))
-        sg = sg(:,1:over-1);
+        sg = sg(1:over-1);
     end
 end
 a = d.argin;
@@ -77,7 +77,7 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
     [y d2] = evalnow(d);  
     
 elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
-    % No frame or segment decomposition in the design to evaluate
+    % Absence of frame decomposition or presence of segment decomposition in the design to evaluate
     % (Or particular frame decomposition, where chunks are not distributed to children (frnochunk).)
     if not(isempty(sg))
         meth = 'Segment ';
@@ -85,6 +85,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             chunks = floor(sg(1:end-1)*sr)+1;
             chunks(2,:) = min( floor(sg(2:end)*sr)-1,lsz-1)+1;
         else
+            error('Fatal error. This mirsegment option is not available anymore.');
             chunks = floor(sg*sr);
             chunks(1,:) = chunks(1,:)+1;
         end
@@ -941,6 +942,12 @@ end
 
 if not(isempty(tvn))
     y = set(y,'TrackVal',{[tvo{1},tvn{1}{1}]});
+end
+
+if isa(old,'mirchromagram')
+    clo = get(old,'ChromaClass');
+    cln = get(new,'ChromaClass');
+    y = set(y,'ChromaClass',{[clo{1},cln{1}{1}]});
 end
 
 if isa(old,'miremotion')
