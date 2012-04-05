@@ -8,7 +8,6 @@ if strcmp(ST(end).file,'arrayviewfunc.m')
 end
 
 
-%% PS
 if nargin<2
     axis = [];
 end
@@ -17,10 +16,6 @@ if nargin<3
     songs = [];
 end
 
-%if nargin<2
-%    axis = [];
-%end
-%% PS
 
 if d.hwr
     d = set(d,'Title',[get(d,'Title'),' (half-wave rectified)']);

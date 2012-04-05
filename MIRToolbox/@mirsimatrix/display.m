@@ -33,14 +33,19 @@ if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     disp(['The ',t,' between files ',nam{1},' and ',nam{2},...
         ' is displayed in Figure ',num2str(fig),'.']);
 else
-    %% PS
-    if ~exist('songs','var') || isempty(songs), songs=1:length(d); end
+    if nargin<3 || isempty(songs)
+        songs=1:length(d);
+    end
+    
     for song = 1:length(songs)  %For each audio file
         i=songs(song);
         
-        if ~exist('ax','var') || isempty(ax), figure; else axes(ax); end
-    %% PS
-        %for i = 1:length(d)
+        if nargin<2 || isempty(ax)
+            figure
+        else
+            axes(ax)
+        end
+        
         if iscell(d{i})
             d{i} = d{i}{1};
         end

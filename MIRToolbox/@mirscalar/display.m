@@ -1,4 +1,4 @@
-function display(s,ax,songs,varargin)
+function display(s,ax,songs,suffix)
 % SCALAR/DISPLAY display the values of a scalar object
 
 ST = dbstack;
@@ -21,13 +21,13 @@ leg = get(s,'Legend');
 legm = get(s,'MultiData');
 cha = get(s,'Channels');
 
-%% PS
-if ~exist('songs','var') || isempty(songs), songs=1:length(v); end
+if nargin<3 || isempty(songs)
+    songs=1:length(v);
+end
+
 for song = 1:length(songs)  %For each audio file
     i=songs(song);
-    %% PS
-    
-    %for i = 1:length(v)  % For each audio file
+
     vi = v{i};
     if isempty(m)
         mi = [];
@@ -113,9 +113,12 @@ for song = 1:length(songs)  %For each audio file
         
     else
         %Graphical display
-        %% PS
-        if ~exist('ax','var') || isempty(ax), figure; else axes(ax); end
-        %% PS
+        
+        if nargin<2 || isempty(ax)
+            figure
+        else
+            axes(ax)
+        end
         
         if not(iscell(vi))
             vi = {vi};
@@ -367,9 +370,9 @@ for song = 1:length(songs)  %For each audio file
         fig = get(0,'CurrentFigure');
         disp(['The ',t,' related to file ',n{i},...
             ' is displayed in Figure ',num2str(fig),'.']);
-        if nargin>3 %>1 PS
-            saveas(fig,[n{i},varargin{1}]);
-            disp(['and is saved in file ',n{i},varargin{1}]);
+        if nargin>3
+            saveas(fig,[n{i},suffix]);
+            disp(['and is saved in file ',n{i},suffix]);
         end
     end
 end
