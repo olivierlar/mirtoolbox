@@ -10,15 +10,11 @@ end
 if nargin<2
     axis = [];
 end
-%% PS
+
 if nargin<3
     songs = [];
 end
 
-%if nargin<2
-%    axis = [];
-%end
-%% PS
 if d.centered
     d = set(d,'Title',[get(d,'Title'),' (centered)']);
 end
