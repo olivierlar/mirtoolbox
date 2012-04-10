@@ -333,7 +333,9 @@ if not(isempty(postoption))
                     if lK < m.diagwidth
                         W = size(dz,1);
                         hK = ceil(lK/2);
-                        dz = dz(1:hK,:);
+                        if size(dz,1)>hK
+                            dz = dz(1:hK,:);
+                        end
                         m.diagwidth = lK;
                     end
                     d{k}{z}= dz;
