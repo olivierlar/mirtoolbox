@@ -8,7 +8,7 @@ function varargout = mirmode(x,varargin)
 
         stra.type = 'String';
         stra.default = 'Best';
-        stra.choice = {'Best','Sum'};
+        stra.choice = {'Best','Sum','Major','SumBest'};
     option.stra = stra;
     
 specif.option = option;
@@ -30,11 +30,7 @@ if iscell(s)
     s = s{1};
 end
 m = get(s,'Data');
-if strcmpi(option.stra,'sum')
-    v = mircompute(@algosum,m);
-elseif strcmpi(option.stra,'best')
-    v = mircompute(@algobest,m);
-end
+v = mircompute(str2func(['algo' lower(option.stra)]),m);
 b = mirscalar(s,'Data',v,'Title','Mode');
 o = {b,s};
 
@@ -45,3 +41,13 @@ v = sum(abs(m(:,:,:,1) - m(:,:,:,2)));
 
 function v = algobest(m)
 v = max(m(:,:,:,1)) - max(m(:,:,:,2));
+
+
+function v = algosumbest(m)
+m = max(.5,m)-.5;
+v = sum(m(:,:,:,1)) - sum(m(:,:,:,2));
+
+
+function v = algomajor(m)
+m = max(.5,m)-.5;
+v = sum(m(:,:,1));
