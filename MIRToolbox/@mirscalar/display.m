@@ -359,7 +359,7 @@ for song = 1:length(songs)  %For each audio file
         if nl>1
             legnd = cell(nl,1);
             for j = 1:nl
-                if isempty(p)
+                if isempty(p) || isempty(p{1})
                     legnd{j} = num2str(j);
                 else
                     legnd{j} = p{i}{1}{j};
