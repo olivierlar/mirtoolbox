@@ -35,10 +35,14 @@ while length(propertyArgIn) >= 2,
            a.frame.length.val = val;
        case 'FrameHop'
            a.frame.hop.val = val;
+       case 'FramePhase'
+           a.frame.phase.val = val;
        case 'FrameLengthUnit'
            a.frame.length.unit = val;
        case 'FrameHopUnit'
            a.frame.hop.unit = val;
+       case 'FramePhaseUnit'
+           a.frame.phase.unit = val;
        case 'FrameEval'
            a.frame.eval = val;
        case 'FrameDontChunk'

@@ -23,6 +23,13 @@ if ischar(varargin{1})
                 varargout = {[]};
             end
             return
+        case 'FramePhase'
+            if isstruct(a.frame)
+                varargout = {a.frame.phase.val};
+            else
+                varargout = {[]};
+            end
+            return
         case 'FrameLengthUnit'
             if isstruct(a.frame)
                 varargout = {a.frame.length.unit};
@@ -33,6 +40,13 @@ if ischar(varargin{1})
         case 'FrameHopUnit'
             if isstruct(a.frame)
                 varargout = {a.frame.hop.unit};
+            else
+                varargout = {[]};
+            end
+            return
+        case 'FramePhaseUnit'
+            if isstruct(a.frame)
+                varargout = {a.frame.phase.unit};
             else
                 varargout = {[]};
             end

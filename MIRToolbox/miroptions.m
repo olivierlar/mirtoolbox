@@ -2,6 +2,7 @@ function [orig during after] = miroptions(method,orig,specif,varg)
 
 DEFAULTFRAMELENGTH = .05;
 DEFAULTFRAMEHOP = .5;
+DEFAULTFRAMESTART = 0;
 
 % The options are determined during the bottom-up process design (see below). 
 
@@ -101,6 +102,7 @@ while i <= length(varg)
         frame.auto = isempty(persoframe);
         frame.length.unit = 's';
         frame.hop.unit = '/1';
+        frame.phase.unit = '/1';
         if length(varg) > i && isnumeric(varg{i+1})
             i = i+1;
             frame.length.val = varg{i};
@@ -122,18 +124,28 @@ while i <= length(varg)
                 if not(frame.hop.val || strcmpi(frame.hop.unit,'Hz'))
                     mirerror(func2str(method),'The hop factor should be strictly positive.')
                 end
-            else
-                if not(isempty(persoframe))
-                    if isfield(option.(persoframe),'keydefault')
-                        frame.hop.val = option.(persoframe).keydefault(2);
-                    else
-                        frame.hop.val = option.(persoframe).default(2);
-                    end
-                elseif isfield(specif,'defaultframehop')
-                    frame.hop.val = specif.defaultframehop;
+            elseif not(isempty(persoframe))
+                if isfield(option.(persoframe),'keydefault')
+                    frame.hop.val = option.(persoframe).keydefault(2);
                 else
-                    frame.hop.val = DEFAULTFRAMEHOP;
+                    frame.hop.val = option.(persoframe).default(2);
                 end
+            elseif isfield(specif,'defaultframehop')
+                frame.hop.val = specif.defaultframehop;
+            else
+                frame.hop.val = DEFAULTFRAMEHOP;
+            end
+            if length(varg) > i && isnumeric(varg{i+1})
+                i = i+1;
+                frame.phase.val = varg{i};
+                if length(varg) > i && ischar(varg{i+1}) && ...
+                        (strcmpi(varg{i+1},'%') || strcmpi(varg{i+1},'/1') || ...
+                         strcmpi(varg{i+1},'s') || strcmpi(varg{i+1},'sp'))
+                    i = i+1;
+                    frame.phase.unit = varg{i};
+                end
+            else
+                frame.phase.val = DEFAULTFRAMESTART;
             end
         else
             if not(isempty(persoframe))
@@ -158,6 +170,7 @@ while i <= length(varg)
             else
                 frame.hop.val = DEFAULTFRAMEHOP;
             end
+            frame.phase.val = DEFAULTFRAMESTART;
         end
         frame.eval = 0;
         if not(isfield(option,'frame')) || ...

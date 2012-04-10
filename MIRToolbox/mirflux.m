@@ -89,7 +89,8 @@ if isamir(x,'miraudio')
         x = mirspectrum(x);
     else
         x = mirspectrum(x,'Frame',option.frame.length.val,option.frame.length.unit,...
-                                  option.frame.hop.val,option.frame.hop.unit);
+                                  option.frame.hop.val,option.frame.hop.unit,...
+                                  option.frame.phase.val,option.frame.phase.unit);
     end
 end
 if isa(x,'mirdesign')

@@ -248,12 +248,8 @@ else
     d = set(d,'File',file,'Sampling',sampling,'Length',lg,'Size',size,...
               'Eval',1,'Index',index,'Struct',struc);
     dl = get(d,'FrameLength');
-    dh = get(d,'FrameHop');
     if length(dl)>1
         v = cell(1,length(dl));
-        if length(dh) == 1
-            dh = repmat(dh,1,length(dl));
-        end
         for i = 1:length(dl)
             d = set(d,'Scale',i);
             v{i} = evaleach(d,single,name);

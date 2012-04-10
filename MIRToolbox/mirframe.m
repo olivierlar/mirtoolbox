@@ -42,16 +42,21 @@ elseif isa(x,'mirdesign')
         
         fl = get(x,'FrameLength');
         fh = get(x,'FrameHop');
+        fp = get(x,'FramePhase');
         flu = get(x,'FrameLengthUnit');
         fhu = get(x,'FrameHopUnit');
+        fpu = get(x,'FramePhaseUnit');
         if fl
             f = set(f,'FrameLength',fl,'FrameLengthUnit',flu,...
-                      'FrameHop',fh,'FrameHopUnit',fhu);
+                      'FrameHop',fh,'FrameHopUnit',fhu,...
+                      'FramePhase',fp,'FramePhaseUnit',fpu);
         else
             f = set(f,'FrameLength',para.wlength.val,...
                       'FrameLengthUnit',para.wlength.unit,...
                       'FrameHop',para.hop.val,...
-                      'FrameHopUnit',para.hop.unit);
+                      'FrameHopUnit',para.hop.unit,...
+                      'FramePhase',para.phase.val,...
+                      'FramePhaseUnit',para.phase.unit);
         end
         f = set(f,'FrameEval',1,...
                   'SeparateChannels',get(x,'SeparateChannels'));
@@ -119,6 +124,15 @@ elseif isa(x,'mirdata')
             elseif strcmpi(para.hop.unit,'Hz')
                 h = sf{k}/para.hop.val;
             end
+            if strcmpi(para.phase.unit,'s')
+                p = para.phase.val*sf{k};
+            elseif strcmpi(para.phase.unit,'sp')
+                p = para.phase.val;
+            elseif strcmpi(para.phase.unit,'/1')
+                p = para.phase.val*h;
+            elseif strcmpi(para.phase.unit,'%')
+                p = para.phase.val*h*.01;
+            end
             l = floor(l);
             dx2k = cell(1,length(dxk));
             dt2k = cell(1,length(dxk));
@@ -132,7 +146,7 @@ elseif isa(x,'mirdata')
                         dtj = dtj(1,:)';
                     end
 
-                    n = floor((size(dxj,1)-l)/h)+1; % Number of frames
+                    n = floor((size(dxj,1)-l-p)/h)+1; % Number of frames
                     dx2j = zeros(l,n,size(dxj,3));
                     dt2j = zeros(l,n);
                     fpj = zeros(2,n);
@@ -143,7 +157,7 @@ elseif isa(x,'mirdata')
                         fpj = [dtj(1) ; dtj(end)];
                     else
                         for i = 1:n % For each frame, ...
-                            st = floor((i-1)*h+1);
+                            st = floor((i-1)*h+p+1);
                             stend = st+l-1;
                             dx2j(:,i,:) = dxj(st:stend,1,:);
                             dt2j(:,i) = dtj(st:stend);
@@ -169,7 +183,7 @@ elseif isa(x,'mirdata')
                         dtj = dtj(1,:)';
                     end
 
-                    n = floor((size(dxj,1)-l(j))/h(j))+1; % Number of frames
+                    n = floor((size(dxj,1)-l(j)-p)/h(j))+1; % Number of frames
                     dx2j = zeros(l(j),n,size(dxj,3));
                     dt2j = zeros(l(j),n);
                     fpj = zeros(2,n);
@@ -180,7 +194,7 @@ elseif isa(x,'mirdata')
                         fpj = [dtj(1) ; dtj(end)];
                     else
                         for i = 1:n % For each frame, ...
-                            st = floor((i-1)*h(j)+1);
+                            st = floor((i-1)*h(j)+p+1);
                             stend = st+l(j)-1;
                             dx2j(:,i,:) = dxj(st:stend,1,:);
                             dt2j(:,i) = dtj(st:stend);
@@ -217,6 +231,7 @@ if not(isempty(v)) && isstruct(v{1})
     else
         para.wlength = v{1};
         para.hop = v{2};
+        para.phase = v{3};
     end
     return
 end
@@ -224,6 +239,8 @@ para.wlength.val = 0.05;
 para.wlength.unit = 's';
 para.hop.val = 0.5;
 para.hop.unit = '/1';
+para.phase.val = 0;
+para.phase.unit = '/1';
 nv = length(v);
 i = 1;
 j = 1;
@@ -257,6 +274,20 @@ while i <= nv
             i = i+1;
             para.hop.unit = v{i};
         end
+    elseif strcmpi(arg,'Phase')
+        if i < nv && isnumeric(v{i+1})
+            i = i+1;
+            j = 0;
+            para.phase.val = v{i};
+        else
+            error('ERROR IN MIRFRAME: Incorrect use of Phase option. See help mirframe.'); 
+        end
+        if i < nv && ischar(v{i+1}) && ...
+                (strcmpi(v{i+1},'%') || strcmpi(v{i+1},'/1') || ...
+                 strcmpi(v{i+1},'s') || strcmpi(v{i+1},'sp'))
+            i = i+1;
+            para.phase.unit = v{i};
+        end
     elseif isnumeric(arg)
         switch j
             case 1
@@ -276,6 +307,15 @@ while i <= nv
                          strcmpi(v{i+1},'Hz'))
                     i = i+1;
                     para.hop.unit = v{i};
+                end
+            case 3
+                j = 4;
+                para.phase.val = arg;
+                if i < nv && ischar(v{i+1}) && ...
+                        (strcmpi(v{i+1},'%') || strcmpi(v{i+1},'/1') || ...
+                         strcmpi(v{i+1},'s') || strcmpi(v{i+1},'sp'))
+                    i = i+1;
+                    para.phase.unit = v{i};
                 end
             otherwise
                 error('ERROR IN MIRFRAME: Syntax error. See help mirframe.');
