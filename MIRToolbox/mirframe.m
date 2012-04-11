@@ -85,6 +85,9 @@ elseif isa(x,'mirdesign')
                     varargin{1}.hop.val = varargin{1}.hop.val(sc);
                 end
             end
+            varargin{1}.phase.val = 0;
+                % The phase has already been taken into account in the
+                % chunk decomposition.
             f = mirframe(e,varargin{:});
         end
     end

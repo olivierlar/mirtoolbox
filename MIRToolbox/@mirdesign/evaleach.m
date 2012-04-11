@@ -345,20 +345,28 @@ elseif strcmpi(fr.hop.unit,'Hz')
     h = sr/fr.hop.val;
     h2 = sr2/fr.hop.val;
 end
-n = floor((lsz-fl)/h)+1;   % Number of frames
+if strcmpi(fr.phase.unit,'s')
+    ph = fr.phase.val*sr;
+elseif strcmpi(fr.phase.unit,'sp')
+    ph = fr.phase.val;
+elseif strcmpi(fr.phase.unit,'/1')
+    ph = fr.phase.val*h;
+elseif strcmpi(fr.phase.unit,'%')
+    ph = fr.phase.val*h*.01;
+end
+n = floor((lsz-fl-ph)/h)+1;   % Number of frames
 if n < 1
     %warning('WARNING IN MIRFRAME: Frame length longer than total sequence size. No frame decomposition.');
     fp = w;
     fp2 = (w-1)/sr*sr2+1;
 else
-    st = floor(((1:n)-1)*h)+w(1);
-    st2 = floor(((1:n)-1)*h2)+w(1);
+    st = floor(((1:n)-1)*h+ph)+w(1);
+    st2 = floor(((1:n)-1)*h2)+w(1)+ph;
     fp = [st; floor(st+fl-1)];
     fp(:,fp(2,:)>w(2)) = [];
     fp2 = [st2; floor(st2+fl2-1)];
     fp2(:,fp2(2,:)>(w(2)-w(1))/sr*sr2+w(2)) = [];
 end
-fpe = (fp2-1)/sr2-(fp-1)/sr; %Rounding error if resampling
 fpsz = (fp(2,1)-fp(1,1)) * n;      % Total number of samples
 fpsz2 = (fp2(2,1)-fp2(1,1)) * n;      % Total number of samples
 if max(fpsz,fpsz2) > CHUNKLIM
