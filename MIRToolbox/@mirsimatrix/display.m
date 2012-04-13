@@ -21,8 +21,24 @@ if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     imagesc(fp2,fp1,d{1}{1});
     if not(isempty(wr))
         hold on
-        for k = 1:size(wr,1)
-            plot(fp2(wr(k,2)),fp1(wr(k,1)),'w+','MarkerSize',10)
+        paths = wr{1};
+        bests = wr{2};
+        [i j] = find(bests);
+        for k = 1:length(i)
+            best = bests(i(k),j(k));
+            path = paths{real(best),imag(best)};
+            for l = 1:length(path)
+                if path{l}(2,end) - path{l}(2,1) > 50 && ...
+                    path{l}(1,end) - path{l}(1,1) > 50     
+                    for m = 1:size(path{l},2)
+                        plot(fp2(path{l}(2,m)),fp1(path{l}(1,m)),...
+                            'k','LineWidth',1)
+                    end
+                    %path{l}
+                    %drawnow
+                    %pause
+                end
+            end
         end
     end
     set(gca,'YDir','normal')

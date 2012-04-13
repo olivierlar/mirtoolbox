@@ -380,43 +380,66 @@ if not(isempty(postoption))
         m = set(m,'Data',d,'FramePos',fp);
     end
     if postoption.warp
-        dz = 1 - (d{1}{1} - min(min(d{1}{1}))) / (max(max(d{1}{1})) - min(min(d{1}{1})));
+        dz = 1 - (d{1}{1} - min(min(d{1}{1}))) ...
+            / (max(max(d{1}{1})) - min(min(d{1}{1})));
         dz(dz>.33) = Inf;
-        bests = zeros(size(dz)+1);
-        bests(1,2:end) = Inf;
-        bests(2:end,1) = Inf;
         paths = cell(size(dz)+1);
+        bests = sparse(size(dz,1),size(dz,2));
         for i = 1:size(dz,1)
+            if ~mod(i,100)
+                i/size(dz,1)
+            end
             for j = 1:size(dz,2)
-                [best,index] = min([bests(i,j),...
-                                    bests(i+1,j),...
-                                    bests(i,j+1)]);
-                bests(i+1,j+1) = best + dz(i,j);
-                if ~isinf(bests(i+1,j+1))
-                    switch index
-                        case 1
-                            path = paths{i,j};
-                        case 2
-                            path = paths{i+1,j};
-                        case 3
-                            path = paths{i,j+1};
-                    end
-                    paths{i+1,j+1} = [path;i j];
+                if isinf(dz(i,j))
+                    continue
                 end
+                ending = [i; j; dz(i,j)];
+                [newpaths bests] = addpaths({},paths{i,j},ending,bests);
+                [newpaths bests] = ...
+                            addpaths(newpaths,paths{i+1,j},ending,bests);
+                [newpaths bests] = ...
+                            addpaths(newpaths,paths{i,j+1},ending,bests);
+                if isempty(newpaths)
+                    newpaths = {ending};
+                end
+                paths{i+1,j+1} = newpaths;
             end
         end
-        scod = repmat(((1:size(dz,1))/size(dz,1))',[1 size(dz,2)]) .* ...
-               repmat(((1:size(dz,2))/size(dz,2)),[size(dz,1) 1]);
-        [unused sord] = sort(scod(:),'descend');
-        paths(1,:) = [];
-        paths(:,1) = [];
-        for i = 1:length(sord)
-            if ~isempty(paths{sord(i)})
-                m = set(m,'Warp',paths{sord(i)});
-                break
+        m = set(m,'Warp',{paths,bests});
+    end
+end
+
+
+function [newpaths bests] = addpaths(newpaths,oldpaths,ending,bests)
+for k = 1:length(oldpaths)
+    % For each path
+    found = 0;
+    for l = 1:length(newpaths)
+        if (newpaths{l}(1,1) - oldpaths{k}(1,1)) * ...
+           (newpaths{l}(2,1) - oldpaths{k}(2,1)) <= 0
+            found = 1;
+            if oldpaths{k}(1,1) < newpaths{l}(1,1)
+                newpaths{l} = [oldpaths{k} ending];
+                bests = update(bests,oldpaths{k}(1:2,1),ending(1:2));
             end
         end
     end
+    if ~found
+        newpaths{end+1} = [oldpaths{k} ending];
+        bests = update(bests,oldpaths{k}(1:2,1),ending(1:2));
+    end
+end
+
+
+function bests = update(bests,starts,ends)
+key = ends(1)+1i*ends(2);
+[i,j,v] = find(bests);
+[i0,j0] = find(v == key);
+if isempty(i0) 
+    bests(starts(1),starts(2)) = key;
+elseif i(i0)-ends(1)+j(j0)-ends(2)<starts(1)-ends(1)+starts(2)-ends(2)
+    bests(i(i0),j(j0)) = 0;
+    bests(starts(1),starts(2)) = key;
 end
 
 
