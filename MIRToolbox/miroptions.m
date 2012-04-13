@@ -89,6 +89,11 @@ for i = 1:length(fields)
                 during.(field).length.unit = 's';
                 during.(field).hop.val = option.(field).default(2);
                 during.(field).hop.unit = '/1';
+                if length(option.(field).default) < 3
+                    option.(field).default(3) = 0;
+                end
+                during.(field).phase.val = option.(field).default(3);
+                during.(field).phase.unit = '/1';
             else
                 during.(field) = option.(field).default;
             end
