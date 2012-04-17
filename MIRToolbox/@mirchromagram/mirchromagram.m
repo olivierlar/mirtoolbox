@@ -103,6 +103,11 @@ function varargout = mirchromagram(orig,varargin)
         origin.type = 'Integer';
         origin.default = 261.6256;
     option.origin = origin;
+    
+        transp.key = 'Transpose';
+        transp.type = 'Integer';
+        transp.default = 0;
+    option.transp = transp;
    
 specif.option = option;
 specif.defaultframelength = .2;
@@ -253,13 +258,16 @@ function c = modif(c,option,chromascale)
 if option.plabel
     c = set(c,'PitchLabel',1);
 end            
-if option.cen || option.nor || option.wrp
+if option.cen || option.nor || option.wrp || option.transp
     n = get(c,'Magnitude');
     p = get(c,'Chroma');
     cl = get(c,'ChromaClass');
     fp = get(c,'FramePos');
     n2 = cell(1,length(n));
     p2 = cell(1,length(n));
+    if option.transp
+        transp = mod(option.transp,12);
+    end
     wrp = option.wrp && not(get(c,'Wrap'));
     for i = 1:length(n)
         ni = n{i};
@@ -296,6 +304,9 @@ if option.cen || option.nor || option.wrp
                 n2j = n2j ./ repmat(vectnorm(n2j,option.nor) + ...
                     repmat(1e-6,[1,size(n2j,2),size(n2j,3)] )...
                     ,[size(n2j,1),1,1]);
+            end
+            if option.transp
+                n2j = [n2j(13-transp:end,:,:);n2j(1:12-transp,:,:)];
             end
             n2i{j} = n2j;
         end
