@@ -385,6 +385,7 @@ if not(isempty(postoption))
         dz(dz>.33) = Inf;
         paths = cell(size(dz)+1);
         bests = sparse(size(dz,1),size(dz,2));
+        bestsindex = sparse(size(dz,1),size(dz,2));
         for i = 1:size(dz,1)
             if ~mod(i,100)
                 i/size(dz,1)
@@ -394,23 +395,31 @@ if not(isempty(postoption))
                     continue
                 end
                 ending = [i; j; dz(i,j)];
-                [newpaths bests] = addpaths({},paths{i,j},ending,bests);
-                [newpaths bests] = ...
-                            addpaths(newpaths,paths{i+1,j},ending,bests);
-                [newpaths bests] = ...
-                            addpaths(newpaths,paths{i,j+1},ending,bests);
-                if isempty(newpaths)
+                [newpaths bests bestsindex] = ...
+                            addpaths({},paths{i,j},ending,...
+                                     bests,bestsindex);
+                [newpaths bests bestsindex] = ...
+                            addpaths(newpaths,paths{i+1,j},ending,...
+                                     bests,bestsindex);
+                [newpaths bests bestsindex] = ...
+                            addpaths(newpaths,paths{i,j+1},ending,...
+                                     bests,bestsindex);
+                if isempty(newpaths) && (i == 1 || j == 1 || ...
+                                         (isinf(dz(i-1,j-1)) && ...
+                                          isinf(dz(i-1,j)) && ...
+                                          isinf(dz(i,j-1))))
                     newpaths = {ending};
                 end
                 paths{i+1,j+1} = newpaths;
             end
         end
-        m = set(m,'Warp',{paths,bests});
+        m = set(m,'Warp',{paths,bests,bestsindex});
     end
 end
 
 
-function [newpaths bests] = addpaths(newpaths,oldpaths,ending,bests)
+function [newpaths bests bestsindex] = addpaths(newpaths,oldpaths,ending,...
+                                                bests,bestsindex)
 for k = 1:length(oldpaths)
     % For each path
     found = 0;
@@ -420,26 +429,44 @@ for k = 1:length(oldpaths)
             found = 1;
             if oldpaths{k}(1,1) < newpaths{l}(1,1)
                 newpaths{l} = [oldpaths{k} ending];
-                bests = update(bests,oldpaths{k}(1:2,1),ending(1:2));
+                [bests bestsindex] = update(bests,bestsindex,...
+                                            oldpaths{k}(1:2,1),...
+                                            ending(1:2),l);
+            end
+        else
+            if oldpaths{k}(1,1) < newpaths{l}(1,1)
+                if bests(oldpaths{k}(1,1),oldpaths{k}(2,1))...
+                        == ending(1)+1i*ending(2)
+                    bests(oldpaths{k}(1,1),oldpaths{k}(2,1)) = 0;
+                end
+            else
+                if bests(newpaths{l}(1,1),newpaths{l}(2,1))...
+                        == ending(1)+1i*ending(2)
+                    bests(newpaths{l}(1,1),newpaths{l}(2,1)) = 0;
+                end
             end
         end
     end
     if ~found
         newpaths{end+1} = [oldpaths{k} ending];
-        bests = update(bests,oldpaths{k}(1:2,1),ending(1:2));
+        [bests bestsindex] = update(bests,bestsindex,...
+                                    oldpaths{k}(1:2,1),...
+                                    ending(1:2),length(newpaths));
     end
 end
 
 
-function bests = update(bests,starts,ends)
+function [bests bestsindex] = update(bests,bestsindex,starts,ends,pathindex)
 key = ends(1)+1i*ends(2);
 [i,j,v] = find(bests);
 [i0,j0] = find(v == key);
-if isempty(i0) 
+if 1 %isempty(i0) 
     bests(starts(1),starts(2)) = key;
+    bestsindex(starts(1),starts(2)) = pathindex;
 elseif i(i0)-ends(1)+j(j0)-ends(2)<starts(1)-ends(1)+starts(2)-ends(2)
     bests(i(i0),j(j0)) = 0;
     bests(starts(1),starts(2)) = key;
+    bestsindex(starts(1),starts(2)) = pathindex;
 end
 
 

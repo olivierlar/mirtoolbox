@@ -23,20 +23,17 @@ if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
         hold on
         paths = wr{1};
         bests = wr{2};
+        bestsindex = wr{3};
         [i j] = find(bests);
         for k = 1:length(i)
             best = bests(i(k),j(k));
-            path = paths{real(best),imag(best)};
-            for l = 1:length(path)
-                if path{l}(2,end) - path{l}(2,1) > 50 && ...
-                    path{l}(1,end) - path{l}(1,1) > 50     
-                    for m = 1:size(path{l},2)
-                        plot(fp2(path{l}(2,m)),fp1(path{l}(1,m)),...
-                            'k','LineWidth',1)
-                    end
-                    %path{l}
-                    %drawnow
-                    %pause
+            bestindex = bestsindex(i(k),j(k));
+            path = paths{real(best)+1,imag(best)+1}{bestindex};
+            if path(2,end) - path(2,1) > 10 && ...
+                    path(1,end) - path(1,1) > 10     
+                for m = 1:size(path,2)
+                    plot(fp2(path(2,m)),fp1(path(1,m)),...
+                        'k+','LineWidth',2)
                 end
             end
         end
