@@ -188,7 +188,7 @@ if curve
                             if not(isempty(ap)) && not(isempty(ap{1}))
                                 apj = ap{h}{1,j,i};
                                 plot(xj(apj),yk(apj),'dr') 
-                                for g = 1:length(apj)
+                                for g = 1:length(ppj)
                                     line([xj(ppj(g)),xj(apj(g))],...
                                          [yk(ppj(g)),yk(apj(g))],...
                                          'Color','r')

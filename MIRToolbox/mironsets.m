@@ -60,9 +60,6 @@ function varargout = mironsets(x,varargin)
 %               'Threshold' with default value t = 0
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
 %       mironsets(...,'Release') (or 'Releases') detects release phases.
-%           mironsets(...,'Gauss',o) estimate the attack and/or release
-%               points using a gaussian envelope smoothing of order o of the
-%               onset curve.
 %       mironsets(...,'Frame',...) decomposes into frames, with default frame
 %           length 3 seconds and hop factor .1
 %   Preselected onset detection models:
@@ -271,6 +268,12 @@ function varargout = mironsets(x,varargin)
         kernelsize.default = 32;
     option.kernelsize = kernelsize;
     
+%%
+        nomodif.key = 'NoModif';
+        nomodif.type = 'Boolean';
+        nomodif.default = 0;
+    option.nomodif = nomodif;
+
 %% options related to event detection
         detect.key = 'Detect';
         detect.type = 'String';
@@ -305,12 +308,6 @@ function varargout = mironsets(x,varargin)
         release.keydefault = 'Olivier';
         release.when = 'After';
     option.release = release;
-
-        gauss.key = 'Gauss';
-        gauss.type = 'Integer';
-        gauss.default = 0;
-        gauss.when = 'After';
-    option.gauss = gauss;
     
 %% preselection
         presel.choice = {'Scheirer','Klapuri99'};
@@ -344,6 +341,10 @@ varargout = mirfunction(@mironsets,x,varargin,nargout,specif,@init,@main);
 function [y type] = init(x,option)
 if iscell(x)
     x = x{1};
+end
+if option.nomodif
+    y = x;
+    return
 end
 if ischar(option.presel)
     if strcmpi(option.presel,'Scheirer')
@@ -510,11 +511,11 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
         end
     end
     if strcmpi(postoption.detect,'Peaks')
-        o = mirpeaks(o,'Total',Inf,'SelectFirst',...
+        o = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
             'Order','Abscissa','NoBegin','NoEnd');
     elseif strcmpi(postoption.detect,'Valleys')
-        o = mirpeaks(o,'Total',Inf,'SelectFirst',...
+        o = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
             'Valleys','Order','Abscissa','NoBegin','NoEnd');
     end
@@ -530,7 +531,12 @@ if (isfield(postoption,'attack') && postoption.attack) || ...
     ppv = get(o,'PeakPreciseVal');
     d = get(o,'Data');
     if postoption.attack
-        [st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
+        v = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
+            'Contrast',postoption.cthr,...
+            'Valleys','Order','Abscissa','NoBegin','NoEnd');
+        st = get(v,'PeakPos');
+        [st pp] = mircompute(@startattack,d,pp,st);
+        %[st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
     end
     if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
                                   && ~strcmpi(postoption.release,'Off')
@@ -546,8 +552,27 @@ if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
 end
 
 
-function st = startattack(d,pp,pv,pm,ppp,ppv)
+function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
 pp = sort(pp{1});
+st = st{1};
+if st(1)>pp(1)
+    dd = diff(d,1,1);       % d'
+    p = find(dd((pp(1)-1)-1:-1:1)<=0,1);
+    if isempty(p)
+        st0 = 1;
+    else
+        st0 = ((pp(1)-1)-p)+1;
+    end
+    st = [st0 st];
+end
+if length(st)>length(pp)
+    st = st(1:length(pp));
+else
+    pp = pp(1:length(st));
+end
+st = {{st} {pp}};
+return
+
 pv = pv{1};
 pm = pm{1};
 ppp = ppp{1};
@@ -558,17 +583,12 @@ dd = diff(d,1,1);       % d'
 ddd = diff(dd,1,1);     % d''
 dddd = diff(ddd,1,1);   % d'''
 while i<=length(pp)
-    % Start attack is identified to previous peak in d''.
-    p = find(dddd((pp(i)-1)-1:-1:1)<0,1); % previous decreasing d''
+    % Start attack is identified to previous valley in d.
+    p = find(dd((pp(i)-1)-1:-1:1)<0,1);
     if isempty(p)
         st(i) = 1;
     else
-        n = find(dddd((pp(i)-1)-p-1:-1:1)>0,1); % previous increasing d''
-        if isempty(n)
-            st(i) = 1;
-        else
-            st(i) = ((pp(i)-1)-p-(n-1))+1;
-        end
+        st(i) = ((pp(i)-1)-p)+1;
         if i>1 && st(i-1)==st(i)
             if d(pp(i))>d(pp(i-1))
                 del = i-1;
@@ -584,6 +604,32 @@ while i<=length(pp)
             i = i-1;
         end
     end
+    % Start attack is identified to previous peak in d''.
+    %p = find(dddd((pp(i)-1)-1:-1:1)<0,1); % previous decreasing d''
+    %if isempty(p)
+    %    st(i) = 1;
+    %else
+    %    n = find(dddd((pp(i)-1)-p-1:-1:1)>0,1); % previous increasing d''
+    %    if isempty(n)
+    %        st(i) = 1;
+    %    else
+    %        st(i) = ((pp(i)-1)-p-(n-1))+1;
+    %    end
+    %    if i>1 && st(i-1)==st(i)
+    %        if d(pp(i))>d(pp(i-1))
+    %            del = i-1;
+    %        else
+    %            del = i;
+    %        end
+    %        st(del) = [];
+    %        pp(del) = [];
+    %        pv(del) = [];
+    %        pm(del) = [];
+    %        ppp(del) = [];
+    %        ppv(del) = [];
+    %        i = i-1;
+    %    end
+    %end
     i = i+1;
 end
 st = {{st} {pp} {pv} {pm} {ppp} {ppv}};
