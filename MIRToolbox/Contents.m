@@ -32,6 +32,7 @@
 % mironsets        - Note onset positions and characteristics
 % mirattacktime    - Duration of note attacks
 % mirattackslope   - Average slope of note attacks
+% mirattackleap    - Change of amplitude in note attacks
 % mireventdensity  - Average frequency of events
 %
 %RHYTHM
