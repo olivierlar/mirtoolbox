@@ -48,7 +48,7 @@ x = mirspectrum(x);
 if not(haspeaks(x))
     x = mirpeaks(x,'Contrast',option.cthr);
 end
-type = 'mirscalar';
+type = {'mirscalar','mirspectrum'};
 
 
 function r = main(p,option,postoption)
