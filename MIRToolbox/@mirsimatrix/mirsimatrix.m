@@ -422,18 +422,32 @@ function [newpaths bests bestsindex] = addpaths(newpaths,oldpaths,ending,...
                                                 bests,bestsindex)
 for k = 1:length(oldpaths)
     % For each path
-    found = 0;
+    found_redundant = 0;
     for l = 1:length(newpaths)
         if (newpaths{l}(1,1) - oldpaths{k}(1,1)) * ...
-           (newpaths{l}(2,1) - oldpaths{k}(2,1)) <= 0
-            found = 1;
+                (newpaths{l}(2,1) - oldpaths{k}(2,1)) >= 0
+            % Redundant paths. One is removed.
+            found_redundant = 1;
             if oldpaths{k}(1,1) < newpaths{l}(1,1)
+                % The new candidate is actually better.
+                % The path stored in newpaths is modified.
                 newpaths{l} = [oldpaths{k} ending];
+                if bests(newpaths{l}(1,1),newpaths{l}(2,1)) ...
+                        == ending(1)+1i*ending(2)
+                    bests(newpaths{l}(1,1),newpaths{l}(2,1)) = 0;
+                end
                 [bests bestsindex] = update(bests,bestsindex,...
                                             oldpaths{k}(1:2,1),...
                                             ending(1:2),l);
             end
         else
+            % Each of the 2 paths explores more one particular dimension
+            % upfront. No path should be removed.
+            %        +
+            %     --+
+            %    -  |
+            %       |
+            %      |
             if oldpaths{k}(1,1) < newpaths{l}(1,1)
                 if bests(oldpaths{k}(1,1),oldpaths{k}(2,1))...
                         == ending(1)+1i*ending(2)
@@ -447,7 +461,7 @@ for k = 1:length(oldpaths)
             end
         end
     end
-    if ~found
+    if ~found_redundant
         newpaths{end+1} = [oldpaths{k} ending];
         [bests bestsindex] = update(bests,bestsindex,...
                                     oldpaths{k}(1:2,1),...
@@ -459,12 +473,12 @@ end
 function [bests bestsindex] = update(bests,bestsindex,starts,ends,pathindex)
 key = ends(1)+1i*ends(2);
 [i,j,v] = find(bests);
-[i0,j0] = find(v == key);
-if 1 %isempty(i0) 
+k = find(v == key);
+if isempty(k) 
     bests(starts(1),starts(2)) = key;
     bestsindex(starts(1),starts(2)) = pathindex;
-elseif i(i0)-ends(1)+j(j0)-ends(2)<starts(1)-ends(1)+starts(2)-ends(2)
-    bests(i(i0),j(j0)) = 0;
+elseif 1 %i(i0)-ends(1)+j(j0)-ends(2)<starts(1)-ends(1)+starts(2)-ends(2)
+    bests(i(k),j(k)) = 0;
     bests(starts(1),starts(2)) = key;
     bestsindex(starts(1),starts(2)) = pathindex;
 end
