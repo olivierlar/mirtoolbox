@@ -19,7 +19,6 @@ d = get(e,'Data');
 nf = length(d);
 fs = get(e,'Sampling');
 nm = get(e,'Name');
-pp = get(e,'PeakPosUnit');
 for i = 1:nf
     di = d{i}{1};
     nmi = nm{i};
@@ -27,15 +26,6 @@ for i = 1:nf
     di = rand(size(di)).*di;
     di = di/max(max(max(abs(di))))*.9999;
     di = reshape(di,[],1);
-    
-    if ~isempty(pp)
-        pi = pp{i}{1}{1};
-        d2i = zeros(length(di),1);
-        for h = 1:length(pi)
-            d2i(round(pi(h)*11025)) = 1;
-        end
-        di = di/10 + d2i;
-    end  
     
     %Let's remove the extension from the original files
     if length(nmi)>3 && strcmpi(nmi(end-3:end),'.wav')

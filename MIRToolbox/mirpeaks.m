@@ -710,7 +710,7 @@ for i = 1:length(d) % For each audio file,...
                                         if int > best || ... % New condition added (Lartillot 16.4.2010)
                                                 isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
                                                 int > option.delta
-                                            % partial becomes dead
+                                                % partial becomes dead
                                             mxl(tr,k+1) = mxl(tr,k);
                                             myl(tr,k+1) = 0;
                                             grvy = [grvy; tr k]; % added to the graveyard

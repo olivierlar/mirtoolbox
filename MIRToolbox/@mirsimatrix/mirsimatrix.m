@@ -194,14 +194,14 @@ elseif isempty(option.arg2)
                             vv(:,i) = vv(:,i)/norm(vv(:,i));
                         end
                     end
-                    hK = ceil(lK/2);
                     if not(isempty(postoption)) && ...
                             strcmpi(postoption.view,'TimeLag')
+                        hK = ceil(lK/2);
                         for i = 1:l
                             if mirwaitbar && (mod(i,100) == 1 || i == l)
                                 waitbar(i/l,handle);
                             end
-                            ij = min(i+lK-1,l); % Frame region i:ij
+                            ij = min(i+lK-1,l);
                             dkij = disf(vv(:,i),vv(:,i:ij));
                             for j = 0:ij-i
                                 if hK-j>0
@@ -217,7 +217,7 @@ elseif isempty(option.arg2)
                             if mirwaitbar && (mod(i,100) == 1 || i == l)
                                 waitbar(i/l,handle);
                             end
-                            j = min(i+hK-1,l);
+                            j = min(i+lK-1,l);
                             dkij = disf(vv(:,i),vv(:,i:j));
                             dk{z}(i,i:j,g) = dkij;
                             dk{z}(i:j,i,g) = dkij';
@@ -319,28 +319,22 @@ if not(isempty(postoption))
             m = set(m,'Data',d);
             m.view = 'h';
         elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
+            W = m.diagwidth;
             for k = 1:length(d)
                 for z = 1:length(d{k})
-                    if isinf(m.diagwidth)
-                        nlines = 2*size(d{k}{z},1)*2-1;
-                        half = size(d{k}{z},1);
+                    if isinf(W)
+                        dz = NaN(size(d{k}{z}));
                     else
-                        nlines = m.diagwidth;
-                        half = (m.diagwidth+1)/2;
+                        dz = NaN(W,size(d{k}{z},2));
                     end
-                    dz = NaN(nlines,size(d{k}{z},2));
-                    for l = 1:nlines
-                        dia = abs(half-l);
-                        if l<half
-                            dz(l,1:end-dia) = diag(d{k}{z},dia)';
-                        else
-                            dz(l,dia+1:end) = diag(d{k}{z},dia)';
-                        end
+                    for l = 1:size(dz,1)
+                        dz(l,l:end) = diag(d{k}{z},l-1)';
                     end
                     if lK < m.diagwidth
-                        nlines2 = floor(lK/2);
-                        if size(dz,1)>lK
-                            dz = dz(half-nlines2:half+nlines2,:);
+                        W = size(dz,1);
+                        hK = ceil(lK/2);
+                        if size(dz,1)>hK
+                            dz = dz(1:hK,:);
                         end
                         m.diagwidth = lK;
                     end
@@ -388,6 +382,7 @@ if not(isempty(postoption))
     if postoption.warp
         dz = 1 - (d{1}{1} - min(min(d{1}{1}))) ...
             / (max(max(d{1}{1})) - min(min(d{1}{1})));
+        dz(dz>.33) = Inf;
         paths = cell(size(dz)+1);
         bests = sparse(size(dz,1),size(dz,2));
         bestsindex = sparse(size(dz,1),size(dz,2));
@@ -396,24 +391,24 @@ if not(isempty(postoption))
                 i/size(dz,1)
             end
             for j = 1:size(dz,2)
-                if dz(i,j)>.5
+                if isinf(dz(i,j))
                     continue
                 end
-                ending = [i; j];
+                ending = [i; j; dz(i,j)];
                 [newpaths bests bestsindex] = ...
-                            addpaths({},paths{i,j},ending,dz(i,j),...
-                                     bests,bestsindex,paths,1);
+                            addpaths({},paths{i,j},ending,...
+                                     bests,bestsindex);
                 [newpaths bests bestsindex] = ...
-                            addpaths(newpaths,paths{i+1,j},ending,dz(i,j),...
-                                     bests,bestsindex,paths,0);
+                            addpaths(newpaths,paths{i+1,j},ending,...
+                                     bests,bestsindex);
                 [newpaths bests bestsindex] = ...
-                            addpaths(newpaths,paths{i,j+1},ending,dz(i,j),...
-                                     bests,bestsindex,paths,0);
+                            addpaths(newpaths,paths{i,j+1},ending,...
+                                     bests,bestsindex);
                 if isempty(newpaths) && (i == 1 || j == 1 || ...
-                                         (dz(i-1,j-1)>.5 && ...
-                                          dz(i-1,j)>.5 && ...
-                                          dz(i,j-1)>.5))
-                    newpaths = {[ending; 0]};
+                                         (isinf(dz(i-1,j-1)) && ...
+                                          isinf(dz(i-1,j)) && ...
+                                          isinf(dz(i,j-1))))
+                    newpaths = {ending};
                 end
                 paths{i+1,j+1} = newpaths;
             end
@@ -423,13 +418,10 @@ if not(isempty(postoption))
 end
 
 
-function [newpaths bests bestsindex] = addpaths(newpaths,oldpaths,ending,d,...
-                                                bests,bestsindex,paths,diag)
+function [newpaths bests bestsindex] = addpaths(newpaths,oldpaths,ending,...
+                                                bests,bestsindex)
 for k = 1:length(oldpaths)
     % For each path
-    if oldpaths{k}(3,end)<10 && d>.33
-        continue
-    end
     found_redundant = 0;
     for l = 1:length(newpaths)
         if (newpaths{l}(1,1) - oldpaths{k}(1,1)) * ...
@@ -439,16 +431,14 @@ for k = 1:length(oldpaths)
             if oldpaths{k}(1,1) < newpaths{l}(1,1)
                 % The new candidate is actually better.
                 % The path stored in newpaths is modified.
-                newpaths{l} = [oldpaths{k} ...
-                               [ending; oldpaths{k}(3,end)+diag]];
+                newpaths{l} = [oldpaths{k} ending];
                 if bests(newpaths{l}(1,1),newpaths{l}(2,1)) ...
                         == ending(1)+1i*ending(2)
                     bests(newpaths{l}(1,1),newpaths{l}(2,1)) = 0;
                 end
                 [bests bestsindex] = update(bests,bestsindex,...
                                             oldpaths{k}(1:2,1),...
-                                            ending(1:2),l,...
-                                            paths,newpaths);
+                                            ending(1:2),l);
             end
         else
             % Each of the 2 paths explores more one particular dimension
@@ -472,40 +462,23 @@ for k = 1:length(oldpaths)
         end
     end
     if ~found_redundant
-        newpaths{end+1} = [oldpaths{k} ...
-                           [ending; oldpaths{k}(3,end)+diag]];
+        newpaths{end+1} = [oldpaths{k} ending];
         [bests bestsindex] = update(bests,bestsindex,...
                                     oldpaths{k}(1:2,1),...
-                                    ending(1:2),length(newpaths),...
-                                    paths,newpaths);
+                                    ending(1:2),length(newpaths));
     end
 end
 
 
-function [bests bestsindex] = update(bests,bestsindex,starts,ends,...
-                                     pathindex,paths,newpaths)
+function [bests bestsindex] = update(bests,bestsindex,starts,ends,pathindex)
 key = ends(1)+1i*ends(2);
 [i,j,v] = find(bests);
 k = find(v == key);
-if ~isempty(k)
+if isempty(k) 
+    bests(starts(1),starts(2)) = key;
+    bestsindex(starts(1),starts(2)) = pathindex;
+elseif 1 %i(i0)-ends(1)+j(j0)-ends(2)<starts(1)-ends(1)+starts(2)-ends(2)
     bests(i(k),j(k)) = 0;
-end
-previous = bests(starts(1),starts(2));
-previndex = bestsindex(starts(1),starts(2));
-replace = 0;
-if previous == 0
-    replace = 1;
-else
-    newscore = newpaths{pathindex}(3,end-1);
-    oldscore = paths{real(previous)+1,imag(previous)+1}{previndex}(3,end);
-    if newscore > oldscore
-        replace = 1;
-    elseif newscore == oldscore
-        paths{real(previous)+1,imag(previous)+1}{previndex}
-        newpaths{pathindex}
-    end
-end
-if replace
     bests(starts(1),starts(2)) = key;
     bestsindex(starts(1),starts(2)) = pathindex;
 end
