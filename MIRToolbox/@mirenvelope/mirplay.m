@@ -56,7 +56,7 @@ d = get(a,'Data');
 f = get(a,'Sampling');
 n = get(a,'Name');
 c = get(a,'Channels');
-fp = get(a,'FramePos');
+pp = get(a,'PeakPosUnit');
 if not(option.se)
     if length(d)>1
         if isfield(option,'inc')
@@ -112,6 +112,16 @@ if not(isempty(order))
                     djl = resample(di(:,j,l),11025,round(f{k}));
                     djl = djl/max(djl);
                     djl = rand(length(djl),1).*djl;
+                    
+                    if ~isempty(pp)
+                        pjl = pp{k}{i}{j,l};
+                        d2jl = zeros(length(djl),1);
+                        for h = 1:length(pjl)
+                            d2jl(round(pjl(h)*11025)) = 1;
+                        end
+                        djl = djl/10 + d2jl;
+                    end                        
+                    
                     sound(djl,11025);
                     idealtime = length(djl)/11025;
                     practime = toc;
