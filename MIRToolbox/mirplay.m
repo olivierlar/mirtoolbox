@@ -146,35 +146,59 @@ if not(isempty(order))
                     end
                 else
                     if isa(a,'mirpitch')
-                        ampi = amp{k}{i};
+                        deg = get(a,'Degrees');
+                        transcribed = ~isempty(deg{k}{i});
+                    else
+                        transcribed = 0;
                     end
-                    synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
-                    for j = 1:size(di,2)
-                        if iscell(di)
-                            dj = di{j};
-                        else
-                            dj = di(:,j);
-                        end
-                        dj(isnan(dj)) = 0;
-                        if isa(a,'mirpitch')
-                            ampj = zeros(size(dj));
-                            if iscell(ampi)
-                                ampj(1:size(ampi{j})) = ampi{j};
-                            else
-                                ampj(1:size(ampi(:,j))) = ampi(:,j);
-                            end
-                        end
-                        if not(isempty(dj))
-                            k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
-                            k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
-                            if isa(a,'mirpitch')
-                                ampj = repmat(ampj,1,k2-k1+1);
-                            else
-                                ampj = ones(size(dj),k2-k1+1);
-                            end
+                    if transcribed
+                        stp = get(a,'Start');
+                        enp = get(a,'End');
+                        deg = deg{k}{i}{1};
+                        stp = stp{k}{i}{1};
+                        enp = enp{k}{i}{1};
+                        synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
+                        for j = 1:length(deg)
+                            fj = 440 * 2^(deg(j)/12);
+                            k1 = floor((fp{k}{i}(1,stp(j))-fp{k}{i}(1))*44100)+1;
+                            k2 = floor((fp{k}{i}(2,enp(j))-fp{k}{i}(1))*44100)+1;
+                            ampj = ones(1,k2-k1+1);
                             synth(k1:k2) = synth(k1:k2) ...
-                                + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1) ...
+                                + sum(ampj.*sin(2*pi*fj*(0:k2-k1)/44100),1) ...
                                         .*hann(k2-k1+1)';
+                        end
+                    else
+                        if isa(a,'mirpitch')
+                            ampi = amp{k}{i};
+                        end
+                        synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
+                        for j = 1:size(di,2)
+                            if iscell(di)
+                                dj = di{j};
+                            else
+                                dj = di(:,j);
+                            end
+                            dj(isnan(dj)) = 0;
+                            if isa(a,'mirpitch')
+                                ampj = zeros(size(dj));
+                                if iscell(ampi)
+                                    ampj(1:size(ampi{j})) = ampi{j};
+                                else
+                                    ampj(1:size(ampi(:,j))) = ampi(:,j);
+                                end
+                            end
+                            if not(isempty(dj))
+                                k1 = floor((fp{k}{i}(1,j)-fp{k}{i}(1))*44100)+1;
+                                k2 = floor((fp{k}{i}(2,j)-fp{k}{i}(1))*44100)+1;
+                                if isa(a,'mirpitch')
+                                    ampj = repmat(ampj,1,k2-k1+1);
+                                else
+                                    ampj = ones(size(dj),k2-k1+1);
+                                end
+                                synth(k1:k2) = synth(k1:k2) ...
+                                    + sum(ampj.*sin(2*pi*dj*(0:k2-k1)/44100),1) ...
+                                            .*hann(k2-k1+1)';
+                            end
                         end
                     end
                     soundsc(synth,44100);
