@@ -433,7 +433,7 @@ if option.segm
                         pointer = startp(l);
                         for h = l-1:-1:max(l-10,1)
                             if deg(l) == deg(h)
-                                if isempty(x2) % old version...
+                                if 1 %isempty(x2) % old version...
                                     test = ~isempty(pointer) && ...
                                             startp(l)-endp(h)<12 && ...
                                            ~any(intersect(startp(h):pointer-1,breaks));
@@ -456,7 +456,7 @@ if option.segm
                                         test = max(zone(:,end)) < max(max(zone(:,2:end-1)));
                                     end
                                 end
-                                if 0 %test
+                                if test
                                     % Segment close in frequency with recent one
                                     startp(l) = [];
                                     meanp(h) = mean(meanp([h l]));
