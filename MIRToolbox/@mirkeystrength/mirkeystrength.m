@@ -75,9 +75,13 @@ else
             kj = cell(12,size(mj,2),size(mj,3));
             for k = 1:size(mj,2)
                 for l = 1:size(mj,3)
-                    tmp = corrcoef([mj(:,k,l) gomezprofs']);
-                    sj(:,k,l,1) = tmp(1,2:13);
-                    sj(:,k,l,2) = tmp(1,14:25);
+                    if ~max(abs(mj(:,k,l)))
+                        sj(:,k,l,:) = 0;
+                    else
+                        tmp = corrcoef([mj(:,k,l) gomezprofs']);
+                        sj(:,k,l,1) = tmp(1,2:13);
+                        sj(:,k,l,2) = tmp(1,14:25);
+                    end
                     kj(:,k,l) = {'C','C#','D','D#','E','F','F#','G','G#','A','A#','B'};
                 end
             end
