@@ -398,7 +398,7 @@ end
 
 
 function res = combinechunk_frame(old,new,d2,fri)
-if isempty(mirgetdata(new))
+if isa(new,'miraudio') && isempty(mirgetdata(new))
     res = old;
     return
 end
