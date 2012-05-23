@@ -50,34 +50,52 @@ if iscell(x) %not(isamir(x,'mirmidi'))
     da = get(o,'AttackPos');
     dr = get(o,'ReleasePos');
     df = get(o,'FramePos');
-else
+    dp = get(x,'Data');
+elseif isa(x,'mirenvelope')
     df = get(x,'FramePos');
+    dp = get(x,'Data');
     do = [];
+elseif isa(x,'mirpitch')
+    do = 1;
+    da = get(x,'Start');
+    dr = get(x,'End');
+    df = get(x,'FramePos');
+    dp = get(x,'Degrees');
 end
-dp = get(x,'Data');
 nmat = cell(1,length(dp));
 for i = 1:length(dp)
-    nmat{i} = [];
-    for j = 2:length(dp{i})
-        if isempty(do)
-            tij = df{i}{j}(1);
-            dij = df{i}{j}(2)- tij;
-            vij = 120;
-        else
-            tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
-            dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
-            if not(iscell(do))
+    if isa(x,'mirpitch')
+        nmat{i} = zeros(length(dp{i}{1}{1}),7);
+        for j = 1:length(dp{i}{1}{1})
+            t = df{i}{1}(1,da{i}{1}{1}(j));
+            d = df{i}{1}(2,dr{i}{1}{1}(j) )- t;
+            v = 120;
+            p = dp{i}{1}{1}(j) + 62;
+            nmat{i}(j,:) = [t d 1 p v t d];
+        end
+    else
+        nmat{i} = [];
+        for j = 2:length(dp{i})
+            if isempty(do)
+                tij = df{i}{j}(1);
+                dij = df{i}{j}(2)- tij;
                 vij = 120;
             else
-                vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
+                tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
+                dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
+                if not(iscell(do))
+                    vij = 120;
+                else
+                    vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
+                end
             end
-        end
-        for k = 1:size(dp{i}{j},3)
-            for l = 1:size(dp{i}{j},2)
-                for n = 1:length(dp{i}{j}{1,l,k})
-                    f = dp{i}{j}{1,l,k}(n);
-                    p = round(hz2midi(f));
-                    nmat{i} = [nmat{i}; tij dij 1 p vij tij dij];
+            for k = 1:size(dp{i}{j},3)
+                for l = 1:size(dp{i}{j},2)
+                    for n = 1:length(dp{i}{j}{1,l,k})
+                        f = dp{i}{j}{1,l,k}(n);
+                        p = round(hz2midi(f));
+                        nmat{i} = [nmat{i}; tij dij 1 p vij tij dij];
+                    end
                 end
             end
         end

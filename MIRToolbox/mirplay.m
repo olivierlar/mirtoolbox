@@ -154,7 +154,7 @@ if not(isempty(order))
                     if transcribed
                         stp = get(a,'Start');
                         enp = get(a,'End');
-                        deg = deg{k}{i}{1};
+                        deg = deg{k}{i}{1}-5;
                         stp = stp{k}{i}{1};
                         enp = enp{k}{i}{1};
                         synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
