@@ -411,6 +411,9 @@ if option.segm
                             buffer = [];
                         end
                     else
+                        if length(pf{i}{j}{1,l,k})>1
+                            mirerror('mirpitch','''Segment'' option only for monodies (use also ''Mono'')');
+                        end
                         buffer(end+1) = pf{i}{j}{1,l,k};
                     end
                 end
