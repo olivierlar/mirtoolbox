@@ -41,6 +41,11 @@ function varargout = mirpitch(orig,varargin)
 %       Alternatively, the result of a mirpeaks computation can be directly
 %           given as first argument of the mirpitch function.
 %   Post-processing options:
+%       mirpitch(..., 'Cent?) convert the pitch axis from Hz to cent scale.
+%           One octave corresponds to 1200 cents, so that 100 cents
+%           correspond to a semitone in equal temperament.
+%       mirpitch(..., 'Segment?) segments the obtained monodic pitch curve
+%           in cents as a succession of notes with stable frequencies.
 %       mirpitch(...,'Sum','no') does not sum back the channels at the end 
 %           of the computation. The resulting pitch information remains
 %           therefore decomposed into several channels.

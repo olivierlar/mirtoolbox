@@ -58,6 +58,11 @@ function varargout = mirtempo(x,varargin)
 %           total amplitude of the autocorrelation function.
 %               if no value for thr is given, the value thr=0.1 is chosen
 %                   by default.
+%       mirtempo(...,'Track',tr): tracks peaks along time in order to 
+%           obtain a stabilized tempo curve and to limit therefore switches
+%           between alternative pulsations
+%               if no value for thr is given, the value tr=0.1 is chosen
+%                   by default.
 %
 %   [t,p] = mirtempo(...) also displays the result of the signal analysis
 %       leading to the tempo estimation, and shows in particular the
