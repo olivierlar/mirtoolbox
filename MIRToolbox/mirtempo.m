@@ -259,7 +259,8 @@ function varargout = mirtempo(x,varargin)
     option.ma = ma;
 
         track.key = 'Track';
-        track.type = 'Boolean';
+        track.type = 'Integer';
+        track.keydefault = .1;
         track.default = 0;
     option.track = track;
 
@@ -288,6 +289,9 @@ end
 if option.perio
     option.m = 3;
     option.enh = 2:10;
+end
+if option.track
+    option.enh = 0;
 end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
