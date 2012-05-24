@@ -180,6 +180,7 @@ function varargout = mirpitch(orig,varargin)
     
         segm.key = 'Segment';
         segm.type = 'Boolean';
+        segm.when = 'Both';
         segm.default = 0;
     option.segm = segm;
 
@@ -245,6 +246,10 @@ if option.tolo
 end
 if not(option.ac) && not(option.as) && not(option.ce) && not(option.s)
     option.ac = 1;
+end
+if option.segm && ~option.frame.length.val
+    option.frame.length.val = NaN;
+    option.frame.hop.val = NaN;
 end
 if isnan(option.frame.length.val)
     option.frame.length.val = .0464;
@@ -333,7 +338,7 @@ function o = main(x,option,postoption)
 if option.multi && option.m == 1
     option.m = Inf;
 end
-if option.mono && option.m == Inf
+if (option.mono && option.m == Inf) || option.segm
     option.m = 1;
 end
 if iscell(x)
@@ -359,7 +364,9 @@ else
 end
 fp = get(x,'FramePos');
 
-if option.cent
+punit = 'Hz';
+if (option.cent || option.segm) && strcmp(get(x,'Unit'),'Hz')
+    punit = 'cents';
     for i = 1:length(pf)
         for j = 1:length(pf{i})
             for k = 1:size(pf{i}{j},3)
@@ -578,7 +585,7 @@ p.start = ps;
 p.end = pe;
 p.mean = pm;
 p.degrees = dg;
-s = mirscalar(x,'Data',pf,'Title','Pitch','Unit','Hz');
+s = mirscalar(x,'Data',pf,'Title','Pitch','Unit',punit);
 p = class(p,'mirpitch',s);
 o = {p,x};
 
