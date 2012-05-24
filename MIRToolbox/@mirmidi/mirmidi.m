@@ -41,30 +41,36 @@ type = 'mirmidi';
     
 
 function m = main(x,option,postoption)
-if iscell(x) %not(isamir(x,'mirmidi'))
+transcript = 0;
+if iscell(x)
     o = x{1};
+    do = get(o,'PeakVal');
+    da = get(o,'AttackPosUnit');
+    dr = get(o,'ReleasePosUnit');
     a = x{2};
     s = mirsegment(a,o);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
-    do = get(o,'PeakVal');
-    da = get(o,'AttackPos');
-    dr = get(o,'ReleasePos');
-    df = get(o,'FramePos');
     dp = get(x,'Data');
-elseif isa(x,'mirenvelope')
-    df = get(x,'FramePos');
-    dp = get(x,'Data');
+else
     do = [];
-elseif isa(x,'mirpitch')
-    do = 1;
-    da = get(x,'Start');
-    dr = get(x,'End');
-    df = get(x,'FramePos');
-    dp = get(x,'Degrees');
-end
-nmat = cell(1,length(dp));
-for i = 1:length(dp)
     if isa(x,'mirpitch')
+        da = get(x,'Start');
+        dr = get(x,'End');
+        dp = get(x,'Degrees');
+        if isempty(da)
+            dp = get(x,'Data');
+        else
+            transcript = 1;
+        end
+    else
+        da = get(x,'AttackPosUnit');
+        dr = get(x,'ReleasePosUnit');
+    end
+end
+df = get(x,'FramePos');
+nmat = cell(1,length(dp));
+if transcript
+    for i = 1:length(dp)
         nmat{i} = zeros(length(dp{i}{1}{1}),7);
         for j = 1:length(dp{i}{1}{1})
             t = df{i}{1}(1,da{i}{1}{1}(j));
@@ -73,21 +79,24 @@ for i = 1:length(dp)
             p = dp{i}{1}{1}(j) + 62;
             nmat{i}(j,:) = [t d 1 p v t d];
         end
-    else
+    end
+else
+    for i = 1:length(dp)
         nmat{i} = [];
-        for j = 2:length(dp{i})
+        if isempty(do)
+            first = 1;
+        else
+            first = 2;
+        end
+        for j = first:length(dp{i})
             if isempty(do)
                 tij = df{i}{j}(1);
                 dij = df{i}{j}(2)- tij;
                 vij = 120;
             else
-                tij = mean(df{i}{1}(:,da{i}{1}{1}(j-1)));
-                dij = mean(df{i}{1}(:,dr{i}{1}{1}(j-1))) - tij;
-                if not(iscell(do))
-                    vij = 120;
-                else
-                    vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
-                end
+                tij = da{i}{1}{1}(j-1);
+                dij = dr{i}{1}{1}(j-1) - tij;
+                vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
             end
             for k = 1:size(dp{i}{j},3)
                 for l = 1:size(dp{i}{j},2)
