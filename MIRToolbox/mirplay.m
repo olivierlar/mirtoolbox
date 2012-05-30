@@ -147,7 +147,11 @@ if not(isempty(order))
                 else
                     if isa(a,'mirpitch')
                         deg = get(a,'Degrees');
-                        transcribed = ~isempty(deg{k}{i});
+                        if isempty(deg)
+                            transcribed = 0;
+                        else
+                            transcribed = ~isempty(deg{k}{i});
+                        end
                     else
                         transcribed = 0;
                     end
