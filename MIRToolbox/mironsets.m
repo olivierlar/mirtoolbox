@@ -555,7 +555,7 @@ end
 function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
 pp = sort(pp{1});
 st = st{1};
-if st(1)>pp(1)
+if ~isempty(st) && st(1)>pp(1)
     dd = diff(d,1,1);       % d'
     p = find(dd((pp(1)-1)-1:-1:1)<=0,1);
     if isempty(p)
