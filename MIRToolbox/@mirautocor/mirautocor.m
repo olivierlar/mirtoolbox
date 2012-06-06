@@ -212,6 +212,7 @@ else
     a.ofspectrum = 0;
     a.window = {};
     a.normalwindow = 0;
+    a.resonance = '';
     a = class(a,'mirautocor',mirdata(orig));
     a = purgedata(a);
     a = set(a,'Ord','coefficients');
@@ -415,7 +416,7 @@ for k = 1:length(coeff)
                 c = c./ xw;
                 a.normalwindow = 1;
             end
-            if ischar(option.reso) && ...
+            if ischar(option.reso) && isempty(a.resonance) && ...
                     (strcmpi(option.reso,'ToiviainenSnyder') || ...
                     strcmpi(option.reso,'Toiviainen') || ...
                     strcmpi(option.reso,'vanNoorden'))
@@ -441,6 +442,7 @@ for k = 1:length(coeff)
                     w = w/max(w);
                     c = c.* repmat(w,[1,size(c,2),size(c,3)]);
                 end
+                a.resonance = option.reso;
             end
             if option.h
                 c = hwr(c);

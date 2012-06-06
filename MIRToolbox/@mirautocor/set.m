@@ -7,6 +7,7 @@ f = a.freq;
 s = a.ofspectrum;
 w = a.window;
 nw = a.normalwindow;
+r = a.resonance;
 d = mirdata(a);
 d = set(d,'Title',get(a,'Title'),'Abs',get(a,'Abs'),'Ord',get(a,'Ord'));
 while length(propertyArgIn) >= 2,
@@ -26,6 +27,8 @@ while length(propertyArgIn) >= 2,
            w = val;
        case 'LowRemoved'
            lr = val;
+       case 'Resonance'
+           r = val;
        otherwise
            d = set(d,prop,val);
    end
@@ -34,4 +37,5 @@ aa.freq = f;
 aa.ofspectrum = s;
 aa.window = w;
 aa.normalwindow = nw;
+aa.resonance = r;
 aa = class(aa,'mirautocor',d);

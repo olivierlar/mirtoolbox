@@ -1,4 +1,4 @@
-function MIRplayer(arg,select)
+function mirplayer(arg,select)
 %Usage:
 %MIRplayer(arg,select)
 %where

@@ -15,6 +15,8 @@ switch propName
         val = a.ofspectrum;
     case 'Window'
         val = a.window;
+    case 'Resonance'
+        val = a.resonance;
     otherwise
         val = get(mirdata(a),propName);
 end
