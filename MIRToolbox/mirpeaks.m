@@ -213,6 +213,11 @@ function varargout = mirpeaks(orig,varargin)
         mem.type = 'Integer';
         mem.default = Inf;
     option.mem = mem;
+    
+        fuse.key = 'Fuse';
+        fuse.type = 'Boolean';
+        fuse.default = 0;
+    option.fuse = fuse;
 
         shorttrackthresh.key = 'CollapseTracks';
         shorttrackthresh.type = 'Integer';
@@ -315,12 +320,22 @@ else
         t = get(x,'Pos');
     end
 end
+
+interpol = get(x,'Interpolable') && not(isempty(option.interpol)) && ...
+    ((isnumeric(option.interpol) && option.interpol) || ...
+     (ischar(option.interpol) && not(strcmpi(option.interpol,'No')) && ...
+      not(strcmpi(option.interpol,'Off'))));
+                
 pp = cell(1,length(d));
 pv = cell(1,length(d));
 pm = cell(1,length(d));
 ppp = cell(1,length(d));
 ppv = cell(1,length(d));
 tp = cell(1,length(d));
+if interpol
+    tpp = cell(1,length(d));
+    tpv = cell(1,length(d));
+end
 tv = cell(1,length(d));
 
 if isnan(option.thr)
@@ -345,10 +360,6 @@ if not(isempty(option.scan))
     pscan = get(option.scan,'PeakPos');
 end
 
-interpol = get(x,'Interpolable') && not(isempty(option.interpol)) && ...
-                ((isnumeric(option.interpol) && option.interpol) || ...
-                 (ischar(option.interpol) && not(strcmpi(option.interpol,'No')) && not(strcmpi(option.interpol,'Off'))));
-                
 for i = 1:length(d) % For each audio file,...
     di = d{i};
     if cha == 1
@@ -657,6 +668,7 @@ for i = 1:length(d) % For each audio file,...
                     mxk2 = mx{1,k+1,l}; % w^{k+1}
                     thk1 = th(mxk1,k,l);
                     thk2 = th(mxk2,k,l);
+                    matched = zeros(size(thk2));
                     myk2 = dh(mx{1,k+1,l},k,l); % amplitude
                     tr1 = tr2;
                     tr2 = NaN(1,length(mxk2));
@@ -673,54 +685,68 @@ for i = 1:length(d) % For each audio file,...
                             tr = tr1(n); % Current track.
 
                             if not(isnan(tr))
-                                % still alive...
+                                % track currently active
 
                                 % Step 1 in Mc Aulay & Quatieri
                                 [int m] = min(abs(thk2-thk1(n)));
+                                % Finding w^{k+1} closest to current w^k
+                                
                                 if isinf(int) || int > option.delta
                                     % all w^{k+1} outside matching interval:
-                                        % partial becomes dead
+                                        % partial becomes inactive
                                     mxl(tr,k+1) = mxl(tr,k);
                                     myl(tr,k+1) = 0;
                                     grvy = [grvy; tr k]; % added to the graveyard
                                 else
-                                    % closest w^{k+1} is tentatively selected:
-                                        % candidate match
+                                    [best mm] = min(abs(thk2(m)-th(mxk1,k,l)));
+                                    % the mmth peak in frame k is the closest to w^{k+1}
 
-                                    % Step 2 in Mc Aulay & Quatieri
-                                    [best mm] = min(abs(thk2(m)-th(mx{1,k,l})));
-                                    if mm == n
-                                        % no better match to remaining w^k:
-                                            % definite match
-                                        mxl(tr,k+1) = mxk2(m)-1;
-                                        myl(tr,k+1) = myk2(m);
-                                        tr2(m) = tr;
-                                        thk1(n) = -Inf; % selected w^k is eliminated from further consideration
-                                        thk2(m) = Inf;  % selected w^{k+1} is eliminated as well
-                                        if not(isempty(grvy))
-                                            zz = find ((mxl(grvy(:,1),k) >= mxl(tr,k) & ...
-                                                        mxl(grvy(:,1),k) <= mxl(tr,k+1)) | ...
-                                                       (mxl(grvy(:,1),k) <= mxl(tr,k) & ...
-                                                        mxl(grvy(:,1),k) >= mxl(tr,k+1)));
-                                            grvy(zz,:) = [];
-                                        end
+                                    % Let's first test whether candidate
+                                    % match w^{k+1} is particularly closed to an inactive track. (Lartillot)
+                                    if isempty(grvy)
+                                        testprev = 0;
                                     else
-                                        % let's look at adjacent lower w^{k+1}...
-                                        [int mmm] = min(abs(thk2(1:m)-thk1(n)));
-                                        if int > best || ... % New condition added (Lartillot 16.4.2010)
-                                                isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
-                                                int > option.delta
-                                            % partial becomes dead
-                                            mxl(tr,k+1) = mxl(tr,k);
-                                            myl(tr,k+1) = 0;
-                                            grvy = [grvy; tr k]; % added to the graveyard
+                                        [best2 mm2] = min(abs(thk2(m)-th(mxl(grvy(:,1),k),k,l)));
+                                        if best2 < best
+                                            oldk = grvy(mm2,2);
+                                            if mxl(tr,oldk)
+                                                oldt1 = th(mxl(grvy(mm2,1),oldk),oldk,l);
+                                                oldt2 = th(mxl(tr,oldk),oldk,l);
+                                                dif1 = abs(oldt1-thk2(m));
+                                                dif2 = abs(oldt2-thk2(m));
+                                                if dif1 < dif2
+                                                    testprev = 1;
+                                                end
+                                            else
+                                                testprev = 1;
+                                            end
                                         else
+                                            testprev = 0;
+                                        end
+                                    end
+                                    if testprev
+                                        % Yes, candidate match w^{k+1} is particularly closed to an inactive track. (Lartillot)
+                                        otr = grvy(mm2,1);
+                                        mxl(otr,k+1) = mxk2(m)-1;
+                                        myl(otr,k+1) = myk2(m);
+                                        tr2(m) = otr;
+                                        thk2(m) = Inf;  % selected w^{k+1} is eliminated from further consideration
+                                        matched(m) = 1;
+                                        grvy(mm2,:) = [];
+                                        
+                                    else
+                                        % Step 2 in Mc Aulay & Quatieri
+                                        if option.fuse || mm == n
+                                            % candidate match w^{k+1} is not closer to any remaining w^k:
                                             % definite match
-                                            mxl(tr,k+1) = mxk2(mmm)-1;
-                                            myl(tr,k+1) = myk2(mmm);
-                                            tr2(mmm) = tr;
-                                            thk1(n) = -Inf;     % selected w^k is eliminated from further consideration
-                                            thk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
+                                            mxl(tr,k+1) = mxk2(m)-1;
+                                            myl(tr,k+1) = myk2(m);
+                                            tr2(m) = tr;
+                                            matched(m) = 1;
+                                            if ~option.fuse
+                                                thk1(n) = -Inf; % selected w^k is eliminated from further consideration
+                                                thk2(m) = Inf;  % selected w^{k+1} is eliminated as well
+                                            end
                                             if not(isempty(grvy))
                                                 zz = find ((mxl(grvy(:,1),k) >= mxl(tr,k) & ...
                                                             mxl(grvy(:,1),k) <= mxl(tr,k+1)) | ...
@@ -729,34 +755,66 @@ for i = 1:length(d) % For each audio file,...
                                                 grvy(zz,:) = [];
                                             end
                                         end
+                                        
+                                        if ~option.fuse && mm ~= n
+                                            % candidate match w^{k+1} is closer to another w^k
+                                            
+                                            % let's look at adjacent lower w^{k+1}...
+                                            [int mmm] = min(abs(thk2(1:m)-thk1(n)));
+                                            if int > best || ... % New condition added (Lartillot 16.4.2010)
+                                                    isinf(int) || ... % Conditions proposed in Mc Aulay & Quatieri (all w^{k+1} below matching interval)
+                                                    int > option.delta
+                                                % no other suitable candidate match w^{k+1} found
+                                                % partial becomes inactive
+                                                mxl(tr,k+1) = mxl(tr,k);
+                                                myl(tr,k+1) = 0;
+                                                grvy = [grvy; tr k]; % added to the graveyard
+                                            else
+                                                
+                                                % definite match
+                                                mxl(tr,k+1) = mxk2(mmm)-1;
+                                                myl(tr,k+1) = myk2(mmm);
+                                                tr2(mmm) = tr;
+                                                thk1(n) = -Inf;     % selected w^k is eliminated from further consideration
+                                                thk2(mmm) = Inf;    % selected w^{k+1} is eliminated as well
+                                                matched(mmm) = 1;
+                                                if not(isempty(grvy))
+                                                    zz = find ((mxl(grvy(:,1),k) >= mxl(tr,k) & ...
+                                                                mxl(grvy(:,1),k) <= mxl(tr,k+1)) | ...
+                                                               (mxl(grvy(:,1),k) <= mxl(tr,k) & ...
+                                                                mxl(grvy(:,1),k) >= mxl(tr,k+1)));
+                                                    grvy(zz,:) = [];
+                                                end
+                                            end
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                     
+                    
                     % Step 3 in Mc Aulay & Quatieri
                     for m = 1:length(mxk2)
-                        if not(isinf(thk2(m)))
+                        if ~matched(m)
                             % unmatched w^{k+1}
-                            
                             if isempty(grvy)
                                 int = [];
                             else
-                                % Let's try to reuse a zombie from the
+                                % Let's try to reuse an inactive track from the
                                 % graveyard (Lartillot).
                                 [int z] = min(abs(th(mxl(grvy(:,1),k+1)+1,k,l)-thk2(m)));
                             end
                             if isempty(int) || int > option.delta ...
                                     || int > min(abs(th(mxl(:,k+1)+1,k,l)-thk2(m)))
-                                % No suitable zombie.
+                                % No suitable inactive track.
                                 % birth of a new partial (Mc Aulay &
                                 % Quatieri)
                                 mxl = [mxl;zeros(1,k+1)];
                                 tr = size(mxl,1);
                                 mxl(tr,k) = mxk2(m)-1;
                             else
-                                % Suitable zombie found. (Lartillot)
+                                % Suitable inactive track found, turned active. (Lartillot)
                                 tr = grvy(z,1);
                                 grvy(z,:) = [];
                             end
@@ -810,22 +868,27 @@ for i = 1:length(d) % For each audio file,...
                     tpp{i}{h}{l} = zeros(size(mxl));
                     for k = 1:size(mxl,2)
                         for j = 1:size(mxl,1)
-                            mj = mxl(j,k);
-                            if mj>2 && mj<size(dh3,1)-1
-                                % More precise peak position
-                                y0 = dh3(mj,k,l);
-                                ym = dh3(mj-1,k,l);
-                                yp = dh3(mj+1,k,l);
-                                p = (yp-ym)/(2*(2*y0-yp-ym));
-                                tpv{i}{h}{l}(j,k) = y0 - 0.25*(ym-yp)*p;
-                                if p >= 0
-                                    tpp{i}{h}{l}(j,k) = (1-p)*th(mj,k,l)+p*th(mj+1,k,l);
-                                elseif p < 0
-                                    tpp{i}{h}{l}(j,k) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
+                            if myl(j,k)
+                                mj = mxl(j,k);
+                                if mj>2 && mj<size(dh3,1)-1
+                                    % More precise peak position
+                                    y0 = dh3(mj,k,l);
+                                    ym = dh3(mj-1,k,l);
+                                    yp = dh3(mj+1,k,l);
+                                    p = (yp-ym)/(2*(2*y0-yp-ym));
+                                    tpv{i}{h}{l}(j,k) = y0 - 0.25*(ym-yp)*p;
+                                    if p >= 0
+                                        tpp{i}{h}{l}(j,k) = (1-p)*th(mj,k,l)+p*th(mj+1,k,l);
+                                    elseif p < 0
+                                        tpp{i}{h}{l}(j,k) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
+                                    end
+                                elseif mj
+                                    tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
+                                    tpp{i}{h}{l}(j,k) = th(mj,k,l);
                                 end
-                            elseif mj
-                                tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
-                                tpp{i}{h}{l}(j,k) = th(mj,k,l);
+                            else
+                                tpv{i}{h}{l}(j,k) = 0;
+                                tpp{i}{h}{l}(j,k) = NaN;
                             end
                         end
                     end
