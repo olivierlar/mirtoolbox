@@ -211,7 +211,8 @@ function varargout = mirpeaks(orig,varargin)
     
         mem.key = 'TrackMem';
         mem.type = 'Integer';
-        mem.default = Inf;
+        mem.default = 0;
+        mem.keydefault = Inf;
     option.mem = mem;
     
         fuse.key = 'Fuse';

@@ -27,6 +27,9 @@ if iscell(x)
     x = x{1};
 end
 if ~isamir(x,'mirscalar')
+    if ~isamir(x,'miraudio')
+        warning(['Do you really intend to apply MIRRMS on a ',class(x),'?']);
+    end
     d = get(x,'Data');
     v = mircompute(@algo,d);
     x = mirscalar(x,'Data',v,'Title','RMS energy');
