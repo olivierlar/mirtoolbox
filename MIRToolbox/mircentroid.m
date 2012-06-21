@@ -17,6 +17,12 @@ function varargout = mircentroid(x,varargin)
         peaks.keydefault = 'NoInterpol';
     option.peaks = peaks;
     
+        minrms.key = 'MinRMS';
+        minrms.when = 'After';
+        minrms.type = 'Numerical';
+        minrms.default = .005;
+    option.minrms = minrms;
+    
 specif.option = option;
 
 varargout = mirfunction(@mircentroid,x,varargin,nargout,specif,@init,@main);
@@ -74,7 +80,26 @@ else
     t = ['centroid of ',get(x,'Title')];
 end
 c = mirscalar(x,'Data',cx,'Title',t);
+if isa(x,'mirspectrum') && isstruct(postoption) && ...
+        isfield(postoption,'minrms') && postoption.minrms
+    c = after(x,c,postoption.minrms);
+end
 
 
 function c = centroid(d,p)
 c = (p'*d) ./ sum(d);
+
+
+function c = after(x,c,minrms)
+r = mirrms(x,'Warning',0);
+v = mircompute(@trim,get(c,'Data'),get(r,'Data'),minrms);
+c = set(c,'Data',v);
+
+    
+function d = trim(d,r,minrms)
+r = r/max(max(r));
+pos = find(r<minrms);
+for i = 1:length(pos)
+    d{pos(i)} = NaN;
+end
+d = {d};

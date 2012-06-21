@@ -8,6 +8,11 @@ function varargout = mirrms(x,varargin)
         notchunking.default = 1;
     option.notchunking = notchunking;
         
+        warning.key = 'Warning';
+        warning.type = 'Boolean';
+        warning.default = 1;
+    option.warning = warning;
+
 specif.option = option;
 
 specif.defaultframelength = 0.05;
@@ -27,7 +32,7 @@ if iscell(x)
     x = x{1};
 end
 if ~isamir(x,'mirscalar')
-    if ~isamir(x,'miraudio')
+    if option.warning && ~isamir(x,'miraudio')
         warning(['Do you really intend to apply MIRRMS on a ',class(x),'?']);
     end
     d = get(x,'Data');
