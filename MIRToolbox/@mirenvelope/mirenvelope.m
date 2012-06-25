@@ -376,7 +376,7 @@ elseif strcmpi(option.method,'Spectro')
     e.phase = ph;
     e = class(e,'mirenvelope',mirtemporal(orig));
     e = set(e,'Title','Envelope','Data',d,'Pos',p,...
-              'Sampling',sr,'Channels',ch,'FramePos',{{p{1}{1}([1 end])}});
+              'Sampling',sr,'Channels',ch,'FramePos',{{fp{1}{1}([1 end])'}});
     postoption.trim = 0;
     postoption.ds = 0;
     e = post(e,postoption);
