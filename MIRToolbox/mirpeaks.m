@@ -424,28 +424,30 @@ for i = 1:length(d) % For each audio file,...
         end
         warning(state.state,'MATLAB:divideByZero');
 
+        szth = size(th);
+        szth(1) = 1;
         if option.nobegin
             dh0 = [Inf(1,nc,np,nd0);dh0];   
             % This infinite value at the beginning
             % prevents the selection of the first sample of data
             dh2 = [Inf(1,nc,np,nd0);dh2];
-            th = [NaN(1,nc,np,1);th];
+            th = [NaN(szth);th];
         else
             dh0 = [-Inf(1,nc,np,nd0);dh0];
             % This infinite negative value at the beginning
             % ensures the selection of the first sample of data
             dh2 = [-Inf(1,nc,np,nd0);dh2];
-            th = [NaN(1,nc,np,1);th];
+            th = [NaN(szth);th];
         end
         if option.noend
             dh0 = [dh0;Inf(1,nc,np,nd0)];
             % idem for the last sample of data
             dh2 = [dh2;Inf(1,nc,np,nd0)];
-            th = [th;NaN(1,nc,np,1)];
+            th = [th;NaN(szth)];
         else
             dh0 = [dh0;-Inf(1,nc,np,nd0)];
             dh2 = [dh2;-Inf(1,nc,np,nd0)];
-            th = [th;NaN(1,nc,np,1)];
+            th = [th;NaN(szth)];
         end
         nl0 = nl0+2;
 
@@ -453,7 +455,7 @@ for i = 1:length(d) % For each audio file,...
         nl = nl0*nd0;
         dh = zeros(nl,nc,np);
         dh3 = zeros(nl,nc,np);
-        th2 = zeros(nl,nc,np);
+        th2 = zeros(size(th));
         for l = 1:nd0
             dh((l-1)*nl0+(1:nl0)',:,:) = dh0(:,:,:,l);
             dh3((l-1)*nl0+(1:nl0)',:,:) = dh2(:,:,:,l);

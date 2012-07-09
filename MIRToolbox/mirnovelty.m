@@ -38,6 +38,11 @@ function varargout = mirnovelty(orig,varargin)
         K.default = 64;
     option.K = K;
     
+        gran.key = 'Granul';
+        gran.type = 'Integer';
+        gran.default = 1;
+    option.gran = gran;
+
         transf.type = 'String';
         transf.default = 'TimeLag';
         transf.choice = {'Horizontal','TimeLag'};
@@ -58,7 +63,7 @@ function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
-                      'Width',option.K,option.transf);
+                      'Width',max(option.K),option.transf);
 end
 
 
@@ -69,58 +74,61 @@ end
 if not(isa(orig,'mirscalar'))
     s = get(orig,'Data');
     dw = get(orig,'DiagWidth');
+    Ks = option.K;
     for k = 1:length(s)
-        if isnumeric(dw)
-            dwk = dw;
-        else
-            dwk = dw{k};
-        end
-        if option.K
-            cgs = min(option.K,dwk);
-        else
-            cgs = dwk;
-        end
-        cg = checkergauss(cgs,option.transf);
-        disp('Computing convolution, please wait...')
-        for z = 1:length(s{k})
-            sz = s{k}{z};
-            szma = max(max(sz));
-            szmi = min(min(sz));
-            sz = (sz-szmi)/(szma-szmi);
-            sz = 2*sz-1;
-            sz(isnan(sz)) = 0;
-            cv = convolve2(sz,cg,'same');
-            nl = size(cv,1);
-            nc = size(cv,2);
-            if nl == 0
-                warning('WARNING IN NOVELTY: No frame decomposition. The novelty score cannot be computed.');
-                score{k}{z} = [];
+        for i = 1:length(Ks)
+            if isnumeric(dw)
+                dwk = dw;
             else
-                sco = cv(floor(size(cv,1)/2),:);
-                incr = find(diff(sco)>=0);
-                if not(isempty(incr))
-                    decr = find(diff(sco)<=0);
-                    sco(1:incr(1)-1) = NaN(1,incr(1)-1);
-                    if not(isempty(decr))
-                        sco(decr(end)+1:end) = NaN(1,length(sco)-decr(end));
-                    end
+                dwk = dw{k};
+            end
+            if Ks(i)
+                cgs = min(Ks(i),dwk);
+            else
+                cgs = dwk;
+            end
+            cg = checkergauss(cgs,option.transf)/cgs.^option.gran;
+            disp('Computing convolution, please wait...')
+            for z = 1:length(s{k})
+                sz = s{k}{z};
+                szma = max(max(sz));
+                szmi = min(min(sz));
+                sz = (sz-szmi)/(szma-szmi);
+                sz = 2*sz-1;
+                sz(isnan(sz)) = 0;
+                cv = convolve2(sz,cg,'same');
+                nl = size(cv,1);
+                nc = size(cv,2);
+                if nl == 0
+                    warning('WARNING IN NOVELTY: No frame decomposition. The novelty score cannot be computed.');
+                    score{k}{z} = [];
+                else
+                    sco = cv(floor(size(cv,1)/2),:);
                     incr = find(diff(sco)>=0);
-                    sco2 = sco;
                     if not(isempty(incr))
-                        sco2 = sco2(1:incr(end)+1);
+                        decr = find(diff(sco)<=0);
+                        sco(1:incr(1)-1) = NaN(1,incr(1)-1);
+                        if not(isempty(decr))
+                            sco(decr(end)+1:end) = NaN(1,length(sco)-decr(end));
+                        end
+                        incr = find(diff(sco)>=0);
+                        sco2 = sco;
+                        if not(isempty(incr))
+                            sco2 = sco2(1:incr(end)+1);
+                        end
+                        decr = find(diff(sco)<=0);
+                        if not(isempty(decr)) && decr(1)>2
+                            sco2 = sco2(decr(1)-1:end);
+                        end
+                        mins = min(sco2);
+                        rang = find(sco>= mins);
+                        if not(isempty(rang))
+                            sco(1:rang(1)-1) = NaN(1,rang(1)-1);
+                            sco(rang(end)+1:end) = NaN(1,length(sco)-rang(end));
+                        end
                     end
-                    decr = find(diff(sco)<=0);
-                    if not(isempty(decr)) && decr(1)>2
-                        sco2 = sco2(decr(1)-1:end);
-                    end
-                    mins = min(sco2);
-                    rang = find(sco>= mins);
-                    if not(isempty(rang))
-                        sco(1:rang(1)-1) = NaN(1,rang(1)-1);
-                        sco(rang(end)+1:end) = NaN(1,length(sco)-rang(end));
-                    end
+                    score{k}{z}(i,:) = sco';
                 end
-                score{k}{z} = sco;
             end
         end
     end
@@ -130,9 +138,11 @@ end
 if not(isempty(postoption)) && postoption.normal
     for k = 1:length(score)
         for l = 1:length(score{k})
-            sco = score{k}{l};
-            sco = (sco-min(sco))/(max(sco)-min(sco));
-            score{k}{l} = sco;
+            for i = 1:size(score{k}{l},1)
+                sco = score{k}{l}(i,:);
+                sco = (sco-min(sco))/(max(sco)-min(sco));
+                score{k}{l}(i,:) = sco;
+            end
         end
     end
 end
