@@ -58,6 +58,14 @@ if isa(x,'mirclassify')
     return
 end
 
+if isa(x,'mirmidi')
+    d = get(x,'Data');
+    if length(d) == 1
+        d = d{1};
+    end
+    return
+end
+
 if isa(x,'mirsimatrix')
     pt = [];
 else
