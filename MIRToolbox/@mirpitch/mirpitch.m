@@ -41,10 +41,10 @@ function varargout = mirpitch(orig,varargin)
 %       Alternatively, the result of a mirpeaks computation can be directly
 %           given as first argument of the mirpitch function.
 %   Post-processing options:
-%       mirpitch(..., 'Cent?) convert the pitch axis from Hz to cent scale.
+%       mirpitch(..., 'Cent') convert the pitch axis from Hz to cent scale.
 %           One octave corresponds to 1200 cents, so that 100 cents
 %           correspond to a semitone in equal temperament.
-%       mirpitch(..., 'Segment?) segments the obtained monodic pitch curve
+%       mirpitch(..., 'Segment') segments the obtained monodic pitch curve
 %           in cents as a succession of notes with stable frequencies.
 %       mirpitch(...,'Sum','no') does not sum back the channels at the end 
 %           of the computation. The resulting pitch information remains
@@ -263,7 +263,7 @@ if isnan(option.frame.hop.val)
     option.frame.hop.val = .01;
     option.frame.hop.unit = 's';
 end
-if isamir(orig,'mirscalar') || haspeaks(orig)
+if isamir(orig,'mirmidi') || isamir(orig,'mirscalar') || haspeaks(orig)
     y = orig;
 else
     if isamir(orig,'mirautocor')
@@ -355,7 +355,7 @@ if iscell(x)
 else
     x2 = [];
 end
-if not(isa(x,'mirpitch'))
+if not(isa(x,'mirpitch') || isa(x,'mirmidi'))
     x = mirpeaks(x,'Total',option.m,'Track',option.track,...
                    'Contrast',option.cthr,'Threshold',option.thr,...
                    'Reso',option.reso,'NoBegin','NoEnd',...
@@ -527,6 +527,19 @@ elseif isa(x,'mirpitch')
     pe = get(x,'End');
     pm = get(x,'Mean');
     dg = get(x,'Degrees');
+elseif isa(x,'mirmidi')
+    nm = get(x,'Data');
+    for i = 1:length(nm)
+        startp = nm{i}(:,1);
+        endp = startp + nm{i}(:,2);
+        fp{i} = [startp endp]';
+        ps{i} = {{1:length(startp)}};
+        pe{i} = {{1:length(endp)}};
+        pm{i} = {{nm{i}(:,4)'-68}};
+        dg{i} = pm{i};
+        pf{i} = {NaN(size(startp'))};
+    end
+    x = set(x,'FramePos',{fp});
 else
     ps = {};
     pe = {};

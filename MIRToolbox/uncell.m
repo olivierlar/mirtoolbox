@@ -50,7 +50,7 @@ if iscell(x)
             if size(s)<3
                 s(3) = 1;
             end
-            if (s(1)>1 || isnan(lvl)) || lvl == -Inf
+            if s(1)>1 || isnan(lvl) || lvl == -Inf
                 x = NaN([s(1) l*s(2) nf*s(3:end)]);
                 for j = 1:nf
                     for i = 1:l
@@ -70,25 +70,34 @@ if iscell(x)
                         end
                     end
                 end
-            else
-                x = NaN([l*s(1) s(2) nf*s(3:end)]);
+            elseif size(z,1)>size(z,2)
+                x = NaN([l s(2) nf*s(3:end)]);
                 for j = 1:nf
                     for i = 1:l
-                        if size(z,1)>size(z,2)
-                            zij =  z{i,1,j};
-                        else
-                            zij =  z{1,i,j};
-                        end
+                        zij =  z{i,1,j};
                         if ischar(zij) && length(zij) == 1 && zij>='A' && zij <= 'G'
-                            %zi
                             zij = zij-'A';
                         end
-                        x((i-1)*s(1)*size(zij,1)+1:(i-1)*s(1)*size(zij,1)+size(zij,1),...
+                        x((i-1)*size(zij,1)+1:(i-1)*size(zij,1)+size(zij,1),...
                           1:size(zij,2),...
                           j,...
                           1:size(zij,4)) = zij;
                     end
                 end
+            else
+                x = NaN([1 l*s(2) nf*s(3:end)]);
+                for j = 1:nf
+                    for i = 1:l
+                        zij =  z{1,i,j};
+                        if ischar(zij) && length(zij) == 1 && zij>='A' && zij <= 'G'
+                            zij = zij-'A';
+                        end
+                        x(1:size(zij,1),...
+                          (i-1)*s(2)*size(zij,2)+1:(i-1)*s(2)*size(zij,2)+size(zij,2),...
+                          j,...
+                          1:size(zij,4)) = zij;
+                    end
+                end                
             end
         end
     end
@@ -119,22 +128,4 @@ elseif ischar(x)
         case 'B'
             x = 11;
     end
-elseif 0 %scal
-    if size(x,1)==1 && size(x,2)==1 && size(x,3)>1
-        x = shiftdim(x,2);
-    else
-        %y = zeros(size(x,2),size(x,1),size(x,3));
-        %y = zeros(size(x));
-        %for i = 1:size(x,3)
-        %    y(:,:,i) = x(:,:,i);
-        %end
-        %x = y;
-    end
-elseif 0 %not(isnan(lvl)) && lvl>=0
-    %x = squeeze(x);
-    if size(x,1) == 1
-        x = x(:);
-    end
-elseif 0 %size(x,3) > 1 && size(x,1) == 1
-    x = reshape(x,size(x,2),size(x,3))';
 end

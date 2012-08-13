@@ -145,6 +145,7 @@ if not(isempty(order))
                         end
                     end
                 else
+                    synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                     if isa(a,'mirpitch')
                         deg = get(a,'Degrees');
                         if isempty(deg)
@@ -161,7 +162,6 @@ if not(isempty(order))
                         deg = deg{k}{i}{1}-5;
                         stp = stp{k}{i}{1};
                         enp = enp{k}{i}{1};
-                        synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                         for j = 1:length(deg)
                             fj = 440 * 2^(deg(j)/12);
                             k1 = floor((fp{k}{i}(1,stp(j))-fp{k}{i}(1))*44100)+1;
@@ -175,7 +175,6 @@ if not(isempty(order))
                         if isa(a,'mirpitch')
                             ampi = amp{k}{i};
                         end
-                        synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                         for j = 1:size(di,2)
                             if iscell(di)
                                 dj = di{j};
