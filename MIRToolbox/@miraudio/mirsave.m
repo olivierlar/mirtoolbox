@@ -41,7 +41,9 @@ for i = 1:nf
     end
     out = [];
     for j = 1:length(di)
-        di{j} = di{j}./repmat(maxd,size(di{j}))*.9999;
+        if maxd>1
+            di{j} = di{j}./repmat(maxd,size(di{j}))*.9999;
+        end
         out = [out;reshape(di{j},[],size(di{j},3),1)];
         if length(di)>1
             out = [out;rand(100,size(di{j},3))*.9];
