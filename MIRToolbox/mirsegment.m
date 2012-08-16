@@ -278,7 +278,7 @@ elseif isa(x,'mirdata')
             elseif size(ds,2) == length(dx)
                 dsk = {ds(:,k)};
             else
-                dsk = {ds};
+                dsk = ds;
             end
             fsk = [];   % the structured array of segmentation times 
                          % needs to be flatten
@@ -302,6 +302,9 @@ elseif isa(x,'mirdata')
                     end
                     if iscell(dsm)
                         dsm = dsm{1};
+                        if iscell(dsm)
+                            dsm = dsm{1};
+                        end
                     end
                     if size(dsm,1)>1 && size(dsm,2)>1
                         mirerror('MIRSEGMENT',...
