@@ -110,6 +110,7 @@ elseif isa(x,'mirdata')
         dx2 = cell(1,length(dx));   % magnitude in framed structure 
         dt2 = cell(1,length(dx));   % time positions in framed structure
         fp = cell(1,length(dx));    % frame positions
+        l2 = cell(1,length(dx));
         for k = 1:length(dx)    % For each audio file, ...
             dxk = dx{k};
             dtk = dt{k};
@@ -142,6 +143,7 @@ elseif isa(x,'mirdata')
             dx2k = cell(1,length(dxk));
             dt2k = cell(1,length(dxk));
             fpk = cell(1,length(dxk));
+            l2k = cell(1,length(dxk));
             if size(l)==1
                 for j = 1:length(dxk)   % For each segment, ...
                     dxj = dxk{j};
@@ -172,10 +174,12 @@ elseif isa(x,'mirdata')
                     dx2k{j} = dx2j;
                     dt2k{j} = dt2j;
                     fpk{j} = fpj;
+                    l2k{j} = l;
                 end
                 dx2{k} = dx2k;
                 dt2{k} = dt2k;
                 fp{k} = fpk;
+                l2{k} = l2k;
             else % Multi-scale version
                 if size(h) == 1
                     h = repmat(h,size(l));
@@ -209,19 +213,21 @@ elseif isa(x,'mirdata')
                     dx2k{j} = dx2j;
                     dt2k{j} = dt2j;
                     fpk{j} = fpj;
+                    l2k{j} = l(j);
                 end
                 dx2{k} = dx2k;
                 dt2{k} = dt2k;
                 fp{k} = fpk;
+                l2{k} = l2k;
             end
         end
         if isa(x,'mirtemporal')
-            f = set(x,'Time',dt2,'Data',dx2,'FramePos',fp);
+            f = set(x,'Time',dt2,'Data',dx2,'FramePos',fp,'Length',l2);
         else
             f = mirtemporal([],'Time',dt2,'Data',dx2,'FramePos',fp,...
                     'Sampling',get(x,'Sampling'),'Name',get(x,'Name'),...
                     'Label',get(x,'Label'),'Channels',get(x,'Channels'),...
-                    'Centered',0,'Title',get(x,'Title'));
+                    'Centered',0,'Length',l2,'Title',get(x,'Title'));
         end
     end
 else
