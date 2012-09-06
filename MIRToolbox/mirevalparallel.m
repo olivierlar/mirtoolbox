@@ -6,6 +6,8 @@ function y = mirevalparallel(d,a,sr,lg,w,single,ch,export)
 l = length(a);
 y = cell(1,l);
 parfor i = 1:l
+    mirverbose(0);
+    mirwaitbar(0);
     if l > 1
         fprintf('\n')
         display(['*** File # ',num2str(i),'/',num2str(l),': ',a{i}]);

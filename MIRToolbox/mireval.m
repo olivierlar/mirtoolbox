@@ -132,8 +132,6 @@ if mirparallel
             matlabpool(mirparallel);
         end
         parallel = 1;
-        mirwaitbar(0)
-        mirverbose(0)
     catch
         warning('mirparallel cannot open matlabpool because it is already used.');
     end

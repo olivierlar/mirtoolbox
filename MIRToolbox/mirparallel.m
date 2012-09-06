@@ -9,7 +9,6 @@ function p = mirparallel(s)
 persistent mir_parallel
 
 if nargin
-    warning('MIRtoolbox Parallel computing is currently in Beta Version.');
     if s
         try
             matlabpool size;
