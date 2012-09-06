@@ -101,11 +101,11 @@ type = 'mirsimatrix';
 
 
 function m = main(orig,option,postoption)
-if ~isframed(orig)
-    mirerror('mirsimatrix','The input should be frame decomposed.');
-end
 if iscell(orig)
     orig = orig{1};
+end
+if ~isframed(orig)
+    mirerror('mirsimatrix','The input should be frame decomposed.');
 end
 if isa(orig,'mirsimatrix')
     d = get(orig,'Data');
