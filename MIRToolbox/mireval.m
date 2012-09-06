@@ -126,7 +126,11 @@ end
 parallel = 0;
 if mirparallel
     try
-        matlabpool;
+        if mirparallel == 1 || mirparallel == Inf
+            matlabpool;
+        else
+            matlabpool(mirparallel);
+        end
         parallel = 1;
         mirwaitbar(0)
         mirverbose(0)
