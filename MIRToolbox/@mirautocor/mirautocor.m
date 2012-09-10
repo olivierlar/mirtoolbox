@@ -600,6 +600,9 @@ if abs(size(dn,1)-size(do,1)) <= 2 % Probleme of border fluctuation
     mi = min(size(dn,1),size(do,1));
     dn = dn(1:mi,:,:);
     do = do(1:mi,:,:);
+    po = get(old,'Pos');
+    po{1}{1} = po{1}{1}(1:mi,:,:);
+    old = set(old,'Pos',po);
 elseif length(dn) < length(do)
     dn(length(do),:,:) = 0; % Zero-padding
 end
