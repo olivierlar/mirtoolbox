@@ -27,6 +27,9 @@ if isa(c,'temporal')
 end
 if isa(c,'mirscalar')
     m = cell(1,l);
+    if isa(c,'mirpitch')
+        pa = cell(1,l);
+    end
 end
 if isa(c,'miremotion')
     dd = cell(1,l);
@@ -61,6 +64,9 @@ for i = 1:l
     end
     if isa(c,'mirscalar')
         m{i} = getargin(argin,'Mode');
+        if isa(c,'mirpitch')
+            pa{i} = getargin(argin,'Amplitude');
+        end
     end
     if isa(c,'miremotion')
         dd{i} = getargin(argin,'DimData');
@@ -79,6 +85,9 @@ if isa(c,'temporal')
 end
 if isa(c,'mirscalar')
     c = set(c,'Mode',m);
+    if isa(c,'mirpitch')
+        c = set(c,'Amplitude',pa);
+    end
 end
 if isa(c,'miremotion')
     c = set(c,'DimData',dd,'ClassData',cd);
