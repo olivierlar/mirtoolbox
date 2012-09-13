@@ -160,7 +160,10 @@ else
             toc
         end
         y{f} = yf;
-        if not(isempty(export))
+        if (mirtemporary && length(order)>1) || not(isempty(export))
+            if isempty(export)
+                export = 'mirtoolbox.tmp';
+            end
             if strncmpi(export,'Separately',10)
                 filename = a{f};
                 filename(filename == '/') = '.';
