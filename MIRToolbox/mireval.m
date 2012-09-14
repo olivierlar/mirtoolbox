@@ -162,7 +162,7 @@ else
         y{f} = yf;
         if (mirtemporary && length(order)>1) || not(isempty(export))
             if isempty(export)
-                export = 'mirtoolbox.tmp';
+                export = 'mirtemporary.txt';
             end
             if strncmpi(export,'Separately',10)
                 filename = a{f};

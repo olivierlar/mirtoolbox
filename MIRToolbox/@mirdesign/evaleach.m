@@ -124,7 +124,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         end
         if not(isempty(d.tmpfile)) && d.tmpfile.fid == 0
             % When applicable, a new temporary file is created.
-            d.tmpfile.fid = fopen('tmpfile.mirtoolbox','w');
+            d.tmpfile.fid = fopen('mireval.tmp','w');
         end
         tmpfile = [];
         if not(d.ascending)
@@ -218,7 +218,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             if not(isempty(d2.tmpfile))
                 adr = ftell(d2.tmpfile.fid);
                 fclose(d2.tmpfile.fid);
-                ytmpfile.fid = fopen('tmpfile.mirtoolbox');
+                ytmpfile.fid = fopen('mireval.tmp');
                 fseek(ytmpfile.fid,adr,'bof');
                 ytmpfile.data = y{1};
                 ytmpfile.layer = 0;
@@ -693,7 +693,7 @@ for i = 1:length(argin)
             a = set(a,'Data',{{data}},'Pos',{{pos}});
             if ch(3)
                 fclose(tmpfile.fid);
-                delete('tmpfile.mirtoolbox');
+                delete('mireval.tmp');
             end
             argin{i} = a;
         end
