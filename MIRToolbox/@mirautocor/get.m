@@ -17,6 +17,8 @@ switch propName
         val = a.window;
     case 'Resonance'
         val = a.resonance;
+    case 'Phase'
+        val = a.phase;
     otherwise
         val = get(mirdata(a),propName);
 end

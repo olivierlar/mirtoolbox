@@ -154,6 +154,11 @@ function varargout = mirautocor(orig,varargin)
         win.default = NaN;
     option.win = win;
     
+        phase.key = 'Phase';
+        phase.type = 'Boolean';
+        phase.default = 0;
+    option.phase = phase;
+
 specif.option = option;
 
 specif.defaultframelength = 0.05;
@@ -182,6 +187,7 @@ if isa(orig,'mirautocor')
             (option.min || iscell(option.max) || option.max < Inf)
         coeff = get(a,'Coeff');
         delay = get(a,'Delay');
+        phase = get(a,'Phase');
         for h = 1:length(coeff)
             if a.freq
                 mi = 1/option.max;
@@ -195,9 +201,12 @@ if isa(orig,'mirautocor')
                                  delay{h}{k}(:,1,1) <= ma));
                 coeff{h}{k} = coeff{h}{k}(range,:,:);
                 delay{h}{k} = delay{h}{k}(range,:,:);
+                if ~isempty(phase)
+                    phase{h}{k} = phase{h}{k}(range,:,:);
+                end
             end
         end
-        a = set(a,'Coeff',coeff,'Delay',delay);
+        a = set(a,'Coeff',coeff,'Delay',delay,'Phase',phase);
     end
     if not(isempty(postoption)) && not(isequal(postoption,0))
         a = post(a,postoption);
@@ -213,6 +222,7 @@ else
     a.window = {};
     a.normalwindow = 0;
     a.resonance = '';
+    a.phase = {};
     a = class(a,'mirautocor',mirdata(orig));
     a = purgedata(a);
     a = set(a,'Ord','coefficients');
@@ -257,6 +267,9 @@ else
 
     coeff = cell(1,length(sig));
     lags = cell(1,length(sig));
+    if option.phase
+        phas = cell(1,length(sig));
+    end
     wind = cell(1,length(sig));
     for k = 1:length(sig)
         s = sig{k};
@@ -271,6 +284,9 @@ else
         end
         coeffk = cell(1,length(s));
         lagsk = cell(1,length(s));
+        if option.phase
+            phask = cell(1,length(s));
+        end
         windk = cell(1,length(s));
         for l = 1:length(s)
             sl = s{l};
@@ -343,6 +359,10 @@ else
                 scaleopt = option.scaleopt;
             end
             c = zeros(masp,size(sl,2),size(sl,3));
+            if option.phase
+                ph = zeros(masp,size(sl,2),size(sl,3));
+            end
+            
             for i = 1:size(sl,2)
                 for j = 1:size(sl,3)
                     if option.gener == 2
@@ -355,7 +375,18 @@ else
                         ll = (0:masp-1);
                         c(:,i,j) = cc(ll+1);
                     end
+                    
+                    if option.phase
+                        for h = 2:size(c,1)
+                            pha = zeros(1,h-1);
+                            for g = 1:h-1
+                                pha(g) = sum(sl(g:h:end));
+                            end
+                            [unused ph(h,i,j)] = max(pha);
+                        end
+                    end
                 end
+                
                 if strcmpi(option.scaleopt,'coeff') && option.gener == 2
                     % to be adapted to generalized autocor
                     c(:,i,:) = c(:,i,:)/xcorr(sum(sl(:,i,:),3),0);
@@ -367,16 +398,26 @@ else
                     % the sum over channels becomes identically 1.0. 
                 end
             end
+            
             coeffk{l} = c(misp:end,:,:);
             pl = pl(find(pl(:,1,1) >=mi),:,:);
             lagsk{l} = pl(1:min(size(coeffk{l},1),size(pl,1)),:,:);
+            if option.phase
+                phask{l} = ph(misp:end,:,:);
+            end
             windk{l} = kw;
         end
         coeff{k} = coeffk;
         lags{k} = lagsk;
+        if option.phase
+            phas{k} = phask;
+        end
         wind{k} = windk;
     end
     a = set(a,'Coeff',coeff,'Delay',lags,'Window',wind);
+    if option.phase
+        a = set(a,'Phase',phas);
+    end
     if not(isempty(postoption))
         a = post(a,postoption);
     end
@@ -577,6 +618,17 @@ for k = 1:length(coeff)
             end
             coeff{k}{l} = c;
             lags{k}{l} = t;
+            if 0 %option.ph
+                for g = 1:size(p{k}{l},2)
+                    for i = 1:length(p{k}{l}{1,g})
+                        if t(1)
+                            error('check here');
+                        end
+                        indx = p{k}{l}{1,g}(i);
+                        
+                    end
+                end
+            end
         end
     end
 end
