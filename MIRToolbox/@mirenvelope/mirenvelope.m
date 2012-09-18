@@ -671,7 +671,4 @@ if isfield(postoption,'sampling')
         e = set(e,'Halfwave',1,'Centered',1);
     end
 end
-e = set(e,'Data',d,'Time',tp); 
-%if isfield(postoption,'frame') && isstruct(postoption.frame)
-%    e = mirframenow(e,postoption);
-%end
+e = set(e,'Data',d,'Time',tp);
