@@ -156,6 +156,7 @@ function varargout = mirautocor(orig,varargin)
     
         phase.key = 'Phase';
         phase.type = 'Boolean';
+        phase.when = 'Both';
         phase.default = 0;
     option.phase = phase;
 
@@ -187,7 +188,6 @@ if isa(orig,'mirautocor')
             (option.min || iscell(option.max) || option.max < Inf)
         coeff = get(a,'Coeff');
         delay = get(a,'Delay');
-        phase = get(a,'Phase');
         for h = 1:length(coeff)
             if a.freq
                 mi = 1/option.max;
@@ -201,12 +201,9 @@ if isa(orig,'mirautocor')
                                  delay{h}{k}(:,1,1) <= ma));
                 coeff{h}{k} = coeff{h}{k}(range,:,:);
                 delay{h}{k} = delay{h}{k}(range,:,:);
-                if ~isempty(phase)
-                    phase{h}{k} = phase{h}{k}(range,:,:);
-                end
             end
         end
-        a = set(a,'Coeff',coeff,'Delay',delay,'Phase',phase);
+        a = set(a,'Coeff',coeff,'Delay',delay);
     end
     if not(isempty(postoption)) && not(isequal(postoption,0))
         a = post(a,postoption);
@@ -222,6 +219,7 @@ else
     a.window = {};
     a.normalwindow = 0;
     a.resonance = '';
+    a.input = [];
     a.phase = {};
     a = class(a,'mirautocor',mirdata(orig));
     a = purgedata(a);
@@ -267,9 +265,6 @@ else
 
     coeff = cell(1,length(sig));
     lags = cell(1,length(sig));
-    if option.phase
-        phas = cell(1,length(sig));
-    end
     wind = cell(1,length(sig));
     for k = 1:length(sig)
         s = sig{k};
@@ -284,9 +279,6 @@ else
         end
         coeffk = cell(1,length(s));
         lagsk = cell(1,length(s));
-        if option.phase
-            phask = cell(1,length(s));
-        end
         windk = cell(1,length(s));
         for l = 1:length(s)
             sl = s{l};
@@ -359,10 +351,6 @@ else
                 scaleopt = option.scaleopt;
             end
             c = zeros(masp,size(sl,2),size(sl,3));
-            if option.phase
-                ph = zeros(masp,size(sl,2),size(sl,3));
-            end
-            
             for i = 1:size(sl,2)
                 for j = 1:size(sl,3)
                     if option.gener == 2
@@ -375,18 +363,8 @@ else
                         ll = (0:masp-1);
                         c(:,i,j) = cc(ll+1);
                     end
-                    
-                    if option.phase
-                        for h = 2:size(c,1)
-                            pha = zeros(1,h-1);
-                            for g = 1:h-1
-                                pha(g) = sum(sl(g:h:end));
-                            end
-                            [unused ph(h,i,j)] = max(pha);
-                        end
-                    end
                 end
-                
+
                 if strcmpi(option.scaleopt,'coeff') && option.gener == 2
                     % to be adapted to generalized autocor
                     c(:,i,:) = c(:,i,:)/xcorr(sum(sl(:,i,:),3),0);
@@ -398,25 +376,18 @@ else
                     % the sum over channels becomes identically 1.0. 
                 end
             end
-            
             coeffk{l} = c(misp:end,:,:);
             pl = pl(find(pl(:,1,1) >=mi),:,:);
             lagsk{l} = pl(1:min(size(coeffk{l},1),size(pl,1)),:,:);
-            if option.phase
-                phask{l} = ph(misp:end,:,:);
-            end
             windk{l} = kw;
         end
         coeff{k} = coeffk;
         lags{k} = lagsk;
-        if option.phase
-            phas{k} = phask;
-        end
         wind{k} = windk;
     end
     a = set(a,'Coeff',coeff,'Delay',lags,'Window',wind);
     if option.phase
-        a = set(a,'Phase',phas);
+        a = set(a,'Input',orig);
     end
     if not(isempty(postoption))
         a = post(a,postoption);
@@ -439,7 +410,17 @@ if max(option.e) > 1
     pv = get(pa,'PeakVal');
     vv = get(va,'PeakVal');
 end
+if option.phase
+    x = get(a,'Input');
+    d = get(x,'Data');
+    pk = get(a,'PeakPos');
+    sr = get(a,'Sampling');
+    phas = cell(1,length(coeff));
+end
 for k = 1:length(coeff)
+    if option.phase
+        phask = cell(1,length(coeff{k}));
+    end
     for l = 1:length(coeff{k})
         c = coeff{k}{l};  % Coefficients of autocorrelation
         t = lags{k}{l};   % Delays of autocorrelation
@@ -606,6 +587,31 @@ for k = 1:length(coeff)
                     end
                 end
             end
+            if option.phase
+                ph = cell(1,size(d{k}{l},2),size(d{k}{l},3));
+                for i = 1:size(ph,2)
+                    for j = 1:size(ph,3)
+                        if ~isempty(pk{k}{l})
+                            option.phase = 2;
+                            pkj = pk{k}{l}{1,i,j};
+                            phj = zeros(1,length(pkj));
+                            for h = 1:length(pkj)
+                                lag = round(t(pkj(h))*sr{k});
+                                if ~lag
+                                    continue
+                                end
+                                pha = zeros(1,lag);
+                                for g = 1:lag
+                                    pha(g) = sum(d{k}{l}(g:lag:end,i,j));
+                                end
+                                [unused phj(h)] = max(pha);
+                            end
+                            ph{1,i,j} = phj;
+                        end
+                    end
+                end
+                phask{l} = ph;
+            end
             if freq
                 if t(1,1) == 0
                     c = c(2:end,:,:);
@@ -631,10 +637,16 @@ for k = 1:length(coeff)
             end
         end
     end
+    if option.phase
+        phas{k} = phask;
+    end
 end
 a = set(a,'Coeff',coeff,'Delay',lags,'Freq');
 if freq
     a = set(a,'FreqDomain',1,'Abs','frequency (Hz)');
+end
+if option.phase == 2
+    a = set(a,'Phase',phas);
 end
 
 

@@ -17,6 +17,8 @@ switch propName
         val = a.window;
     case 'Resonance'
         val = a.resonance;
+    case 'Input'
+        val = a.input;
     case 'Phase'
         val = a.phase;
     otherwise

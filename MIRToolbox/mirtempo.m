@@ -218,7 +218,11 @@ function varargout = mirtempo(x,varargin)
         r.choice = {'ToiviainenSnyder','vanNoorden',0,'off','no'};
         r.default = 'ToiviainenSnyder';
     option.r = r;
-
+    
+        phase.key = 'Phase';
+        phase.type = 'Boolean';
+        phase.default = 0;
+    option.phase = phase;
 
 %% options related to mirspectrum:
     
@@ -359,7 +363,8 @@ end
 if isamir(x,'mirautocor') || (option.aut && not(option.spe))
     y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi,...
           'Enhanced',option.enh,...'NormalInput','coeff',...
-          'Resonance',option.r,'NormalWindow',option.nw);
+          'Resonance',option.r,'NormalWindow',option.nw,...
+          'Phase',option.phase);
 elseif isamir(x,'mirspectrum') || (option.spe && not(option.aut))
     y = mirspectrum(x,'Min',option.mi/60,'Max',option.ma/60,...
                        'Prod',option.prod,...'NormalInput',...
@@ -381,6 +386,9 @@ y = mirpeaks(y,'Total',option.m,'Track',option.track,...
                'Pref',option.pref(1),option.pref(2),...
                'Contrast',option.thr,'NoBegin','NoEnd',...
                'Normalize','Local');
+if option.phase
+    y = mirautocor(y,'Phase');
+end
 type = {'mirscalar',mirtype(y)};            
 
 
