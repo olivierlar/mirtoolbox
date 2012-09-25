@@ -113,7 +113,7 @@ if not(isempty(order))
                     djl = djl/max(djl);
                     djl = rand(length(djl),1).*djl;
                     
-                    if ~isempty(pp)
+                    if ~isempty(pp) && ~isempty(pp{k}{i})
                         pjl = pp{k}{i}{j,l};
                         d2jl = zeros(length(djl),1);
                         for h = 1:length(pjl)
