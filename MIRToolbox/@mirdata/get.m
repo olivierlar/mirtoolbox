@@ -52,7 +52,7 @@ switch propName
             val{k} = cell(1,length(pp{k}));
             if isempty(pp{k})
                 nseg = 0;
-            elseif iscell(pp{k}{1})
+            elseif 1 %iscell(pp{k}{1})
                 nseg = length(pp{k});
             else
                 nseg = 1;
