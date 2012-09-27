@@ -58,6 +58,7 @@ function varargout = mironsets(x,varargin)
 %               well:
 %               'Contrast' with default value c = .01
 %               'Threshold' with default value t = 0
+%               'Single' detects only the highest peak.
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
 %       mironsets(...,'Release') (or 'Releases') detects release phases.
 %       mironsets(...,'Frame',...) decomposes into frames, with default frame
@@ -294,6 +295,12 @@ function varargout = mironsets(x,varargin)
         thr.default = 0;
         thr.when = 'After';
     option.thr = thr;
+    
+        single.key = 'Single';
+        single.type = 'Boolean';
+        single.default = 0;
+        single.when = 'After';
+    option.single = single;
 
         attack.key = {'Attack','Attacks'};
         attack.type = 'Boolean';
@@ -510,14 +517,21 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             postoption.detect = 'Peaks';
         end
     end
+    if postoption.single
+        total = 1;
+        noend = 0;
+    else
+        total = Inf;
+        noend = 1;
+    end
     if strcmpi(postoption.detect,'Peaks')
-        o = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
+        o = mirpeaks(o,'Total',total,'SelectFirst',0,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
-            'Order','Abscissa','NoBegin','NoEnd');
+            'Order','Abscissa','NoBegin','NoEnd',noend);
     elseif strcmpi(postoption.detect,'Valleys')
-        o = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
+        o = mirpeaks(o,'Total',total,'SelectFirst',0,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
-            'Valleys','Order','Abscissa','NoBegin','NoEnd');
+            'Valleys','Order','Abscissa','NoBegin','NoEnd',noend);
     end
     nop = cell(size(get(o,'Data')));
     o = set(o,'AttackPos',nop,'ReleasePos',nop);
@@ -533,7 +547,7 @@ if (isfield(postoption,'attack') && postoption.attack) || ...
     if postoption.attack
         v = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
             'Contrast',postoption.cthr,...
-            'Valleys','Order','Abscissa','NoBegin','NoEnd');
+            'Valleys','Order','Abscissa','NoEnd');
         st = get(v,'PeakPos');
         [st pp] = mircompute(@startattack,d,pp,st);
         %[st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
@@ -554,6 +568,11 @@ end
 
 function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
 pp = sort(pp{1});
+if isempty(pp)
+    st = [];
+    return
+end
+
 st = st{1};
 if ~isempty(st) && st(1)>pp(1)
     dd = diff(d,1,1);       % d'
@@ -636,6 +655,10 @@ st = {{st} {pp} {pv} {pm} {ppp} {ppv}};
 
 
 function rt = endrelease(d,pp,pv,pm,ppp,ppv,st,meth)
+if isempty(pp)
+    rt = [];
+    return
+end
 pp = sort(pp{1});
 pv = pv{1};
 pm = pm{1};

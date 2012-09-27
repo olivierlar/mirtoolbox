@@ -5,6 +5,8 @@ function varargout = mirattacktime(orig,varargin)
 %       (l='Lin') or the logarithm of that duration (l='Log') following the
 %       approach proposed in Krimphoff et al. (1994).
 %       Default value: l='Lin'.
+%   mirattacktime(...,'Single') only selects one attack phase in the signal
+%       (or in each segment).
 %
 % Krimphoff, J., McAdams, S. & Winsberg, S. (1994), Caractérisation du 
 % timbre des sons complexes. II : Analyses acoustiques et quantification 
@@ -15,13 +17,18 @@ function varargout = mirattacktime(orig,varargin)
         scale.default = 'Lin';
     option.scale = scale;
     
+        single.key = 'Single';
+        single.type = 'Boolean';
+        single.default = 0;
+    option.single = single;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack');
+o = mironsets(x,'Attack','Single',option.single);
 type = mirtype(x);
 
 
@@ -38,12 +45,20 @@ at = {at,o};
 
 
 function fp = frampose(pa,po)
+if isempty(pa)
+    fp = [];
+    return
+end
 pa = sort(pa{1});
 po = sort(po{1});
 fp = [pa';po'];
 
 
 function at = algo(po,pa,sc)
+if isempty(pa)
+    at = [];
+    return
+end
 po = sort(po{1});
 pa = sort(pa{1});
 at = po-pa;

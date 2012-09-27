@@ -9,9 +9,11 @@ function varargout = mirattackslope(orig,varargin)
 %           m = 'Gauss': average of the slope, weighted by a gaussian
 %               curve that emphasizes values at the middle of the attack
 %               period. (similar to Peeters 2004).
-%       mirattackslope(...,'Contrast',c) specifies the 'Contrast' parameter
-%           used in mironsets for event detection through peak picking.
-%           Same default value as in mironsets.
+%   mirattackslope(...,'Contrast',c) specifies the 'Contrast' parameter
+%       used in mironsets for event detection through peak picking.
+%       Same default value as in mironsets.
+%   mirattackslope(...,'Single') only selects one attack phase in the
+%       signal (or in each segment).
 %
 % Peeters. G. (2004). A large set of audio features for sound description
 % (similarity and classification) in the CUIDADO project. version 1.0
@@ -26,13 +28,18 @@ function varargout = mirattackslope(orig,varargin)
         cthr.default = NaN;
     option.cthr = cthr;
     
+        single.key = 'Single';
+        single.type = 'Boolean';
+        single.default = 0;
+    option.single = single;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattackslope,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Contrast',option.cthr);
+o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single);
 type = mirtype(x);
 
 
@@ -53,12 +60,20 @@ sl = {sl,o};
 
 
 function fp = frampose(pa,po)
+if isempty(pa)
+    fp = [];
+    return
+end
 pa = sort(pa{1});
 po = sort(po{1});
 fp = [pa';po'];
 
 
 function sl = algo(po,pa,pou,pau,d,meth,sr)
+if isempty(pa)
+    sl = [];
+    return
+end
 pa = sort(pa{1});
 po = sort(po{1});
 pau = sort(pau{1});
