@@ -126,10 +126,19 @@ for song = 1:length(songs)  %For each audio file
             ppi = {ppi};
         end
         
-        nl = size(vi{1},1);    % Number of bins
-        nc = size(vi{1},2);    % Number of frames
-        l = size(vi{1},3);     % Number of channels
-        il = (1-0.15)/l;
+        nl = 0;
+        for j = 1:length(vi)
+            if ~isempty(vi{j})
+                nl = size(vi{j},1);    % Number of bins
+                nc = size(vi{j},2);    % Number of frames
+                l = size(vi{j},3);     % Number of channels
+                il = (1-0.15)/l;
+                break
+            end
+        end
+        if ~nl
+            break
+        end
         
         if nc==1 && l>1        % If one frame and several channels
             xlab = 'Channels'; % channels will be represented in the x axis
@@ -190,6 +199,9 @@ for song = 1:length(songs)  %For each audio file
                 vj = vi{j};
                 
                 fpj = fpi{j};
+                if isempty(fpj)
+                    continue
+                end
                 if isempty(ppi) || length(ppi)<j
                     ppj = [];
                 else

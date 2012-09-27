@@ -167,7 +167,7 @@ if curve
                                 xj(end)-xj(1),max(yk)-min(yk)]+1e-16,...
                                 'EdgeColor',col{h}(j,:,k))
                         end
-                        if not(isempty(pp)) && not(isempty(pp{1}))
+                        if length(pp) >= h && not(isempty(pp{h}))
                             [ppj order] = sort(pp{h}{1,j,i});
                             if not(isempty(pm)) && not(isempty(pm{1}))
                                 pmj = pm{h}{1,j,i}(order);
@@ -185,7 +185,7 @@ if curve
                                     plot(xj(ppj),yk(ppj),'or')
                                 end
                             end
-                            if not(isempty(ap)) && not(isempty(ap{1}))
+                            if not(isempty(ap)) && not(isempty(ap{h}))
                                 apj = ap{h}{1,j,i};
                                 plot(xj(apj),yk(apj),'dr') 
                                 for g = 1:length(ppj)
@@ -194,7 +194,7 @@ if curve
                                          'Color','r')
                                 end
                             end
-                            if not(isempty(rp)) && not(isempty(rp{1}))
+                            if not(isempty(rp)) && not(isempty(rp{h}))
                                 rpj = rp{h}{1,j,i};
                                 plot(xj(rpj),yk(rpj),'dr') 
                                 for g = 1:length(rpj)
