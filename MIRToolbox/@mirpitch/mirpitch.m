@@ -46,6 +46,8 @@ function varargout = mirpitch(orig,varargin)
 %           correspond to a semitone in equal temperament.
 %       mirpitch(..., 'Segment') segments the obtained monodic pitch curve
 %           in cents as a succession of notes with stable frequencies.
+%           Additional parameters available: 'SegMinLength', 'SegPitchGap',
+%               'SegTimeGap'.
 %       mirpitch(...,'Sum','no') does not sum back the channels at the end 
 %           of the computation. The resulting pitch information remains
 %           therefore decomposed into several channels.

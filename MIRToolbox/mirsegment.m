@@ -36,8 +36,9 @@ function [f,p,m,fe] = mirsegment(x,varargin)
 %           Default value: t2 = .02
 %
 %   f = mirsegment(a,s) segments a using the results of a segmentation
-%       analysis s. s can be the peaks detected on an analysis of the
-%       audio for instance.
+%       analysis s. s can be for instance:
+%           - the peaks detected on an analysis of the audio
+%           - the results of mirpeaks('Segment').
 %
 %   f = mirsegment(a,v) where v is an array of numbers, segments a using
 %       the temporal positions specified in v (in s.)
@@ -253,7 +254,10 @@ elseif isa(x,'mirdata')
         dx = get(x,'Data');
         dt = get(x,'Time');
 
-        if isa(option.strat,'mirscalar')
+        if isa(option.strat,'mirpitch')
+            ds = get(option.strat,'Start');
+            fp = get(option.strat,'FramePos');
+        elseif isa(option.strat,'mirscalar')
             ds = get(option.strat,'PeakPos');
             fp = get(option.strat,'FramePos');
         elseif isa(option.strat,'mirdata')
