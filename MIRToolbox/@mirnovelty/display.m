@@ -35,6 +35,7 @@ for i = 1:length(songs)  %For each audio file
     end        
 
     h = imagesc(fpi,1:ng,v);
+    colormap(gray)
 
     title('Novelty graph')
     xlabel('temporal location of frame centers (in s.)')

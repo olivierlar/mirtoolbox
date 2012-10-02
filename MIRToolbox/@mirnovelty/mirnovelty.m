@@ -154,15 +154,61 @@ else
             res{k} = cell(1,length(s{k}));
             for z = 1:length(s{k})
                 sz = s{k}{z};
-                %szma = max(max(sz));
-                %szmi = min(min(sz));
-                %sz = (sz-szmi)/(szma-szmi);
-                %sz = 2*sz-1;
-                %sz(isnan(sz)) = 0;
-
-                step = 1/option.gran;
-                thr = step:step:1-step;
-                thr(1: floor( min(min(sz))/step )) = [];
+                l = size(sz,1);
+                pr = zeros(l);
+                sel = [];
+                cand = [];
+                for i = 1:l
+                    for j = 1:l-i
+                        pr(i,j) = min(sz(i+1:i+j,i));
+                    end
+                    dr = find(pr(i,1:end-1)>pr(i,2:end));
+                    j = 1;
+                    while j <= length(cand)
+                        if cand(j).current == 1
+                            sel(end+1).i = cand(j).i;
+                            sel(end).j = cand(j).j;
+                            sel(end).sim = cand(j).sim;
+                            cand(j) = [];
+                        else
+                            idx = find(cand(j).current-1 == dr);
+                            if ~isempty(idx)
+                                cand(j).current = cand(j).current-1;
+                                dr(idx) = [];
+                                j = j+1;
+                            else
+                                cand(j) = [];
+                            end
+                        end
+                    end
+                    for j = 2:length(dr)
+                        cand(end+1).i = i;
+                        cand(end).j = dr(j);
+                        cand(end).sim = pr(i,dr(j));
+                        cand(end).current = j;
+                    end
+                end
+                res{k}{z} = sel;
+                for i = 1:length(sel)
+                    sel(i).i
+                    sel(i).j
+                    sel(i).sim
+                end
+            end
+        end
+        orig = set(orig,'Novelty',res);
+        title = 'Novelty diagram';
+    
+    elseif strcmpi(option.method,'Lartillot.old')
+        for k = 1:length(s)
+            res{k} = cell(1,length(s{k}));
+            for z = 1:length(s{k})
+                sz = s{k}{z};
+                szma = max(max(sz));
+                szmi = min(min(sz));
+                step = (szma-szmi)/(option.gran+1);
+                thr = szmi+step:step:szma-step;
+                %thr(1: floor( min(min(sz))/step )) = [];
                 res{k}{z} = cell(1,length(thr));
                 for h = 1:length(thr)
                     res{k}{z}{h} = [];

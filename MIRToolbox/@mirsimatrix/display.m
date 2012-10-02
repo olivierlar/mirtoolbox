@@ -12,6 +12,7 @@ pp = get(m,'PeakPos');
 g = get(m,'Graph');
 b = get(m,'Branch');
 wr = get(m,'Warp');
+nv = get(m,'Novelty');
 if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     figure
     fp1 = cell2mat(fp{1});
@@ -163,6 +164,20 @@ else
                     for j = 1:length(pp{i}{1}{k})
                         plot(fpi(k),fpi(pp{i}{1}{k}(j)) - fpi(1), ...
                             'w+','MarkerSize',10)
+                    end
+                end
+            end
+            if not(isempty(nv))
+                hold on
+                for k = 1:length(nv{i}{1})
+                    if nv{i}{1}(k).j>10 && ...
+                            nv{i}{1}(k).sim>.9
+                        x = fpi(nv{i}{1}(k).i);
+                        y = x + fpi(nv{i}{1}(k).j);
+                        line([x y],[x x])
+                        line([x y],[y y])
+                        line([x x],[x y])
+                        line([y y],[x y])
                     end
                 end
             end

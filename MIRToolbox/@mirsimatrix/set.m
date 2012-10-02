@@ -6,6 +6,7 @@ propertyArgIn = varargin;
 graph = m.graph;
 branch = m.branch;
 warp = m.warp;
+nov = m.novelty;
 d = mirdata(m);
 while length(propertyArgIn) >= 2,
    prop = propertyArgIn{1};
@@ -18,6 +19,8 @@ while length(propertyArgIn) >= 2,
            branch = val;
        case 'Warp'
            warp = val;
+       case 'Novelty'
+           nov = val;
        otherwise
            d = set(d,prop,val);
    end
@@ -28,4 +31,5 @@ mm.similarity = m.similarity;
 mm.graph = graph;
 mm.branch = branch;
 mm.warp = warp;
+mm.novelty = nov;
 mm = class(mm,'mirsimatrix',d);

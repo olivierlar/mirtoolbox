@@ -244,6 +244,7 @@ elseif isempty(option.arg2)
     m.graph = {};
     m.branch = {};
     m.warp = [];
+    m.novelty = {};
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix');
@@ -298,6 +299,7 @@ else
     m.graph = {};
     m.branch = {};
     m.warp = [];
+    m.novelty = {};
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix','Data',d,'Pos',[],...
