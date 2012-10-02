@@ -1,5 +1,5 @@
 function mm = set(m,varargin)
-% SET Set properties for the MIRsimatrix object
+% SET Set properties for the MIRnovelty object
 % and return the updated object
 
 propertyArgIn = varargin;
