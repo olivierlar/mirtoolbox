@@ -16,6 +16,14 @@ while length(propertyArgIn) >= 2,
    switch prop
        case 'Amplitude'
            a = val;
+       case 'Start'
+           ps = val;
+       case 'End'
+           pe = val;
+       case 'Mean'
+           pm = val;
+       case 'Degrees'
+           deg = val;
        otherwise
            s = set(s,prop,val);
    end

@@ -308,7 +308,7 @@ for song = 1:length(songs)  %For each audio file
                         pe = get(s,'End');
                         pm = get(s,'Mean');
                         deg = get(s,'Degrees');
-                        if not(isempty(ps))                % Note display
+                        if length(ps)>=i && ~isempty(ps{i})              % Note display
                             for h = 1:nl;
                                 psh = ps{i}{j}{1,h,k};
                                 peh = pe{i}{j}{1,h,k};

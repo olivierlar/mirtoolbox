@@ -29,6 +29,10 @@ if isa(c,'mirscalar')
     m = cell(1,l);
     if isa(c,'mirpitch')
         pa = cell(1,l);
+        ps = cell(1,l);
+        pe = cell(1,l);
+        pi = cell(1,l);
+        pd = cell(1,l);
     end
 end
 if isa(c,'miremotion')
@@ -66,6 +70,10 @@ for i = 1:l
         m{i} = getargin(argin,'Mode');
         if isa(c,'mirpitch')
             pa{i} = getargin(argin,'Amplitude');
+            ps{i} = getargin(argin,'Start');
+            pe{i} = getargin(argin,'End');
+            pi{i} = getargin(argin,'Mean');
+            pd{i} = getargin(argin,'Degrees');
         end
     end
     if isa(c,'miremotion')
@@ -86,7 +94,8 @@ end
 if isa(c,'mirscalar')
     c = set(c,'Mode',m);
     if isa(c,'mirpitch')
-        c = set(c,'Amplitude',pa);
+        c = set(c,'Amplitude',pa,'Start',ps,'End',pe,'Mean',pi,...
+                  'Degrees',pd);
     end
 end
 if isa(c,'miremotion')

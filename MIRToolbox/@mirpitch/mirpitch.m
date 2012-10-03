@@ -404,7 +404,7 @@ if (option.cent || option.segm) && ...
     end
 end
 
-if option.segm == 1
+if option.segm
     scale = [];
     for i = 1:length(pf)
         for j = 1:length(pf{i})
@@ -416,23 +416,47 @@ if option.segm == 1
                 buffer = [];
                 breaks = [];
                 currentp = [];
+                maxp = 0;
+                reson = [];
                 for l = 2:size(pf{i}{j},2)-1
+                    if pa{i}{j}{1,l,k} > maxp
+                        maxp = pa{i}{j}{1,l,k};
+                    end
+                    if ~isempty(reson) && l-reson(1).end>50
+                        reson(1) = [];
+                    end
+                    interrupt = 0;
                     if l == size(pf{i}{j},2)-1 || ...
                             isempty(pf{i}{j}{1,l,k}) || ...
                             (~isempty(currentp) && ...
-                             abs(currentp-mean(buffer)) > option.segpitch)
+                             abs(currentp-mean(buffer.pitch)) > option.segpitch)
+                         interrupt = 1;
+                    end
+                    
+                    if ~interrupt
+                        for h = 1:length(reson)
+                            if abs(pf{i}{j}{1,l,k}-reson(h).pitch) < 50 && ...
+                                    pa{i}{j}{1,l,k} < reson(h).amp/5
+                                pa{i}{j}{1,l,k} = [];
+                                pf{i}{j}{1,l,k} = [];
+                                interrupt = 1;
+                                break
+                            end
+                        end
+                    end
+                    
+                    if interrupt
                         % Segment interrupted
-                        
                         if isempty(currentp)
                             if length(startp) > length(endp)
                                 startp(end) = [];
                             end
                         else
-                            meanp(end+1) = mean(buffer);
+                            meanp(end+1) = mean(buffer.pitch);
                             endp(end+1) = l-1;
                             
                             if isempty(scale)
-                                scale = currentp;
+                                scale = meanp(1);
                                 %deg = 1;
                             elseif 0 % generalized scales..
                                 [distp closdeg] = min(abs(currentp-scale));
@@ -451,26 +475,30 @@ if option.segm == 1
                             
                             %[deg(end+1) scale] = cent2deg(meanp(end),scale);
                             deg(end+1) = cent2deg(meanp(end),scale);
+                            reson(end+1).pitch = meanp(end);
+                            reson(end).amp = mean(buffer.amp);
+                            reson(end).end = l-1;
                         end
+                                                
                         buffer = [];
                         currentp = [];
                         breaks(end+1) = l;
                     elseif isempty(buffer)
-                        if 1 % abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
-                            % New segment starting
-                            startp(end+1) = l;
-                            buffer = pf{i}{j}{1,l,k};
-                        end
-                    elseif abs(pf{i}{j}{1,l,k}-mean(buffer)) > 65
+                        % New segment starting
+                        startp(end+1) = l;
+                        buffer.pitch = pf{i}{j}{1,l,k};
+                        buffer.amp = pa{i}{j}{1,l,k};
+                    elseif abs(pf{i}{j}{1,l,k}-mean(buffer.pitch)) > 65
                         % Segment interrupted by pitch gap
-                        meanp(end+1) = mean(buffer);
+                        meanp(end+1) = mean(buffer.pitch);
                         endp(end+1) = l-1;
                         %[deg(end+1) scale] = cent2deg(meanp(end),scale);
                         deg(end+1) = cent2deg(meanp(end),scale);
-                        if abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
+                        if 1 %abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
                             % New segment starting
                             startp(end+1) = l;
-                            buffer = pf{i}{j}{1,l,k};
+                            buffer.pitch = pf{i}{j}{1,l,k};
+                            buffer.amp = pa{i}{j}{1,l,k};
                         else
                             buffer = [];
                         end
@@ -478,11 +506,13 @@ if option.segm == 1
                         if length(pf{i}{j}{1,l,k})>1
                             mirerror('mirpitch','''Segment'' option only for monodies (use also ''Mono'')');
                         end
-                        buffer(end+1) = pf{i}{j}{1,l,k};
+                        buffer.pitch(end+1) = pf{i}{j}{1,l,k};
+                        buffer.amp(end+1) = pa{i}{j}{1,l,k};
                     end
                     
-                    if isempty(currentp) && length(buffer)>2
-                        currentp = mean(buffer);
+                    if isempty(currentp) && ...
+                            isstruct(buffer) && length(buffer.pitch)>2
+                        currentp = mean(buffer.pitch);
                     end
                 end
                 
@@ -492,68 +522,28 @@ if option.segm == 1
                 
                 l = 1;
                 while l <= length(endp)
-                    if ~isempty(intersect(startp(l)-(1:5),breaks)) && ...
-                            ~isempty(intersect(endp(l)+(1:5),breaks))
+                    if 1 %~isempty(intersect(startp(l)-(1:5),breaks)) && ...
+                         %   ~isempty(intersect(endp(l)+(1:5),breaks))
                         minlength = option.segmin;
                     else
                         minlength = 2;
                     end
                     if endp(l)-startp(l) > minlength
                     % Segment sufficiently long
-                        found = 0;
-                        pointer = startp(l);
-                        for h = l-1:-1:max(l-10,1)
-                            if deg(l) == deg(h)
-                                if 1 %isempty(x2)
-                                    test = ~isempty(pointer) && ...
-                                            startp(l)-endp(h)<12 && ...
-                                           ~any(intersect(startp(h):pointer-1,breaks));
-                                    if test
-                                        pointer = startp(h);
-                                        test = abs(meanp(l)-meanp(h)) < 40;
-                                    else
-                                        pointer = [];
-                                    end
-                                else  % old version...
-                                    if 1 %abs(meanp(l)-meanp(h)) < 40;
-                                        minp = min(meanp(l),meanp(h));
-                                        maxp = max(meanp(l),meanp(h));
-                                        minp = find(1200*log2(f2{i}{j}(:,1)) > minp,1);
-                                        maxp = find(1200*log2(f2{i}{j}(:,1)) > maxp,1);
-                                        zone = x2{i}{j}(minp:maxp,endp(h):startp(l));
-                                        test = all(max(zone)>max(zone(:,1))*.05);
-                                    end
-                                    if test && size(zone,2)>2
-                                        test = max(zone(:,end)) < max(max(zone(:,2:end-1)));
-                                    end
-                                end
-                                if 0 %test
-                                    % Segment close in frequency with recent one
-                                    startp(l) = [];
-                                    meanp(h) = mean(meanp([h l]));
-                                    meanp(l) = [];
-                                    deg(l) = [];
-                                    endp(h) = endp(l);
-                                    endp(l) = [];
-                                    found = 1;
-                                end
-                                break
-                            end
-                        end
                         if l>1 && ...
-                                startp(l) <= endp(l-1)+option.segtime && ...
-                                abs(meanp(l)-meanp(l-1)) < 50
-                            % Segment fused with previous one
-                            startp(l) = [];
-                            meanp(l-1) = mean(meanp(l-1:l));
-                            meanp(l) = [];
-                            deg(l-1) = cent2deg(meanp(l-1),scale);
-                            deg(l) = [];
-                            endp(l-1) = [];
-                            found = 1;
-                        end
-                        if ~found
-                            l = l+1;
+                           startp(l) <= endp(l-1)+option.segtime && ...
+                           0%(0 || ... deg(l) == deg(l-1) || ...
+                            %abs(meanp(l)-meanp(l-1)) < 50)
+                                % Segment fused with previous one
+                                startp(l) = [];
+                                meanp(l-1) = mean(meanp(l-1:l));
+                                meanp(l) = [];
+                                deg(l-1) = cent2deg(meanp(l-1),scale);
+                                deg(l) = [];
+                                endp(l-1) = [];
+                                found = 1;
+                        else
+                                l = l+1;
                         end
                     % Other cases: Segment too short
                     elseif l>1 && ...
@@ -584,143 +574,18 @@ if option.segm == 1
                     end
                 end
                 
-                ps{i}{j}{k} = startp;
-                pe{i}{j}{k} = endp;
-                pm{i}{j}{k} = meanp;
-                dg{i}{j}{k} = deg;
-            end
-        end
-    end
-elseif option.segm == 2
-    for i = 1:length(pf)
-        for j = 1:length(pf{i})
-            for k = 1:size(pf{i}{j},3)
-                startp = [];
-                meanp = [];
-                endp = [];
-                buffer = [];
-                breaks = [];
-                currentp = [];
-                for l = 2:size(pf{i}{j},2)-1
-                    if ~isempty(currentp) && ...
-                            (isempty(pf{i}{j}{1,l,k}) || ...
-                             abs(currentp-mean(buffer)) > 5)
-                        % Segment interrupted
-                        
-                        if ~isempty(buffer)
-                            meanp(end+1) = mean(buffer);
-                            endp(end+1) = l-1;
-                        end
-                        
-                        buffer = [];
-                        currentp = [];
-                        breaks(end+1) = l;
-                    elseif isempty(buffer)
-                        if 1 % abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
-                            % New segment starting
-                            startp(end+1) = l;
-                            buffer = pf{i}{j}{1,l,k};
-                        end
-                    elseif abs(pf{i}{j}{1,l,k}-mean(buffer)) > 65
-                        % Segment interrupted by pitch gap
-                        meanp(end+1) = mean(buffer);
-                        endp(end+1) = l-1;
-                        if abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
-                            % New segment starting
-                            startp(end+1) = l;
-                            buffer = pf{i}{j}{1,l,k};
-                        else
-                            buffer = [];
-                        end
-                        currentp = [];
-                    else
-                        if length(pf{i}{j}{1,l,k})>1
-                            mirerror('mirpitch','''Segment'' option only for monodies (use also ''Mono'')');
-                        end
-                        buffer(end+1) = pf{i}{j}{1,l,k};
-                    end
-                    
-                    if isempty(currentp)
-                        for m = 1:length(buffer)-3
-                            if abs(buffer(end)-buffer(m)) < 5 && ...
-                                    abs(mean(buffer(m:end))-buffer(m)) < 5
-                                currentp = mean(buffer);
-                                startp(end) = startp(end) + m-1;
-                                buffer(1:m-1) = [];
-                                break
-                            end
-                        end
-                    end
-                end
-                
-                if length(startp) > length(meanp)
-                    startp(end) = [];
-                end
-                
                 l = 1;
                 while l <= length(endp)
-                    if ~isempty(intersect(startp(l)-(1:5),breaks)) && ...
-                            ~isempty(intersect(endp(l)+(1:5),breaks))
-                        minlength = option.segmin;
-                    else
-                        minlength = 2;
-                    end
-                    if endp(l)-startp(l) > minlength
-                    % Segment sufficiently long
-                        found = 0;
-                        pointer = startp(l);
-                        for h = l-1:-1:max(l-10,1)
-                            if deg(l) == deg(h)
-                                test = ~isempty(pointer) && ...
-                                        startp(l)-endp(h)<12 && ...
-                                       ~any(intersect(startp(h):pointer-1,breaks));
-                                if test
-                                    pointer = startp(h);
-                                    test = abs(meanp(l)-meanp(h)) < 40;
-                                else
-                                    pointer = [];
-                                end
-                                if 0 %test
-                                    % Segment close in frequency with recent one
-                                    startp(l) = [];
-                                    meanp(h) = mean(meanp([h l]));
-                                    meanp(l) = [];
-                                    deg(l) = [];
-                                    endp(h) = endp(l);
-                                    endp(l) = [];
-                                    found = 1;
-                                end
-                                break
-                            end
-                        end
-                        if ~found
-                            l = l+1;
-                        end
-                    % Other cases: Segment too short
-                    elseif l>1 && ...
-                            startp(l) == endp(l-1)+1 && ...
-                            abs(meanp(l)-meanp(l-1)) < 50
-                        % Segment fused with previous one
-                        startp(l) = [];
-                        meanp(l-1) = mean(meanp(l-1:l));
-                        meanp(l) = [];
-                        deg(l) = [];
-                        endp(l-1) = [];
-                    elseif l < length(meanp) && ...
-                            startp(l+1) == endp(l)+1 && ...
-                            abs(meanp(l+1)-meanp(l)) < 50
-                        % Segment fused with next one
-                        startp(l+1) = [];
-                        meanp(l) = mean(meanp(l:l+1));
-                        meanp(l+1) = [];
-                        deg(l+1) = [];
-                        endp(l) = [];
-                    else
+                    if max([pa{i}{j}{1,startp(l):endp(l),k}]) < maxp/10 ...
+                            && isempty(pa{i}{j}{1,startp(l)-1,k}) ...
+                            && isempty(pa{i}{j}{1,endp(l)+1,k})
                         % Segment removed
                         startp(l) = [];
                         meanp(l) = [];
                         deg(l) = [];
                         endp(l) = [];
+                    else
+                        l = l+1;
                     end
                 end
                 
@@ -819,4 +684,7 @@ o = {p,x};
 
 function [deg ref] = cent2deg(cent,ref)
 deg = round((cent-ref)/100);
+if isempty(deg)
+    deg = NaN;
+end
 %ref = cent - deg*100
