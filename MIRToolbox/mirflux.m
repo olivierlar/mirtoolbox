@@ -58,6 +58,11 @@ function varargout = mirflux(orig,varargin)
         complex.default = 0;
     option.complex = complex;
     
+        sb.key = 'SubBand';
+        sb.type = 'Boolean';
+        sb.default = 0;
+    option.sb = sb;
+    
         h.key = 'Halfwave';
         h.type = 'Boolean';
         h.default = 0;
@@ -84,6 +89,9 @@ varargout = mirfunction(@mirflux,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
+if option.sb
+    x = mirfilterbank(x,'Manual',[-Inf 50*2.^(0:1:8) Inf],'Order',2);
+end
 if isamir(x,'miraudio') 
     if isframed(x)
         x = mirspectrum(x);
