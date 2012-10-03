@@ -14,6 +14,7 @@ function varargout = mirpitch(orig,varargin)
 %                   fb = 'NoFilterBank': no filterbank decomposition
 %                   fb = '2Channels' (default value)
 %                   fb = 'Gammatone' 
+%       mirpitch(...,'Spectrum') computes the FFT spectrum
 %       mirpitch(...,'AutocorSpectrum') computes the autocorrelation of
 %           the FFT spectrum
 %       mirpitch(...,'Cepstrum') computes the cepstrum
@@ -327,30 +328,33 @@ else
         end
         if option.as || option.ce || option.s
             x = mirframenow(orig,option);
-            s = mirspectrum(x,'Min',option.mi,'Max',option.ma);
-            if option.as
-                as = mirautocor(s,...
-                                'Min',option.mi,'Hz','Max',option.ma,'Hz');
-                if option.ac
-                    y = y*as;
-                else
-                    y = as;
-                end
-            end
-            if option.ce
-                ce = mircepstrum(s,'freq',...
-                                'Min',option.mi,'Hz','Max',option.ma,'Hz');
-                if option.ac || option.as
-                    y = y*ce;
-                else
-                    y = ce;
-                end
-            end
             if option.s
-                if option.ac || option.as
+                s = mirspectrum(x,'Min',option.mi,'Max',option.ma);
+                if option.ac
                     y = y*s;
                 else
                     y = s;
+                end
+            end
+            if option.as || option.ce
+                s = mirspectrum(x);
+                if option.as
+                    as = mirautocor(s,'Min',option.mi,'Hz',...
+                                      'Max',option.ma,'Hz');
+                    if option.ac || option.s
+                        y = y*as;
+                    else
+                        y = as;
+                    end
+                end
+                if option.ce
+                    ce = mircepstrum(s,'freq','Min',option.mi,'Hz',...
+                                              'Max',option.ma,'Hz');
+                    if option.ac || option.s || option.as
+                        y = y*ce;
+                    else
+                        y = ce;
+                    end
                 end
             end
         end
@@ -685,6 +689,6 @@ o = {p,x};
 function [deg ref] = cent2deg(cent,ref)
 deg = round((cent-ref)/100);
 if isempty(deg)
-    deg = NaN;
+    deg = 0;
 end
 %ref = cent - deg*100
