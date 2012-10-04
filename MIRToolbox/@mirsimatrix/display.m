@@ -169,15 +169,25 @@ else
             end
             if not(isempty(nv))
                 hold on
-                for k = 1:length(nv{i}{1})
-                    if nv{i}{1}(k).j>10 && ...
-                            nv{i}{1}(k).sim>.9
-                        x = fpi(nv{i}{1}(k).i);
-                        y = x + fpi(nv{i}{1}(k).j);
-                        line([x y],[x x])
-                        line([x y],[y y])
-                        line([x x],[x y])
-                        line([y y],[x y])
+                sim = [nv{i}{1}.sim];
+                gap = [nv{i}{1}.gap];
+                mingap = min(gap);
+                rangap = max(gap)-mingap;
+                gap = (gap-mingap)/rangap;
+                [gap ord] = sort(gap);
+                nvi = nv{i}{1}(ord); 
+                for k = 1:length(nvi)
+                    if gap(k)
+                        %nv{i}{1}(k).j>10 && ...
+                         %   nv{i}{1}(k).sim>.9
+                        x = fpi(nvi(k).i) - fpi(1)/2;
+                        y = x + fpi(nvi(k).j + 1);
+                        col = 1-gap(k);
+                        wid = gap(k)^.05*.8;
+                        line([x y],[x x],'Color',[col col col],'LineWidth',wid)
+                        line([x y],[y y],'Color',[col col col],'LineWidth',wid)
+                        line([x x],[x y],'Color',[col col col],'LineWidth',wid)
+                        line([y y],[x y],'Color',[col col col],'LineWidth',wid)
                     end
                 end
             end

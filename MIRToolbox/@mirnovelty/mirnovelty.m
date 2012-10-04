@@ -155,45 +155,49 @@ else
             for z = 1:length(s{k})
                 sz = s{k}{z};
                 l = size(sz,1);
-                pr = zeros(l);
+                pr = NaN(l);
                 sel = [];
                 cand = [];
                 for i = 1:l
                     for j = 1:l-i
                         pr(i,j) = min(sz(i+1:i+j,i));
                     end
-                    dr = find(pr(i,1:end-1)>pr(i,2:end));
+                    dr = find(pr(i,1:end-1) - pr(i,2:end) > .00);%1);
                     j = 1;
                     while j <= length(cand)
                         if cand(j).current == 1
                             sel(end+1).i = cand(j).i;
                             sel(end).j = cand(j).j;
                             sel(end).sim = cand(j).sim;
+                            sel(end).gap = cand(j).gap;
                             cand(j) = [];
                         else
                             idx = find(cand(j).current-1 == dr);
                             if ~isempty(idx)
                                 cand(j).current = cand(j).current-1;
-                                dr(idx) = [];
-                                j = j+1;
+                                cand(j).sim = min(cand(j).sim,...
+                                                  pr(i,dr(idx)));
+                                cand(j).gap = min(cand(j).gap,...
+                                                  pr(i,dr(idx)) - pr(i,dr(idx)+1));
+                                if 0 %cand(j).dissim > cand(j).sim
+                                    cand(j) = [];
+                                else
+                                    j = j+1;
+                                end
                             else
                                 cand(j) = [];
                             end
                         end
                     end
-                    for j = 2:length(dr)
+                    for j = 1:length(dr)
                         cand(end+1).i = i;
                         cand(end).j = dr(j);
                         cand(end).sim = pr(i,dr(j));
+                        cand(end).gap = pr(i,dr(j)) - pr(i,dr(j)+1);
                         cand(end).current = j;
                     end
                 end
                 res{k}{z} = sel;
-                for i = 1:length(sel)
-                    sel(i).i
-                    sel(i).j
-                    sel(i).sim
-                end
             end
         end
         orig = set(orig,'Novelty',res);
