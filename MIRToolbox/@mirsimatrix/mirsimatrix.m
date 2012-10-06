@@ -80,6 +80,12 @@ function varargout = mirsimatrix(orig,varargin)
         warp.when = 'After';
     option.warp = warp;
     
+        cluster.key = 'Cluster';
+        cluster.type = 'Boolean';
+        cluster.default = 0;
+        cluster.when = 'After';
+    option.cluster = cluster;
+
         arg2.position = 2;
         arg2.default = [];
     option.arg2 = arg2;
@@ -244,7 +250,7 @@ elseif isempty(option.arg2)
     m.graph = {};
     m.branch = {};
     m.warp = [];
-    m.novelty = {};
+    m.clusters = [];
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix');
@@ -299,7 +305,7 @@ else
     m.graph = {};
     m.branch = {};
     m.warp = [];
-    m.novelty = {};
+    m.clusters = [];
     m = class(m,'mirsimatrix',mirdata(orig));
     m = purgedata(m);
     m = set(m,'Title','Dissimilarity matrix','Data',d,'Pos',[],...
@@ -424,6 +430,59 @@ if not(isempty(postoption))
             end
         end
         m = set(m,'Warp',{paths,bests,bestsindex});
+    end
+    if postoption.cluster
+        for k = 1:length(d)
+            clus{k} = cell(1,length(d{k}));
+            for z = 1:length(d{k})
+                dz = d{k}{z};
+                l = size(dz,1);
+                pr = NaN(l);
+                sel = [];
+                cand = [];
+                for i = 1:l
+                    for j = 1:l-i
+                        pr(i,j) = min(dz(i+1:i+j,i));
+                    end
+                    dr = find(pr(i,1:end-1) - pr(i,2:end) > .00);
+                    j = 1;
+                    while j <= length(cand)
+                        if cand(j).current == 1
+                            sel(end+1).i = cand(j).i;
+                            sel(end).j = cand(j).j;
+                            sel(end).sim = cand(j).sim;
+                            sel(end).gap = cand(j).gap;
+                            cand(j) = [];
+                        else
+                            idx = find(cand(j).current-1 == dr);
+                            if ~isempty(idx)
+                                cand(j).current = cand(j).current-1;
+                                cand(j).sim = min(cand(j).sim,...
+                                                  pr(i,dr(idx)));
+                                cand(j).gap = min(cand(j).gap,...
+                                                  pr(i,dr(idx)) - pr(i,dr(idx)+1));
+                                if 0 %cand(j).dissim > cand(j).sim
+                                    cand(j) = [];
+                                else
+                                    j = j+1;
+                                end
+                            else
+                                cand(j) = [];
+                            end
+                        end
+                    end
+                    for j = 1:length(dr)
+                        cand(end+1).i = i;
+                        cand(end).j = dr(j);
+                        cand(end).sim = pr(i,dr(j));
+                        cand(end).gap = pr(i,dr(j)) - pr(i,dr(j)+1);
+                        cand(end).current = j;
+                    end
+                end
+                clus{k}{z} = sel;
+            end
+        end
+        m = set(m,'Clusters',clus);
     end
 end
 

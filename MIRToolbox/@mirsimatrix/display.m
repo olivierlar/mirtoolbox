@@ -12,7 +12,7 @@ pp = get(m,'PeakPos');
 g = get(m,'Graph');
 b = get(m,'Branch');
 wr = get(m,'Warp');
-nv = get(m,'Novelty');
+cl = get(m,'Clusters');
 if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     figure
     fp1 = cell2mat(fp{1});
@@ -136,22 +136,22 @@ else
                 end
             elseif not(isempty(tp)) && not(isempty(tp{i}))
                 hold on
-                for k = 1:size(tp{i}{1}{1},1)
+                for h = 1:size(tp{i}{1}{1},1)
                     prej = 0;
                     for j = 1:size(tp{i}{1}{1},2)
-                        if tv{i}{1}{1}(k,j)
-                            if prej% && not(isempty(tp(k,j)))
+                        if tv{i}{1}{1}(h,j)
+                            if prej% && not(isempty(tp(h,j)))
                                 plot([fpi(prej) fpi(j)],...
-                                    [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
-                                    fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                    [fpi(tp{i}{1}{1}(h,prej)) - fpi(1) ...
+                                    fpi(tp{i}{1}{1}(h,j)) - fpi(1)],...
                                     'k','LineWidth',1)
                                 plot([fpi(prej) fpi(j)],...
-                                    [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
-                                    fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                    [fpi(tp{i}{1}{1}(h,prej)) - fpi(1) ...
+                                    fpi(tp{i}{1}{1}(h,j)) - fpi(1)],...
                                     'w+','MarkerSize',10)
                                 plot([fpi(prej) fpi(j)],...
-                                    [fpi(tp{i}{1}{1}(k,prej)) - fpi(1) ...
-                                    fpi(tp{i}{1}{1}(k,j)) - fpi(1)],...
+                                    [fpi(tp{i}{1}{1}(h,prej)) - fpi(1) ...
+                                    fpi(tp{i}{1}{1}(h,j)) - fpi(1)],...
                                     'kx','MarkerSize',10)
                             end
                             prej = j;
@@ -160,30 +160,30 @@ else
                 end
             elseif not(isempty(pp)) && not(isempty(pp{i}))
                 hold on
-                for k = 1:length(pp{i}{1})
-                    for j = 1:length(pp{i}{1}{k})
-                        plot(fpi(k),fpi(pp{i}{1}{k}(j)) - fpi(1), ...
+                for h = 1:length(pp{i}{1})
+                    for j = 1:length(pp{i}{1}{h})
+                        plot(fpi(k),fpi(pp{i}{1}{h}(j)) - fpi(1), ...
                             'w+','MarkerSize',10)
                     end
                 end
             end
-            if not(isempty(nv))
+            if not(isempty(cl))
                 hold on
-                sim = [nv{i}{1}.sim];
-                gap = [nv{i}{1}.gap];
+                sim = [cl{i}{1}.sim];
+                gap = [cl{i}{1}.gap];
                 mingap = min(gap);
                 rangap = max(gap)-mingap;
                 gap = (gap-mingap)/rangap;
                 [gap ord] = sort(gap);
-                nvi = nv{i}{1}(ord); 
-                for k = 1:length(nvi)
-                    if gap(k)
-                        %nv{i}{1}(k).j>10 && ...
-                         %   nv{i}{1}(k).sim>.9
-                        x = fpi(nvi(k).i) - fpi(1)/2;
-                        y = x + fpi(nvi(k).j + 1);
-                        col = 1-gap(k);
-                        wid = gap(k)^.05*.8;
+                cli = cl{i}{1}(ord); 
+                for h = 1:length(cli)
+                    if gap(h)
+                        %cl{i}{1}(k).j>10 && ...
+                         %   cl{i}{1}(k).sim>.9
+                        x = fpi(cli(h).i) - fpi(1)/2;
+                        y = x + fpi(cli(h).j + 1);
+                        col = 1-gap(h);
+                        wid = gap(h)^.05*.8;
                         line([x y],[x x],'Color',[col col col],'LineWidth',wid)
                         line([x y],[y y],'Color',[col col col],'LineWidth',wid)
                         line([x x],[x y],'Color',[col col col],'LineWidth',wid)

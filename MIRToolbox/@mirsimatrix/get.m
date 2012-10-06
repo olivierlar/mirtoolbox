@@ -11,8 +11,8 @@ switch propName
         val = a.branch;
     case 'Warp'
         val = a.warp;
-    case 'Novelty'
-        val = a.novelty;
+    case 'Clusters'
+        val = a.clusters;
     otherwise
         val = get(mirdata(a),propName);
 end
