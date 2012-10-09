@@ -263,6 +263,11 @@ function varargout = mironsets(x,varargin)
         max.type = 'Integer';
         max.default = 1000;
     option.max = max;
+    
+        novelty.key = 'Novelty';
+        novelty.type = 'Boolean';
+        novelty.default = 0;
+    option.novelty = novelty;
 
         kernelsize.key = 'KernelSize';
         kernelsize.type = 'Integer';
@@ -326,7 +331,7 @@ function varargout = mironsets(x,varargin)
 %% 'Frame' option
         frame.key = 'Frame';
         frame.type = 'Integer';
-        frame.when = 'Both';
+        frame.when = 'After';
         frame.number = 2;
         frame.default = [0 0];
         frame.keydefault = [3 .1];
@@ -370,7 +375,7 @@ if option.diffenv
     option.env = 1;
 end
 if isnan(option.env)
-    if option.flux || option.pitch
+    if option.flux || option.pitch || option.novelty
         option.env = 0;
     else
         option.env = 1;
@@ -391,12 +396,16 @@ if isamir(x,'miraudio')
                           'Mu',option.mu);
         type = 'mirenvelope';
     elseif option.flux
-        x = mirframenow(x,option);
         y = mirflux(x,'Inc',option.inc,'Complex',option.complex);
         type = 'mirscalar';
     elseif option.pitch
         [unused ac] = mirpitch(x,'Frame','Min',option.min,'Max',option.max);
         y = mirnovelty(ac,'KernelSize',option.kernelsize);
+        type = 'mirscalar';
+    elseif option.novelty
+        s = mirspectrum(x,'max',1000,'Frame',.05,.1,'MinRes',2,'log');
+        y = mirnovelty(s,'KernelSize',option.kernelsize,...
+                      'Distance','Euclidean','Similarity','oneminus');
         type = 'mirscalar';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
@@ -407,7 +416,6 @@ elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope')
     y = x; %mirframenow(x,option);
     type = mirtype(x);
 else
-    x = mirframenow(x,option);
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
     type = 'mirscalar';
 end
@@ -504,9 +512,10 @@ if isfield(option,'presel') && ...
     o = mirsum(o,'Weights',(filtfreq(1:end-1)+filtfreq(2:end))/2);
     o = mirenvelope(o,'Smooth',12);
 end
-if not(isa(o,'mirscalar'))
-    o = mirframenow(o,postoption);
+if isa(o,'mirscalar')
+    o = mirenvelope(o);
 end
+o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
     if isnan(postoption.cthr) || not(postoption.cthr)
         if ischar(postoption.detect) || postoption.detect
