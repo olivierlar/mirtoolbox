@@ -312,10 +312,12 @@ if isamir(orig,'mirscalar')
     e.downsampl = 0;
     e.hwr = 0;
     e.diff = 0;
-    e.method = 'Spectro';
+    e.method = 'Scalar';
     e.phase = {{}};
     e = class(e,'mirenvelope',mirtemporal(orig));
-    e = set(e,'Title','Envelope','Data',d,'Pos',p,'FramePos',{{}});
+    e = set(e,'Title','Envelope','Data',d,'Pos',p,...
+              'FramePos',{{p{1}{1}([1 end])}},...
+              'Sampling',{1/diff(p{1}{1}([1 2]))});
     postoption.trim = 0;
     postoption.ds = 0;
     e = post(e,postoption);
