@@ -197,7 +197,6 @@ elseif isempty(option.arg2)
                     manually = 1;
                 end
                 if manually
-                    disf = str2func(option.distance);
                     if strcmpi(option.distance,'cosine')
                         for i = 1:l
                             vv(:,i) = vv(:,i)/norm(vv(:,i));
@@ -211,7 +210,16 @@ elseif isempty(option.arg2)
                                 waitbar(i/l,handle);
                             end
                             ij = min(i+lK-1,l); % Frame region i:ij
-                            dkij = disf(vv(:,i),vv(:,i:ij));
+                            if ij==i
+                                continue
+                            end
+                            if strcmpi(option.distance,'cosine')
+                                dkij = cosine(vv(:,i),vv(:,i:ij));
+                            else
+                                mm = squareform(pdist(vv(:,i:ij)',...
+                                                      option.distance));
+                                dkij = mm(:,1);
+                            end
                             for j = 0:ij-i
                                 if hK-j>0
                                     dk{z}(hK-j,i,g) = dkij(j+1);   
@@ -227,7 +235,16 @@ elseif isempty(option.arg2)
                                 waitbar(i/l,handle);
                             end
                             j = min(i+hK-1,l);
-                            dkij = disf(vv(:,i),vv(:,i:j));
+                            if j==i
+                                continue
+                            end
+                            if strcmpi(option.distance,'cosine')
+                                dkij = cosine(vv(:,i),vv(:,i:j));
+                            else
+                                mm = squareform(pdist(vv(:,i:j)',...
+                                                      option.distance));
+                                dkij = mm(:,1);
+                            end
                             dk{z}(i,i:j,g) = dkij;
                             dk{z}(i:j,i,g) = dkij';
                         end
@@ -590,15 +607,9 @@ else
     end
 end
 
+
 function d = cosine(r,s)
 d = 1-r'*s;
-%nr = sqrt(r'*r);
-%ns = sqrt(s'*s);
-%if or(nr == 0, ns == 0);
-%    d = 1;
-%else
-%    d = 1 - r'*s/nr/ns;
-%end
 
 
 function d = KL(x,y)
