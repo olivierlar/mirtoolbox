@@ -302,6 +302,13 @@ function varargout = mirtempo(x,varargin)
         lart.keydefault = .2;
     option.lart = lart;
     
+    
+        wrap.key = 'Wrap';
+        wrap.type = 'Boolean';
+        wrap.default = 0;
+        wrap.when = 'After';
+    option.wrap = wrap;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirtempo,x,varargin,nargout,specif,@init,@main);
@@ -313,6 +320,10 @@ function [y type] = init(x,option)
 if iscell(x)
     x = x{1};
 end
+if isamir(x,'mirscalar')
+    y = x;
+    return
+end
 if option.perio
     option.m = 3;
     option.enh = 2:10;
@@ -322,7 +333,6 @@ if option.track
 end
 if option.lart
     option.m = Inf;
-    option.thr = .6;
 end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
@@ -409,6 +419,11 @@ function o = main(p,option,postoption)
 if iscell(p)
     p = p{1};
 end
+if isamir(p,'mirscalar')
+    t = modif(p,postoption)
+    o = {t};
+    return
+end
 pt = get(p,'TrackPrecisePos');
 track = 1;
 if isempty(pt) || isempty(pt{1})
@@ -474,7 +489,7 @@ if option.lart
                                         tmpk{1,g,h} = tmpk{1,g,h}...
                                                         * round(div);
                                     end
-                                    tmpk{1,l,h}(i+1) = 1;
+                                    tmpk{1,l,h}(i+1) = 1;%%%
                                     bpm{j}{k}(1,changes(end):l-1,h) = ...
                                         bpm{j}{k}(1,changes(end):l-1,h)...
                                             * round(div);
@@ -495,8 +510,8 @@ if option.lart
                         
                         if ~res && ~isempty(trsl)
                             tmpol = bpm{j}{k}(1,trsl-1,h);
-                            for i = 1:length(tmpk{1,l-1,h})
-                                if abs(log(ptl(1)*tmpk{1,l-1,h}(i)) ...
+                            for i = 1:length(tmpk{1,trsl-1,h})
+                                if abs(log(ptl(1)*tmpk{1,trsl-1,h}(i)) ...
                                         - log(tmpol)) ...
                                             < option.lart
                                     %bpmk{1,l,h}(i) = ptl(1);
@@ -517,8 +532,8 @@ if option.lart
                                                             * round(div);
                                         end
                                         tmpk{1,l,h}(i+1) = 1;
-                                        bpm{j}{k}(1,changes(end):l-1,h) = ...
-                                            bpm{j}{k}(1,changes(end):l-1,h)...
+                                        bpm{j}{k}(1,changes(end):trsl-1,h) = ...
+                                            bpm{j}{k}(1,changes(end):trsl-1,h)...
                                                 * round(div);
                                         res = 1;
                                         tmpo = ptl(1)
@@ -533,6 +548,15 @@ if option.lart
                                         tmpo = ptl(1)*tmpk{1,l,h}(i+1);
                                     end
                                 end
+                            end
+                            if res
+                                bpm{j}{k}(1,trsl:l-1,h) = ...
+                                    bpm{j}{k}(1,trsl-1,h);
+                                for g = trsl:l-1
+                                    tmpk{1,g,h} = tmpk{1,trsl-1,h};
+                                end
+                                trsl = [];
+                                stdl = l;
                             end
                         end
                         
@@ -549,6 +573,7 @@ if option.lart
                             tmpk{1,l,h} = 1;
                             tmpo = ptl(1);
                             changes(end+1) = l;
+                            
                             if ~isempty(trsl) && l-trsl<5
                                 bpm{j}{k}(1,trsl:l-1,h) = bpm{j}{k}(1,trsl-1,h);
                                 for i = trsl:l-1
@@ -557,6 +582,7 @@ if option.lart
                             end
                             trsl = l;
                         end
+                        
                         i = 1;
                         while i <= length(tmpk{1,l,h})
                             if ~tmpk{1,l,h}(i)
@@ -578,17 +604,6 @@ if option.lart
                     bpm{j}{k}(1,l,h) = tmpo;
                     tmpk{1,l,h},bpm{j}{k}(1,l,h)
                 end
-                %l = l+1;
-                %p1 = l;
-                %p2 = l-1;
-                %for i = length(changes):-1:1
-                %    if l-changes(i) > 5
-                %        tmpo(p1:p2) = NaN(1,size(p2-p1+1));
-                %        tmpo(p1:min(p1+5,p2)) = tmpo(changes(i));
-                %        p1 = changes(i);
-                %    end
-                %    l = changes(i);
-                %end
             end
         end 
     end
@@ -616,6 +631,7 @@ else
     end
 end
 t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
+t = modif(t,postoption)
 o = {t,p};
 
 
@@ -632,4 +648,24 @@ if isa(p,'mirautocor') && not(get(p,'FreqDomain'))
     ptl = 60./bpm;
 else
     ptl = bpm/60;
+end
+
+
+function t = modif(t,option)
+if option.wrap
+    d = get(t,'Data');
+    for i = 1:length(d)
+        for j = 1:length(d{i})
+            dij = zeros(1,length(d{i}{j}));
+            r = NaN;
+            for k = 1:length(d{i}{j})
+                if isnan(r) || abs(diff(log(d{i}{j}([k-1 k])))) > .2
+                    r = ceil(log2(d{i}{j}(k)) - log2(60)) - 1;
+                end
+                dij(k) = d{i}{j}(k)*2^(-r);
+            end
+            d{i}{j} = dij;
+        end
+    end
+    t = set(t,'Data',d);
 end
