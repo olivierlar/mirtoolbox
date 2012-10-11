@@ -337,7 +337,7 @@ end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
         warning('WARNING IN MIRTEMPO: The input should not be already decomposed into frames.');
-        disp(['Suggestion: Use the ''Frame'' option instead.'])
+        disp('Suggestion: Use the ''Frame'' option instead.')
     end
     if strcmpi(option.sum,'Before')
         optionsum = 1;
@@ -420,7 +420,7 @@ if iscell(p)
     p = p{1};
 end
 if isamir(p,'mirscalar')
-    t = modif(p,postoption)
+    t = modif(p,postoption);
     o = {t};
     return
 end
@@ -446,7 +446,7 @@ if option.lart
             trsl = [];
             for h = 1:size(ptk,3)
                 for l = 1:size(ptk,2)
-                    ptl = getbpm(p,ptk{1,l,h})
+                    ptl = getbpm(p,ptk{1,l,h});
                     if isempty(ptl)
                         if ~isempty(stdl)
                             tmpo = bpm{j}{k}(1,stdl,h);
@@ -498,12 +498,14 @@ if option.lart
                                 end
                             else
                                 div = tmpo/ptl(1);
-                                r = mod(div,1);
-                                if r<option.lart || r>1-option.lart
-                                    %bpmk{1,l,h}(i+1) = ptl(1);
-                                    tmpk{1,l,h}(i+1) = round(div);
-                                    res = 1;
-                                    tmpo = ptl(1)*tmpk{1,l,h}(i+1);
+                                if round(div)>1
+                                    r = mod(div,1);
+                                    if r<option.lart || r>1-option.lart
+                                        %bpmk{1,l,h}(i+1) = ptl(1);
+                                        tmpk{1,l,h}(i+1) = round(div);
+                                        res = 1;
+                                        tmpo = ptl(1)*tmpk{1,l,h}(i+1);
+                                    end
                                 end
                             end
                         end
@@ -536,7 +538,7 @@ if option.lart
                                             bpm{j}{k}(1,changes(end):trsl-1,h)...
                                                 * round(div);
                                         res = 1;
-                                        tmpo = ptl(1)
+                                        tmpo = ptl(1);
                                     end
                                 else
                                     div = tmpol/ptl(1);
@@ -568,10 +570,26 @@ if option.lart
                         else
                             if ~isempty(stdl) && l-stdl > 10
                                 stdl = [];
-                            end
-                            %bpmk{1,l,h} = ptl(1);
-                            tmpk{1,l,h} = 1;
+                            end                            
+                            
                             tmpo = ptl(1);
+                            if ptl(1)<50
+                                for i = 2:length(ptl)
+                                    if ptl(i)<180
+                                        div = ptl(i)/ptl(1);
+                                        if round(div)>1
+                                            r = mod(div,1);
+                                            if r<option.lart || ...
+                                                    r>1-option.lart
+                                                tmpo = ptl(i);
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            
+                            tmpk{1,l,h} = 1;
                             changes(end+1) = l;
                             
                             if ~isempty(trsl) && l-trsl<5
@@ -602,7 +620,6 @@ if option.lart
                         end
                     end
                     bpm{j}{k}(1,l,h) = tmpo;
-                    tmpk{1,l,h},bpm{j}{k}(1,l,h)
                 end
             end
         end 
@@ -631,7 +648,7 @@ else
     end
 end
 t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
-t = modif(t,postoption)
+t = modif(t,postoption);
 o = {t,p};
 
 
@@ -662,7 +679,11 @@ if option.wrap
                 if isnan(r) || abs(diff(log(d{i}{j}([k-1 k])))) > .2
                     r = ceil(log2(d{i}{j}(k)) - log2(60)) - 1;
                 end
-                dij(k) = d{i}{j}(k)*2^(-r);
+                if r>0
+                    dij(k) = d{i}{j}(k)*2^(-r);
+                else
+                    dij(k) = d{i}{j}(k);
+                end
             end
             d{i}{j} = dij;
         end
