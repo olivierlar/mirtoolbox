@@ -1,5 +1,7 @@
 function varargout = mirattackslope(orig,varargin)
-%   a = mirattackslope(x) estimates the average slope of each note attack. 
+%   a = mirattackslope(x) estimates the average slope of each note attack.
+%       Values are expressed in the same scale than the original signal,
+%       but normalised by time in seconds.
 %   Optional arguments:
 %   a = mirattackslope(x,m) specifies a method for slope computation.
 %       Possible values:

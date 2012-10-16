@@ -1,5 +1,6 @@
 function varargout = mirattackleap(orig,varargin)
-%   a = mirattackleap(x) estimates the leap of each note attack. 
+%   a = mirattackleap(x) estimates the leap of each note attack.
+%       Values are expressed in the same scale than the original signal.
 %   Optional arguments:
 %   mirattackleap(...,'Contrast',c) specifies the 'Contrast' parameter
 %       used in mironsets for event detection through peak picking.
