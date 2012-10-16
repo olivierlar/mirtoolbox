@@ -170,25 +170,20 @@ else
             if not(isempty(cl))
                 hold on
                 sim = [cl{i}{1}.sim];
-                gap = [cl{i}{1}.gap];
-                mingap = min(gap);
-                rangap = max(gap)-mingap;
-                gap = (gap-mingap)/rangap;
-                [gap ord] = sort(gap);
+                minsim = min(sim);
+                ransim = max(sim)-minsim;
+                sim = (sim-minsim)/ransim;
+                [sim ord] = sort(sim);
                 cli = cl{i}{1}(ord); 
                 for h = 1:length(cli)
-                    if gap(h)
-                        %cl{i}{1}(k).j>10 && ...
-                         %   cl{i}{1}(k).sim>.9
-                        x = fpi(cli(h).i) - fpi(1)/2;
-                        y = x + fpi(cli(h).j + 1);
-                        col = 1-gap(h);
-                        wid = gap(h)^.05*.8;
-                        line([x y],[x x],'Color',[col col col],'LineWidth',wid)
-                        line([x y],[y y],'Color',[col col col],'LineWidth',wid)
-                        line([x x],[x y],'Color',[col col col],'LineWidth',wid)
-                        line([y y],[x y],'Color',[col col col],'LineWidth',wid)
-                    end
+                    x = fpi(cli(h).i) - fpi(1)/2;
+                    y = x + fpi(cli(h).j + 1);
+                    col = 1-sim(h);
+                    wid = sim(h)^.05*.8 + .1;
+                    line([x y],[x x],'Color',[col col col],'LineWidth',wid)
+                    line([x y],[y y],'Color',[col col col],'LineWidth',wid)
+                    line([x x],[x y],'Color',[col col col],'LineWidth',wid)
+                    line([y y],[x y],'Color',[col col col],'LineWidth',wid)
                 end
             end
             set(gca,'YDir','normal')

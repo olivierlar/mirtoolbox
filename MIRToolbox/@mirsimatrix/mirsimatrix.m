@@ -90,6 +90,12 @@ function varargout = mirsimatrix(orig,varargin)
         arg2.default = [];
     option.arg2 = arg2;
     
+        frame.key = 'Frame';
+        frame.type = 'Integer';
+        frame.number = 2;
+        frame.default = [.05 1];
+    option.frame = frame;
+    
 specif.option = option;
 specif.nochunk = 1;
 varargout = mirfunction(@mirsimatrix,orig,varargin,nargout,specif,@init,@main);
@@ -100,7 +106,9 @@ if isamir(x,'miraudio')
     if isframed(x)
         x = mirspectrum(x);
     else
-        x = mirspectrum(x,'Frame',0.05,1);
+        x = mirspectrum(x,'Frame',option.frame.length.val,option.frame.length.unit,...
+                                  option.frame.hop.val,option.frame.hop.unit,...
+                                  option.frame.phase.val,option.frame.phase.unit);
     end
 end
 type = 'mirsimatrix';
@@ -448,20 +456,35 @@ if not(isempty(postoption))
         end
         m = set(m,'Warp',{paths,bests,bestsindex});
     end
-    if postoption.cluster
+    if postoption.cluster % && isempty(get(orig,'Clusters'))
         for k = 1:length(d)
             clus{k} = cell(1,length(d{k}));
             for z = 1:length(d{k})
                 dz = d{k}{z};
                 l = size(dz,1);
-                pr = NaN(l);
+                %prof = NaN(l);
                 sel = [];
-                cand = [];
+                %cand = [];
                 for i = 1:l
-                    for j = 1:l-i
-                        pr(i,j) = min(dz(i+1:i+j,i));
+                    maxrad = min(i-1,l-i-1);
+                    for j = 1:maxrad
+                        in = dz(i-j:i+j,i-j:i+j);
+                        homg = mean(in(:))-std(in(:));
+                        out = [dz(i-j:i+j,i-j),dz(i-j:i+j,i+j)];
+                        halo = mean(out(:)) - std(out(:));
+                        if homg-halo>.05
+                            sel(end+1).i = i-j;
+                            sel(end).j = j;
+                            sel(end).sim = homg;
+                            sel(end).gap = homg-halo;
+                        end
                     end
-                    dr = find(pr(i,1:end-1) - pr(i,2:end) > .00);
+                end
+                if 0
+                    for j = 1:l-i
+                        prof(i,j) = min(dz(i+1:i+j,i));
+                    end
+                    drop = find(prof(i,1:end-1) > prof(i,2:end));
                     j = 1;
                     while j <= length(cand)
                         if cand(j).current == 1
@@ -471,13 +494,13 @@ if not(isempty(postoption))
                             sel(end).gap = cand(j).gap;
                             cand(j) = [];
                         else
-                            idx = find(cand(j).current-1 == dr);
+                            idx = find(cand(j).current-1 == drop);
                             if ~isempty(idx)
                                 cand(j).current = cand(j).current-1;
                                 cand(j).sim = min(cand(j).sim,...
-                                                  pr(i,dr(idx)));
+                                                  prof(i,drop(idx)));
                                 cand(j).gap = min(cand(j).gap,...
-                                                  pr(i,dr(idx)) - pr(i,dr(idx)+1));
+                                                  prof(i,drop(idx)) - prof(i,drop(idx)+1));
                                 if 0 %cand(j).dissim > cand(j).sim
                                     cand(j) = [];
                                 else
@@ -488,12 +511,30 @@ if not(isempty(postoption))
                             end
                         end
                     end
-                    for j = 1:length(dr)
-                        cand(end+1).i = i;
-                        cand(end).j = dr(j);
-                        cand(end).sim = pr(i,dr(j));
-                        cand(end).gap = pr(i,dr(j)) - pr(i,dr(j)+1);
-                        cand(end).current = j;
+                    ij = i;
+                    for j = 1:length(drop)
+                        if i>1
+                            for h = ij+1:drop(j)
+                                if dz(h,i) <= dz(h,i-1)
+                                    ij = NaN;
+                                    break
+                                end
+                                if isnan(ij)
+                                    break
+                                else
+                                    ij = drop(j);
+                                end
+                            end
+                        end
+                        if isnan(ij)
+                            break
+                        else
+                            cand(end+1).i = i;
+                            cand(end).j = drop(j);
+                            cand(end).sim = prof(i,drop(j));
+                            cand(end).gap = prof(i,drop(j)) - prof(i,drop(j)+1);
+                            cand(end).current = j;
+                        end
                     end
                 end
                 clus{k}{z} = sel;
