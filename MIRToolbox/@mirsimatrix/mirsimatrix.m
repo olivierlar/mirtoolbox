@@ -457,87 +457,46 @@ if not(isempty(postoption))
         m = set(m,'Warp',{paths,bests,bestsindex});
     end
     if postoption.cluster % && isempty(get(orig,'Clusters'))
+        clus = cell(1,length(d));
         for k = 1:length(d)
             clus{k} = cell(1,length(d{k}));
             for z = 1:length(d{k})
                 dz = d{k}{z};
                 l = size(dz,1);
-                %prof = NaN(l);
-                sel = [];
-                %cand = [];
-                for i = 1:l
-                    maxrad = min(i-1,l-i-1);
-                    for j = 1:maxrad
-                        in = dz(i-j:i+j,i-j:i+j);
+                sim = NaN(l);
+                for i = 2:l-1
+                    for j = 1:l-i-1
+                        in = dz(i:i+j,i:i+j);
                         homg = mean(in(:))-std(in(:));
-                        out = [dz(i-j:i+j,i-j),dz(i-j:i+j,i+j)];
+                        out = [dz(i:i+j,i-1),dz(i:i+j,i+j+1)];
                         halo = mean(out(:)) - std(out(:));
-                        if homg-halo>.05
-                            sel(end+1).i = i-j;
-                            sel(end).j = j;
-                            sel(end).sim = homg;
-                            sel(end).gap = homg-halo;
-                        end
-                    end
-                end
-                if 0
-                    for j = 1:l-i
-                        prof(i,j) = min(dz(i+1:i+j,i));
-                    end
-                    drop = find(prof(i,1:end-1) > prof(i,2:end));
-                    j = 1;
-                    while j <= length(cand)
-                        if cand(j).current == 1
-                            sel(end+1).i = cand(j).i;
-                            sel(end).j = cand(j).j;
-                            sel(end).sim = cand(j).sim;
-                            sel(end).gap = cand(j).gap;
-                            cand(j) = [];
-                        else
-                            idx = find(cand(j).current-1 == drop);
-                            if ~isempty(idx)
-                                cand(j).current = cand(j).current-1;
-                                cand(j).sim = min(cand(j).sim,...
-                                                  prof(i,drop(idx)));
-                                cand(j).gap = min(cand(j).gap,...
-                                                  prof(i,drop(idx)) - prof(i,drop(idx)+1));
-                                if 0 %cand(j).dissim > cand(j).sim
-                                    cand(j) = [];
+                        if homg > .7 && homg-halo>.01
+                            sim(i,j) = homg;
+                            
+                            if j>1 && ~isnan(sim(i,j-1)) && ...
+                                    sim(i,j-1)-sim(i,j) < .01
+                                sim(i,j-1) = NaN;
+                            end
+                            if i>1 && j<l-i-1 && ...
+                                    ~isnan(sim(i-1,j+1)) && ...
+                                    sim(i,j)-sim(i-1,j+1) < .01
+                                sim(i-1,j+1) = NaN;
+                            end
+                            
+                            if i>1 && ~isnan(sim(i-1,j))
+                                if abs(sim(i-1,j)-sim(i,j)) < .01
+                                    sim(i-1,j) = NaN;
+                                    sim(i,j) = NaN;
+                                elseif sim(i-1,j) > sim(i,j)
+                                    sim(i,j) = NaN;
                                 else
-                                    j = j+1;
+                                    sim(i-1,j) = NaN;
                                 end
-                            else
-                                cand(j) = [];
                             end
                         end
                     end
-                    ij = i;
-                    for j = 1:length(drop)
-                        if i>1
-                            for h = ij+1:drop(j)
-                                if dz(h,i) <= dz(h,i-1)
-                                    ij = NaN;
-                                    break
-                                end
-                                if isnan(ij)
-                                    break
-                                else
-                                    ij = drop(j);
-                                end
-                            end
-                        end
-                        if isnan(ij)
-                            break
-                        else
-                            cand(end+1).i = i;
-                            cand(end).j = drop(j);
-                            cand(end).sim = prof(i,drop(j));
-                            cand(end).gap = prof(i,drop(j)) - prof(i,drop(j)+1);
-                            cand(end).current = j;
-                        end
-                    end
                 end
-                clus{k}{z} = sel;
+                clus{k}{z} = sim;
             end
         end
         m = set(m,'Clusters',clus);

@@ -93,7 +93,7 @@ end
 fp = get(orig,'FramePos');
 if not(isa(orig,'mirscalar'))
     s = get(orig,'Data');
-    cl = get(orig,'Clusters')
+    cl = get(orig,'Clusters');
     if isempty(cl)
         dw = get(orig,'DiagWidth');
         Ks = option.K;
@@ -155,17 +155,23 @@ if not(isa(orig,'mirscalar'))
             end
         end
     else
+        score = cell(1,length(s));
         for k = 1:length(s)
+            score{k} = cell(1,length(s{k}));
             for z = 1:length(s{k})
-                score{k}{z} = zeros(1,size(s{k}{z},1)-1);
+                score{k}{z} = zeros(1,size(cl{k}{z},1));
                 for i = 1:length(cl{k}{z})
-                    cli = cl{k}{z}(i);
-                    x = cli.i;
-                    score{k}{z}(x) = score{k}{z}(x) + cli.sim + cli.j;
-                    y = cli.i + cli.j;
-                    score{k}{z}(x) = score{k}{z}(x) + cli.sim + cli.j;
+                    for j = 1:length(cl{k}{z})
+                        clij = cl{k}{z}(i,j);
+                        if ~isnan(clij) %&& clij > .9
+                            score{k}{z}(i) = max(score{k}{z}(i), ...
+                                clij^5 * j^2);
+                            score{k}{z}(i+j) = max(score{k}{z}(i+j), ...
+                                clij^5 * j^2);
+                        end
+                    end
                 end
-                fp{k}{z} = [fp{k}{z}(1,2:end);fp{k}{z}(2,1:end-1)];
+                %fp{k}{z} = [fp{k}{z}(1,2:end);fp{k}{z}(2,1:end-1)];
             end
         end
     end

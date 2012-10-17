@@ -169,21 +169,28 @@ else
             end
             if not(isempty(cl))
                 hold on
-                sim = [cl{i}{1}.sim];
-                minsim = min(sim);
-                ransim = max(sim)-minsim;
-                sim = (sim-minsim)/ransim;
-                [sim ord] = sort(sim);
-                cli = cl{i}{1}(ord); 
-                for h = 1:length(cli)
-                    x = fpi(cli(h).i) - fpi(1)/2;
-                    y = x + fpi(cli(h).j + 1);
-                    col = 1-sim(h);
-                    wid = sim(h)^.05*.8 + .1;
-                    line([x y],[x x],'Color',[col col col],'LineWidth',wid)
-                    line([x y],[y y],'Color',[col col col],'LineWidth',wid)
-                    line([x x],[x y],'Color',[col col col],'LineWidth',wid)
-                    line([y y],[x y],'Color',[col col col],'LineWidth',wid)
+                sims = cl{i}{1}(:);
+                sims(isnan(sims)) = [];
+                minsim = min(sims);
+                ransim = max(sims)-minsim;
+                sim = (cl{i}{1}-minsim)/ransim;
+                for h = 1:size(cl{1}{1},1)
+                    for j = 1:size(cl{1}{1},2)
+                        if ~isnan(cl{1}{1}(h,j))
+                            x = fpi(h) - fpi(1)/2;
+                            y = x + fpi(j + 1);
+                            col = sim(h,j);
+                            wid = 1; %sim(h,j)^.05*.8 + .1;
+                            line([x y],[x x],...
+                                 'Color',[col col col],'LineWidth',wid)
+                            line([x y],[y y],...
+                                 'Color',[col col col],'LineWidth',wid)
+                            line([x x],[x y],...
+                                 'Color',[col col col],'LineWidth',wid)
+                            line([y y],[x y],...
+                                 'Color',[col col col],'LineWidth',wid)
+                        end
+                    end
                 end
             end
             set(gca,'YDir','normal')
