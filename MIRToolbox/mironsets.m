@@ -403,7 +403,7 @@ if isamir(x,'miraudio')
         y = mirnovelty(ac,'KernelSize',option.kernelsize);
         type = 'mirscalar';
     elseif option.novelty
-        s = mirspectrum(x,'max',1000,'Frame',.05,.1,'MinRes',2,'log');
+        s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'log');
         y = mirnovelty(s,'KernelSize',option.kernelsize,...
                       'Distance','Euclidean','Similarity','oneminus');
         type = 'mirscalar';
