@@ -439,7 +439,6 @@ if option.lart
         for k = 1:length(pt{j})
             ptk = pt{j}{k};
             tmpk = cell(1,size(ptk,2),size(ptk,3));
-            %bpmk = cell(1,size(ptk,2),size(ptk,3));
             bpm{j}{k} = zeros(1,size(ptk,2),size(ptk,3));
             changes = [];
             stdl = [];
@@ -447,44 +446,56 @@ if option.lart
             for h = 1:size(ptk,3)
                 for l = 1:size(ptk,2)
                     ptl = getbpm(p,ptk{1,l,h});
+                    
                     if isempty(ptl)
+                        % No peak detected
+                        
                         if ~isempty(stdl)
+                            % Prolongation of previous peak
                             tmpo = bpm{j}{k}(1,stdl,h);
                             tmpk{1,l,h} = tmpk{1,stdl,h};
+                            
                         else
+                            % or frame leaved empty
                             tmpo = NaN;
                         end
+                        
                         changes(end+1) = l;
                         
                         if ~isempty(trsl) && l-trsl<5
+                            % Hypothetical phase aborted
                             bpm{j}{k}(1,trsl:l-1,h) = bpm{j}{k}(1,trsl-1,h);
                             for i = trsl:l-1
                                 tmpk{1,i,h} = tmpk{1,trsl-1,h};
                             end
                         end
+                        
                     elseif l == 1 || isempty(tmpk{1,l-1,h})
-                        %bpmk{1,l,h} = ptl(1);
+                        % New init phase: highest peak selected
                         tmpk{1,l,h} = 1;
                         tmpo = ptl(1);
                         changes(end+1) = l;
+                        
                     else
                         res = 0;
 
                         for i = 1:length(tmpk{1,l-1,h})
                             if abs(log(ptl(1)*tmpk{1,l-1,h}(i)) - log(tmpo)) < option.lart
-                                %bpmk{1,l,h}(i) = ptl(1);
+                                % Continuation of current track
                                 tmpk{1,l,h}(i) = round(tmpo/ptl(1));
                                 res = 1;
                                 tmpo = ptl(1)*tmpk{1,l,h}(i);
                                 break
                             end
                         end
+                        
                         if ~res
                             if ptl(1)>tmpo
                                 div = ptl(1)/tmpo;
                                 r = mod(div,1);
                                 if r<option.lart || r>1-option.lart
-                                    %bpmk{1,l,h}(i+1) = ptl(1);
+                                    % Subdivision of pulse detected
+                                    % Track transformed and continued
                                     for g = changes(end):l-1
                                         tmpk{1,g,h} = tmpk{1,g,h}...
                                                         * round(div);
@@ -496,12 +507,14 @@ if option.lart
                                     res = 1;
                                     tmpo = ptl(1);
                                 end
+                                
                             else
                                 div = tmpo/ptl(1);
                                 if round(div)>1
+                                    % Multiple of pulse detected
+                                    % Track continued
                                     r = mod(div,1);
                                     if r<option.lart || r>1-option.lart
-                                        %bpmk{1,l,h}(i+1) = ptl(1);
                                         tmpk{1,l,h}(i+1) = round(div);
                                         res = 1;
                                         tmpo = ptl(1)*tmpk{1,l,h}(i+1);
@@ -511,24 +524,27 @@ if option.lart
                         end
                         
                         if ~res && ~isempty(trsl)
+                            % Same 3 steps but tried on hypothetical track
                             tmpol = bpm{j}{k}(1,trsl-1,h);
                             for i = 1:length(tmpk{1,trsl-1,h})
                                 if abs(log(ptl(1)*tmpk{1,trsl-1,h}(i)) ...
                                         - log(tmpol)) ...
                                             < option.lart
-                                    %bpmk{1,l,h}(i) = ptl(1);
+                                    % Continuation of hypothetical track
                                     tmpk{1,l,h}(i) = round(tmpol/ptl(1));
                                     res = 1;
                                     tmpo = ptl(1)*tmpk{1,l,h}(i);
                                     break
                                 end
                             end
+                            
                             if ~res
                                 if ptl(1)>tmpol
                                     div = ptl(1)/tmpol;
                                     r = mod(div,1);
                                     if r<option.lart || r>1-option.lart
-                                        %bpmk{1,l,h}(i+1) = ptl(1);
+                                        % Subdivision of pulse detected
+                                        % Hypothetical track transformed and continued
                                         for g = changes(end):l-1
                                             tmpk{1,g,h} = tmpk{1,g,h}...
                                                             * round(div);
@@ -540,18 +556,23 @@ if option.lart
                                         res = 1;
                                         tmpo = ptl(1);
                                     end
+                                    
                                 else
                                     div = tmpol/ptl(1);
                                     r = mod(div,1);
                                     if r<option.lart || r>1-option.lart
-                                        %bpmk{1,l,h}(i+1) = ptl(1);
+                                        % Multiple of pulse detected
+                                        % Hypothetical track continued
                                         tmpk{1,l,h}(i+1) = round(div);
                                         res = 1;
                                         tmpo = ptl(1)*tmpk{1,l,h}(i+1);
                                     end
                                 end
                             end
+                            
                             if res
+                                % Hypothetical track turned into confirmed
+                                % track
                                 bpm{j}{k}(1,trsl:l-1,h) = ...
                                     bpm{j}{k}(1,trsl-1,h);
                                 for g = trsl:l-1
@@ -564,16 +585,20 @@ if option.lart
                         
                         if res
                             if l-changes(end)>5
+                                % Hypothetical track aborted
                                 stdl = l;
                                 trsl = [];
                             end
+                            
                         else
                             if ~isempty(stdl) && l-stdl > 10
+                                % After long stop, previous peak forgotten
                                 stdl = [];
                             end                            
                             
                             tmpo = ptl(1);
                             if ptl(1)<50
+                                % Very slow pulses subdivided
                                 for i = 2:length(ptl)
                                     if ptl(i)<180
                                         div = ptl(i)/ptl(1);
@@ -593,6 +618,7 @@ if option.lart
                             changes(end+1) = l;
                             
                             if ~isempty(trsl) && l-trsl<5
+                                % Hypothetical phase aborted
                                 bpm{j}{k}(1,trsl:l-1,h) = bpm{j}{k}(1,trsl-1,h);
                                 for i = trsl:l-1
                                     tmpk{1,i,h} = tmpk{1,trsl-1,h};
@@ -604,14 +630,14 @@ if option.lart
                         i = 1;
                         while i <= length(tmpk{1,l,h})
                             if ~tmpk{1,l,h}(i)
+                                % Previous track not detected is continued if
+                                % there is energy left around that frequency.
                                 tmpi = tmpo/tmpk{1,l-1,h}(i);
                                 ps = find(pp{j}{k}(:,l,h)...
                                             > getpos(p,tmpi),1);
                                 if d{j}{k}(ps,l,h) > .1
-                                    %bpmk{1,l,h}(i) = bpmk{1,l-1,h}(i);
                                     tmpk{1,l,h}(i) = tmpk{1,l-1,h}(i);
                                 else
-                                    %bpmk{1,l,h}(i) = [];
                                     tmpk{1,l,h}(i) = [];
                                     i = i-1;
                                 end
@@ -621,6 +647,47 @@ if option.lart
                     end
                     bpm{j}{k}(1,l,h) = tmpo;
                 end
+                
+                r = NaN;
+                newbpm = zeros(1,size(bpm{j}{k},2));
+                for l = 1:size(bpm{j}{k},2)
+                    if isnan(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2
+                        if (bpm{j}{k}(l) < 50 || bpm{j}{k}(l) > 150)
+                            ptl = getbpm(p,ptk{1,l,h});
+                            found = 0;
+                            for i = 1:length(ptl)
+                                if (ptl(i) > 50 && ptl(i) < 150)
+                                    if bpm{j}{k}(l) > ptl(i)
+                                        div = bpm{j}{k}(l) / ptl(i);
+                                        rm = mod(div,1);
+                                        if rm < option.lart || ...
+                                                rm > 1-option.lart
+                                            r = div;
+                                            found = 1;
+                                            break
+                                        end
+                                    else
+                                        div = ptl(i) / bpm{j}{k}(l);
+                                        rm = mod(div,1);
+                                        if rm < option.lart || ...
+                                                rm > 1-option.lart
+                                            r = 1 / div;
+                                            found = 1;
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if ~found
+                                r = Inf;
+                            end
+                        else
+                            r = 1;
+                        end
+                    end
+                    newbpm(l) = bpm{j}{k}(l) / r;
+                end
+                bpm{j}{k} = newbpm;
             end
         end 
     end
