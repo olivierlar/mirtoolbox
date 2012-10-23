@@ -24,7 +24,7 @@ function varargout = mirpitch(orig,varargin)
 %       mirpitch(...,'Total',m) selects the m best pitches.
 %           Default value: m = Inf, no limit is set concerning the number
 %           of pitches to be detected.
-%       mirpitch(...,'Mono') corresponds to morpitch(...,'Total',1)
+%       mirpitch(...,'Mono') corresponds to mirpitch(...,'Total',1)
 %       mirpitch(...,'Min',mi) indicates the lowest frequency taken into
 %           consideration.
 %           Default value: 75 Hz. (Praat)
@@ -652,7 +652,6 @@ if option.stable(1) < Inf
     end
 end
 if option.median
-    sr = get(x,'Sampling');
     for i = 1:length(pf)
         for j = 1:length(pf{i})
             if size(fp{i}{j},2) > 1

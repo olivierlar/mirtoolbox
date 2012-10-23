@@ -648,20 +648,20 @@ if option.lart
                     bpm{j}{k}(1,l,h) = tmpo;
                 end
                 
-                r = NaN;
+                r = Inf;
                 newbpm = zeros(1,size(bpm{j}{k},2));
                 for l = 1:size(bpm{j}{k},2)
-                    if isnan(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2
+                    if isinf(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2
                         if (bpm{j}{k}(l) < 50 || bpm{j}{k}(l) > 150)
                             ptl = getbpm(p,ptk{1,l,h});
                             found = 0;
                             for i = 1:length(ptl)
-                                if (ptl(i) > 50 && ptl(i) < 150)
+                                if (ptl(i) > 50 && ptl(i) < 160)
                                     if bpm{j}{k}(l) > ptl(i)
                                         div = bpm{j}{k}(l) / ptl(i);
                                         rm = mod(div,1);
-                                        if rm < option.lart || ...
-                                                rm > 1-option.lart
+                                        if 1 %rm < option.lart || ...
+                                                %rm > 1-option.lart
                                             r = div;
                                             found = 1;
                                             break
@@ -669,8 +669,8 @@ if option.lart
                                     else
                                         div = ptl(i) / bpm{j}{k}(l);
                                         rm = mod(div,1);
-                                        if rm < option.lart || ...
-                                                rm > 1-option.lart
+                                        if 1 %rm < option.lart || ...
+                                                %rm > 1-option.lart
                                             r = 1 / div;
                                             found = 1;
                                             break
