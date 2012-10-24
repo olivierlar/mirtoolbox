@@ -48,6 +48,11 @@ function varargout = mirnovelty(orig,varargin)
         transf.choice = {'Horizontal','TimeLag'};
     option.transf = transf;
     
+        gaps.key = 'Gaps';
+        gaps.type = 'Boolean';
+        gaps.default = 0;
+    option.gaps = gaps;
+
         cluster.key = 'Cluster';
         cluster.type = 'Boolean';
         cluster.default = 0;
@@ -73,7 +78,7 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
 function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
-    if option.cluster
+    if option.cluster || option.gaps
         option.K = Inf;
         option.transf = 'Standard';
     end
@@ -90,106 +95,120 @@ function y = main(orig,option,postoption)
 if iscell(orig)
     orig = orig{1};
 end
-fp = get(orig,'FramePos');
-if not(isa(orig,'mirscalar'))
-    s = get(orig,'Data');
-    cl = get(orig,'Clusters');
-    if isempty(cl)
-        dw = get(orig,'DiagWidth');
-        Ks = option.K;
-        for k = 1:length(s)
-            for i = 1:length(Ks)
-                if isnumeric(dw)
-                    dwk = dw;
-                else
-                    dwk = dw{k};
-                end
-                if Ks(i)
-                    cgs = min(Ks(i),dwk);
-                else
-                    cgs = dwk;
-                end
-                cg = checkergauss(cgs,option.transf)/cgs.^option.gran;
-                disp('Computing convolution, please wait...')
-                for z = 1:length(s{k})
-                    sz = s{k}{z};
-                    szma = max(max(sz));
-                    szmi = min(min(sz));
-                    sz = (sz-szmi)/(szma-szmi);
-                    sz = 2*sz-1;
-                    sz(isnan(sz)) = 0;
-                    cv = convolve2(sz,cg,'same');
-                    nl = size(cv,1);
-                    nc = size(cv,2);
-                    if nl == 0
-                        warning('WARNING IN NOVELTY: No frame decomposition. The novelty score cannot be computed.');
-                        score{k}{z} = [];
+
+if option.gaps
+    for i = 1:9
+        fl = mirflux(orig,'Gaps',1-i/10);
+        if i == 1
+            n = fl;
+        else
+            n = n + fl^i;
+        end
+    end
+else
+        
+    fp = get(orig,'FramePos');
+    if not(isa(orig,'mirscalar'))
+        s = get(orig,'Data');
+        cl = get(orig,'Clusters');
+        if isempty(cl)
+            dw = get(orig,'DiagWidth');
+            Ks = option.K;
+            for k = 1:length(s)
+                for i = 1:length(Ks)
+                    if isnumeric(dw)
+                        dwk = dw;
                     else
-                        sco = cv(floor(size(cv,1)/2),:);
-                        incr = find(diff(sco)>=0);
-                        if not(isempty(incr))
-                            decr = find(diff(sco)<=0);
-                            sco(1:incr(1)-1) = NaN(1,incr(1)-1);
-                            if not(isempty(decr))
-                                sco(decr(end)+1:end) = NaN(1,length(sco)-decr(end));
-                            end
+                        dwk = dw{k};
+                    end
+                    if Ks(i)
+                        cgs = min(Ks(i),dwk);
+                    else
+                        cgs = dwk;
+                    end
+                    cg = checkergauss(cgs,option.transf)/cgs.^option.gran;
+                    disp('Computing convolution, please wait...')
+                    for z = 1:length(s{k})
+                        sz = s{k}{z};
+                        szma = max(max(sz));
+                        szmi = min(min(sz));
+                        sz = (sz-szmi)/(szma-szmi);
+                        sz = 2*sz-1;
+                        sz(isnan(sz)) = 0;
+                        cv = convolve2(sz,cg,'same');
+                        nl = size(cv,1);
+                        nc = size(cv,2);
+                        if nl == 0
+                            warning('WARNING IN NOVELTY: No frame decomposition. The novelty score cannot be computed.');
+                            score{k}{z} = [];
+                        else
+                            sco = cv(floor(size(cv,1)/2),:);
                             incr = find(diff(sco)>=0);
-                            sco2 = sco;
                             if not(isempty(incr))
-                                sco2 = sco2(1:incr(end)+1);
+                                decr = find(diff(sco)<=0);
+                                sco(1:incr(1)-1) = NaN(1,incr(1)-1);
+                                if not(isempty(decr))
+                                    sco(decr(end)+1:end) = NaN(1,length(sco)-decr(end));
+                                end
+                                incr = find(diff(sco)>=0);
+                                sco2 = sco;
+                                if not(isempty(incr))
+                                    sco2 = sco2(1:incr(end)+1);
+                                end
+                                decr = find(diff(sco)<=0);
+                                if not(isempty(decr)) && decr(1)>2
+                                    sco2 = sco2(decr(1)-1:end);
+                                end
+                                mins = min(sco2);
+                                rang = find(sco>= mins);
+                                if not(isempty(rang))
+                                    sco(1:rang(1)-1) = NaN(1,rang(1)-1);
+                                    sco(rang(end)+1:end) = NaN(1,length(sco)-rang(end));
+                                end
                             end
-                            decr = find(diff(sco)<=0);
-                            if not(isempty(decr)) && decr(1)>2
-                                sco2 = sco2(decr(1)-1:end);
-                            end
-                            mins = min(sco2);
-                            rang = find(sco>= mins);
-                            if not(isempty(rang))
-                                sco(1:rang(1)-1) = NaN(1,rang(1)-1);
-                                sco(rang(end)+1:end) = NaN(1,length(sco)-rang(end));
+                            score{k}{z}(i,:) = sco';
+                        end
+                    end
+                end
+            end
+        else
+            score = cell(1,length(s));
+            for k = 1:length(s)
+                score{k} = cell(1,length(s{k}));
+                for z = 1:length(s{k})
+                    score{k}{z} = zeros(1,size(cl{k}{z},1));
+                    for i = 1:length(cl{k}{z})
+                        for j = 1:length(cl{k}{z})
+                            clij = cl{k}{z}(i,j);
+                            if ~isnan(clij) %&& clij > .9
+                                score{k}{z}(i) = max(score{k}{z}(i), ...
+                                    clij^5 * j^2);
+                                score{k}{z}(i+j) = max(score{k}{z}(i+j), ...
+                                    clij^5 * j^2);
                             end
                         end
-                        score{k}{z}(i,:) = sco';
                     end
+                    %fp{k}{z} = [fp{k}{z}(1,2:end);fp{k}{z}(2,1:end-1)];
                 end
             end
         end
     else
-        score = cell(1,length(s));
-        for k = 1:length(s)
-            score{k} = cell(1,length(s{k}));
-            for z = 1:length(s{k})
-                score{k}{z} = zeros(1,size(cl{k}{z},1));
-                for i = 1:length(cl{k}{z})
-                    for j = 1:length(cl{k}{z})
-                        clij = cl{k}{z}(i,j);
-                        if ~isnan(clij) %&& clij > .9
-                            score{k}{z}(i) = max(score{k}{z}(i), ...
-                                clij^5 * j^2);
-                            score{k}{z}(i+j) = max(score{k}{z}(i+j), ...
-                                clij^5 * j^2);
-                        end
-                    end
+        score = get(orig,'Data');
+    end
+    if not(isempty(postoption)) && postoption.normal
+        for k = 1:length(score)
+            for l = 1:length(score{k})
+                for i = 1:size(score{k}{l},1)
+                    sco = score{k}{l}(i,:);
+                    sco = (sco-min(sco))/(max(sco)-min(sco));
+                    score{k}{l}(i,:) = sco;
                 end
-                %fp{k}{z} = [fp{k}{z}(1,2:end);fp{k}{z}(2,1:end-1)];
             end
         end
     end
-else
-    score = get(orig,'Data');
+    n = mirscalar(orig,'Data',score,'Title','Novelty','FramePos',fp); 
 end
-if not(isempty(postoption)) && postoption.normal
-    for k = 1:length(score)
-        for l = 1:length(score{k})
-            for i = 1:size(score{k}{l},1)
-                sco = score{k}{l}(i,:);
-                sco = (sco-min(sco))/(max(sco)-min(sco));
-                score{k}{l}(i,:) = sco;
-            end
-        end
-    end
-end
-n = mirscalar(orig,'Data',score,'Title','Novelty','FramePos',fp); 
+
 y = {n orig};
 
 
