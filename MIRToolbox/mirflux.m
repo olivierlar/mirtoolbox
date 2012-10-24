@@ -44,8 +44,7 @@ function varargout = mirflux(orig,varargin)
 
         dist.key = 'Dist';
         dist.type = 'String';
-        dist.choice = {'Euclidian','City','Cosine'};  %PDIST???? (euclidean)
-        dist.default = 'Euclidian';
+        dist.default = 'Euclidean';
     option.dist = dist;
     
         inc.key = 'Inc';
@@ -57,6 +56,12 @@ function varargout = mirflux(orig,varargin)
         complex.type = 'Boolean';
         complex.default = 0;
     option.complex = complex;
+    
+        gap.key = 'Gaps';
+        gap.type = 'Integer';
+        gap.default = 0;
+        gap.keydefault = .2;
+    option.gap = gap;
     
         sb.key = 'SubBand';
         sb.type = 'String';
@@ -147,7 +152,6 @@ else
     ff = cell(1,length(m));
     newsr = cell(1,length(m));
     dist = str2func(option.dist);
-    %[tmp s] = gettmp(s); %get(s,'Tmp');
     for h = 1:length(m)
         ff{h} = cell(1,length(m{h}));
         if not(iscell(m{h}))
@@ -162,10 +166,6 @@ else
                 phi = ph{h}{i};
             end
             fpi = fp{h}{i};
-            %if 0 %not(isempty(tmp)) && isstruct(tmp) && isfield(tmp,'mi')
-            %    mi = [tmp.mi mi];
-            %    fpi = [tmp.fpi fpi];
-            %end
             nc = size(mi,2);
             np = size(mi,3);
             if nc == 1
@@ -186,19 +186,29 @@ else
                     fp{h}{i} = fpi(:,3:end);
                 else
                     fl = zeros(1,nc-1,np);
+                    if option.gap
+                        mimi = min(min(mi));
+                        mi = (mi - mimi)/(max(max(mi)) - mimi);
+                    end
                     for k = 1:np
                         for j = 1:nc-1
-                            fl(1,j,k) = dist(mi(:,j,k),mi(:,j+1,k),option.inc);
+                            if option.gap
+                                fl(1,j,k) = detectgap(mi(:,j,k),...
+                                                      mi(:,j+1,k),...
+                                                      option.gap);
+                            elseif option.inc
+                                fl(1,j,k) = dist(mi(:,j,k),mi(:,j+1,k),1);
+                            else
+                                fl(1,j,k) = pdist(mi(:,[j j+1],k)',...
+                                                  option.dist);
+                            end
                         end
                     end
                     fp{h}{i} = fpi(:,2:end);
                 end
                 ff{h}{i} = fl;
-                %tmp.mi = mi(:,end,:);
-                %tmp.fpi = fpi(:,end,:);
             end
         end
-        %tmp = [];
         if size(fpi,2)<2
             newsr{h} = 0;
         else
@@ -206,8 +216,7 @@ else
         end
     end
     f = mirscalar(s,'Data',ff,'FramePos',fp,'Sampling',newsr,...
-                        'Title',t,'Parameter',param); %,'Tmp',tmp);
-    %f = settmp(f,tmp);
+                        'Title',t,'Parameter',param);
     if not(isequal(postoption,struct))
         f = modif(f,postoption);
     end
@@ -242,7 +251,7 @@ end
 f = set(f,'Data',fl);
 
 
-function y = Euclidian(mi,mj,inc)
+function y = Euclidean(mi,mj,inc)
 if inc
     y = sqrt(sum(max(0,(mj-mi)).^2));
 else
@@ -266,3 +275,7 @@ if or(nr == 0, ns == 0);
 else
     d = 1 - r'*s/nr/ns;
 end
+
+
+function d = detectgap(mi,mj,thr)
+d = length(find(abs(mi-mj)>thr)) / length(mi);
