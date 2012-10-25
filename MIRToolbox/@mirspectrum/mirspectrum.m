@@ -379,7 +379,7 @@ else
             d = {d};
         end
         if option.alongbands
-            fsi = 1 / (fpi{1}(1,2) - fpi{1}(1,1));
+            fsi = (size(fpi{1},2) - 1) / (fpi{1}(1,end) - fpi{1}(1,1));
         else
             fsi = fs{i};
         end
