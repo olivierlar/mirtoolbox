@@ -578,7 +578,7 @@ end
 function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
 pp = sort(pp{1});
 if isempty(pp)
-    st = [];
+    st = {{} {}};
     return
 end
 
