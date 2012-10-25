@@ -55,13 +55,13 @@ else
         l = 1;
     end
 end
-if not(iscell(y)) && l > 20 %&& size(y,3) == 1
+if not(iscell(y)) && l > 20
     manychannels = 1;
     if lx == 1
         y = reshape(y,[c l])';
         lx = l;
         l = 1;
-    else
+    elseif c == 1
         y = reshape(y,[lx l])';
         fp = reshape(x,[1 lx size(x,3)]);
         fp = fp(:,:,1);
@@ -73,6 +73,8 @@ if not(iscell(y)) && l > 20 %&& size(y,3) == 1
         else
             x = ch';
         end
+    else
+        mirerror('display','This data cannot be displayed.');
     end
 end
 curve = (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
