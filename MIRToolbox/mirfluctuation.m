@@ -1,12 +1,20 @@
 function varargout = mirfluctuation(orig,varargin)
-%   f = mirfluctuation(x) calculates the fluctuation strength, indicating the
-%       rhythmic periodicities along the different channels.
+%   f = mirfluctuation(x) calculates the fluctuation strength, indicating
+%       the rhythmic periodicities along the different channels.
 %   Optional arguments:
 %       mirfluctuation(...,'MinRes',mr) specifies the minimal frequency
 %           resolution of the resulting spectral decomposition, in Hz.
 %               Default: mr = .01 Hz
-%       mirfluctuation(...,'Summary') returns the summary of the fluctuation,
-%           i.e., the summation along the critical bands.
+%       mirfluctuation(...,'Summary') returns the summary of the
+%           fluctuation, i.e., the summation along the critical bands.
+%       mirfluctuation(..., ?InnerFrame?, l, r) specifies the spectrogram 
+%           frame length l (in second), and, optionally, the frame rate r 
+%           (in Hertz), with by default a frame length of 23 ms and a frame
+%           rate of 80 Hz.
+%       mirfluctuation(..., ?Frame?, l, h) computes fluctuation using a 
+%           window moving along the spectrogram, whose length l (in second)
+%           and frame rate r (in Hertz) can be specified as well, with by
+%           default a frame length of 1 s and a frame rate of 10 Hz.
 %
 % E. Pampalk, A. Rauber, D. Merkl, "Content-based Organization and 
 % Visualization of Music Archives", 
@@ -24,17 +32,18 @@ function varargout = mirfluctuation(orig,varargin)
         inframe.key = 'InnerFrame';
         inframe.type = 'Integer';
         inframe.number = 2;
-        inframe.default = [.023 .5];
+        inframe.default = [.023 80];
     option.inframe = inframe;
     
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
         frame.default = [0 0];
-        frame.keydefault = [100 50];
+        frame.keydefault = [1 10];
     option.frame = frame;
 
 specif.option = option;
+specif.nochunk = 1;
      
 varargout = mirfunction(@mirfluctuation,orig,varargin,nargout,specif,@init,@main);
 
@@ -44,7 +53,7 @@ if iscell(x)
     x = x{1};
 end
 if isamir(x,'miraudio') && not(isframed(x))
-    x = mirframe(x,option.inframe(1),option.inframe(2));
+    x = mirframe(x,option.inframe(1),'s',option.inframe(2),'Hz');
 end
 s = mirspectrum(x,'Power','Terhardt','Bark','dB','Mask');
 type = 'mirspectrum';
@@ -59,21 +68,25 @@ if ~fl
     f = mirspectrum(x,'AlongBands','Max',10,'Window',0,'NormalLength',...
                       'Resonance','Fluctuation','MinRes',option.mr);
 else
+    vb = mirverbose;
+    mirverbose(0);
+                
+    df = cell(1,length(d));
+    fp2 = cell(1,length(d));
     for i = 1:length(d)
+        df{i} = cell(1,length(d{i}));
+        fp2{i} = cell(1,length(d{i}));
         for j = 1:length(d{i})
-            if ~fl
-                n = 1;
-            else
-                n = floor((size(d{i}{j},2)-fl)/fh)+1;  % Number of frames
-            end
-            for k = 1:n   % For each frame, ...
-                if ~fl
-                    st = 1;
-                    stend = size(d{i}{j},2);
-                else
-                    st = (k-1)*fh+1;
-                    stend = st+fl-1;
-                end
+            dur = fp{i}{j}(1,end) - fp{i}{j}(1,1);
+            srj = size(d{i}{j},2) / dur;        % Inner frame rate
+            flj = round(fl * srj);
+                            % Outer frame length in number of inner frames
+            fhj = srj / fh; % Outer hop factor in number of inner frames
+            n = floor((dur - fl) * fh ) + 1;    % Number of outer frames
+            fp2{i}{j} = zeros(2,n);
+            for k = 1:n   % For each outer frame, ...
+                st = round( (k-1) * fhj) + 1;
+                stend = st + flj - 1;
                 dk = d{i}{j}(:,st:stend,:);
                 fpk = fp{i}{j}(:,st:stend);
                 x2 = set(x,'Data',{{dk}},'FramePos',{{fpk}});
@@ -81,12 +94,18 @@ else
                                     'NormalLength',...
                                     'Resonance','Fluctuation',...
                                     'MinRes',option.mr);
-                df{i}{j}(:,k,:) = mirgetdata(fk);
+                dfk = mirgetdata(fk);
+                if k == 1
+                    df{i}{j} = zeros(size(dfk,1),n,size(dfk,3));
+                end
+                df{i}{j}(:,k,:) = dfk;
                 fp2{i}{j}(:,k) = [fpk(1);fpk(end)];
             end
         end
     end
     f = set(fk,'Data',df,'FramePos',fp2);
+    
+    mirverbose(vb);
 end
 
 if option.sum
