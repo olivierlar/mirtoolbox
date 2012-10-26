@@ -11,6 +11,8 @@ switch propName
         val = a.unit;
     case 'FramePos'
         val = a.framepos;
+    case 'FrameRate'
+        val = a.framerate;
     case 'Framed'
         val = a.framed;
     case 'Sampling'

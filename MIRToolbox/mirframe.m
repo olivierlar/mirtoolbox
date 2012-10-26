@@ -111,6 +111,7 @@ elseif isa(x,'mirdata')
         dt2 = cell(1,length(dx));   % time positions in framed structure
         fp = cell(1,length(dx));    % frame positions
         l2 = cell(1,length(dx));
+        fr = cell(1,length(dx));
         for k = 1:length(dx)    % For each audio file, ...
             dxk = dx{k};
             dtk = dt{k};
@@ -121,14 +122,19 @@ elseif isa(x,'mirdata')
             end
             if strcmpi(para.hop.unit,'/1')
                 h = para.hop.val*l;
+                fr{k} = sf{k}/h;
             elseif strcmpi(para.hop.unit,'%')
                 h = para.hop.val*l*.01;
+                fr{k} = sf{k}/h;
             elseif strcmpi(para.hop.unit,'s')
                 h = para.hop.val*sf{k};
+                fr{k} = 1/para.hop.val;
             elseif strcmpi(para.hop.unit,'sp')
                 h = para.hop.val;
+                fr{k} = sf{k}/h;
             elseif strcmpi(para.hop.unit,'Hz')
                 h = sf{k}/para.hop.val;
+                fr{k} = para.hop.val;
             end
             if strcmpi(para.phase.unit,'s')
                 p = para.phase.val*sf{k};
@@ -222,9 +228,11 @@ elseif isa(x,'mirdata')
             end
         end
         if isa(x,'mirtemporal')
-            f = set(x,'Time',dt2,'Data',dx2,'FramePos',fp,'Length',l2);
+            f = set(x,'Time',dt2,'Data',dx2,...
+                      'FramePos',fp,'FrameRate',fr,'Length',l2);
         else
-            f = mirtemporal([],'Time',dt2,'Data',dx2,'FramePos',fp,...
+            f = mirtemporal([],'Time',dt2,'Data',dx2,...
+                    'FramePos',fp,'FrameRate',fr,...
                     'Sampling',get(x,'Sampling'),'Name',get(x,'Name'),...
                     'Label',get(x,'Label'),'Channels',get(x,'Channels'),...
                     'Centered',0,'Length',l2,'Title',get(x,'Title'));

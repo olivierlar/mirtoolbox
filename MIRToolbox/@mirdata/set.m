@@ -19,6 +19,8 @@ while length(propertyArgIn) >= 2,
            a.unit = val;
        case 'FramePos'
            a.framepos = val;
+       case 'FrameRate'
+           a.framerate = val;
        case 'Sampling'
            a.sr = val;
        case 'Length'

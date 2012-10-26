@@ -6,6 +6,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.data = orig.data;
     d.unit = orig.unit;
     d.framepos = orig.framepos;
+    d.framerate = orig.framerate;
     d.framed = orig.framed;
     d.sr = orig.sr;
     d.length = orig.length;
@@ -34,6 +35,7 @@ else
     d.data = {};
     d.unit = '';
     d.framepos = {};
+    d.framerate = {};
     d.framed = 0;
     d.sr = {};
     d.length = {};

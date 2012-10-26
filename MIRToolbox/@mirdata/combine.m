@@ -6,6 +6,7 @@ p = cell(1,l);
 ch = cell(1,l);
 d = cell(1,l);
 fp = cell(1,l);
+fr = cell(1,l);
 sr = cell(1,l);
 n = cell(1,l);
 la = cell(1,l);
@@ -45,6 +46,7 @@ for i = 1:l
     ch{i} = getargin(argin,'Channels');
     d{i} = getargin(argin,'Data');
     fp{i} = getargin(argin,'FramePos');
+    fr{i} = getargin(argin,'FrameRate');
     sr{i} = getargin(argin,'Sampling');
     nb{i} = getargin(argin,'NBits');
     n{i} = getargin(argin,'Name');
@@ -81,7 +83,7 @@ for i = 1:l
         cd{i} = getargin(argin,'ClassData');
     end
 end
-c = set(c,'Pos',p,'Data',d,'FramePos',fp,'Channels',ch,...
+c = set(c,'Pos',p,'Data',d,'FramePos',fp,'FrameRate',fr,'Channels',ch,...
           'Sampling',sr,'NBits',nb,'Name',n,'Label',la,'Length',le,...
           'Clusters',cl,'PeakPos',pp,'PeakMode',pm,'PeakVal',pv,...
           'PeakPrecisePos',ppp,'PeakPreciseVal',ppv,...
