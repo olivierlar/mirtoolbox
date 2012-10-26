@@ -369,6 +369,7 @@ else
     end
     fs = get(orig,'Sampling');
     fp = get(orig,'FramePos');
+    fr = get(orig,'FrameRate');
     m = cell(1,length(sig));
     p = cell(1,length(sig));
     f = cell(1,length(sig));
@@ -379,7 +380,7 @@ else
             d = {d};
         end
         if option.alongbands
-            fsi = (size(fpi{1},2) - 1) / (fpi{1}(1,end) - fpi{1}(1,1));
+            fsi = fr{i};
         else
             fsi = fs{i};
         end
