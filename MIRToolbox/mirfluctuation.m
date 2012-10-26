@@ -7,11 +7,11 @@ function varargout = mirfluctuation(orig,varargin)
 %               Default: mr = .01 Hz
 %       mirfluctuation(...,'Summary') returns the summary of the
 %           fluctuation, i.e., the summation along the critical bands.
-%       mirfluctuation(..., ?InnerFrame?, l, r) specifies the spectrogram 
+%       mirfluctuation(..., 'InnerFrame', l, r) specifies the spectrogram 
 %           frame length l (in second), and, optionally, the frame rate r 
 %           (in Hertz), with by default a frame length of 23 ms and a frame
 %           rate of 80 Hz.
-%       mirfluctuation(..., ?Frame?, l, h) computes fluctuation using a 
+%       mirfluctuation(..., 'Frame', l, h) computes fluctuation using a 
 %           window moving along the spectrogram, whose length l (in second)
 %           and frame rate r (in Hertz) can be specified as well, with by
 %           default a frame length of 1 s and a frame rate of 10 Hz.
