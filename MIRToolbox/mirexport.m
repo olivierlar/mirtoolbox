@@ -277,6 +277,12 @@ end
 
 function m = matrixformat(data,filename,title,add,raw)
 named = ~isempty(data.name);
+if raw
+    rawl = 0;
+    for i = 1:length(data.data)
+        rawl = max(rawl,length(data.data{i}));
+    end
+end
 if named && ~raw
     if not(add)
         m(1,:) = {title,data.textdata{:}};
@@ -289,6 +295,11 @@ elseif not(add)
 end
 for i = 1:length(data.data)
     m((1:length(data.data{i}))+~add,i+named) = num2cell(data.data{i});
+    if raw
+        for j =length(data.data{i})+1:rawl
+            m{j+~add,i+named} = NaN;
+        end
+    end
 end
 if add
     fid = fopen(filename,'at');
