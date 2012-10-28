@@ -434,6 +434,7 @@ bpm = cell(1,length(pt));
 if option.lart
     d = get(p,'Data');
     pp = get(p,'Pos');
+    ppp = get(p,'PeakPos');
     for j = 1:length(pt)
         bpm{j} = cell(1,length(pt{j}));
         for k = 1:length(pt{j})
@@ -654,32 +655,31 @@ if option.lart
                     if isinf(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2
                         if (bpm{j}{k}(l) < 50 || bpm{j}{k}(l) > 150)
                             ptl = getbpm(p,ptk{1,l,h});
-                            found = 0;
+                            ppl = ppp{j}{k}{:,l,h};
+                            scores = zeros(1,length(ptl));
                             for i = 1:length(ptl)
                                 if (ptl(i) > 50 && ptl(i) < 160)
-                                    if bpm{j}{k}(l) > ptl(i)
-                                        div = bpm{j}{k}(l) / ptl(i);
-                                        rm = mod(div,1);
-                                        if 1 %rm < option.lart || ...
-                                                %rm > 1-option.lart
-                                            r = div;
-                                            found = 1;
-                                            break
+                                    scores(i) = d{j}{k}(ppl(i),l,h);
+                                    for i2 = 1:i-1
+                                        if ptl(i2) > ptl(i)
+                                            div = ptl(i2) / ptl(i);
+                                        else
+                                            div = ptl(i) / ptl(i2);
                                         end
-                                    else
-                                        div = ptl(i) / bpm{j}{k}(l);
                                         rm = mod(div,1);
-                                        if 1 %rm < option.lart || ...
-                                                %rm > 1-option.lart
-                                            r = 1 / div;
-                                            found = 1;
-                                            break
+                                        if rm < option.lart || ...
+                                                rm > 1-option.lart
+                                            scores(i) = scores(i) + ...
+                                                d{j}{k}(ppl(i2),l,h);
                                         end
                                     end
                                 end
                             end
-                            if ~found
+                            if ~scores
                                 r = Inf;
+                            else
+                                [unused best] = max(scores);
+                                r = bpm{j}{k}(l) / ptl(best);
                             end
                         else
                             r = 1;
