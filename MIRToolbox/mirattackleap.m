@@ -24,7 +24,7 @@ varargout = mirfunction(@mirattackleap,orig,varargin,nargout,specif,@init,@main)
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single);
+o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,'Filter');
 type = mirtype(x);
 
 

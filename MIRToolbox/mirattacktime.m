@@ -28,7 +28,7 @@ varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main)
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Single',option.single);
+o = mironsets(x,'Attack','Single',option.single,'Filter');
 type = mirtype(x);
 
 

@@ -34,14 +34,15 @@ function varargout = mirattackslope(orig,varargin)
         single.type = 'Boolean';
         single.default = 0;
     option.single = single;
-    
+
 specif.option = option;
 
 varargout = mirfunction(@mirattackslope,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single);
+o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
+                 'Filter');
 type = mirtype(x);
 
 
