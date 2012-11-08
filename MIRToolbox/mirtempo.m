@@ -302,6 +302,11 @@ function varargout = mirtempo(x,varargin)
         lart.keydefault = .2;
     option.lart = lart;
     
+            mean.key = 'Mean';
+            mean.type = 'Boolean';
+            mean.default = 0;
+        option.mean = mean;
+
     
         wrap.key = 'Wrap';
         wrap.type = 'Boolean';
@@ -333,6 +338,12 @@ if option.track
 end
 if option.lart
     option.m = Inf;
+    option.enh = 0;
+    option.r = 0;
+    option.mi = 20;
+    option.max = 600;
+    option.fea = 'Novelty';
+    option.thr = .2;
 end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
@@ -860,7 +871,6 @@ if option.lart
                     end
                 end
                 meanbpm{j}{k} = m(bestrack);
-                meanbpm{j}{k}
             end
         end 
     end
@@ -888,8 +898,18 @@ else
         end 
     end
 end
-t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
-t = modif(t,postoption);
+if option.mean
+    fp = get(p,'FramePos');
+    for j = 1:length(fp);
+        for k = 1:length(fp{j})
+            fp{j}{k} = fp{j}{k}([1 end])';
+        end
+    end
+    t = mirscalar(p,'Data',meanbpm,'Title','Tempo','Unit','bpm','FramePos',fp);
+else
+    t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
+    t = modif(t,postoption);
+end
 o = {t,p};
 
 
