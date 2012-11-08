@@ -731,12 +731,16 @@ if option.lart
                 tracks = {};
                 curbpm = 0;
                 for l = 1:size(bpm{j}{k},2)
+                    if isempty(ptk{1,l,h})
+                        newbpm(l) = 0;
+                        continue
+                    end
                     ptl = getbpm(p,ptk{1,l,h});
                     ppl = ppp{j}{k}{:,l,h};
                     lostrack = 0;
                     if l>1
                         ps = find(pp{j}{k}(:,l,h) > getpos(p,curbpm),1);
-                        if d{j}{k}(ps,l,h) < .1
+                        if d{j}{k}(ps,l,h) < .01
                             lostrack = 1;
                         end
                     end
@@ -836,12 +840,26 @@ if option.lart
                 bpm{j}{k} = newbpm;
                 
                 bestrack = 1;
+                m = zeros(1,length(tracks));
+                m(1) = mean(tracks{1});
+                for i = 2:length(tracks)
+                    m(i) = mean(tracks{i});
+                    for i2 = 1:i-1
+                        if (m(i2)/m(i) > 1.8 && m(i2)/m(i) < 2.2) || ...
+                                (m(i)/m(i2) > 1.8 && m(i)/m(i2) < 2.2)
+                            tracks{i2} = [tracks{i2} tracks{i}];
+                            tracks{i} = [];
+                            m(i) = NaN;
+                            break
+                        end
+                    end
+                end
                 for i = 2:length(tracks)
                     if length(tracks{i}) > length(tracks{bestrack})
                         bestrack = i;
                     end
                 end
-                meanbpm{j}{k} = mean(tracks{bestrack});
+                meanbpm{j}{k} = m(bestrack);
                 meanbpm{j}{k}
             end
         end 
