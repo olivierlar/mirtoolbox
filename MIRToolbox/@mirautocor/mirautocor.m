@@ -405,8 +405,8 @@ if isequal(option.e,1)
     option.e = 2:10;
 end
 if max(option.e) > 1
-    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01);
-    va = mirpeaks(a,'Valleys','Contrast',.01);
+    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01,'Normalize','Local');
+    va = mirpeaks(a,'Valleys','Contrast',.01,'Normalize','Local');
     pv = get(pa,'PeakVal');
     vv = get(va,'PeakVal');
 end
@@ -485,7 +485,7 @@ for k = 1:length(coeff)
                             pvk = pv{k}{l}{1,g,h};
                             mv = [];
                             if not(isempty(pvk))
-                                mp = min(pv{k}{l}{1,g,h}); %Lowest peak
+                                mp = min(pvk); %Lowest peak
                                 vvv = vv{k}{l}{1,g,h}; %Valleys
                                 mv = vvv(find(vvv<mp,1,'last'));
                                     %Highest valley below the lowest peak
@@ -571,6 +571,10 @@ for k = 1:length(coeff)
                                         end
                                     end
                                 end
+                            end
+                            
+                            if 0 %~isempty(mv)
+                                cgh2 = max(cgh2 + mv,0);
                             end
 
                             % The  temporary modifications are
