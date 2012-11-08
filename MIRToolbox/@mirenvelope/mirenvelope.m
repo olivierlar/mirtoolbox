@@ -196,7 +196,7 @@ function varargout = mirenvelope(orig,varargin)
     option.log = oplog;
 
         oppow.key = 'Power';
-        oppow.type = 'Integer';
+        oppow.type = 'Boolean';
         oppow.default = 0;
         oppow.when = 'After';
     option.power = oppow;
@@ -289,8 +289,7 @@ if not(isamir(x,'mirenvelope'))
                                   option.frame.hop.unit,...
                                   option.frame.phase.val,...
                                   option.frame.phase.unit,...
-                                  'Window','hanning',...
-                                  option.band,'Power');
+                          'Window','hanning',option.band);
 
     end
 end
@@ -323,6 +322,7 @@ if isamir(orig,'mirscalar')
     e = post(e,postoption);
     return
 end
+
 if isfield(option,'presel') && ischar(option.presel) && ...
         strcmpi(option.presel,'Klapuri06')
     option.method = 'Spectro';
@@ -350,7 +350,7 @@ elseif strcmpi(option.method,'Spectro')
         sr{h} = 0;
         for i = 1:length(d{h})
             if size(d{h}{i},3)>1 % Already in bands (channels in 3d dim)
-                d{h}{i} = permute(sum(d{h}{i}),[2 1 3]);
+                d{h}{i} = permute(d{h}{i},[2 1 3]);
                 if ~isempty(ph)
                     ph{h}{i} = permute(ph{h}{i},[2 1 3]);
                 end
