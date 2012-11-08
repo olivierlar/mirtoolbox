@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.4.0.6 27-October-2012
+% Version 1.4.0.7 9-November-2012
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
