@@ -48,10 +48,10 @@ function varargout = mirnovelty(orig,varargin)
         transf.choice = {'Horizontal','TimeLag'};
     option.transf = transf;
     
-        gaps.key = 'Gaps';
-        gaps.type = 'Boolean';
-        gaps.default = 0;
-    option.gaps = gaps;
+        flux.key = 'Flux';
+        flux.type = 'Boolean';
+        flux.default = 0;
+    option.flux = flux;
 
         cluster.key = 'Cluster';
         cluster.type = 'Boolean';
@@ -78,7 +78,7 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
 function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
-    if option.cluster || option.gaps
+    if option.cluster || option.flux
         option.K = Inf;
         option.transf = 'Standard';
     end
@@ -96,7 +96,7 @@ if iscell(orig)
     orig = orig{1};
 end
 
-if option.gaps
+if option.flux
     for i = 1:9
         fl = mirflux(orig,'Gaps',1-i/10);
         if i == 1

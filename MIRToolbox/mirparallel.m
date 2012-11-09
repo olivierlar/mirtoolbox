@@ -1,5 +1,5 @@
 function p = mirparallel(s)
-% mirparallel(1) toggles on parallel processing: (BETA)
+% mirparallel(1) toggles on parallel processing.
 %   When ?Folder? or ?Folders? is used, several audio files can be analysed
 %   in parallel using several  parallel Matlab sessions running on the 
 %   different processors and/or  processor cores of your computer.

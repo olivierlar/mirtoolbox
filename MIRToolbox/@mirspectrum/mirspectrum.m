@@ -478,7 +478,7 @@ else
                 end
 
                 % Here is the spectrum computation itself
-                transf = fft(dj,N);
+                transf = fft(dj,N); %/(length(dj));
 
                 len = floor(N/2+1);
                 fj = fsi/2 * linspace(0,1,len)';
