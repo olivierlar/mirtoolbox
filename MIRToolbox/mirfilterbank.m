@@ -97,6 +97,11 @@ function b = main(x,option,postoption)
 if iscell(x)
     x = x{1};
 end
+
+if ~isamir(x,'miraudio')
+    mirerror('MIRFILTERBANK','The input should be an audio waveform.');
+end
+
 f = get(x,'Sampling');
     
 if strcmpi(option.presel,'Scheirer')
