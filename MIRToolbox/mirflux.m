@@ -65,6 +65,7 @@ function varargout = mirflux(orig,varargin)
     
         sb.key = 'SubBand';
         sb.type = 'String';
+        sb.choice = {'Gammatone','2Channels','Manual'};
         sb.default = '';
         sb.keydefault = 'Manual';
     option.sb = sb;
