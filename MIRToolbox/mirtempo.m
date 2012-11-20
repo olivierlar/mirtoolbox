@@ -734,7 +734,8 @@ if option.lart
                 %    tmpseg(segl{end}(i)).end = l;
                 %end
                 
-                r = Inf;
+                r = cell(1,size(bpm{j}{k},2));
+                scor = cell(1,size(bpm{j}{k},2));
                 newbpm = zeros(1,size(bpm{j}{k},2));
                 trans = [find(abs(diff(log(bpm{j}{k}))) > .2)+1,...
                          length(bpm{j}{k})+1];
@@ -748,8 +749,9 @@ if option.lart
                     end
                     ptl = getbpm(p,ptk{1,l,h});
                     ppl = ppp{j}{k}{:,l,h};
+                    
                     lostrack = 0;
-                    if l>1
+                    if 0 %l>1
                         ps = find(pp{j}{k}(:,l,h) > getpos(p,curbpm),1);
                         dn = d{j}{k}(:,l,h);
                         max1 = ps - find(diff(dn(ps:-1:1)) < 0, 1) + 1;
@@ -763,69 +765,133 @@ if option.lart
                             lostrack = 1;
                         end
                     end
-                    if isinf(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2...
-                            || lostrack % || l == endseg+1 
-                        if bpm{j}{k}(l) < 50 || bpm{j}{k}(l) > 150
-                            scores = zeros(1,length(ptl));
-                            for i = 1:length(ptl)
-                                if ptl(i) > 50 && ptl(i) < 160
-                                    scores(i) = d{j}{k}(ppl(i),l,h);
-                                    for i2 = 1:i-1
-                                        if ptl(i2) > ptl(i)
-                                            div = ptl(i2) / ptl(i);
-                                        else
-                                            div = ptl(i) / ptl(i2);
-                                        end
-                                        rm = mod(div,1);
-                                        if rm < .1 || rm > .9
-                                            scores(i) = scores(i) + ...
-                                                d{j}{k}(ppl(i2),l,h);
-                                        end
-                                    end
-                                end
-                            end
-                            if ~scores
-                                r = Inf;
-                                endseg = Inf;
-                            else
-                                [unused best] = max(scores);
-                                r = bpm{j}{k}(l) / ptl(best);
-                                %for i = 1:length(segl{l})
-                                %    if tmpseg(segl{l}(i)).start == l
-                                %        endseg = tmpseg(segl{l}(i)).end;
-                                %        break
-                                %    end
-                                %end
-                                curbpm = bpm{j}{k}(l) / r;
-                            end
-                        else
-                            r = 1;
-                            curbpm = bpm{j}{k}(l);
-                        end
-                        
-                        curtr = 0;
-                        for i = 1:length(tracks)
-                            newdist = min(abs(max(tracks{i}) ...
-                                              - curbpm),...
-                                          abs(min(tracks{i}) ...
-                                              - curbpm));
-                            if newdist < 5 && ...
-                               (~curtr || ...
-                                newdist < min(abs(max(tracks{curtr}) ...
-                                                  - curbpm),...
-                                              abs(min(tracks{curtr}) ...
-                                                  - curbpm)))
-                                curtr = i;
-                            end
-                        end
-                        if ~curtr
-                            curtr = length(tracks) + 1;
-                        end
-                        
-                    else 
-                        curbpm = bpm{j}{k}(l) / r;
+                    
+                    if l == 1 || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2
+                        r{l} = [];
+                        startl = l;
+                    else
+                        r{l} = zeros(size(r{l-1}));
                     end
                     
+                    scores = zeros(1,length(ptl));
+                    factor = ones(1,length(ptl));
+                    for i = 1:length(ptl)
+                        if ptl(i) < 50 || ptl(i) > 160
+                            scores(i) = -Inf;
+                        else
+                            scores(i) = d{j}{k}(ppl(i),l,h);
+                        end
+                        for i2 = 1:i-1
+                            if ptl(i2) > ptl(i)
+                                div = ptl(i2) / ptl(i);
+                            else
+                                div = ptl(i) / ptl(i2);
+                            end
+                            rm = mod(div,1);
+                            if rm < .1 || rm > .9
+                                scores(i) = scores(i) + ...
+                                    d{j}{k}(ppl(i2),l,h);
+                                factor(i) = factor(i) + 1;
+                                scores(i2) = scores(i2) + ...
+                                    d{j}{k}(ppl(i),l,h);
+                                factor(i2) = factor(i2) + 1;
+                            end
+                        end
+                    end
+                    
+                    scores = scores./factor;
+                    
+                    if ~scores
+                        r{l} = [];
+                        scor{l} = [];
+                    else
+                        [unused best] = max(scores);
+                        rl = bpm{j}{k}(l) ./ ptl;
+                        found = 0;
+                        if l>startl
+                            for i = 1:length(r{l-1})
+                                nrli = find(abs(log(r{l-1}(i) ./ rl)) < .1, 1);
+                                if nrli == best
+                                    found = 1;
+                                end
+                                if isempty(nrli)
+                                    r{l}(i) = r{l-1}(i);
+                                else
+                                    r{l}(i) = rl(nrli);
+                                    scor{l}(i) = scores(nrli);
+                                end
+                            end
+                        end
+                        
+                        if ~found
+                            r{l}(end+1) = rl(best);
+                            newi = length(r{l});
+                            scor{l}(newi) = scores(best);
+                            for i = l-1:-1:startl
+                                pti = getbpm(p,ptk{1,i,h});
+                                ppi = ppp{j}{k}{:,i,h};
+                                ri = bpm{j}{k}(i) ./ pti;
+                                nrli = find(abs(log(ri ./ rl(best))) < .1, 1);
+                                if isempty(nrli)
+                                    break
+                                else
+                                    r{i}(newi) = ri(nrli);
+                                    scor{i}(newi) = d{j}{k}(ppi(nrli),i,h);
+                                end
+                            end
+                        end
+                        
+                        if l>startl && scor{l}(1) > 0 && scor{l}(1) < .1
+                            for i = 2:length(scor{l})
+                                if (scor{l}(i) > .2 && ...
+                                            length(scor{l-1}) >= i && ...
+                                            scor{l-1}(i) > .1) || ...
+                                        (round(r{l}(1)) > 4 && ...
+                                            scor{l}(i) > scor{l}(1))
+                                    for i2 = l:-1:startl
+                                        if length(scor{i2}) < i
+                                            break
+                                        end
+                                        buf = scor{i2}(1);
+                                        scor{i2}(1) = scor{i2}(i);
+                                        scor{i2}(i) = buf;
+                                        buf = r{i2}(1);
+                                        r{i2}(1) = r{i2}(i);
+                                        r{i2}(i) = buf;
+                                    end
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                for l = 1:size(bpm{j}{k},2)
+                    if isempty(r{l})
+                        curbpm = 0;
+                    else
+                        curbpm = bpm{j}{k}(l) / r{l}(1);
+                    end
+                    
+                    curtr = 0;
+                    for i = 1:length(tracks)
+                        newdist = min(abs(max(tracks{i}) ...
+                                          - curbpm),...
+                                      abs(min(tracks{i}) ...
+                                          - curbpm));
+                        if newdist < 5 && ...
+                           (~curtr || ...
+                            newdist < min(abs(max(tracks{curtr}) ...
+                                              - curbpm),...
+                                          abs(min(tracks{curtr}) ...
+                                              - curbpm)))
+                            curtr = i;
+                        end
+                    end
+                    if ~curtr
+                        curtr = length(tracks) + 1;
+                    end
+                        
                     if curtr > length(tracks)
                         tracks{curtr} = curbpm;
                     else
@@ -862,15 +928,15 @@ if option.lart
                 m(1) = mean(tracks{1});
                 for i = 2:length(tracks)
                     m(i) = mean(tracks{i});
-                    for i2 = 1:i-1
-                        if (m(i2)/m(i) > 1.8 && m(i2)/m(i) < 2.2) || ...
-                                (m(i)/m(i2) > 1.8 && m(i)/m(i2) < 2.2)
-                            tracks{i2} = [tracks{i2} tracks{i}];
-                            tracks{i} = [];
-                            m(i) = NaN;
-                            break
-                        end
-                    end
+                %    for i2 = 1:i-1
+                %        if (m(i2)/m(i) > 1.8 && m(i2)/m(i) < 2.2) || ...
+                %                (m(i)/m(i2) > 1.8 && m(i)/m(i2) < 2.2)
+                %            tracks{i2} = [tracks{i2} tracks{i}];
+                %            tracks{i} = [];
+                %            m(i) = NaN;
+                %            break
+                %        end
+                %    end
                 end
                 for i = 2:length(tracks)
                     if length(tracks{i}) > length(tracks{bestrack})
