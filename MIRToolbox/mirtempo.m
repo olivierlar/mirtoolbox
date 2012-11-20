@@ -341,7 +341,7 @@ if option.lart
     option.enh = 0;
     option.r = 0;
     option.mi = 20;
-    option.max = 600;
+    option.ma = 600;
     option.fea = 'Novelty';
     option.thr = .2;
 end
@@ -473,7 +473,7 @@ if option.lart
                             tmpk{1,l,h} = tmpk{1,stdl,h};
                             
                         else
-                            % or frame leaved empty
+                            % or frame left empty
                             tmpo = NaN;
                         end
                         
@@ -751,12 +751,20 @@ if option.lart
                     lostrack = 0;
                     if l>1
                         ps = find(pp{j}{k}(:,l,h) > getpos(p,curbpm),1);
-                        if d{j}{k}(ps,l,h) < .01
+                        dn = d{j}{k}(:,l,h);
+                        max1 = ps - find(diff(dn(ps:-1:1)) < 0, 1) + 1;
+                        min1 = max1 - find(diff(dn(max1:-1:1)) > 0, 1) + 1;
+                        max2 = ps + find(diff(dn(ps:end)) < 0, 1) - 1;
+                        min2 = max2 + find(diff(dn(max2:end)) > 0, 1) - 1;
+                        mins = min(min1,min2);
+                        dm = max(dn(min1:min2));
+                        rat = (dn(ps)-mins) / (dm - mins);
+                        if rat < .8
                             lostrack = 1;
                         end
                     end
                     if isinf(r) || abs(diff(log(bpm{j}{k}([l-1 l])))) > .2...
-                            || lostrack ... || l == endseg+1 
+                            || lostrack % || l == endseg+1 
                         if bpm{j}{k}(l) < 50 || bpm{j}{k}(l) > 150
                             scores = zeros(1,length(ptl));
                             for i = 1:length(ptl)
@@ -769,8 +777,7 @@ if option.lart
                                             div = ptl(i) / ptl(i2);
                                         end
                                         rm = mod(div,1);
-                                        if rm < option.lart || ...
-                                                rm > 1-option.lart
+                                        if rm < .1 || rm > .9
                                             scores(i) = scores(i) + ...
                                                 d{j}{k}(ppl(i2),l,h);
                                         end
