@@ -745,6 +745,7 @@ if option.lart
                 for l = 1:size(bpm{j}{k},2)
                     if isempty(ptk{1,l,h})
                         newbpm(l) = 0;
+                        startl = l;
                         continue
                     end
                     ptl = getbpm(p,ptk{1,l,h});
@@ -774,9 +775,9 @@ if option.lart
                     end
                     
                     scores = zeros(1,length(ptl));
-                    factor = ones(1,length(ptl));
+                    %factor = ones(1,length(ptl));
                     for i = 1:length(ptl)
-                        if ptl(i) < 50 || ptl(i) > 160
+                        if ptl(i) < 40 || ptl(i) > 160
                             scores(i) = -Inf;
                         else
                             scores(i) = d{j}{k}(ppl(i),l,h);
@@ -788,18 +789,18 @@ if option.lart
                                 div = ptl(i) / ptl(i2);
                             end
                             rm = mod(div,1);
-                            if rm < .1 || rm > .9
+                            if 0 %rm < .1 || rm > .9
                                 scores(i) = scores(i) + ...
                                     d{j}{k}(ppl(i2),l,h);
-                                factor(i) = factor(i) + 1;
+                                %factor(i) = factor(i) + 1;
                                 scores(i2) = scores(i2) + ...
                                     d{j}{k}(ppl(i),l,h);
-                                factor(i2) = factor(i2) + 1;
+                                %factor(i2) = factor(i2) + 1;
                             end
                         end
                     end
                     
-                    scores = scores./factor;
+                    %scores = scores./factor;
                     
                     if ~scores
                         r{l} = [];
@@ -808,7 +809,11 @@ if option.lart
                         [unused best] = max(scores);
                         rl = bpm{j}{k}(l) ./ ptl;
                         found = 0;
+                        
+                        %Multi-tracking
+                        
                         if l>startl
+                            % Continuing prevous tracks
                             for i = 1:length(r{l-1})
                                 nrli = find(abs(log(r{l-1}(i) ./ rl)) < .1, 1);
                                 if nrli == best
@@ -824,6 +829,7 @@ if option.lart
                         end
                         
                         if ~found
+                            % Creating new track
                             r{l}(end+1) = rl(best);
                             newi = length(r{l});
                             scor{l}(newi) = scores(best);
@@ -837,29 +843,122 @@ if option.lart
                                 else
                                     r{i}(newi) = ri(nrli);
                                     scor{i}(newi) = d{j}{k}(ppi(nrli),i,h);
+                                    factori = 1;
+                                    for i2 = 1:length(pti)
+                                        if i2 == nrli
+                                            continue
+                                        end
+                                        if pti(i2) > pti(nrli)
+                                            div = pti(i2) / pti(nrli);
+                                        else
+                                            div = pti(nrli) / pti(i2);
+                                        end
+                                        rm = mod(div,1);
+                                        if 0 % rm < .1 || rm > .9
+                                            scor{i}(newi) = ...
+                                                scor{i}(newi) + ...
+                                                d{j}{k}(ppi(i2),l,h);
+                                            factori = factori + 1;
+                                        end
+                                    end
+                                    scor{i}(newi) = scor{i}(newi) / factori;
                                 end
                             end
                         end
                         
-                        if l>startl && scor{l}(1) > 0 && scor{l}(1) < .1
-                            for i = 2:length(scor{l})
-                                if (scor{l}(i) > .2 && ...
-                                            length(scor{l-1}) >= i && ...
-                                            scor{l-1}(i) > .1) || ...
-                                        (round(r{l}(1)) > 4 && ...
-                                            scor{l}(i) > scor{l}(1))
-                                    for i2 = l:-1:startl
-                                        if length(scor{i2}) < i
+                        if l>startl
+                            swap = 0;
+                            if scor{l}(1)
+                                if scor{l}(1) < .1
+                                    for i = 2:length(scor{l})
+                                        if (scor{l}(i) > scor{l}(1)*2 && ...
+                                                    length(scor{l-1}) >= i && ...
+                                                    scor{l-1}(i) > scor{l-1}(1)*2) || ...
+                                                (round(r{l}(1)) > 4 && ...
+                                                    scor{l}(i) > scor{l}(1))
+                                            swap = 1;
                                             break
                                         end
-                                        buf = scor{i2}(1);
-                                        scor{i2}(1) = scor{i2}(i);
-                                        scor{i2}(i) = buf;
-                                        buf = r{i2}(1);
-                                        r{i2}(1) = r{i2}(i);
-                                        r{i2}(i) = buf;
                                     end
-                                    break
+                                end
+                            else
+                                if l-startl>4
+                                    found = 0;
+                                    for i = 1:4
+                                        if scor{l-i}(1)
+                                            found = 1;
+                                            break
+                                        end
+                                    end
+                                    if ~found
+                                        swap = 1;
+                                        [unused i] = max(scor{l});
+                                    end
+                                end
+                            end
+                            if ~swap
+                                modr = mod(r{l},1);
+                                scorl = scor{l};
+                                for i = 1:length(modr)-1
+                                    if round(r{l}(i)) < 2 || ...
+                                            (modr(i)>.1 && modr(i)<.9)
+                                        scorl(i) = -Inf;
+                                    else
+                                        for i2 = i+1:length(scorl)
+                                            if modr(i2)<.1 || modr(i2)>.9
+                                                if r{l}(i) > r{l}(i2)
+                                                    divr = r{l}(i) / r{l}(i2);
+                                                else
+                                                    divr = r{l}(i2) / r{l}(i);
+                                                end
+                                                modivr = mod(divr,1);
+                                                if modivr<.2 || modivr>.8
+                                                    if r{l}(i) < r{l}(i2)
+                                                        scorl(i) = scorl(i)+scorl(i2);
+                                                    else
+                                                        scorl(i2) = scorl(i2)+scorl(i);
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                if modr(1)<.1 || modr(1)>.9
+                                    for i = 2:length(modr)
+                                        if scorl(i) > scorl(1) && ...
+                                                (modr(i)<.1 || modr(i)>.9)
+                                            if r{l}(1) > r{l}(i)
+                                                divr = r{l}(1) / r{l}(i);
+                                            else
+                                                divr = r{l}(i) / r{l}(1);
+                                            end
+                                            modivr = mod(divr,1);
+                                            if modivr>.2 && modivr<.8
+                                                % not proportional bpms
+                                                swap = 2;
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            if swap
+                                if swap == 1
+                                    range = l:-1:startl;
+                                else
+                                    range = l;
+                                end
+                                for i2 = range
+                                    if length(scor{i2}) < i || ...
+                                            scor{i2}(1) > scor{i2}(i)
+                                        break
+                                    end
+                                    buf = scor{i2}(1);
+                                    scor{i2}(1) = scor{i2}(i);
+                                    scor{i2}(i) = buf;
+                                    buf = r{i2}(1);
+                                    r{i2}(1) = r{i2}(i);
+                                    r{i2}(i) = buf;
                                 end
                             end
                         end
