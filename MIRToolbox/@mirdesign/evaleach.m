@@ -269,7 +269,9 @@ else
         end
         
         for fri = 1:nch     % For each chunk...
-            disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
+            if mirverbose
+                disp(['Chunk ',num2str(fri),'/',num2str(nch),'...'])
+            end
             d2 = set(d2,'Chunk',chunks(:,fri)');
             d2 = set(d2,'InterChunk',inter);
             %d2.postoption = [];
