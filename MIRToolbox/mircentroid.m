@@ -22,7 +22,13 @@ function varargout = mircentroid(x,varargin)
         minrms.type = 'Numerical';
         minrms.default = .005;
     option.minrms = minrms;
-    
+
+        maxentropy.key = 'MaxEntropy';
+        maxentropy.when = 'After';
+        maxentropy.type = 'Numerical';
+        maxentropy.default = .95;
+    option.maxentropy = maxentropy;
+
 specif.option = option;
 
 varargout = mirfunction(@mircentroid,x,varargin,nargout,specif,@init,@main);
@@ -80,9 +86,8 @@ else
     t = ['centroid of ',get(x,'Title')];
 end
 c = mirscalar(x,'Data',cx,'Title',t);
-if isa(x,'mirspectrum') && isstruct(postoption) && ...
-        isfield(postoption,'minrms') && postoption.minrms
-    c = after(x,c,postoption.minrms);
+if isstruct(postoption)
+    c = after(x,c,postoption.minrms,postoption.maxentropy);
 end
 
 
@@ -90,15 +95,30 @@ function c = centroid(d,p)
 c = (p'*d) ./ sum(d);
 
 
-function c = after(x,c,minrms)
-r = mirrms(x,'Warning',0);
-v = mircompute(@trim,get(c,'Data'),get(r,'Data'),minrms);
+function c = after(x,c,minrms,maxentropy)
+v = get(c,'Data');
+if minrms
+    r = mirrms(x,'Warning',0);
+    v = mircompute(@trimrms,v,get(r,'Data'),minrms);
+end
+if maxentropy && maxentropy < 1
+    h = mirentropy(x,'MinRMS',minrms);
+    v = mircompute(@trimentropy,v,get(h,'Data'),maxentropy);
+end
 c = set(c,'Data',v);
 
     
-function d = trim(d,r,minrms)
+function d = trimrms(d,r,minrms)
 r = r/max(max(r));
 pos = find(r<minrms);
+for i = 1:length(pos)
+    d{pos(i)} = NaN;
+end
+d = {d};
+
+
+function d = trimentropy(d,r,minentropy)
+pos = find(r>minentropy);
 for i = 1:length(pos)
     d{pos(i)} = NaN;
 end

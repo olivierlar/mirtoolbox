@@ -23,6 +23,12 @@ function varargout = mirbrightness(x,varargin)
         cutoff.default = 1500;
     option.cutoff = cutoff;
     
+        minrms.key = 'MinRMS';
+        minrms.when = 'After';
+        minrms.type = 'Numerical';
+        minrms.default = .005;
+    option.minrms = minrms;
+    
 specif.option = option;
 specif.defaultframelength = .05;
 specif.defaultframehop = .5;
@@ -49,6 +55,9 @@ warning('off','MATLAB:divideByZero');
 v = mircompute(@algo,m,f,option.cutoff);
 warning(w.state,'MATLAB:divideByZero');
 b = mirscalar(s,'Data',v,'Title','Brightness');
+if isstruct(postoption)
+    b = after(s,b,postoption.minrms);
+end
 
 
 function v = algo(m,f,k)
@@ -57,3 +66,21 @@ if not(any(max(f)>k))
 end
 sm = sum(m);
 v = sum(m(f(:,1,1) > k,:,:)) ./ sm;
+
+
+function b = after(s,b,minrms)
+v = get(b,'Data');
+if minrms
+    r = mirrms(s,'Warning',0);
+    v = mircompute(@trimrms,v,get(r,'Data'),minrms);
+end
+b = set(b,'Data',v);
+
+    
+function d = trimrms(d,r,minrms)
+r = r/max(max(r));
+pos = find(r<minrms);
+for i = 1:length(pos)
+    d(pos(i)) = NaN;
+end
+d = {d};

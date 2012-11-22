@@ -4,8 +4,15 @@ function varargout = mirflatness(orig,varargin)
 %       - an envelope (temporal flatness), or
 %       - any histogram.
 
+        minrms.key = 'MinRMS';
+        minrms.when = 'After';
+        minrms.type = 'Numerical';
+        minrms.default = .005;
+    option.minrms = minrms;
+    
+specif.option = option;
 
-varargout = mirfunction(@mirflatness,orig,varargin,nargout,struct,@init,@main);
+varargout = mirfunction(@mirflatness,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
@@ -51,3 +58,22 @@ else
     t = ['Flatness of ',get(x,'Title')];
 end
 f = mirscalar(x,'Data',y,'Title',t,'Unit','');
+if isstruct(postoption) && ...
+        isfield(postoption,'minrms') && postoption.minrms
+    f = after(x,f,postoption.minrms);
+end
+
+
+function f = after(x,f,minrms)
+r = mirrms(x,'Warning',0);
+v = mircompute(@trim,get(f,'Data'),get(r,'Data'),minrms);
+f = set(f,'Data',v);
+
+    
+function d = trim(d,r,minrms)
+r = r/max(max(r));
+pos = find(r<minrms);
+for i = 1:length(pos)
+    d(pos(i)) = NaN;
+end
+d = {d};
