@@ -663,7 +663,7 @@ if option.lart
                                 % After long stop, previous peak forgotten
                                 stdl = [];
                             end                            
-                            
+                            % New track started
                             tmpo = ptl(1);
                             if ptl(1)<50
                                 % Very slow pulses subdivided
@@ -821,6 +821,7 @@ if option.lart
                                 end
                                 if isempty(nrli)
                                     r{l}(i) = r{l-1}(i);
+                                    scor{l}(i) = 0;
                                 else
                                     r{l}(i) = rl(nrli);
                                     scor{l}(i) = scores(nrli);
