@@ -450,56 +450,16 @@ if option.lart
     for j = 1:length(pt)
         bpm{j} = cell(1,length(pt{j}));
         meanbpm{j} = cell(1,length(pt{j}));
-        
         for k = 1:length(pt{j})
             ptk = pt{j}{k};
             %tmpk = cell(1,size(ptk,2),size(ptk,3));
-            
-            stdl = [];
-            trsl = [];
             for h = 1:size(ptk,3)
                 tmpseg = [];
-                %segl = cell(1,size(ptk,2));
                 for l = 1:size(ptk,2)
-                    ptl = getbpm(p,ptk{1,l,h});
-                    
-                    if isempty(ptl)
-                        % No peak detected
-                        
-                        if ~isempty(stdl)
-                            % Prolongation of previous peak
-                            %tmpo = bpm{j}{k}(1,stdl,h);
-                            %tmpk{1,l,h} = tmpk{1,stdl,h};
-                            
-                        else
-                            % or frame left empty
-                            %tmpo = NaN;
-                        end
-                        
-                        change = l;
-                        
-                        %if l>1
-                            %for i = 1:length(segl{l-1})
-                            %    tmpseg(segl{l-1}(i)).end = l-1;
-                            %end
-                        %end
-                        
-                        if ~isempty(trsl) && l-trsl<5
-                            % Hypothetical phase aborted
-                            %bpm{j}{k}(1,trsl:l-1,h) = bpm{j}{k}(1,trsl-1,h);
-                            %for i = trsl:l-1
-                            %    tmpk{1,i,h} = tmpk{1,trsl-1,h};
-                            %end
-                        end
-                        
-                    elseif l == 1 || change == l-1 %isempty(tmpk{1,l-1,h})
+                    res = 0;
+                    if l == 1 || isempty(ptl)
                         % New init phase: strongest periodicity selected
-                        
-                        %tmpk{1,l,h} = 1;
-                        %tmpo = ptl(1);
-                        %change = l;
-                        
-                        res = 0;
+                        ptl = getbpm(p,ptk{1,l,h});
                         for i = length(tmpseg):-1:1
                             for i2 = 1:size(tmpseg(i).bpms,1)
                                 if abs(log(tmpseg(i).bpms(i2,end)) ...
@@ -522,29 +482,20 @@ if option.lart
                             tmpseg(end).scores = ...
                                 d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
                         end
-                        
-                        %segl{l} = length(tmpseg);
-                        
                         change = 0;
                         
                     else
-                        res = 0;
-
+                        ptl = getbpm(p,ptk{1,l,h});
                         for i = 1:size(tmpseg(end).bpms,1)
-                            if abs(log(ptl(1)) - log(tmpseg(end).bpms(i,end))) < option.lart
+                            if abs(log(ptl(1)) - ...
+                                    log(tmpseg(end).bpms(i,end))) ...
+                                    < option.lart
                                 % Continuation of strongest track
-                                
-                                %tmpk{1,l,h} = zeros(1,length(tmpk{1,l-1,h}));
-                                %tmpk{1,l,h}(i) = tmpk{1,l-1,h}(i);
-                                %tmpo = ptl(1)*tmpk{1,l,h}(i);
-                                
                                 res = 1;
-                                
                                 tmpseg(end).timindx(end+1) = l;
                                 tmpseg(end).bpms(i,end+1) = ptl(1);
-                                tmpseg(end).scores(i,end+1) = d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
-                                %segl{l}(i) = segl{l-1}(i);
-                                
+                                tmpseg(end).scores(i,end+1) = ...
+                                    d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
                                 break
                             end
                         end
@@ -559,10 +510,10 @@ if option.lart
                                    ~isempty(find(r2 > 1 - option.lart))
                                 % Subdivision/multiple of pulse detected
                                 res = 1;
-                                
                                 tmpseg(end).timindx(end+1) = l;
                                 tmpseg(end).bpms(end+1,end+1) = ptl(1);
-                                tmpseg(end).scores(end+1,end+1) = d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
+                                tmpseg(end).scores(end+1,end+1) = ...
+                                    d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
                                 
                                 new = size(tmpseg(end).bpms,1);
                                 nl = size(tmpseg(end).bpms,2);                                
@@ -579,100 +530,26 @@ if option.lart
                                 end
                             end
                         end
-                        
-                        if 0 %~res && ~isempty(trsl)
-                            % Same steps tried on interrupted track
-                            for i = 1:size(tmpseg(trsl.segidx).bpms,1)
-                                if abs(log(ptl(1)) - log(tmpseg(trsl.segidx).bpms(i,trsl.segidx))) < option.lart
-                                    % Continuation of strongest track
-
-                                    %tmpk{1,l,h} = zeros(1,length(tmpk{1,l-1,h}));
-                                    %tmpk{1,l,h}(i) = tmpk{1,l-1,h}(i);
-                                    %tmpo = ptl(1)*tmpk{1,l,h}(i);
-
-                                    res = 1;
-
-                                    tmpseg(end).timindx(end+1) = l;
-                                    tmpseg(end).bpms(i,end+1) = tmpseg(end).bpms(i,end);
-                                    tmpseg(end).scores(i,end+1) = d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
-                                    %segl{l}(i) = segl{l-1}(i);
-
-                                    break
-                                end
-                            end
-
-                            if ~res
-                                div = ptl(1)./tmpseg(end).bpms(:,end);
-                                r1 = mod(div,1);
-                                r2 = mod(1./div,1);
-                                if ~isempty(find(r1 < option.lart)) || ...
-                                       ~isempty(find(r2 < option.lart)) || ...
-                                       ~isempty(find(r1 > 1 - option.lart)) || ...
-                                       ~isempty(find(r2 > 1 - option.lart))
-                                    % Subdivision/multiple of pulse detected
-                                    res = 1;
-
-                                    tmpseg(end).timindx(end+1) = l;
-                                    tmpseg(end).bpms(end+1,end+1) = ptl(1);
-                                    tmpseg(end).scores(end+1,end+1) = d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
-                                end
-                            end
-                            
-                            if res
-                                % Interrupted track restored
-                                trsl = l; % Previous tracks now considered interrupted;
-                                stdl = l;
-                            end
-                        end
-                        
-                        if res
-                            if l-change>5
-                                % Interrupted tracks abandoned
-                                stdl = l;
-                                if ~isempty(trsl)
-                                    %for i = 1:length(segl{trsl-1})
-                                    %    tmpseg(segl{trsl-1}(i)).end = ...
-                                    %        change-1;
-                                    %end
-                                    trsl = [];
-                                end
-                            end
-                            
-                        else
-                            if ~isempty(stdl) && l-stdl > 10
-                                % After long stop, previous peak forgotten
-                                stdl = [];
-                            end
-                            
+                                                
+                        if ~res
                             % New track started
                             tmpo = ptl(1);
-                            if ptl(1)<50
+                            if 0 %ptl(1)<50
                                 % Very slow pulses subdivided
-                                for i = 2:length(ptl)
-                                    if ptl(i)<180
-                                        div = ptl(i)/ptl(1);
+                                for i0 = 2:length(ptl)
+                                    if ptl(i0)<180
+                                        div = ptl(i0)/ptl(1);
                                         if round(div)>1
                                             r = mod(div,1);
                                             if r<option.lart || ...
                                                     r>1-option.lart
-                                                tmpo = ptl(i);
+                                                tmpo = ptl(i0);
                                                 break
                                             end
                                         end
                                     end
                                 end
                             end
-                            
-                            %for i = 1:length(segl{l-1})
-                            %    if ~isfield(tmpseg(segl{l-1}(i)),'end') ...
-                            %            || isempty(tmpseg(segl{l-1}(i)).end)
-                            %        tmpseg(segl{l-1}(i)).end = l-1;
-                            %    end
-                            %end
-                            
-                            %tmpk{1,l,h} = 1;
-                            
-                            %change = l;
                             
                             res = 0;
                             for i = length(tmpseg):-1:1
@@ -684,7 +561,7 @@ if option.lart
                                         tmpseg(i) = [];
                                         tmpseg(end+1) = buf;
                                         tmpseg(end).timindx(end+1) = l;
-                                        tmpseg(end).bpms(i2,end+1) = ptl(1);
+                                        tmpseg(end).bpms(i2,end+1) = tmpo;
                                         tmpseg(end).scores(i2,end+1) = ...
                                             d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
                                         break
@@ -695,26 +572,43 @@ if option.lart
                                 end
                             end
                             if ~res
-                                tmpseg(end+1).timindx = l;
-                                tmpseg(end).bpms = ptl(1);
-                                tmpseg(end).scores = ...
-                                    d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
-                            end
-                            
-                            if 0 %~isempty(trsl) && l-trsl<5
-                                % Hypothetical phase aborted
-                                bpm{j}{k}(1,trsl:l-1,h) = bpm{j}{k}(1,trsl-1,h);
-                                for i = trsl:l-1
-                                    tmpk{1,i,h} = tmpk{1,trsl-1,h};
+                                for i = length(tmpseg):-1:1
+                                    for i2 = 1:size(tmpseg(i).bpms,1)
+                                        div = ptl(1)./tmpseg(i).bpms(i2,end);
+                                        r1 = mod(div,1);
+                                        r2 = mod(1./div,1);
+                                        if r1 < option.lart || ...
+                                                r1 > 1-option.lart || ...
+                                                r2 < option.lart || ...
+                                                r2 > 1-option.lart
+                                            res = 1;
+                                            buf = tmpseg(i);
+                                            tmpseg(i) = [];
+                                            tmpseg(end+1) = buf;
+                                            tmpseg(end).timindx(end+1) = l;
+                                            tmpseg(end).bpms(end+1,end+1) = tmpo;
+                                            tmpseg(end).scores(end+1,end+1) = ...
+                                                d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
+                                            break
+                                        end
+                                    end
+                                    if res
+                                        break
+                                    end
                                 end
                             end
-                            
-                            trsl = l; % Previous tracks now considered interrupted;
+                            if ~res
+                                tmpseg(end+1).timindx = l;
+                                tmpseg(end).bpms = tmpo;
+                                tmpseg(end).scores = ...
+                                    d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
+                                %tmpseg = integrate(tmpseg,1);
+                            end
                         end
                         
-                        for i=1:size(tmpseg(end).bpms,1)
+                        last = size(tmpseg(end).bpms,2);
+                        for i = 1:size(tmpseg(end).bpms,1)
                             if ~tmpseg(end).bpms(i,end)
-                                last = size(tmpseg(end).bpms,2);
                                 [tmpseg(end) res] = filltmpseg(...
                                     tmpseg(end),i,last-1,last,...
                                     ptl,d{j}{k}(:,l,h),p,...
@@ -736,10 +630,7 @@ if option.lart
                                 end
                             end
                         end
-                        %tmpk{1,l,h}(~tmpk{1,l,h}) = [];
-                        %segl{l}(~segl{l}) = [];
                     end
-                    %bpm{j}{k}(1,l,h) = tmpo;
                 end
 
                 longest = 1;
@@ -751,7 +642,18 @@ if option.lart
                 end
                 tmpseg = tmpseg(longest);
                 
-                                
+                [unused best] = max(mean(tmpseg.scores,2));
+                bpmk = zeros(1,size(ptk,2));
+                bpmk(tmpseg.timindx) = tmpseg.bpms(best,:);
+                for i = 2:length(bpmk)
+                    if ~bpmk(i)
+                        bpmk(i) = bpmk(i-1);
+                    end
+                end
+                
+                bpm{j}{k} = bpmk;
+                
+                if 0                
                 %r = cell(1,size(bpm{j}{k},2));
                 %scor = cell(1,size(bpm{j}{k},2));
                 %newbpm = zeros(1,size(bpm{j}{k},2));
@@ -1059,6 +961,7 @@ if option.lart
                     end
                 end
                 meanbpm{j}{k} = m(bestrack);
+                end
             end
         end 
     end
@@ -1099,6 +1002,33 @@ else
     t = modif(t,postoption);
 end
 o = {t,p};
+
+
+function tmpseg = integrate(tmpseg,j)
+res = 0;
+for i = length(tmpseg)-1:-1:1
+    for i2 = 1:size(tmpseg(i).bpms,1)
+        if abs(log(tmpseg(i).bpms(i2,end)) - ...
+               log(tmpseg(end).bpms(j,end))) < option.lart
+            res = 1;
+            buf = tmpseg(i);
+            tmpseg(i) = [];
+            for j = 1:length(buf.timindx)
+                indx = find(buf.timindx(j)>tmpseg(end).timindx, 1);
+                tmpseg(end).timindx(indx:end) = [buf.timindx(j) ...
+                    tmpseg(end).timindx(indx:end)];
+                tmpseg(end).bpms(indx:end) = [buf.bpms(j) ...
+                    tmpseg(end).bpms(indx:end)];
+                tmpseg(end).scores(indx:end) = [buf.scores(j) ...
+                    tmpseg(end).scores(indx:end)];
+            end
+            break
+        end
+    end
+    if res
+        break
+    end
+end
 
 
 function [tmpseg res] = filltmpseg(tmpseg,i,from,to,ptl,d,p,pp,ppp,param)
