@@ -47,11 +47,16 @@ function varargout = mirnovelty(orig,varargin)
         transf.default = 'TimeLag';
         transf.choice = {'Horizontal','TimeLag'};
     option.transf = transf;
-    
+
         flux.key = 'Flux';
         flux.type = 'Boolean';
         flux.default = 0;
     option.flux = flux;
+
+        half.key = 'Half';
+        half.type = 'Boolean';
+        half.default = 0;
+    option.half = half;
 
         cluster.key = 'Cluster';
         cluster.type = 'Boolean';
@@ -79,12 +84,13 @@ function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     if option.cluster || option.flux
-        option.K = Inf;
+        option.K = 300;
         option.transf = 'Standard';
+        option.half = 1;
     end
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
                       'Width',max(option.K),option.transf,...
-                      'Cluster',option.cluster,...
+                      'Half',option.half,'Cluster',option.cluster,...
                       'Frame',option.frame.length.val,option.frame.length.unit,...
                               option.frame.hop.val,option.frame.hop.unit,...
                               option.frame.phase.val,option.frame.phase.unit);
@@ -97,14 +103,21 @@ if iscell(orig)
 end
 
 if option.flux
-    for i = 1:9
-        fl = mirflux(orig,'Gaps',1-i/10);
-        if i == 1
-            n = fl;
-        else
-            n = n + fl^i;
+    fl = mirflux(orig);
+    score = get(fl,'Data');
+    dw = get(orig,'DiagWidth');
+    if 0 & dw < Inf && not(isempty(postoption)) && postoption.normal
+        for k = 1:length(score)
+            for l = 1:length(score{k})
+                lg = length(score{k}{l});
+                for i = 1:lg
+                    score{k}{l}(i) = score{k}{l}(i) * ...
+                        (1 + atan( dw/min(i,dw) - 1)) / (1 + atan(dw-1));
+                end
+            end
         end
     end
+    n = mirscalar(fl,'Data',score,'Title','Novelty'); 
 else
         
     fp = get(orig,'FramePos');
