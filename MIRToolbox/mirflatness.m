@@ -7,7 +7,7 @@ function varargout = mirflatness(orig,varargin)
         minrms.key = 'MinRMS';
         minrms.when = 'After';
         minrms.type = 'Numerical';
-        minrms.default = .005;
+        minrms.default = .01;
     option.minrms = minrms;
     
 specif.option = option;

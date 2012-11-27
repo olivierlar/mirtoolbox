@@ -104,20 +104,24 @@ end
 
 if option.flux
     fl = mirflux(orig);
-    score = get(fl,'Data');
-    dw = get(orig,'DiagWidth');
-    if 0 & dw < Inf && not(isempty(postoption)) && postoption.normal
-        for k = 1:length(score)
-            for l = 1:length(score{k})
-                lg = length(score{k}{l});
-                for i = 1:lg
-                    score{k}{l}(i) = score{k}{l}(i) * ...
-                        (1 + atan( dw/min(i,dw) - 1)) / (1 + atan(dw-1));
+    if 1
+        n = mirscalar(fl,'Title','Novelty');
+    else
+        score = get(fl,'Data');
+        dw = get(orig,'DiagWidth');
+        if dw < Inf && not(isempty(postoption)) && postoption.normal
+            for k = 1:length(score)
+                for l = 1:length(score{k})
+                    lg = length(score{k}{l});
+                    for i = 1:lg
+                        score{k}{l}(i) = score{k}{l}(i) * ...
+                            (1 + atan( dw/min(i,dw) - 1)) / (1 + atan(dw-1));
+                    end
                 end
             end
         end
+        n = mirscalar(fl,'Data',score,'Title','Novelty');
     end
-    n = mirscalar(fl,'Data',score,'Title','Novelty'); 
 else
         
     fp = get(orig,'FramePos');
