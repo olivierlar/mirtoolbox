@@ -73,7 +73,13 @@ function varargout = mirsimatrix(orig,varargin)
         view.choice = {'Standard','Horizontal','TimeLag'};
         view.when = 'After';
     option.view = view;
-    
+
+        half.key = 'Half';
+        half.type = 'Boolean';
+        half.default = 0;
+        half.when = 'Both';
+    option.half = half;
+
         warp.key = 'Warp';
         warp.type = 'Boolean';
         warp.default = 0;
@@ -170,7 +176,7 @@ elseif isempty(option.arg2)
                 end
                 dk{z} = NaN(lK,l,nc);
             else
-                dk{z} = NaN(l,l,nc);
+                dk{z} = zeros(l,l,nc);
             end
             for g = 1:nc
                 if nd == 1
@@ -211,6 +217,8 @@ elseif isempty(option.arg2)
                         end
                     end
                     hK = ceil(lK/2);
+                    win = window(@hanning,lK);
+                    win = win(ceil(length(win)/2):end)';
                     if not(isempty(postoption)) && ...
                             strcmpi(postoption.view,'TimeLag')
                         for i = 1:l
@@ -253,9 +261,16 @@ elseif isempty(option.arg2)
                                                       option.distance));
                                 dkij = mm(:,1);
                             end
+                            dkij = dkij.*win(1:length(dkij));
                             dk{z}(i,i:j,g) = dkij;
-                            dk{z}(i:j,i,g) = dkij';
+                            if ~option.half
+                                dk{z}(i:j,i,g) = dkij';
+                            end
                         end
+                    end
+                elseif option.half
+                    for i = 1:l
+                        dk{z}(i+1:end,i,g) = 0;
                     end
                 end
             end
@@ -271,6 +286,7 @@ elseif isempty(option.arg2)
     else
         m.view = 's';
     end
+    m.half = option.half;
     m.similarity = 0;
     m.graph = {};
     m.branch = {};
@@ -307,7 +323,7 @@ else
         v2 = vv;
         clear vv
     end
-    d = NaN(nf1,nf2);
+    d = zeros(nf1,nf2);
     disf = str2func(option.distance);
     if strcmpi(option.distance,'cosine')
         for i = 1:nf1
@@ -326,6 +342,7 @@ else
     d = {{d}};
     m.diagwidth = NaN;
     m.view = 's';
+    m.half = 0;
     m.similarity = 0;
     m.graph = {};
     m.branch = {};

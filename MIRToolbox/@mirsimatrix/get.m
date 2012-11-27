@@ -5,6 +5,8 @@ function val = get(a, propName)
 switch propName
     case 'DiagWidth'
         val = a.diagwidth;
+    case 'Half';
+        val = a.half;
     case 'Graph'
         val = a.graph;
     case 'Branch'

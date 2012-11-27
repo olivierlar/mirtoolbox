@@ -27,6 +27,7 @@ while length(propertyArgIn) >= 2,
 end
 mm.diagwidth = m.diagwidth;
 mm.view = m.view;
+mm.half = m.half;
 mm.similarity = m.similarity;
 mm.graph = graph;
 mm.branch = branch;
