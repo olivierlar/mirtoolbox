@@ -352,7 +352,7 @@ for i = 1:length(dd);
     if folders && dd(i).isdir
         if not(strcmp(nf(1),'.'))
             cd(dd(i).name)
-            [l w sr a lg] = evalfolder([path nf],s,l,w,sr,lg,a,1);
+            [l w sr lg a] = evalfolder([path nf],s,l,w,sr,lg,a,1);
             cd ..
         end
     else

@@ -301,7 +301,11 @@ function varargout = mirtempo(x,varargin)
         lart.default = 0;
         lart.keydefault = .1;
     option.lart = lart;
-    
+
+        lart2.type = 'Integer';
+        lart2.default = .2;
+    option.lart2 = lart2;
+
             mean.key = 'Mean';
             mean.type = 'Boolean';
             mean.default = 0;
@@ -343,7 +347,7 @@ if option.lart
     option.mi = 20;
     option.ma = 600;
     option.fea = 'Novelty';
-    option.thr = .2;
+    option.thr = .1;
 end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
@@ -504,30 +508,13 @@ if option.lart
                             div = ptl(1)./tmpseg(end).bpms(:,end);
                             r1 = mod(div,1);
                             r2 = mod(1./div,1);
-                            if ~isempty(find(r1 < option.lart)) || ...
-                                   ~isempty(find(r2 < option.lart)) || ...
-                                   ~isempty(find(r1 > 1 - option.lart)) || ...
-                                   ~isempty(find(r2 > 1 - option.lart))
+                            if ~isempty(find(r1 < option.lart2)) || ...
+                                   ~isempty(find(r2 < option.lart2)) || ...
+                                   ~isempty(find(r1 > 1 - option.lart2)) || ...
+                                   ~isempty(find(r2 > 1 - option.lart2))
                                 % Subdivision/multiple of pulse detected
                                 res = 1;
-                                tmpseg(end).timindx(end+1) = l;
-                                tmpseg(end).bpms(end+1,end+1) = ptl(1);
-                                tmpseg(end).scores(end+1,end+1) = ...
-                                    d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
-                                
-                                new = size(tmpseg(end).bpms,1);
-                                nl = size(tmpseg(end).bpms,2);                                
-                                for i = nl-1:-1:1
-                                    [tmpseg(end) res2] = filltmpseg(...
-                                        tmpseg(end),new,i+1,i,...
-                                        getbpm(p,ptk{1,i,h}),...
-                                        d{j}{k}(:,i,h),p,...
-                                        pp{j}{k}(:,i,h),...
-                                        ppp{j}{k}{1,i,h},option.lart);
-                                    if ~res2
-                                        break
-                                    end
-                                end
+                                tmpseg = newtrack(tmpseg(end),l,h,p,ptk,ptl(1),d{j}{k},pp{j}{k},ppp{j}{k},option.lart);                                
                             end
                         end
                                                 
@@ -541,8 +528,8 @@ if option.lart
                                         div = ptl(i0)/ptl(1);
                                         if round(div)>1
                                             r = mod(div,1);
-                                            if r<option.lart || ...
-                                                    r>1-option.lart
+                                            if r<option.lart2 || ...
+                                                    r>1-option.lart2
                                                 tmpo = ptl(i0);
                                                 break
                                             end
@@ -577,18 +564,16 @@ if option.lart
                                         div = ptl(1)./tmpseg(i).bpms(i2,end);
                                         r1 = mod(div,1);
                                         r2 = mod(1./div,1);
-                                        if r1 < option.lart || ...
-                                                r1 > 1-option.lart || ...
-                                                r2 < option.lart || ...
-                                                r2 > 1-option.lart
+                                        if r1 < option.lart2 || ...
+                                                r1 > 1-option.lart2 || ...
+                                                r2 < option.lart2 || ...
+                                                r2 > 1-option.lart2
                                             res = 1;
                                             buf = tmpseg(i);
                                             tmpseg(i) = [];
                                             tmpseg(end+1) = buf;
-                                            tmpseg(end).timindx(end+1) = l;
-                                            tmpseg(end).bpms(end+1,end+1) = tmpo;
-                                            tmpseg(end).scores(end+1,end+1) = ...
-                                                d{j}{k}(ppp{j}{k}{1,l,h}(1),l,h);
+                                            
+                                            tmpseg = newtrack(tmpseg(end),l,h,p,ptk,tmpo,d{j}{k},pp{j}{k},ppp{j}{k},option.lart);
                                             break
                                         end
                                     end
@@ -1031,6 +1016,22 @@ for i = length(tmpseg)-1:-1:1
 end
 
 
+function tmpseg = newtrack(tmpseg,l,h,p,ptk,tmpo,d,pp,ppp,param)
+tmpseg.timindx(end+1) = l;
+tmpseg.bpms(end+1,end+1) = tmpo;
+tmpseg.scores(end+1,end+1) = d(ppp{1,l,h}(1),l,h);
+
+new = size(tmpseg.bpms,1);
+nl = size(tmpseg.bpms,2);                                
+for i = nl-1:-1:1
+    [tmpseg res2] = filltmpseg(tmpseg,new,i+1,i,getbpm(p,ptk{1,i,h}),...
+                               d(:,i,h),p,pp(:,i,h),ppp{1,i,h},param);
+    if ~res2
+        break
+    end
+end
+
+
 function [tmpseg res] = filltmpseg(tmpseg,i,from,to,ptl,d,p,pp,ppp,param)
 res = 0;
 tmpi = tmpseg.bpms(i,from);
@@ -1047,7 +1048,9 @@ if ~res
     % Track not yet detected is continued if
     % there is energy left around that frequency.
     ps = find(pp > getpos(p,tmpi),1);
-    if d(ps) > .1
+    md = min(d);
+    d = (d-md)/(max(d)-md);
+    if d(ps) > .05
         res = 1;
         tmpseg.bpms(i,to) = tmpseg.bpms(i,from);
         tmpseg.scores(i,to) = d(ps);
