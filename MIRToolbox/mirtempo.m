@@ -299,7 +299,7 @@ function varargout = mirtempo(x,varargin)
         lart.key = 'Lartillot';
         lart.type = 'Integer';
         lart.default = 0;
-        lart.keydefault = .1;
+        lart.keydefault = .075;
     option.lart = lart;
 
         lart2.type = 'Integer';
@@ -344,10 +344,10 @@ if option.lart
     option.m = Inf;
     option.enh = 0;
     option.r = 0;
-    option.mi = 20;
-    option.ma = 600;
+    option.mi = 24;
+    option.ma = Inf;
     option.fea = 'Novelty';
-    option.thr = .1;
+    option.thr = 0;%.1;
 end
 if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
     if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
@@ -446,7 +446,7 @@ if isempty(pt) || isempty(pt{1})
     track = 0;
 end
 bpm = cell(1,length(pt));
-if option.lart
+if 0 %option.lart
     meanbpm = cell(1,length(pt));
     d = get(p,'Data');
     pp = get(p,'Pos');
@@ -639,6 +639,317 @@ if option.lart
             end
         end 
     end
+elseif option.lart
+    bpm = cell(1,length(pt));
+    d = get(p,'Data');
+    pp = get(p,'Pos');
+    ppp = get(p,'PeakPos');
+    for j = 1:length(pt)
+        bpm{j} = cell(1,length(pt{j}));
+        meanbpm{j} = cell(1,length(pt{j}));
+        for k = 1:length(pt{j})
+            ptk = pt{j}{k};
+            for h = 1:size(ptk,3)
+                meters = {};
+                oldmeters = {};
+                bpmk = zeros(1,size(ptk,2));
+                currentbpmk = [];
+                %figure, hold on
+                for l = 1:size(ptk,2)
+                    ptl = getbpm(p,ptk{1,l,h});
+                    for i = 1:length(ptl)
+                        res = 0;
+                        for i2 = 1:length(meters)
+                            bpms = [meters{i2}.lastbpm];
+                            [dist near] = min(abs(60/ptl(i) - 60./bpms));
+                            if dist < option.lart
+                                if meters{i2}(near).timidx(end) < l
+                                    meters{i2}(near).timidx(end+1) = l;
+                                    meters{i2}(near).bpms(end+1) = ptl(i);
+                                    meters{i2}(near).lastbpm = ptl(i);
+                                    meters{i2}(near).score(end+1) = ...
+                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                    meters{i2}(near).main(end+1) = ...
+                                        meters{i2}(near).main(end);
+                                elseif length(meters{i2}(near).bpms) > 1 ...
+                                       && abs(meters{i2}(near).lastbpm ...
+                                              - ptl(i)) < ...
+                                          abs(diff(meters{i2}(near)...
+                                                        .bpms(end-1:end)))
+                                    meters{i2}(near).bpms(end) = ptl(i);
+                                    meters{i2}(near).lastbpm = ptl(i);
+                                    meters{i2}(near).score(end) = ...
+                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                    meters{i2}(near).main(end+1) = ...
+                                        meters{i2}(near).main(end);
+                                end
+                                res = 1;
+                            end
+                        end
+                        if ~res
+                            i2 = 1;
+                            while i2 <= length(meters)
+                                bpms = [meters{i2}.lastbpm];
+                                res2 = 0;
+                                for i3 = 1:length(bpms)
+                                    if ptl(i) > bpms(i3)
+                                        div = ptl(i) / bpms(i3);
+                                        if round(div) > 1 && ...
+                                                (mod(div,1) < option.lart2 || ...
+                                                 mod(div,1) > 1-option.lart2)
+                                            if ~res2
+                                                if res
+                                                    if isempty(meters{res(1)}(res(2)).slow)
+                                                        meters{res(1)}(res(2)).slow.index = ...
+                                                            meters{i2}(i3).index;
+                                                        meters{res(1)}(res(2)).slow.ratio = ...
+                                                            round(div);
+                                                    else
+                                                        meters{res(1)}(res(2)).slow.index(end+1) = ...
+                                                            meters{i2}(i3).index;
+                                                        meters{res(1)}(res(2)).slow.ratio(end+1) = ...
+                                                            round(div);
+                                                    end
+                                                    if ~isempty(currentbpmk)
+                                                        if currentbpmk(1) == i2
+                                                            currentbpmk(1) = res(1);
+                                                            currentbpmk(2) = currentbpmk(2) + length(meters{res(1)});
+                                                        elseif currentbpmk(1) > i2
+                                                            currentbpmk(1) = currentbpmk(1) - 1;
+                                                        end
+                                                    end
+                                                    meters{res(1)} = [meters{res(1)} meters{i2}];
+                                                    meters(i2) = []
+                                                    res2 = -1;
+                                                    break
+                                                else
+                                                    meters{i2}(end+1).index = 0;
+                                                    meters{i2}(end).lastbpm = ptl(i);
+                                                    meters{i2}(end).bpms = ptl(i);
+                                                    meters{i2}(end).timidx = l;
+                                                    meters{i2}(end).score = ...
+                                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                                    meters{i2}(end).slow.index = meters{i2}(i3).index;
+                                                    meters{i2}(end).slow.ratio = round(div);
+                                                    meters{i2}(end).fast = [];
+                                                    meters{i2}(end).main = 0;
+                                                end
+                                            elseif isempty(meters{i2}(end).slow) || ...
+                                                   round(div) < meters{i2}(end).slow.ratio
+                                                meters{i2}(end).slow.index = meters{i2}(i3).index;
+                                                meters{i2}(end).slow.ratio = round(div);
+                                            end
+                                            res = [i2 i3];
+                                            res2 = 1;
+                                        end
+                                    else
+                                        div = bpms(i3) / ptl(i);
+                                        if round(div) > 1 && ...
+                                                (mod(div,1) < option.lart2 || ...
+                                                 mod(div,1) > 1-option.lart2)
+                                            if ~res2
+                                                if res
+                                                    if isempty(meters{res(1)}(res(2)).fast)
+                                                        meters{res(1)}(res(2)).fast.index = ...
+                                                            meters{i2}(i3).index;
+                                                        meters{res(1)}(res(2)).fast.ratio = ...
+                                                            round(div);
+                                                    else
+                                                        meters{res(1)}(res(2)).fast.index(end+1) = ...
+                                                            meters{i2}(i3).index;
+                                                        meters{res(1)}(res(2)).fast.ratio(end+1) = ...
+                                                            round(div);
+                                                    end
+                                                    if ~isempty(currentbpmk)
+                                                        if currentbpmk(1) == i2
+                                                            currentbpmk(1) = res(1);
+                                                            currentbpmk(2) = currentbpmk(2) + length(meters{res(1)});
+                                                        elseif currentbpmk(1) > i2
+                                                            currentbpmk(1) = currentbpmk(1) - 1;
+                                                        end
+                                                    end
+                                                    meters{res(1)} = [meters{res(1)} meters{i2}];
+                                                    meters(i2) = [];
+                                                    res2 = -1;
+                                                    break
+                                                else
+                                                    meters{i2}(end+1).index = 0;
+                                                    meters{i2}(end).lastbpm = ptl(i);
+                                                    meters{i2}(end).bpms = ptl(i);
+                                                    meters{i2}(end).timidx = l;
+                                                    meters{i2}(end).score = ...
+                                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                                    meters{i2}(end).slow = [];
+                                                    meters{i2}(end).fast.index = meters{i2}(i3).index;
+                                                    meters{i2}(end).fast.ratio = round(div);
+                                                    meters{i2}(end).main = 0;
+                                                end
+                                            elseif isempty(meters{i2}(end).slow) || ...
+                                                   round(div) < meters{i2}(end).slow.ratio
+                                                meters{i2}(end).fast.index = meters{i2}(i3).index;
+                                                meters{i2}(end).fast.ratio = round(div);
+                                            end
+                                            res = [i2 i3];
+                                            res2 = 1;
+                                        end
+                                    end
+                                end
+                                if res2 > -1
+                                    i2 = i2+1;
+                                end
+                            end
+                            for i2 = 1:length(meters)
+                                if ~isempty(meters{i2})
+                                    [unused ord] = sort([meters{i2}.lastbpm],'descend');
+                                    if ~isempty(currentbpmk) && ...
+                                            currentbpmk(1) == i2
+                                        currentbpmk(2) = find(ord == currentbpmk(2),1);
+                                    end
+                                    meters{i2} = meters{i2}(ord);
+                                end
+                            end
+                            if ~res
+                                meters{end+1}.index = 1;
+                                meters{end}.lastbpm = ptl(i);
+                                meters{end}.bpms = ptl(i);
+                                meters{end}.timidx = l;
+                                meters{end}.score = ...
+                                    d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                meters{end}.slow = [];
+                                meters{end}.fast = [];
+                                meters{end}.main = 0;
+                            end
+                        end
+                    end
+                    mi = [1 1];
+                    for i = 1:length(meters)
+                        if ~isempty(meters{i})
+                            for i2 = 2:length(meters{i})
+                                if meters{i}(i2).score(end) > ...
+                                        meters{mi(1)}(mi(2)).score(end);
+                                    mi = [i i2];
+                                end
+                            end
+                        end
+                    end
+                    meters{mi(1)}(mi(2)).main(end) = 1;
+                    if isempty(currentbpmk) || ...
+                            ~meters{currentbpmk(1)}...
+                                (currentbpmk(2)).main(end) || ...
+                            ((length(meters{mi(1)}(mi(2)).main) == 1 || ...
+                              ~meters{mi(1)}(mi(2)).main(end-1)) && ...
+                             resonance(meters{mi(1)}(mi(2)).bpms(end)) > ...
+                                resonance(meters{currentbpmk(1)}...
+                                 (currentbpmk(2)).bpms(end)) && ...
+                             resonance(meters{mi(1)}(mi(2)).bpms(end)) * ...
+                                meters{mi(1)}(mi(2)).score(end) > ...
+                             resonance(meters{currentbpmk(1)}...
+                                 (currentbpmk(2)).bpms(end)) * ...
+                                meters{currentbpmk(1)}...
+                                    (currentbpmk(2)).score(end))
+                        currentbpmk = mi;
+                    end
+                    bpmk(l) = meters{currentbpmk(1)}(currentbpmk(2)).bpms(end);
+                    for i = 1:length(meters)
+                        i2 = 1;
+                        while i2 <= length(meters{i})
+                            if meters{i}(i2).timidx(end) ~= l || ...
+                                    l == size(ptk,2)
+                                if length(oldmeters) < i
+                                    oldmeters{i} = meters{i}(i2);
+                                else
+                                    oldmeters{i}(end+1) = meters{i}(i2);
+                                end
+                                meters{i}(i2) = [];
+                                if currentbpmk(1) == i && i2 < currentbpmk(2)
+                                    currentbpmk(2) = currentbpmk(2)-1;
+                                end
+                            else
+                                i2 = i2+1;
+                            end
+                        end
+                    end
+                    if ~mod(l,100)
+                        l
+                    end
+                   %for zz = 1:length(meters{1})
+                   %    plot(meters{1}(zz).timidx,60./meters{1}(zz).bpms,'+-');%,'Color',num2col(i))
+                   %    drawnow
+                   %end 
+                end
+                figure,hold on
+                for i = 1:length(oldmeters)
+                    mac = 0;
+                    mic = 1;
+                    for i2 = 1:length(oldmeters{i})
+                        for i3 = 1:length(oldmeters{i}(i2).score)
+                            if oldmeters{i}(i2).score(i3) > mac
+                                mac = oldmeters{i}(i2).score(i3);
+                            end
+                            if oldmeters{i}(i2).score(i3) < mic
+                                mic = oldmeters{i}(i2).score(i3);
+                            end
+                        end
+                    end
+                    micmac = mac-mic;
+                    if ~micmac
+                        micmac = 1;
+                    end
+                    for i2 = 1:length(oldmeters{i})
+                        for i3 = 1:length(oldmeters{i}(i2).score)
+                            rgb = ones(1,1,3);
+                            if oldmeters{i}(i2).main(i3)
+                                irgb = [2 3];
+                            else
+                                irgb = [1 2];
+                            end
+                            rgb(irgb) = 1 - (oldmeters{i}(i2).score(i3) - mic) / micmac;
+                            plot(oldmeters{i}(i2).timidx(i3),...
+                                 60./oldmeters{i}(i2).bpms(i3),'+','Color',rgb);
+                            %plot(oldmeters{i}(i2).timidx(i3),...
+                            %     60./oldmeters{i}(i2).bpms(i3),rgb,...%'Color',rgb);
+                            %     'MarkerSize',.5 + oldmeters{i}(i2).score(i3)*5);
+                        end
+                    end
+                    plot(60./bpmk,'k');
+                end
+            end
+            
+            meters = oldmeters;
+            bpm{j}{k} = bpmk;
+            
+            if 0
+                %longest = [1 1];
+                meanscore = cell(1,length(oldmeters));
+                maxscore = zeros(2,length(meters));
+                for i = 1:length(meters)
+                    meanscore{i} = zeros(1,length(meters{i}));
+                    for i2 = 1:length(meters{i})
+                        %if length(meters{i}(j).timidx) > ...
+                        %        length(meters{longest(1)}(longest(2)).timidx)
+                        %    longest = [i j];
+                        %end
+                        scores = zeros(size(ptk));
+                        scores(meters{i}(i2).timidx) = meters{i}(i2).score;
+                        meanscore{i}(i2) = mean(scores) * ...
+                            resonance(mean(meters{i}(i2).bpms));
+                    end
+                    [maxscore(1,i) maxscore(2,i)] = max([meanscore{i}]);
+                end
+                %meters = meters{longest(1)}(longest(2));
+                [unused best] = max(maxscore(1,:));
+                bestmeter = meters{best}(maxscore(2,best));
+                bpmk = zeros(1,size(ptk,2));
+                bpmk(bestmeter.timidx) = bestmeter.bpms;
+                for i = 2:length(bpmk)
+                    if ~bpmk(i)
+                        bpmk(i) = bpmk(i-1);
+                    end
+                end
+                bpm{j}{k} = bpmk;
+            end
+        end
+    end
 else
     meanbpm = {};
     for j = 1:length(pt)
@@ -777,6 +1088,10 @@ for i2 = 1:i-1
         break
     end
 end
+
+
+function r = resonance(bpm)
+r = 1 - 0.25*(log2(max(60/bpm,1e-12)/.5)).^2;
                             
                             
 function bpm = getbpm(p,ptl)
