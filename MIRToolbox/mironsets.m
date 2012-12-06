@@ -271,7 +271,7 @@ function varargout = mironsets(x,varargin)
 
         kernelsize.key = 'KernelSize';
         kernelsize.type = 'Integer';
-        kernelsize.default = 32;
+        kernelsize.default = 0;
     option.kernelsize = kernelsize;
     
 %%
@@ -381,7 +381,15 @@ if isnan(option.env)
         option.env = 1;
     end
 end
+if ~option.kernelsize
+    if option.pitch
+        option.kernelsize = 32;
+    elseif option.novelty
+        option.kernelsize = 64;
+    end
+end
 if isamir(x,'miraudio')
+    y = [];
     if option.env
         if strcmpi(option.envmeth,'Filter') && option.fb>1
             fb = mirfilterbank(x,option.filtertype,'NbChannels',option.fb);
@@ -395,19 +403,37 @@ if isamir(x,'miraudio')
                           'PreDecim',option.decim,'PostDecim',0,...
                           'Mu',option.mu);
         type = 'mirenvelope';
-    elseif option.flux
-        y = mirflux(x,'Inc',option.inc,'Complex',option.complex);
+    end
+    if option.flux
+        z = mirflux(x,'Inc',option.inc,'Complex',option.complex);
+        if isempty(y)
+            y = z;
+        else
+            y = y+z;
+        end
         type = 'mirscalar';
-    elseif option.pitch
+    end
+    if option.pitch
         [unused ac] = mirpitch(x,'Frame','Min',option.min,'Max',option.max);
-        y = mirnovelty(ac,'KernelSize',option.kernelsize);
+        z = mirnovelty(ac,'KernelSize',option.kernelsize);
+        if isempty(y)
+            y = z;
+        else
+            y = y+z;
+        end
         type = 'mirscalar';
     elseif option.novelty
-        s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'log');
+        s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3);%,'log');
         %c = mircepstrum(x,'Frame',.05,.2);
         %[p ac] = mirpitch(x,'Frame');
-        y = mirnovelty(s,'KernelSize',option.kernelsize,...
-                      'Distance','Euclidean','Similarity','oneminus');
+        z = mirnovelty(s,'KernelSize',option.kernelsize,...
+                      ...'Distance','Euclidean',...
+                      'Similarity','oneminus');
+        if isempty(y)
+            y = z;
+        else
+            y = y+z;
+        end
         type = 'mirscalar';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
@@ -514,8 +540,8 @@ if isfield(option,'presel') && ...
     o = mirsum(o,'Weights',(filtfreq(1:end-1)+filtfreq(2:end))/2);
     o = mirenvelope(o,'Smooth',12);
 end
-if isa(o,'mirscalar')
-    o = mirenvelope(o);
+if isfield(postoption,'detect')
+    o = mirenvelope(o,'Normal');
 end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
