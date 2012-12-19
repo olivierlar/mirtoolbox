@@ -156,6 +156,9 @@ while i <= length(varg)
                 if length(varg) > i && ischar(varg{i+1}) && strcmpi(varg{i+1},'AtEnd')
                     i = i+1;
                     frame.phase.atend = 'AtEnd';
+                elseif length(varg) > i && isnumeric(varg{i+1}) && ~varg{i+1}
+                    i = i+1;
+                    frame.phase.atend = 0;
                 end
             else
                 frame.phase.val = DEFAULTFRAMESTART;
