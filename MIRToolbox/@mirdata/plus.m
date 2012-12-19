@@ -2,8 +2,10 @@ function c = plus(a,b)
 
 d = get(a,'Data');
 f = cell(1,length(d));
+fp = cell(1,length(d));
 n = get(a,'Name');
 t = get(a,'Title');
+fpa = get(a,'FramePos');
 
 if isa(b,'mirdata')
     e = get(b,'Data');
@@ -12,6 +14,7 @@ if isa(b,'mirdata')
     if not(isa(a,'miraudio'))
        t = [t,' + ',get(b,'Title')];
     end
+    fpb = get(b,'FramePos');
 else
     e = {{b}};
     m = {num2str(b)};
@@ -20,19 +23,25 @@ end
     
 for i = 1:length(d)
     f{i} = cell(1,length(d{i}));
+    fp{i} = cell(1,length(d{i}));
     for j = 1:length(d{i})
         ld = size(d{i}{j},1);
         le = size(e{i}{j},1);
+        [unused ia ib] = intersect(round(fpa{i}{j}(2,:)*1e4),...
+                                   round(fpb{i}{j}(2,:)*1e4));
+        dj = d{i}{j}(:,ia,:);
+        ej = e{i}{j}(:,ib,:);
         if ld > le
-            f{i}{j} = d{i}{j} + [e{i}{j};zeros(ld-le,size(e,2),size(e,3))];
+            f{i}{j} = dj + [ej;zeros(ld-le,length(ia),size(e,3))];
         elseif ld < le
-            f{i}{j} = [d{i}{j};zeros(le-ld,size(d,2),size(d,3))] + e{i}{j};
+            f{i}{j} = [dj;zeros(le-ld,length(ib),size(d,3))] + ej;
         else
-            f{i}{j} = d{i}{j} + e{i}{j};
+            f{i}{j} = dj + ej;
         end
+        fp{i}{j} = fpa{i}{j}(:,ia);
     end
     if isa(a,'miraudio')
         n{i} = [n{i} '+' m{i}];
     end
 end
-c = set(a,'Data',f,'Name',n,'Title',t);
+c = set(a,'Data',f,'Name',n,'Title',t,'FramePos',fp);
