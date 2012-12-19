@@ -694,6 +694,8 @@ elseif option.lart
                                         if div < 1+option.lart2
                                             if 1 % meters{i2}(i3).timidx(end) < l
                                                 if res3
+                                                    % Level identified to
+                                                    % one already detected
                                                     meters{i2}(i3) = [];
                                                     bpms(i3) = [];
                                                     dist(i3) = [];
@@ -748,37 +750,91 @@ elseif option.lart
                                                 (mod(div,1) < option.lart2 || ...
                                                  mod(div,1) > 1-option.lart2)
                                             if res3
-                                                meters{i2}(i3) = [];
-                                                bpms(i3) = [];
-                                                if ~isempty(currentbpmk) && ...
-                                                        currentbpmk(1) == i2 && ...
-                                                        currentbpmk(2) == i3
-                                                    currentbpmk = res3;
-                                                end
-                                                i3 = i3 - 1;
+                                                % Level identified to one
+                                                % already detected
+                                                %meters{i2}(i3) = [];
+                                                %bpms(i3) = [];
+                                                %if ~isempty(currentbpmk) && ...
+                                                %        currentbpmk(1) == i2 && ...
+                                                %        currentbpmk(2) >= i3
+                                                %    currentbpmk = [res3(1)...
+                                                %                   res3(2)-1];
+                                                %end
+                                                %i3 = i3 - 1;
+                                                %if res(1) == i2 && res(2)>i3
+                                                %    res(2) = res(2)-1;
+                                                %    res3 = res;
+                                                %end
                                             elseif res
+                                                chcur = 0;
                                                 if meters{res(1)}(res(2)).lvl > ...
-                                                        meters{i2}(i3).lvl
-                                                    j1 = [i2 i3];
-                                                    j2 = res;
-                                                else
-                                                    j1 = res;
-                                                    j2 = [i2 i3];
-                                                end
-                                                div = meters{j2(1)}(j2(2)).lvl / ...
-                                                    meters{j1(1)}(j1(2)).lvl;
-                                                if round(div) == div
-                                                else
-                                                end
-                                                if ~isempty(currentbpmk)
-                                                    if currentbpmk(1) == i2
+                                                        meters{i2}(i3).lvl * rdiv
+                                                    meter1 = meters{i2};
+                                                    meter2 = meters{res(1)};
+                                                    lvl1 = meter1(i3).lvl * rdiv;
+                                                    lvl2 = meter2(res(2)).lvl;
+                                                    if ~isempty(currentbpmk) && ...
+                                                            currentbpmk(1) == i2
                                                         currentbpmk(1) = res(1);
-                                                        currentbpmk(2) = currentbpmk(2) + length(meters{res(1)});
-                                                    elseif currentbpmk(1) > i2
-                                                        currentbpmk(1) = currentbpmk(1) - 1;
+                                                        chcur = 1;
+                                                        % Best bpm was in
+                                                        % new metrical
+                                                        % hierarchy, which
+                                                        % is fused to the
+                                                        % old one.
+                                                    end
+                                                else
+                                                    meter1 = meters{res(1)};
+                                                    meter2 = meters{i2};
+                                                    lvl1 = meter1(res(2)).lvl;
+                                                    lvl2 = meter2(i3).lvl * rdiv;
+                                                    if ~isempty(currentbpmk) && ...
+                                                            currentbpmk(1) == res(1)
+                                                        chcur = 1;
+                                                        % Best bpm was in
+                                                        % old hierarchy,
+                                                        % which is fused to
+                                                        % the new one.
                                                     end
                                                 end
-                                                meters(i2) = []
+                                                div = lvl2 / lvl1;
+                                                if round(div) == div
+                                                    mult1 = round(div);
+                                                    mult2 = 1;
+                                                else
+                                                    mult1 = lvl2;
+                                                    mult2 = lvl1;
+                                                end
+                                                if mult2 > 1
+                                                    for i4 = 1:length(meter2)
+                                                        meter2(i4).lvl = meter2(i4).lvl * mult2;
+                                                    end
+                                                end
+                                                for i4 = 1:length(meter1)
+                                                    % Fusing one hierarchy
+                                                    % into the other..
+                                                    found = find(meter1(i4).lvl * mult1 ...
+                                                                 == [meter2.lvl]);
+                                                    if isempty(found)
+                                                        meter2(end+1) = meter1(i4);
+                                                        meter2(end).lvl = meter2(end).lvl * mult1;
+                                                        if chcur == 1 && ...
+                                                                i4 == currentbpmk(2)
+                                                            currentbpmk(2) = length(meter2);
+                                                            % Best bpm now
+                                                            % pointing to
+                                                            % the fused
+                                                            % hierarchy.
+                                                        end
+                                                    end
+                                                end
+                                                if ~isempty(currentbpmk) && ...
+                                                        currentbpmk(1) > i2
+                                                    currentbpmk(1) = currentbpmk(1) - 1;
+                                                end
+                                                meters{res(1)} = meter2;
+                                                res(2) = res(2); %%%%%%%%%%%
+                                                meters(i2) = [];
                                                 i2 = i2 - 1;
                                                 break
                                             else
@@ -798,15 +854,16 @@ elseif option.lart
                                                     %meters{i2}(end).slow.ratio = round(div);
                                                     %meters{i2}(end).fast = [];
                                                     meters{i2}(end).main = 0;
+                                                    res = [i2 length(meters{i2})];
                                                 elseif score > meters{i2}(l0).score
                                                     meters{i2}(l0).lastbpm = ptl(i);
                                                     meters{i2}(l0).bpms = ptl(i);
                                                     meters{i2}(l0).score = score;
+                                                    res = [i2 l0];
                                                 end
                                             end
-                                            res = [i2 i3];
                                             res2 = 1;
-                                            res3 = [i2 i3];
+                                            res3 = res;
                                         end
                                     else
                                         div = bpms(i3) / ptl(i);
@@ -817,14 +874,21 @@ elseif option.lart
                                                  mod(div,1) > 1-option.lart2)
                                             if ~res2
                                                 if res3
-                                                    meters{i2}(i3) = [];
-                                                    bpms(i3) = [];
-                                                    if ~isempty(currentbpmk) && ...
-                                                            currentbpmk(1) == i2 && ...
-                                                            currentbpmk(2) == i3
-                                                        currentbpmk = res3;
-                                                    end
-                                                    i3 = i3 - 1;
+                                                    % Level identified to
+                                                    % one already detected
+                                                    %meters{i2}(i3) = [];
+                                                    %bpms(i3) = [];
+                                                    %if ~isempty(currentbpmk) && ...
+                                                    %        currentbpmk(1) == i2 && ...
+                                                    %        currentbpmk(2) >= i3
+                                                    %    currentbpmk = [res3(1)...
+                                                    %                   res3(2)-1];;
+                                                    %end
+                                                    %i3 = i3 - 1;
+                                                    %if res(1) == i2 && res(2)>i3
+                                                    %    res(2) = res(2)-1;
+                                                    %    res3 = res;
+                                                    %end
                                                 else
                                                     if 0 % res
                                                         if isempty(meters{res(1)}(res(2)).fast)
@@ -871,10 +935,12 @@ elseif option.lart
                                                                 %meters{i2}(end).fast.index = meters{i2}(i3).index;
                                                                 %meters{i2}(end).fast.ratio = round(div);
                                                                 meters{i2}(end).main = 0;
+                                                                res = [i2 length(meters{i2})];
                                                             elseif score > meters{i2}(l0).score
                                                                 meters{i2}(l0).lastbpm = ptl(i);
                                                                 meters{i2}(l0).bpms = ptl(i);
                                                                 meters{i2}(l0).score = score;
+                                                                res = [i2 l0];
                                                             end
                                                         else
                                                             lvl = meters{i2}(i3).lvl;
@@ -887,6 +953,7 @@ elseif option.lart
                                                             meters{i2}(end).timidx = l;
                                                             meters{i2}(end).score = score;
                                                             meters{i2}(end).main = 0;
+                                                            res = [i2 length(meters{i2})];
                                                         end
                                                     end
                                                 end
@@ -895,9 +962,8 @@ elseif option.lart
                                                 meters{i2}(end).fast.index = meters{i2}(i3).index;
                                                 meters{i2}(end).fast.ratio = round(div);
                                             end
-                                            res = [i2 i3];
                                             res2 = 1;
-                                            res3 = [i2 i3];
+                                            res3 = res;
                                         end
                                     end
                                     i3 = i3 + 1;
@@ -984,7 +1050,7 @@ elseif option.lart
                                     currentbpmk(2) = currentbpmk(2)-1;
                                 end
                             else
-                                meters{i}(i2).currentbpm = meters{i}(i2).bpms(end);
+                                meters{i}(i2).lastbpm = meters{i}(i2).bpms(end);
                                 i2 = i2+1;
                             end
                         end
