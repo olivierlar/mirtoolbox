@@ -51,6 +51,13 @@ if ischar(varargin{1})
                 varargout = {[]};
             end
             return
+        case 'FramePhaseAtEnd'
+            if isstruct(a.frame)
+                varargout = {a.frame.phase.atend};
+            else
+                varargout = {[]};
+            end
+            return
         case 'FrameDontChunk'
             if isstruct(a.frame)
                 varargout = {a.frame.dontchunk};

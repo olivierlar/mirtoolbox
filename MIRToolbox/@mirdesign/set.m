@@ -43,6 +43,8 @@ while length(propertyArgIn) >= 2,
            a.frame.hop.unit = val;
        case 'FramePhaseUnit'
            a.frame.phase.unit = val;
+       case 'FramePhaseAtEnd'
+           a.frame.phase.atend = val;
        case 'FrameEval'
            a.frame.eval = val;
        case 'FrameDontChunk'

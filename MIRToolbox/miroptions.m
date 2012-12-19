@@ -3,6 +3,7 @@ function [orig during after] = miroptions(method,orig,specif,varg)
 DEFAULTFRAMELENGTH = .05;
 DEFAULTFRAMEHOP = .5;
 DEFAULTFRAMESTART = 0;
+DEFAULTFRAMESYNC = 0;
 
 % The options are determined during the bottom-up process design (see below). 
 
@@ -94,6 +95,7 @@ for i = 1:length(fields)
                 end
                 during.(field).phase.val = option.(field).default(3);
                 during.(field).phase.unit = '/1';
+                during.(field).phase.atend = 0;
             else
                 during.(field) = option.(field).default;
             end
@@ -108,6 +110,7 @@ while i <= length(varg)
         frame.length.unit = 's';
         frame.hop.unit = '/1';
         frame.phase.unit = '/1';
+        frame.phase.atend = 0;
         
         if length(varg) > i && isnumeric(varg{i+1})
             i = i+1;
@@ -150,6 +153,10 @@ while i <= length(varg)
                     i = i+1;
                     frame.phase.unit = varg{i};
                 end
+                if length(varg) > i && ischar(varg{i+1}) && strcmpi(varg{i+1},'AtEnd')
+                    i = i+1;
+                    frame.phase.atend = 'AtEnd';
+                end
             else
                 frame.phase.val = DEFAULTFRAMESTART;
             end
@@ -188,6 +195,10 @@ while i <= length(varg)
                          strcmpi(varg{i+1},'s') || strcmpi(varg{i+1},'sp'))
                     i = i+1;
                     frame.phase.unit = varg{i};
+                end
+                if length(varg) > i && ischar(varg{i+1}) && strcmpi(varg{i+1},'AtEnd')
+                    i = i+1;
+                    frame.phase.atend = 'AtEnd';
                 end
             else
                 frame.phase.val = DEFAULTFRAMESTART;

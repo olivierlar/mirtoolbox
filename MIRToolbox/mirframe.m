@@ -46,17 +46,20 @@ elseif isa(x,'mirdesign')
         flu = get(x,'FrameLengthUnit');
         fhu = get(x,'FrameHopUnit');
         fpu = get(x,'FramePhaseUnit');
+        fpe = get(x,'FramePhaseAtEnd');
         if fl
             f = set(f,'FrameLength',fl,'FrameLengthUnit',flu,...
                       'FrameHop',fh,'FrameHopUnit',fhu,...
-                      'FramePhase',fp,'FramePhaseUnit',fpu);
+                      'FramePhase',fp,'FramePhaseUnit',fpu,...
+                      'FramePhaseAtEnd',fpe);
         else
             f = set(f,'FrameLength',para.wlength.val,...
                       'FrameLengthUnit',para.wlength.unit,...
                       'FrameHop',para.hop.val,...
                       'FrameHopUnit',para.hop.unit,...
                       'FramePhase',para.phase.val,...
-                      'FramePhaseUnit',para.phase.unit);
+                      'FramePhaseUnit',para.phase.unit,...
+                      'FramePhaseAtEnd',fpe);
         end
         f = set(f,'FrameEval',1,...
                   'SeparateChannels',get(x,'SeparateChannels'));
@@ -136,14 +139,19 @@ elseif isa(x,'mirdata')
                 h = sf{k}/para.hop.val;
                 fr{k} = para.hop.val;
             end
+            if para.phase.atend
+                p = mod(-l,h);
+            else
+                p = 0;
+            end
             if strcmpi(para.phase.unit,'s')
-                p = para.phase.val*sf{k};
+                p = p + para.phase.val*sf{k};
             elseif strcmpi(para.phase.unit,'sp')
-                p = para.phase.val;
+                p = p + para.phase.val;
             elseif strcmpi(para.phase.unit,'/1')
-                p = para.phase.val*h;
+                p = p + para.phase.val*h;
             elseif strcmpi(para.phase.unit,'%')
-                p = para.phase.val*h*.01;
+                p = p + para.phase.val*h*.01;
             end
             l = floor(l);
             dx2k = cell(1,length(dxk));
@@ -251,6 +259,7 @@ if not(isempty(v)) && isstruct(v{1})
         para.wlength = v{1};
         para.hop = v{2};
         para.phase = v{3};
+        para.atend = v{4};
     end
     return
 end
@@ -260,6 +269,7 @@ para.hop.val = 0.5;
 para.hop.unit = '/1';
 para.phase.val = 0;
 para.phase.unit = '/1';
+para.phase.atend = 0;
 nv = length(v);
 i = 1;
 j = 1;
@@ -307,6 +317,10 @@ while i <= nv
             i = i+1;
             para.phase.unit = v{i};
         end
+        if i < nv && ischar(v{i+1}) && strcmpi(v{i+1},'AtEnd')
+            i = i+1;
+            para.phase.atend = 'AtEnd';
+        end
     elseif isnumeric(arg)
         switch j
             case 1
@@ -335,6 +349,13 @@ while i <= nv
                          strcmpi(v{i+1},'s') || strcmpi(v{i+1},'sp'))
                     i = i+1;
                     para.phase.unit = v{i};
+                end
+                if i < nv && ischar(v{i+1}) && strcmpi(v{i+1},'AtEnd')
+                    i = i+1;
+                    para.phase.atend = 'AtEnd';
+                elseif i < nv && isnumeric(v{i+1}) && ~v{i+1}
+                    i = i+1;
+                    para.phase.atend = 0;
                 end
             otherwise
                 error('ERROR IN MIRFRAME: Syntax error. See help mirframe.');
