@@ -11,9 +11,13 @@ n = d.name;
 l = d.label;
 p = d.pos;
 fp = d.framepos;
+ld = length(v);
 pp = d.peak.pos;
 pm = d.peak.mode;
-ld = length(v);
+if isempty(pp)
+    pp = cell(ld);
+    pm = cell(ld);
+end
 if isempty(d.attack)
     ap = cell(ld);
 else

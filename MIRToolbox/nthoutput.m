@@ -11,7 +11,9 @@ varargout = mirfunction(@nthoutput,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 type = mirtype(x);
-type = type{option.nth};
+if iscell(type)
+    type = type{option.nth};
+end
 
 
 function y = main(x,option,postoption)

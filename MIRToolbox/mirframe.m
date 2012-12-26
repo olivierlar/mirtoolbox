@@ -175,7 +175,11 @@ elseif isa(x,'mirdata')
                         disp('Frame length longer than total sequence size. No frame decomposition.');
                         dx2j = dxj(:,1,:);
                         dt2j = dtj;
-                        fpj = [dtj(1) ; dtj(end)];
+                        if isempty(dtj)
+                            fpk = [];
+                        else
+                            fpj = [dtj(1) ; dtj(end)];
+                        end
                     else
                         for i = 1:n % For each frame, ...
                             st = floor((i-1)*h+p+1);
