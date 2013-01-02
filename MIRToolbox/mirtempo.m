@@ -663,16 +663,17 @@ elseif option.lart
                 %figure, hold on
                 for l = 1:size(ptk,2)
                     ptl = getbpm(p,ptk{1,l,h});
-                    comet = zeros(1,length(meters));
+                    %comet = zeros(1,length(meters));
                     for i = 1:length(ptl)
                         res = 0;
                         for i2 = 1:length(meters)
                             res3 = 0;
                             bpms = [meters{i2}.lastbpm];
                             norb = bpms ./ [meters{i2}.lvl];
-                            bpms = mean(norb) * [meters{i2}.lvl];
-                            dist = abs(60/ptl(i) - 60./bpms);
-                            if comet(i2)
+                            nbpms = mean(norb) * [meters{i2}.lvl];
+                            dist = min(abs(60/ptl(i) - 60./bpms),...
+                                       abs(60/ptl(i) - 60./nbpms));
+                            if 0 %comet(i2)
                                 thr = option.lart * 2;
                             else
                                 thr = option.lart;
@@ -685,8 +686,10 @@ elseif option.lart
                                     % level.
                                     if meters{i2}(i3).timidx(end) == l
                                         % Already continued.
-                                        if dist(i3) < abs(60/ptl(i) - ...
-                                                          60./meters{i2}(i3).bpms(end))
+                                        if dist(i3) < min(abs(60./meters{i2}(i3).bpms(end) ...
+                                                              - 60./bpms(i3)),...
+                                                          abs(60./meters{i2}(i3).bpms(end) ...
+                                                              - 60./nbpms(i3)))
                                             % New candidate is better.
                                             meters{i2}(i3).bpms(end) = ptl(i);
                                             meters{i2}(i3).score(end) = ...
@@ -718,14 +721,21 @@ elseif option.lart
                                                     end
                                                     i3 = i3 - 1;
                                                 else
-                                                    meters{i2}(i3).timidx(end+1) = l;
-                                                    meters{i2}(i3).bpms(end+1) = ptl(i);
-                                                    meters{i2}(i3).lastbpm = ptl(i);
-                                                    meters{i2}(i3).score(end+1) = ...
-                                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                                    meters{i2}(i3).main(end+1) = ...
-                                                        meters{i2}(i3).main(end);
-                                                    comet(i2) = 1;
+                                                    res4 = [];
+                                                    for i4 = 1:i2-1
+                                                        
+                                                    end
+                                                    if ~isempty(res4)
+                                                    else
+                                                        meters{i2}(i3).timidx(end+1) = l;
+                                                        meters{i2}(i3).bpms(end+1) = ptl(i);
+                                                        meters{i2}(i3).lastbpm = ptl(i);
+                                                        meters{i2}(i3).score(end+1) = ...
+                                                            d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                                        meters{i2}(i3).main(end+1) = ...
+                                                            meters{i2}(i3).main(end);
+                                                        %comet(i2) = 1;
+                                                    end
                                                 end
                                             elseif length(meters{i2}(i3).bpms) > 1 ...
                                                    && abs(meters{i2}(i3).lastbpm ...
@@ -738,7 +748,7 @@ elseif option.lart
                                                     d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                                 meters{i2}(i3).main(end+1) = ...
                                                     meters{i2}(i3).main(end);
-                                                comet(i2) = 1;
+                                                %comet(i2) = 1;
                                             end
                                             res = 1;
                                             res3 = [i2 i3];
@@ -896,7 +906,7 @@ elseif option.lart
                                                     %meters{i2}(end).fast = [];
                                                     meters{i2}(end).main = 0;
                                                     res = [i2 length(meters{i2})];
-                                                    comet(i2) = 1;
+                                                    %comet(i2) = 1;
                                                 elseif score > meters{i2}(l0).score
                                                     meters{i2}(l0).lastbpm = ptl(i);
                                                     meters{i2}(l0).bpms = ptl(i);
@@ -955,7 +965,7 @@ elseif option.lart
                                                         %meters{i2}(end).fast.ratio = round(div);
                                                         meters{i2}(end).main = 0;
                                                         res = [i2 length(meters{i2})];
-                                                        comet(i2) = 1;
+                                                        %comet(i2) = 1;
                                                     elseif score > meters{i2}(l0).score
                                                         meters{i2}(l0).lastbpm = ptl(i);
                                                         meters{i2}(l0).bpms = ptl(i);
@@ -1005,7 +1015,7 @@ elseif option.lart
                                 meters{end}.slow = [];
                                 meters{end}.fast = [];
                                 meters{end}.main = 0;
-                                comet(end+1) = 1;
+                                %comet(end+1) = 1;
                             end
                         end
                     end
@@ -1080,6 +1090,7 @@ elseif option.lart
                 end
                 figure,hold on
                 for i = 1:length(oldmeters)
+                    irgb = shiftdim(1-num2col(i),-1);
                     mac = 0;
                     mic = 1;
                     for i2 = 1:length(oldmeters{i})
@@ -1099,12 +1110,8 @@ elseif option.lart
                     for i2 = 1:length(oldmeters{i})
                         for i3 = 1:length(oldmeters{i}(i2).score)
                             rgb = ones(1,1,3);
-                            if oldmeters{i}(i2).main(i3)
-                                irgb = [2 3];
-                            else
-                                irgb = [1 2];
-                            end
-                            rgb(irgb) = 1 - (oldmeters{i}(i2).score(i3) - mic) / micmac;
+                            rgb = ones(1,1,3) - ...
+                                (oldmeters{i}(i2).score(i3) - mic) / micmac * irgb;
                             plot(oldmeters{i}(i2).timidx(i3),...
                                  60./oldmeters{i}(i2).bpms(i3),'+','Color',rgb);
                             %plot(oldmeters{i}(i2).timidx(i3),...
@@ -1112,7 +1119,7 @@ elseif option.lart
                             %     'MarkerSize',.5 + oldmeters{i}(i2).score(i3)*5);
                         end
                     end
-                    plot(60./bpmk,'k');
+                    %plot(60./bpmk,'k');
                 end
             end
             
