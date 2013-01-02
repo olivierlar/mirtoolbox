@@ -573,8 +573,8 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     nop = cell(size(get(o,'Data')));
     o = set(o,'AttackPos',nop,'ReleasePos',nop);
 end
-if (isfield(postoption,'attack') && postoption.attack) || ...
-        (isfield(postoption,'release') && postoption.release)
+if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
+        (isfield(postoption,'release') && not(isequal(postoption.release,0)))
     pp = get(o,'PeakPos');
     pv = get(o,'PeakVal');
     pm = get(o,'PeakMode');
@@ -588,6 +588,8 @@ if (isfield(postoption,'attack') && postoption.attack) || ...
         st = get(v,'PeakPos');
         [st pp] = mircompute(@startattack,d,pp,st);
         %[st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
+    else
+        st = [];
     end
     if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
                                   && ~strcmpi(postoption.release,'Off')
