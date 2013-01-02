@@ -189,20 +189,24 @@ if curve
                             end
                             if not(isempty(ap)) && not(isempty(ap{h}))
                                 apj = ap{h}{1,j,i};
-                                plot(xj(apj),yk(apj),'dr') 
-                                for g = 1:length(ppj)
-                                    line([xj(ppj(g)),xj(apj(g))],...
-                                         [yk(ppj(g)),yk(apj(g))],...
-                                         'Color','r')
+                                if ~isempty(apj)
+                                    plot(xj(apj),yk(apj),'dr') 
+                                    for g = 1:length(ppj)
+                                        line([xj(ppj(g)),xj(apj(g))],...
+                                             [yk(ppj(g)),yk(apj(g))],...
+                                             'Color','r')
+                                    end
                                 end
                             end
                             if not(isempty(rp)) && not(isempty(rp{h}))
                                 rpj = rp{h}{1,j,i};
-                                plot(xj(rpj),yk(rpj),'dr') 
-                                for g = 1:length(rpj)
-                                    line([xj(ppj(g)),xj(rpj(g))],...
-                                         [yk(ppj(g)),yk(rpj(g))],...
-                                         'Color','r')
+                                if ~isempty(rpj)
+                                    plot(xj(rpj),yk(rpj),'dr') 
+                                    for g = 1:length(rpj)
+                                        line([xj(ppj(g)),xj(rpj(g))],...
+                                             [yk(ppj(g)),yk(rpj(g))],...
+                                             'Color','r')
+                                    end
                                 end
                             end
                         end
