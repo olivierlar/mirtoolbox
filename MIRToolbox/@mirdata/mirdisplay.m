@@ -52,7 +52,9 @@ else
             va = 'ans';
         end
         if length(v)>1
-            va = [va,'(',num2str(i),')'];
+            vai = [va,'(',num2str(i),')'];
+        else
+            vai = va;
         end
         if not(isempty(l)) && iscell(l) && not(isempty(l{i}))
             lab = ' with label ';
@@ -64,7 +66,7 @@ else
         else
             lab = '';
         end
-        disp([va,' is the ',d.title,' related to ',n{i},lab,...
+        disp([vai,' is the ',d.title,' related to ',n{i},lab,...
             ', of sampling rate ',num2str(f{i}),' Hz.'])
         if size(v{i},2) == 0
             if isempty(d.init)
