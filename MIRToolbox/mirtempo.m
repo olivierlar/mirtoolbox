@@ -308,7 +308,7 @@ function varargout = mirtempo(x,varargin)
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .2;
+        lart2.default = .15; %.2;
     option.lart2 = lart2;
 
             mean.key = 'Mean';
@@ -669,10 +669,14 @@ elseif option.lart
                         for i2 = 1:length(meters)
                             res3 = 0;
                             bpms = [meters{i2}.lastbpm];
-                            norb = bpms ./ [meters{i2}.lvl];
-                            nbpms = mean(norb) * [meters{i2}.lvl];
-                            dist = min(abs(60/ptl(i) - 60./bpms),...
-                                       abs(60/ptl(i) - 60./nbpms));
+                            if 1
+                                dist = abs(60/ptl(i) - 60./bpms);
+                            else
+                                norb = bpms ./ [meters{i2}.lvl];
+                                nbpms = mean(norb) * [meters{i2}.lvl];
+                                dist = min(abs(60/ptl(i) - 60./bpms),...
+                                           abs(60/ptl(i) - 60./nbpms));
+                            end
                             if 0 %comet(i2)
                                 thr = option.lart * 2;
                             else
@@ -721,21 +725,14 @@ elseif option.lart
                                                     end
                                                     i3 = i3 - 1;
                                                 else
-                                                    res4 = [];
-                                                    for i4 = 1:i2-1
-                                                        
-                                                    end
-                                                    if ~isempty(res4)
-                                                    else
-                                                        meters{i2}(i3).timidx(end+1) = l;
-                                                        meters{i2}(i3).bpms(end+1) = ptl(i);
-                                                        meters{i2}(i3).lastbpm = ptl(i);
-                                                        meters{i2}(i3).score(end+1) = ...
-                                                            d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                                        meters{i2}(i3).main(end+1) = ...
-                                                            meters{i2}(i3).main(end);
-                                                        %comet(i2) = 1;
-                                                    end
+                                                    meters{i2}(i3).timidx(end+1) = l;
+                                                    meters{i2}(i3).bpms(end+1) = ptl(i);
+                                                    meters{i2}(i3).lastbpm = ptl(i);
+                                                    meters{i2}(i3).score(end+1) = ...
+                                                        d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                                    meters{i2}(i3).main(end+1) = ...
+                                                        meters{i2}(i3).main(end);
+                                                    %comet(i2) = 1;
                                                 end
                                             elseif length(meters{i2}(i3).bpms) > 1 ...
                                                    && abs(meters{i2}(i3).lastbpm ...
@@ -1004,6 +1001,7 @@ elseif option.lart
                             %        meters{i2} = meters{i2}(ord);
                             %    end
                             %end
+                            
                             if ~res
                                 % New metrical hierarchy
                                 meters{end+1}.lvl = 1;
@@ -1019,6 +1017,75 @@ elseif option.lart
                             end
                         end
                     end
+                    
+                    for i = 2:length(meters)
+                        if length(oldmeters)<i || isempty(oldmeters{i})
+                            included = 1;
+                            for i2 = 1:length(meters{i})
+                                found = 0;
+                                for i3 = 1:i-1
+                                    bpms = [meters{i3}.lastbpm];
+                                    norb = bpms ./ [meters{i3}.lvl];
+                                    nbpms = mean(norb) * [meters{i3}.lvl];
+                                    dist = min(abs(60/meters{i}(i2).lastbpm - 60./bpms),...
+                                               abs(60/meters{i}(i2).lastbpm - 60./nbpms));
+                                    if ~isempty(find(dist<option.lart));
+                                        found = 1;
+                                        break
+                                    end
+                                end
+                                if ~found
+                                    for i3 = 1:i-1
+                                        for i4 = 1:length(meters{i3})
+                                            ma = max(meters{i}(i2).lastbpm,...
+                                                     meters{i3}(i4).lastbpm);
+                                            mi = min(meters{i}(i2).lastbpm,...
+                                                     meters{i3}(i4).lastbpm);
+                                            div = ma / mi;
+                                            rdiv = round(div);
+                                            if rdiv > 1 && ...
+                                                    ~isempty(find(~mod(rdiv,[2 3]))) && ...
+                                                    (mod(div,1) < option.lart2 || ...
+                                                     mod(div,1) > 1-option.lart2)
+                                                if meters{i}(i2).lastbpm > ...
+                                                        meters{i3}(i4).lastbpm
+                                                    meters{i3}(end+1).lvl = ...
+                                                        meters{i}(i2).lvl * rdiv;
+                                                else
+                                                    meters{i3}(end+1).lvl = ...
+                                                        meters{i}(i2).lvl / rdiv;
+                                                end
+                                                meters{i3}(end).lastbpm = meters{i}(i2).lastbpm;
+                                                meters{i3}(end).bpms = meters{i}(i2).bpms;
+                                                meters{i3}(end).timidx = meters{i}(i2).timidx;
+                                                meters{i3}(end).score = meters{i}(i2).score;
+                                                meters{i3}(end).main = meters{i}(i2).main;
+                                                found = 1;
+                                                break
+                                            end
+                                        end
+                                        if found
+                                            break
+                                        end
+                                    end
+                                end
+                                if ~found
+                                    included = 0;
+                                    break
+                                end
+                            end
+                            if included
+                                % meters{i} is completely included into
+                                % meters{i2}
+                                meters(i) = [];
+                                if length(oldmeters) >= i
+                                    oldmeters(i) = [];
+                                end
+                                break
+                            end
+                        end
+                    end
+                    
                     mi = [];
                     for i = 1:length(meters)
                         if ~isempty(meters{i})
@@ -1032,7 +1099,7 @@ elseif option.lart
                             end
                         end
                     end
-                    if ~isempty(mi)
+                    if 0 %~isempty(mi)
                         meters{mi(1)}(mi(2)).main(end) = 1;
                         if isempty(currentbpmk) || ...
                                 ~meters{currentbpmk(1)}...
@@ -1058,6 +1125,7 @@ elseif option.lart
                         currentbpmk = [];
                         bpmk(l) = 0;
                     end
+                    
                     for i = 1:length(meters)
                         i2 = 1;
                         while i2 <= length(meters{i})
