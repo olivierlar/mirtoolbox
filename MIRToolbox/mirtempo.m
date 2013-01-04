@@ -308,7 +308,7 @@ function varargout = mirtempo(x,varargin)
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .15; %.2;
+        lart2.default = .25;
     option.lart2 = lart2;
 
             mean.key = 'Mean';
@@ -662,12 +662,16 @@ elseif option.lart
                 currentbpmk = [];
                 %figure, hold on
                 for l = 1:size(ptk,2)
+                    %l
+                    %if l>10
+                    %    [meters{1}.lvl]
+                    %end
                     ptl = getbpm(p,ptk{1,l,h});
                     %comet = zeros(1,length(meters));
                     for i = 1:length(ptl)
                         res = 0;
                         for i2 = 1:length(meters)
-                            res3 = 0;
+                            res3 = [];
                             bpms = [meters{i2}.lastbpm];
                             if 1
                                 dist = abs(60/ptl(i) - 60./bpms);
@@ -690,10 +694,16 @@ elseif option.lart
                                     % level.
                                     if meters{i2}(i3).timidx(end) == l
                                         % Already continued.
-                                        if dist(i3) < min(abs(60./meters{i2}(i3).bpms(end) ...
+                                        if 1
+                                            odist = abs(60./meters{i2}(i3).bpms(end) ...
+                                                        - 60./bpms(i3));
+                                        else
+                                            odist = min(abs(60./meters{i2}(i3).bpms(end) ...
                                                               - 60./bpms(i3)),...
                                                           abs(60./meters{i2}(i3).bpms(end) ...
-                                                              - 60./nbpms(i3)))
+                                                              - 60./nbpms(i3)));
+                                        end
+                                        if dist(i3) < odist
                                             % New candidate is better.
                                             meters{i2}(i3).bpms(end) = ptl(i);
                                             meters{i2}(i3).score(end) = ...
@@ -708,22 +718,23 @@ elseif option.lart
                                         end
                                         if div < 1+option.lart2
                                             if 1 % meters{i2}(i3).timidx(end) < l
-                                                if res3
+                                                if ~isempty(res3) && ...
+                                                        dist(i3) > dist(res3(2))
                                                     % Level identified to
                                                     % one already detected
-                                                    meters{i2}(i3) = [];
-                                                    bpms(i3) = [];
-                                                    dist(i3) = [];
-                                                    if ~isempty(currentbpmk) && ...
-                                                            currentbpmk(1) == i2
-                                                        if currentbpmk(2) == i3
-                                                            currentbpmk = res3;
-                                                        elseif currentbpmk(2) > i3
-                                                            currentbpmk(2) = ...
-                                                                currentbpmk(2) - 1;
-                                                        end
-                                                    end
-                                                    i3 = i3 - 1;
+                                                    %meters{i2}(i3) = [];
+                                                    %bpms(i3) = [];
+                                                    %dist(i3) = [];
+                                                    %if ~isempty(currentbpmk) && ...
+                                                    %        currentbpmk(1) == i2
+                                                    %    if currentbpmk(2) == i3
+                                                    %        currentbpmk = res3;
+                                                    %    elseif currentbpmk(2) > i3
+                                                    %        currentbpmk(2) = ...
+                                                    %            currentbpmk(2) - 1;
+                                                    %    end
+                                                    %end
+                                                    %i3 = i3 - 1;
                                                 else
                                                     meters{i2}(i3).timidx(end+1) = l;
                                                     meters{i2}(i3).bpms(end+1) = ptl(i);
@@ -732,6 +743,7 @@ elseif option.lart
                                                         d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                                     meters{i2}(i3).main(end+1) = ...
                                                         meters{i2}(i3).main(end);
+                                                    res3 = [i2 i3];
                                                     %comet(i2) = 1;
                                                 end
                                             elseif length(meters{i2}(i3).bpms) > 1 ...
@@ -745,10 +757,10 @@ elseif option.lart
                                                     d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                                 meters{i2}(i3).main(end+1) = ...
                                                     meters{i2}(i3).main(end);
+                                                res3 = [i2 i3];
                                                 %comet(i2) = 1;
                                             end
                                             res = 1;
-                                            res3 = [i2 i3];
                                         end
                                     end
                                 end
@@ -761,7 +773,7 @@ elseif option.lart
                             i2 = 1;
                             while i2 <= length(meters)
                                 bpms = [meters{i2}.lastbpm];
-                                res3 = 0;
+                                res3 = [];
                                 i3 = 1;
                                 while i3 <= length(bpms)
                                     if ptl(i) > bpms(i3)
@@ -770,14 +782,14 @@ elseif option.lart
                                         div = ptl(i) / bpms(i3);
                                         rdiv = round(div);
                                         if rdiv > 1 && ...
-                                                ~isempty(find(~mod(rdiv,[2 3]))) && ...
+                                                ...~isempty(find(~mod(rdiv,[2 3]))) && ...
                                                 (mod(div,1) < option.lart2 || ...
                                                  mod(div,1) > 1-option.lart2)
                                             % Candidate level can be
                                             % integrated in this metrical
                                             % hierarchy
                                             
-                                            if res3
+                                            if ~isempty(res3)
                                                 % Level identified to one
                                                 % already detected
                                                 
@@ -919,14 +931,14 @@ elseif option.lart
                                         div = bpms(i3) / ptl(i);
                                         rdiv = round(div);
                                         if rdiv > 1 && ...
-                                                ~isempty(find(~mod(rdiv,[2 3]))) && ...
+                                                ...~isempty(find(~mod(rdiv,[2 3]))) && ...
                                                 (mod(div,1) < option.lart2 || ...
                                                  mod(div,1) > 1-option.lart2)
                                             % Candidate level can be
                                             % integrated in this metrical
                                             % hierarchy
                                             
-                                            if res3
+                                            if ~isempty(res3)
                                                 % Level identified to one
                                                 % already detected
                                                 
@@ -1050,10 +1062,10 @@ elseif option.lart
                                                 if meters{i}(i2).lastbpm > ...
                                                         meters{i3}(i4).lastbpm
                                                     meters{i3}(end+1).lvl = ...
-                                                        meters{i}(i2).lvl * rdiv;
+                                                        meters{i}(i2).lvl / rdiv;
                                                 else
                                                     meters{i3}(end+1).lvl = ...
-                                                        meters{i}(i2).lvl / rdiv;
+                                                        meters{i}(i2).lvl * rdiv;
                                                 end
                                                 meters{i3}(end).lastbpm = meters{i}(i2).lastbpm;
                                                 meters{i3}(end).bpms = meters{i}(i2).bpms;
