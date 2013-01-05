@@ -308,7 +308,7 @@ function varargout = mirtempo(x,varargin)
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .25;
+        lart2.default = .2;
     option.lart2 = lart2;
 
             mean.key = 'Mean';
@@ -751,8 +751,6 @@ elseif option.lart
                                                 meters{i2}(i3).lastbpm = ptl(i);
                                                 meters{i2}(i3).score(end) = ...
                                                     d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                                meters{i2}(i3).main(end+1) = ...
-                                                    meters{i2}(i3).main(end);
                                                 res3 = [i2 i3];
                                                 %comet(i2) = 1;
                                             end
