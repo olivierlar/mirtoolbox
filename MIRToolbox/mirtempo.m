@@ -662,10 +662,6 @@ elseif option.lart
                 currentbpmk = [];
                 %figure, hold on
                 for l = 1:size(ptk,2)
-                    %l
-                    %if l>10
-                    %    [meters{1}.lvl]
-                    %end
                     ptl = getbpm(p,ptk{1,l,h});
                     %comet = zeros(1,length(meters));
                     for i = 1:length(ptl)
@@ -916,11 +912,20 @@ elseif option.lart
                                                     meters{i2}(end).main = 0;
                                                     res = [i2 length(meters{i2})];
                                                     %comet(i2) = 1;
-                                                elseif score > meters{i2}(l0).score
-                                                    meters{i2}(l0).lastbpm = ptl(i);
-                                                    meters{i2}(l0).bpms = ptl(i);
-                                                    meters{i2}(l0).score = score;
-                                                    res = [i2 l0];
+                                                else
+                                                    dist = abs([meters{i2}(l0).lastbpm] - ptl(i));
+                                                    [unused md] = min(dist);
+                                                    if meters{i2}(l0(md)).timidx(end) < l
+                                                        meters{i2}(l0(md)).lastbpm = ptl(i);
+                                                        meters{i2}(l0(md)).bpms(end+1) = ptl(i);
+                                                        meters{i2}(l0(md)).score(end+1) = score;
+                                                        meters{i2}(l0(md)).timidx(end+1) = l;
+                                                    elseif score > meters{i2}(l0(md)).score
+                                                        meters{i2}(l0(md)).lastbpm = ptl(i);
+                                                        meters{i2}(l0(md)).bpms(end) = ptl(i);
+                                                        meters{i2}(l0(md)).score(end) = score;
+                                                    end
+                                                    res = [i2 l0(md)];
                                                 end
                                             end
                                             res3 = res;
@@ -975,11 +980,20 @@ elseif option.lart
                                                         meters{i2}(end).main = 0;
                                                         res = [i2 length(meters{i2})];
                                                         %comet(i2) = 1;
-                                                    elseif score > meters{i2}(l0).score
-                                                        meters{i2}(l0).lastbpm = ptl(i);
-                                                        meters{i2}(l0).bpms = ptl(i);
-                                                        meters{i2}(l0).score = score;
-                                                        res = [i2 l0];
+                                                    else
+                                                        dist = abs([meters{i2}(l0).lastbpm] - ptl(i));
+                                                        [unused md] = min(dist);
+                                                        if meters{i2}(l0(md)).timidx(end) < l
+                                                            meters{i2}(l0(md)).lastbpm = ptl(i);
+                                                            meters{i2}(l0(md)).bpms(end+1) = ptl(i);
+                                                            meters{i2}(l0(md)).score(end+1) = score;
+                                                            meters{i2}(l0(md)).timidx(end+1) = l;
+                                                        elseif score > meters{i2}(l0(md)).score
+                                                            meters{i2}(l0(md)).lastbpm = ptl(i);
+                                                            meters{i2}(l0(md)).bpms(end) = ptl(i);
+                                                            meters{i2}(l0(md)).score(end) = score;
+                                                        end
+                                                        res = [i2 l0(md)];
                                                     end
                                                 else
                                                     lvl = meters{i2}(i3).lvl;
