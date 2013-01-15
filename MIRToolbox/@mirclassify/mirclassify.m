@@ -41,7 +41,7 @@ disp('Classifying...')
 if not(iscell(dt))
     dt = {dt};
 end
-lvt = length(get(t,'Data'));
+lvt = length(get(t,'Data')); % Number of training samples
 vt = [];
 for i = 1:length(dt)
     if isnumeric(dt{i})
@@ -61,11 +61,12 @@ for i = 1:length(dt)
     end
 end
 c.training = vt;
+
 dim = size(vt,1);
 if not(iscell(da))
     da = {da};
 end
-lva = length(get(a,'Data'));
+lva = length(get(a,'Data')); % Number of test samples
 va = [];
 for i = 1:length(da)
     if isnumeric(da{i})
@@ -85,6 +86,7 @@ for i = 1:length(da)
     end
 end
 c.test = va;
+
 c.nbobs = lvt;
 totva = [vt va];
 mahl = cov(totva');
@@ -188,6 +190,7 @@ c = class(c,'mirclassify');
 
 
 function vt = integrate(vt,v,lvt,norml)
+% lvt is the number of samples
 vtl = [];
 for l = 1:lvt
     vl = v{l};
@@ -218,7 +221,7 @@ ncentres = 0;
 covartype = 'full';
 kmiter = 10;
 emiter = 100;
-norml = 1;
+norml = 0;
 mahl = 1;
 while i <= length(v)
     arg = v{i};
