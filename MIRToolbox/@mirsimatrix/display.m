@@ -167,7 +167,7 @@ else
                     end
                 end
             end
-            if not(isempty(cl))
+            if ~isempty(cl) && ~isempty(cl{i})
                 hold on
                 sims = cl{i}{1}(:);
                 sims(isnan(sims)) = [];
