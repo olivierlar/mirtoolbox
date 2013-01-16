@@ -34,9 +34,13 @@ end
 m = get(x,'Data');
 v = cell(1,length(m));
 for h = 1:length(m)
-    v{h} = cell(1,length(m{h}));
-    for k = 1:length(m{h})
-        mk = m{h}{k};
+    mh = m{h};
+    if ~iscell(mh)
+        mh = {mh};
+    end
+    v{h} = cell(1,length(mh));
+    for k = 1:length(mh)
+        mk = mh{k};
         mn = mk;
         if isa(x,'mirhisto') || isa(x,'mirscalar')
             mn = mn';
@@ -64,7 +68,8 @@ for h = 1:length(m)
 end
 t = ['Entropy of ',get(x,'Title')];
 h = mirscalar(x,'Data',v,'Title',t);
-if isstruct(postoption) && ...
+if (isa(x,'miraudio') || isa(x,'mirspectrum') || isa(x,'mircepstrum')) && ...
+        isstruct(postoption) && ...
         isfield(postoption,'minrms') && postoption.minrms
     h = after(x,h,postoption.minrms);
 end
