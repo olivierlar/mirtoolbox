@@ -33,6 +33,7 @@ if iscell(x)
     x = x{1};
 end
 d = get(x,'Data');
+fp = get(x,'FramePos');
 %disp('Computing histogram...')
 ddd = cell(1,length(d));
 bbb = cell(1,length(d));
@@ -111,7 +112,9 @@ for i = 1:length(d)
     ddd{i} = ipermute(dd,[3 2 1]);
     bbb{i}(:,:,1) = b(:,1:end-1);
     bbb{i}(:,:,2) = b(:,2:end);
+    fp{i} = {fp{i}{1}([1 end])'};
 end
+x = set(x,'FramePos',fp);
 h = class(struct,'mirhisto',mirdata(x));
 h = purgedata(h);
 h = set(h,'Bins',bbb,'Weight',ddd);
