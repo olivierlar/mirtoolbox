@@ -127,6 +127,11 @@ function varargout = mironsets(x,varargin)
             specframe.number = 2;
             specframe.default = [.1 .1];
         option.specframe = specframe;
+        
+            powerspectrum.key = 'PowerSpectrum';
+            powerspectrum.type = 'Boolean';
+            powerspectrum.default = 1;
+        option.powerspectrum = powerspectrum;        
                     
         sum.key = 'Sum';
         sum.type = 'Boolean';
@@ -401,7 +406,8 @@ if isamir(x,'miraudio')
                           'FilterType',option.filter,...
                           'Tau',option.tau,'UpSample',option.up,...
                           'PreDecim',option.decim,'PostDecim',0,...
-                          'Mu',option.mu);
+                          'Mu',option.mu,...
+                          'PowerSpectrum',option.powerspectrum);
         type = 'mirenvelope';
     end
     if option.flux

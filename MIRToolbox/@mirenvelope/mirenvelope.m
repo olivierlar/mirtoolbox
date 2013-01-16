@@ -155,6 +155,11 @@ function varargout = mirenvelope(orig,varargin)
         complex.default = 0;
         complex.when = 'After';
     option.complex = complex;    
+
+        powerspectrum.key = 'PowerSpectrum';
+        powerspectrum.type = 'Boolean';
+        powerspectrum.default = 1;
+    option.powerspectrum = powerspectrum;
     
 %% Options related to all methods:
     
@@ -290,8 +295,8 @@ if not(isamir(x,'mirenvelope'))
                                   option.frame.phase.val,...
                                   option.frame.phase.unit,...
                                   option.frame.phase.atend,...
-                          'Window','hanning',option.band);
-
+                                  'Window','hanning',option.band,...
+                                  'Power',option.powerspectrum);
     end
 end
 
