@@ -36,13 +36,17 @@ lab = get(t,'Label');
 c.labtraining = lab;
 rlab = get(a,'Label');
 c.labtest = rlab;
-[k,ncentres,covartype,kmiter,emiter,d,norml,mahl] = scanargin(varargin);
+[k,ncentres,covartype,kmiter,emiter,d,mahl] = scanargin(varargin);
 disp('Classifying...')
+
+%% Training phase
 if not(iscell(dt))
     dt = {dt};
 end
-lvt = length(get(t,'Data')); % Number of training samples
-vt = [];
+lvt = length(get(t,'Data'));    % Number of training samples
+vt = [];                        % Preprocessed training vectors
+mn = cell(1,length(dt));
+sd = cell(1,length(dt));
 for i = 1:length(dt)
     if isnumeric(dt{i})
         d = cell(1,size(dt{i},2));
@@ -52,22 +56,25 @@ for i = 1:length(dt)
     else
         d = get(dt{i},'Data');
     end
-    vt = integrate(vt,d,lvt,norml);
-    if isa(dt{i},'scalar')
+    
+    [vt mn{i} sd{i}] = integrate(vt,d,lvt);
+    
+    if 0 %isa(dt{i},'scalar')
         m = mode(dt{i});
         if not(isempty(m))
-            vt = integrate(vt,m,lvt,norml);
+            vt = integrate(vt,m,lvt);
         end
     end
 end
 c.training = vt;
-
 dim = size(vt,1);
+
+%% Test phase
 if not(iscell(da))
     da = {da};
 end
-lva = length(get(a,'Data')); % Number of test samples
-va = [];
+lva = length(get(a,'Data'));    % Number of test samples
+va = [];                        % Preprocessed test vectors
 for i = 1:length(da)
     if isnumeric(da{i})
         d = cell(1,size(da{i},2));
@@ -77,11 +84,13 @@ for i = 1:length(da)
     else
         d = get(da{i},'Data');
     end
-    va = integrate(va,d,lva,norml);
-    if isa(da{i},'scalar')
+    
+    va = integrate(va,d,lva,mn{i},sd{i});
+    
+    if 0 %isa(da{i},'scalar')
         m = mode(da{i});
         if not(isempty(m))
-            va = integrate(va,m,lva,norml);
+            va = integrate(va,m,lva,m{i},s{i});
         end
     end
 end
@@ -189,7 +198,7 @@ end
 c = class(c,'mirclassify');
 
 
-function vt = integrate(vt,v,lvt,norml)
+function [vt m s] = integrate(vt,v,lvt,m,s)
 % lvt is the number of samples
 vtl = [];
 for l = 1:lvt
@@ -205,15 +214,20 @@ for l = 1:lvt
     end
     vtl(:,l) = vl;
 end
-if norml
-    dnom = repmat(std(vtl,0,2),[1 size(vtl,2)]);
-    dnom = dnom + (dnom == 0);  % In order to avoid division by 0
-    vtl = (vtl - repmat(mean(vtl,2),[1 size(vtl,2)])) ./ dnom;
+
+if nargin<4
+    m = mean(vtl,2);
+    s = std(vtl,0,2);
 end
+
+dnom = repmat(s,[1 size(vtl,2)]);
+dnom = dnom + (dnom == 0);  % In order to avoid division by 0
+vtl = (vtl - repmat(m,[1 size(vtl,2)])) ./ dnom;
+
 vt(end+1:end+size(vtl,1),:) = vtl;
 
 
-function [k,ncentres,covartype,kmiter,emiter,d,norml,mahl] = scanargin(v)
+function [k,ncentres,covartype,kmiter,emiter,d,mahl] = scanargin(v)
 k = 1;
 d = 0;
 i = 1;
@@ -221,7 +235,6 @@ ncentres = 0;
 covartype = 'full';
 kmiter = 10;
 emiter = 100;
-norml = 0;
 mahl = 1;
 while i <= length(v)
     arg = v{i};
