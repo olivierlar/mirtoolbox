@@ -27,8 +27,13 @@ for i = 1:length(d)
     for j = 1:length(d{i})
         ld = size(d{i}{j},1);
         le = size(e{i}{j},1);
-        [unused ia ib] = intersect(round(fpa{i}{j}(2,:)*1e4),...
-                                   round(fpb{i}{j}(2,:)*1e4));
+        if isempty(fpa{i})
+            ia = 1;
+            ib = 1;
+        else
+            [unused ia ib] = intersect(round(fpa{i}{j}(2,:)*1e4),...
+                                       round(fpb{i}{j}(2,:)*1e4));
+        end
         dj = d{i}{j}(:,ia,:);
         ej = e{i}{j}(:,ib,:);
         if ld > le
@@ -38,7 +43,11 @@ for i = 1:length(d)
         else
             f{i}{j} = dj + ej;
         end
-        fp{i}{j} = fpa{i}{j}(:,ia);
+        if isempty(fpa{i})
+            fp{i} = [];
+        else
+            fp{i}{j} = fpa{i}{j}(:,ia);
+        end
     end
     if isa(a,'miraudio')
         n{i} = [n{i} '+' m{i}];
