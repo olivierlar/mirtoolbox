@@ -680,7 +680,7 @@ elseif option.lart
                             
                             i3 = 1;
                             while i3 <= length(dist)
-                                if dist(i3) < thr
+                                if dist(i3) < option.lart
                                     % Continuing an existing metrical
                                     % level.
                                     if meters{i2}(i3).timidx(end) == l
