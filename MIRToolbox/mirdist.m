@@ -119,4 +119,5 @@ else
     end
 end
 d = mirscalar(y,'Data',dt,'Title',[get(y,'Title'),' Distance'],...
-                'Name',get(x,'Name'),'Name2',get(y,'Name'));
+                'Name',get(x,'Name'),'Name2',get(y,'Name'),...
+                'FramePos',cell(1,length(dt)));
