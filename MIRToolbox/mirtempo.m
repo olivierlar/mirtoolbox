@@ -660,14 +660,15 @@ elseif option.lart
                 oldmeters = {};
                 bpmk = zeros(1,size(ptk,2));
                 currentbpmk = [];
-                %figure, hold on
-                for l = 1:size(ptk,2)
-                    ptl = getbpm(p,ptk{1,l,h});
+                for l = 1:size(ptk,2)       % For each successive frame
+                    ptl = getbpm(p,ptk{1,l,h}); % Peaks
                     cntr = zeros(1,length(meters));
-                    for i = 1:length(ptl)
-                        res = 0;
-                        for i2 = 1:length(meters)
-                            res3 = [];
+                    for i = 1:length(ptl)   % For each peak
+                        found = 0;          % Is peak located in metrical hierarchies?
+                        coord = [];         % Where is peak located
+                        for i2 = 1:length(meters)   
+                                            % For each metrical hierarchy
+                            locoord = [];
                             bpms = [meters{i2}.lastbpm];
                             if 1
                                 dist = abs(60/ptl(i) - 60./bpms);
@@ -702,7 +703,7 @@ elseif option.lart
                                                 d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                         end
                                         
-                                        res3 = [i2 i3];
+                                        locoord = i3;
                                     else
                                         if bpms(i3) > ptl(i)
                                             div = bpms(i3) / ptl(i);
@@ -712,10 +713,10 @@ elseif option.lart
                                         if div < 1+option.lart2
                                             % Continuing an existing metrical
                                             % level.
-                                            res = 1;
+                                            found = 1;
                                             
-                                            if isempty(res3) || ...
-                                                    dist(i3) < dist(res3(2))
+                                            if isempty(locoord) || ...
+                                                    dist(i3) < dist(locoord)
                                                 % Level not identified to
                                                 % one already detected
                                                 meters{i2}(i3).timidx(end+1) = l;
@@ -726,7 +727,7 @@ elseif option.lart
                                                 meters{i2}(i3).main(end+1) = ...
                                                     meters{i2}(i3).main(end);
                                                 
-                                                res3 = [i2 i3];
+                                                locoord = i3;
                                             end
                                         end
                                     end
@@ -735,16 +736,16 @@ elseif option.lart
                             end                            
                         end
                         
-                        if res
-                            if ~isempty(res3)
-                                cntr(res3(1)) = cntr(res3(1))+1;
-                                if cntr(res3(1)) ~= res3(2)
-                                    indx = 1:length(meters{res3(1)});
-                                    indx(indx == res3(2)) = [];
-                                    indx = [indx(1:cntr(res3(1))-1) ...
-                                            res3(2) ...
-                                            indx(cntr(res3(1)):end)];
-                                    meters{res3(1)} = meters{res3(1)}(indx);
+                        if found
+                            if 0 %~isempty(locoord)
+                                cntr(i2) = cntr(i2)+1;
+                                if cntr(i2) ~= locoord
+                                    indx = 1:length(meters{i2});
+                                    indx(indx == locoord) = [];
+                                    indx = [indx(1:cntr(i2)-1) ...
+                                            locoord ...
+                                            indx(cntr(i2):end)];
+                                    meters{i2} = meters{i2}(indx);
                                 end
                             end
                         else
@@ -753,7 +754,7 @@ elseif option.lart
                             i2 = 1;
                             while i2 <= length(meters)
                                 bpms = [meters{i2}.lastbpm];
-                                res3 = [];
+                                locoord = [];
                                 i3 = 1;
                                 while i3 <= length(bpms)
                                     if ptl(i) > bpms(i3)
@@ -769,7 +770,7 @@ elseif option.lart
                                             % integrated in this metrical
                                             % hierarchy
                                             
-                                            if ~isempty(res3)
+                                            if ~isempty(locoord)
                                                 % Level identified to one
                                                 % already detected
                                                 
@@ -787,7 +788,7 @@ elseif option.lart
                                                 %    res3 = res;
                                                 %end
                                                 
-                                            elseif res
+                                            elseif found
                                                 % Candidate level also
                                                 % integrated in other
                                                 % metrical hierarchy. Both
@@ -800,7 +801,7 @@ elseif option.lart
                                                     lvl = meters{i2}(i3).lvl / rdiv;
                                                 end
                                                 chcur = 0;
-                                                if meters{res(1)}(res(2)).lvl > ...
+                                                if meters{coord(1)}(coord(2)).lvl > ...
                                                         meters{i2}(i3).lvl / rdiv
                                                     % Other hierarchy is
                                                     % faster than current.
@@ -808,17 +809,17 @@ elseif option.lart
                                                         % Slower hierarchy,
                                                         % which is fused to
                                                         % faster one
-                                                    meter2 = meters{res(1)};
+                                                    meter2 = meters{coord(1)};
                                                         % Faster hierarchy,
                                                         % onto which slower
                                                         % one is fused
                                                     lvl1 = lvl;
                                                         % Level in slower
-                                                    lvl2 = meter2(res(2)).lvl;
+                                                    lvl2 = meter2(coord(2)).lvl;
                                                         % Level in faster
                                                     if ~isempty(currentbpmk) && ...
                                                             currentbpmk(1) == i2
-                                                        currentbpmk(1) = res(1);
+                                                        currentbpmk(1) = coord(1);
                                                         chcur = 1;
                                                         % Best bpm was in
                                                         % current
@@ -827,12 +828,12 @@ elseif option.lart
                                                 else
                                                     % Other hierarchy is
                                                     % slower than current
-                                                    meter1 = meters{res(1)};
+                                                    meter1 = meters{coord(1)};
                                                     meter2 = meters{i2};
-                                                    lvl1 = meter1(res(2)).lvl;
+                                                    lvl1 = meter1(coord(2)).lvl;
                                                     lvl2 = lvl;
                                                     if ~isempty(currentbpmk) && ...
-                                                            currentbpmk(1) == res(1)
+                                                            currentbpmk(1) == coord(1)
                                                         chcur = 1;
                                                         % Best bpm was in
                                                         % other hierarchy.
@@ -877,11 +878,12 @@ elseif option.lart
                                                         currentbpmk(1) = res(1);
                                                     end
                                                 end
-                                                meters{res(1)} = meter2;
+                                                meters{coord(1)} = meter2;
                                                 meters(i2) = [];
                                                 i2 = i2 - 1;
                                                 break
                                             else
+                                                found = 1;
                                                 lvl = meters{i2}(i3).lvl ...
                                                       / round(div);
                                                 l0 = find(lvl == ...
@@ -898,7 +900,7 @@ elseif option.lart
                                                     %meters{i2}(end).slow.ratio = round(div);
                                                     %meters{i2}(end).fast = [];
                                                     meters{i2}(end).main = 0;
-                                                    res = [i2 length(meters{i2})];
+                                                    coord = [i2 length(meters{i2})];
                                                     %comet(i2) = 1;
                                                     if lvl<1
                                                         for i4 = 1:length(meters{i2})
@@ -918,10 +920,10 @@ elseif option.lart
                                                         meters{i2}(l0(md)).bpms(end) = ptl(i);
                                                         meters{i2}(l0(md)).score(end) = score;
                                                     end
-                                                    res = [i2 l0(md)];
+                                                    coord = [i2 l0(md)];
                                                 end
                                             end
-                                            res3 = res;
+                                            locoord = coord(2);
                                         end
                                     else
                                         % Candidate slower than stored
@@ -936,7 +938,7 @@ elseif option.lart
                                             % integrated in this metrical
                                             % hierarchy
                                             
-                                            if ~isempty(res3)
+                                            if ~isempty(locoord)
                                                 % Level identified to one
                                                 % already detected
                                                 
@@ -954,6 +956,7 @@ elseif option.lart
                                                 %    res3 = res;
                                                 %end
                                             else
+                                                found = 1;
                                                 score = d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                                 lvl = meters{i2}(i3).lvl ...
                                                         * round(div);
@@ -971,7 +974,7 @@ elseif option.lart
                                                         %meters{i2}(end).fast.index = meters{i2}(i3).index;
                                                         %meters{i2}(end).fast.ratio = round(div);
                                                         meters{i2}(end).main = 0;
-                                                        res = [i2 length(meters{i2})];
+                                                        coord = [i2 length(meters{i2})];
                                                         %comet(i2) = 1;
                                                     else
                                                         dist = abs([meters{i2}(l0).lastbpm] - ptl(i));
@@ -981,12 +984,12 @@ elseif option.lart
                                                             meters{i2}(l0(md)).bpms(end+1) = ptl(i);
                                                             meters{i2}(l0(md)).score(end+1) = score;
                                                             meters{i2}(l0(md)).timidx(end+1) = l;
-                                                            res = [i2 l0(md)];
+                                                            coord = [i2 l0(md)];
                                                         elseif score > meters{i2}(l0(md)).score
                                                             meters{i2}(l0(md)).lastbpm = ptl(i);
                                                             meters{i2}(l0(md)).bpms(end) = ptl(i);
                                                             meters{i2}(l0(md)).score(end) = score;
-                                                            res = [i2 0];
+                                                            coord = [i2 0];
                                                         end
                                                     end
                                                 else
@@ -1000,11 +1003,13 @@ elseif option.lart
                                                     meters{i2}(end).timidx = l;
                                                     meters{i2}(end).score = score;
                                                     meters{i2}(end).main = 0;
-                                                    res = [i2 length(meters{i2})];
+                                                    coord = [i2 length(meters{i2})];
                                                     comet(i2) = 1;
                                                 end
                                             end
-                                            res3 = res;
+                                            if ~isempty(coord)
+                                                locoord = coord(2);
+                                            end
                                         end
                                     end
                                     i3 = i3 + 1;
@@ -1022,16 +1027,16 @@ elseif option.lart
                             %    end
                             %end
                             
-                            if res
-                                if res(2)
-                                    cntr(res(1)) = cntr(res(1))+1;
-                                    if cntr(res(1)) ~= res(2)
-                                        indx = 1:length(meters{res(1)});
-                                        indx(indx == res(2)) = [];
-                                        indx = [indx(1:cntr(res(1))-1) ...
-                                                res(2) ...
-                                                indx(cntr(res(1)):end)];
-                                        meters{res(1)} = meters{res(1)}(indx);
+                            if found
+                                if 0 %coord(2)
+                                    cntr(coord(1)) = cntr(coord(1))+1;
+                                    if cntr(coord(1)) ~= coord(2)
+                                        indx = 1:length(meters{coord(1)});
+                                        indx(indx == coord(2)) = [];
+                                        indx = [indx(1:cntr(coord(1))-1) ...
+                                                coord(2) ...
+                                                indx(cntr(coord(1)):end)];
+                                        meters{coord(1)} = meters{coord(1)}(indx);
                                     end
                                 end
                             else
@@ -1047,6 +1052,7 @@ elseif option.lart
                                 meters{end}.main = 0;
                                 %comet(end+1) = 1;
                                 cntr(end+1) = 0;
+                                found = 1;
                             end
                         end
                     end
@@ -1215,7 +1221,6 @@ elseif option.lart
                     end
                     for i2 = 1:length(oldmeters{i})
                         for i3 = 1:length(oldmeters{i}(i2).score)
-                            rgb = ones(1,1,3);
                             rgb = ones(1,1,3) - ...
                                 (oldmeters{i}(i2).score(i3) - mic) / micmac * irgb;
                             plot(oldmeters{i}(i2).timidx(i3),...
