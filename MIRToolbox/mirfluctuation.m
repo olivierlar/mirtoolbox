@@ -29,6 +29,16 @@ function varargout = mirfluctuation(orig,varargin)
         mr.default = .01;
     option.mr = mr;
     
+        max.key = 'Max';
+        max.type = 'Integer';
+        max.default = 10;
+    option.max = max;
+
+        band.type = 'String';
+        band.choice = {'Mel','Bark'};
+        band.default = 'Bark';
+    option.band = band;
+    
         inframe.key = 'InnerFrame';
         inframe.type = 'Integer';
         inframe.number = 2;
@@ -52,10 +62,13 @@ function [s type] = init(x,option)
 if iscell(x)
     x = x{1};
 end
+if option.inframe(2) < option.max * 2
+    option.inframe(2) = option.max * 2;
+end
 if isamir(x,'miraudio') && not(isframed(x))
     x = mirframe(x,option.inframe(1),'s',option.inframe(2),'Hz');
 end
-s = mirspectrum(x,'Power','Terhardt','Bark','dB','Mask');
+s = mirspectrum(x,'Power','Terhardt',option.band,'dB','Mask');
 type = 'mirspectrum';
 
 
@@ -65,7 +78,8 @@ fp = get(x,'FramePos');
 fl = option.frame.length.val;
 fh = option.frame.hop.val;
 if ~fl
-    f = mirspectrum(x,'AlongBands','Max',10,'Window',0,'NormalLength',...
+    f = mirspectrum(x,'AlongBands','Max',option.max,...
+                      'Window',0,'NormalLength',...
                       'Resonance','Fluctuation','MinRes',option.mr);
 else
     vb = mirverbose;
