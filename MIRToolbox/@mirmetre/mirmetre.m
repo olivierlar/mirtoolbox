@@ -309,11 +309,11 @@ for j = 1:length(pt)
                     bpms{i2} = [mk{i2}.lastbpm];
                 end
                 
-                for i = 1:length(ptl)   % For each peak
-                    found = 0;          % Is peak located in metrical hierarchies?
-                    coord = [];         % Where is peak located
-                    for i2 = 1:length(mk)   
-                                        % For each metrical hierarchy
+                for i = 1:length(ptl)       % For each peak
+                    score = d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                    found = 0;              % Is peak in metrical hierarchies?
+                    coord = [];             % Where is peak located
+                    for i2 = 1:length(mk)   % For each metrical hierarchy
                         if ~isempty(bpms{i2})
                             locoord = [];
                             dist = abs(60/ptl(i) - 60./bpms{i2});
@@ -368,281 +368,195 @@ for j = 1:length(pt)
                     end
 
                     if found
-                        if 0 %~isempty(locoord)
-                            cntr(i2) = cntr(i2)+1;
-                            if cntr(i2) ~= locoord
-                                indx = 1:length(meters{i2});
-                                indx(indx == locoord) = [];
-                                indx = [indx(1:cntr(i2)-1) ...
-                                        locoord ...
-                                        indx(cntr(i2):end)];
-                                meters{i2} = meters{i2}(indx);
-                            end
+                        break
+                    end
+                    
+                    % Candidate level not belonging to current
+                    % metrical levels
+                    i2 = 1;
+                    while i2 <= length(mk)
+                        [orbpms ord] = sort(bpms{i2});
+                        fo = find(orbpms > ptl(i), 1);
+                        if isempty(fo)
+                            fo = length(orbpms)+1;
                         end
-                    else
-                        % Candidate level not belonging to current
-                        % metrical levels
-                        i2 = 1;
-                        while i2 <= length(mk)
-                            locoord = [];
-                            i3 = 1;
-                            while i3 <= length(bpms{i2})
-                                if ptl(i) > bpms{i2}(i3)
-                                    % Candidate faster than stored
-                                    % level
-                                    div = ptl(i) / bpms{i2}(i3);
-                                    rdiv = round(div);
-                                    if rdiv > 1 && ...
-                                            ...~isempty(find(~mod(rdiv,[2 3 5]))) && ...
-                                            (mod(div,1) < option.lart2 || ...
-                                             mod(div,1) > 1-option.lart2)
-                                        % Candidate level can be
-                                        % integrated in this metrical
-                                        % hierarchy
 
-                                        if ~isempty(locoord)
-                                            % Level identified to one
-                                            % already detected
-
-                                            %meters{i2}(i3) = [];
-                                            %bpms(i3) = [];
-                                            %if ~isempty(currentbpmk) && ...
-                                            %        currentbpmk(1) == i2 && ...
-                                            %        currentbpmk(2) >= i3
-                                            %    currentbpmk = [res3(1)...
-                                            %                   res3(2)-1];
-                                            %end
-                                            %i3 = i3 - 1;
-                                            %if res(1) == i2 && res(2)>i3
-                                            %    res(2) = res(2)-1;
-                                            %    res3 = res;
-                                            %end
-
-                                        elseif found
-                                            % Candidate level also
-                                            % integrated in other
-                                            % metrical hierarchy. Both
-                                            % hierarchies are fused.
-                                            lvl = mk{i2}(i3).lvl / rdiv;
-                                            if lvl<1
-                                                for i4 = 1:length(mk{i2})
-                                                    mk{i2}(i4).lvl = mk{i2}(i4).lvl * rdiv;
-                                                end
-                                                lvl = mk{i2}(i3).lvl / rdiv;
-                                            end
-                                            chcur = 0;
-                                            if mk{coord(1)}(coord(2)).lvl > ...
-                                                    mk{i2}(i3).lvl / rdiv
-                                                % Other hierarchy is
-                                                % faster than current.
-                                                meter1 = mk{i2};
-                                                    % Slower hierarchy,
-                                                    % which is fused to
-                                                    % faster one
-                                                meter2 = mk{coord(1)};
-                                                    % Faster hierarchy,
-                                                    % onto which slower
-                                                    % one is fused
-                                                lvl1 = lvl;
-                                                    % Level in slower
-                                                lvl2 = meter2(coord(2)).lvl;
-                                                    % Level in faster
-                                            else
-                                                % Other hierarchy is
-                                                % slower than current
-                                                meter1 = mk{coord(1)};
-                                                meter2 = mk{i2};
-                                                bpms{coord(1)} = bpms{i2};
-                                                lvl1 = meter1(coord(2)).lvl;
-                                                lvl2 = lvl;
-                                            end
-                                            div = lvl2 / lvl1;
-                                            if round(div) == div
-                                                % Faster hierarchy is
-                                                % exact multiple of
-                                                % slower one.
-                                                mult1 = round(div);
-                                                mult2 = 1;
-                                            else
-                                                mult1 = lvl2;
-                                                mult2 = lvl1;
-                                                for i4 = 1:length(meter2)
-                                                    meter2(i4).lvl = meter2(i4).lvl * mult2;
-                                                end
-                                            end
-                                            for i4 = 1:length(meter1)
-                                                % Fusing one hierarchy
-                                                % into the other..
-                                                f = find(meter1(i4).lvl * mult1 ...
-                                                             == [meter2.lvl]);
-                                                if isempty(f)
-                                                    meter2(end+1) = meter1(i4);
-                                                    meter2(end).lvl = meter2(end).lvl * mult1;
-                                                    f = length(meters);
-                                                    bpms{coord(1)}(end+1) = meter1(i4).lastbpm;
-                                                end
-                                                coord(2) = f;
-                                            end
-                                            mk{coord(1)} = meter2;
-                                            mk(i2) = [];
-                                            bpms(i2) = [];
-                                            i2 = i2 - 1;
-                                            break
-                                        else
-                                            found = 1;
-                                            lvl = mk{i2}(i3).lvl ...
-                                                  / round(div);
-                                            l0 = find(lvl == ...
-                                                      [mk{i2}.lvl]);
-                                            score = d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                            if isempty(l0)
-                                                % New metrical level
-                                                mk{i2}(end+1).lvl = lvl;
-                                                mk{i2}(end).lastbpm = ptl(i);
-                                                mk{i2}(end).bpms = ptl(i);
-                                                mk{i2}(end).timidx = l;
-                                                mk{i2}(end).score = score;
-                                                coord = [i2 length(mk{i2})];
-                                                bpms{i2}(end+1) = ptl(i);
-                                                if lvl<1
-                                                    for i4 = 1:length(mk{i2})
-                                                        mk{i2}(i4).lvl = mk{i2}(i4).lvl * round(div);
-                                                    end
-                                                end
-                                            else
-                                                dist = abs([mk{i2}(l0).lastbpm] - ptl(i));
-                                                [unused md] = min(dist);
-                                                if mk{i2}(l0(md)).timidx(end) < l
-                                                    mk{i2}(l0(md)).lastbpm = ptl(i);
-                                                    mk{i2}(l0(md)).bpms(end+1) = ptl(i);
-                                                    mk{i2}(l0(md)).score(end+1) = score;
-                                                    mk{i2}(l0(md)).timidx(end+1) = l;
-                                                elseif score > mk{i2}(l0(md)).score
-                                                    mk{i2}(l0(md)).lastbpm = ptl(i);
-                                                    mk{i2}(l0(md)).bpms(end) = ptl(i);
-                                                    mk{i2}(l0(md)).score(end) = score;
-                                                end
-                                                coord = [i2 l0(md)];
-                                            end
-                                        end
-                                        locoord = coord(2);
-                                    end
-                                else
-                                    % Candidate slower than stored
-                                    % level
-                                    div = bpms{i2}(i3) / ptl(i);
-                                    rdiv = round(div);
-                                    if rdiv > 1 && ...
-                                            ...~isempty(find(~mod(rdiv,[2 3 5]))) && ...
-                                            (mod(div,1) < option.lart2 || ...
-                                             mod(div,1) > 1-option.lart2)
-                                        % Candidate level can be
-                                        % integrated in this metrical
-                                        % hierarchy
-
-                                        if ~isempty(locoord)
-                                            % Level identified to one
-                                            % already detected
-
-                                            %meters{i2}(i3) = [];
-                                            %bpms(i3) = [];
-                                            %i3 = i3 - 1;
-                                            %if res(1) == i2 && res(2)>i3
-                                            %    res(2) = res(2)-1;
-                                            %    res3 = res;
-                                            %end
-                                        else
-                                            score = d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                            lvl = mk{i2}(i3).lvl ...
-                                                    * round(div);
-                                            if 1 %lvl == round(lvl)
-                                                l0 = find(lvl == ...
-                                                          [mk{i2}.lvl]);
-                                                if isempty(l0)
-                                                    % New metrical level
-                                                    mk{i2}(end+1).lvl = lvl;
-                                                    mk{i2}(end).lastbpm = ptl(i);
-                                                    mk{i2}(end).bpms = ptl(i);
-                                                    mk{i2}(end).timidx = l;
-                                                    mk{i2}(end).score = score;
-                                                    found = 1;
-                                                    coord = [i2 length(mk{i2})];
-                                                    bpms{i2}(end+1) = ptl(i);
-                                                    %comet(i2) = 1;
-                                                else
-                                                    dist = abs([mk{i2}(l0).lastbpm] - ptl(i));
-                                                    [unused md] = min(dist);
-                                                    if mk{i2}(l0(md)).timidx(end) < l
-                                                        mk{i2}(l0(md)).lastbpm = ptl(i);
-                                                        mk{i2}(l0(md)).bpms(end+1) = ptl(i);
-                                                        mk{i2}(l0(md)).score(end+1) = score;
-                                                        mk{i2}(l0(md)).timidx(end+1) = l;
-                                                        found = 1;
-                                                        coord = [i2 l0(md)];
-                                                    elseif score > mk{i2}(l0(md)).score
-                                                        mk{i2}(l0(md)).lastbpm = ptl(i);
-                                                        mk{i2}(l0(md)).bpms(end) = ptl(i);
-                                                        mk{i2}(l0(md)).score(end) = score;
-                                                        found = 1;
-                                                        coord = [i2 0];
-                                                    end
-                                                end
-                                            else
-                                                lvl = meters{i2}(i3).lvl;
-                                                for i4 = 1:length(meters{i2})
-                                                    meters{i2}(i4).lvl = meters{i2}(i4).lvl * round(div);
-                                                end
-                                                meters{i2}(end+1).lvl = lvl;
-                                                meters{i2}(end).lastbpm = ptl(i);
-                                                meters{i2}(end).bpms = ptl(i);
-                                                meters{i2}(end).timidx = l;
-                                                meters{i2}(end).score = score;
-                                                coord = [i2 length(meters{i2})];
-                                                comet(i2) = 1;
-                                                bpms{i2}(end+1) = ptl(i);
-                                            end
-                                        end
-                                        if ~isempty(coord)
-                                            locoord = coord(2);
-                                        end
-                                    end
-                                end
-                                i3 = i3 + 1;
+                        % Stored levels slower than candidate
+                        slower = [];
+                        i3 = fo-1;
+                        while i3 > 0
+                            div = ptl(i) / orbpms(i3);
+                            rdiv = round(div);
+                            if rdiv > 1 && ...
+                                    ...~isempty(find(~mod(rdiv,[2 3 5]))) && ...
+                                    (mod(div,1) < option.lart2 || ...
+                                     mod(div,1) > 1-option.lart2)
+                                % Candidate level can be
+                                % integrated in this metrical
+                                % hierarchy
+                                slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
+                                slower.bpm = orbpms(i3);
+                                slower.score = mk{i2}(ord(i3)).score(end);
+                                break
                             end
+                            i3 = i3 - 1;
+                        end
+                        
+                        % Stored levels faster than candidate
+                        faster = [];
+                        i3 = fo;
+                        while i3 <= length(orbpms)
+                            div = orbpms(fo) / ptl(i);
+                            rdiv = round(div);
+                            if rdiv > 1 && ...
+                                    ...~isempty(find(~mod(rdiv,[2 3 5]))) && ...
+                                    (mod(div,1) < option.lart2 || ...
+                                     mod(div,1) > 1-option.lart2)
+                                % Candidate level can be
+                                % integrated in this metrical
+                                % hierarchy
+                                faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
+                                faster.bpm = orbpms(i3);
+                                faster.score = mk{i2}(ord(i3)).score(end);
+                                break
+                            end
+                            i3 = i3 + 1;
+                        end
+                        
+                        if isempty(slower) && isempty(faster)
                             i2 = i2 + 1;
+                            continue
+                        elseif isempty(slower)
+                            lvl = faster.lvl;
+                        elseif isempty(faster)
+                            lvl = slower.lvl;
+                        elseif slower.score < faster.score
+                            lvl = faster.lvl;
+                        else
+                            lvl = slower.lvl;
                         end
-                        %for i2 = 1:length(meters)
-                        %    if ~isempty(meters{i2})
-                        %        [unused ord] = sort([meters{i2}.lastbpm],'descend');
-                        %        meters{i2} = meters{i2}(ord);
-                        %    end
-                        %end
-
-                        if found
-                            if 0 %coord(2)
-                                cntr(coord(1)) = cntr(coord(1))+1;
-                                if cntr(coord(1)) ~= coord(2)
-                                    indx = 1:length(meters{coord(1)});
-                                    indx(indx == coord(2)) = [];
-                                    indx = [indx(1:cntr(coord(1))-1) ...
-                                            coord(2) ...
-                                            indx(cntr(coord(1)):end)];
-                                    meters{coord(1)} = meters{coord(1)}(indx);
+                        
+                        if ~found
+                            found = 1;
+                            l0 = find(lvl == [mk{i2}.lvl]);
+                            if isempty(l0)
+                                % New metrical level
+                                mk{i2}(end+1).lvl = lvl;
+                                mk{i2}(end).lastbpm = ptl(i);
+                                mk{i2}(end).bpms = ptl(i);
+                                mk{i2}(end).timidx = l;
+                                mk{i2}(end).score = score;
+                                coord = [i2 length(mk{i2})];
+                                bpms{i2}(end+1) = ptl(i);
+                                if lvl<1
+                                    for i4 = 1:length(mk{i2})
+                                        mk{i2}(i4).lvl = ...
+                                            mk{i2}(i4).lvl * round(div);
+                                    end
+                                end
+                            else
+                                dist = abs([mk{i2}(l0).lastbpm] - ptl(i));
+                                [unused md] = min(dist);
+                                if mk{i2}(l0(md)).timidx(end) < l
+                                    mk{i2}(l0(md)).lastbpm = ptl(i);
+                                    mk{i2}(l0(md)).bpms(end+1) = ptl(i);
+                                    mk{i2}(l0(md)).score(end+1) = score;
+                                    mk{i2}(l0(md)).timidx(end+1) = l;
+                                elseif score > mk{i2}(l0(md)).score
+                                    mk{i2}(l0(md)).lastbpm = ptl(i);
+                                    mk{i2}(l0(md)).bpms(end) = ptl(i);
+                                    mk{i2}(l0(md)).score(end) = score;
+                                end
+                                coord = [i2 l0(md)];
+                            end
+                            locoord = coord(2);
+                            
+                        else
+                            % Candidate level also integrated in other
+                            % metrical hierarchy. Both hierarchies are fused.
+                            if lvl<1
+                                for i4 = 1:length(mk{i2})
+                                    mk{i2}(i4).lvl = mk{i2}(i4).lvl * rdiv;
+                                end
+                                lvl = lvl * rdiv;
+                            end
+                            
+                            if mk{coord(1)}(coord(2)).lvl > lvl
+                                % Other hierarchy is
+                                % faster than current.
+                                meter1 = mk{i2};
+                                    % Slower hierarchy,
+                                    % which is fused to
+                                    % faster one
+                                meter2 = mk{coord(1)};
+                                    % Faster hierarchy,
+                                    % onto which slower
+                                    % one is fused
+                                lvl1 = lvl;
+                                    % Level in slower
+                                lvl2 = meter2(coord(2)).lvl;
+                                    % Level in faster
+                            else
+                                % Other hierarchy is
+                                % slower than current
+                                meter1 = mk{coord(1)};
+                                meter2 = mk{i2};
+                                bpms{coord(1)} = bpms{i2};
+                                lvl1 = meter1(coord(2)).lvl;
+                                lvl2 = lvl;
+                            end
+                            div = lvl2 / lvl1;
+                            if round(div) == div
+                                % Faster hierarchy is
+                                % exact multiple of
+                                % slower one.
+                                mult1 = round(div);
+                                mult2 = 1;
+                            else
+                                mult1 = lvl2;
+                                mult2 = lvl1;
+                                for i4 = 1:length(meter2)
+                                    meter2(i4).lvl = ...
+                                            meter2(i4).lvl * mult2;
                                 end
                             end
-                        else
-                            % New metrical hierarchy
-                            mk{end+1}.lvl = 1;
-                            mk{end}.lastbpm = ptl(i);
-                            mk{end}.bpms = ptl(i);
-                            mk{end}.timidx = l;
-                            mk{end}.score = ...
-                                d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                            cntr(end+1) = 0;
-                            %found = 1;
-                            bpms{end+1} = ptl(i);
-                            %coord = [length(bpms),1];
+                            for i4 = 1:length(meter1)
+                                % Fusing one hierarchy
+                                % into the other..
+                                f = find(meter1(i4).lvl * mult1 ...
+                                         == [meter2.lvl]);
+                                if isempty(f)
+                                    meter2(end+1) = meter1(i4);
+                                    meter2(end).lvl = ...
+                                        meter2(end).lvl * mult1;
+                                    f = length(meters);
+                                    bpms{coord(1)}(end+1) = ...
+                                                meter1(i4).lastbpm;
+                                end
+                                coord(2) = f;
+                            end
+                            mk{coord(1)} = meter2;
+                            mk(i2) = [];
+                            bpms(i2) = [];
+                            i2 = i2 - 1;
+                            break
                         end
+                        
+                        i2 = i2 + 1;
+                    end
+                    
+                    if ~found
+                        % New metrical hierarchy
+                        mk{end+1}.lvl = 1;
+                        mk{end}.lastbpm = ptl(i);
+                        mk{end}.bpms = ptl(i);
+                        mk{end}.timidx = l;
+                        mk{end}.score = ...
+                            d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                        cntr(end+1) = 0;
+                        %found = 1;
+                        bpms{end+1} = ptl(i);
+                        %coord = [length(bpms),1];
                     end
                 end
 
@@ -713,7 +627,6 @@ for j = 1:length(pt)
                             % meters{i} is completely included into
                             % meters{i2}
                             mk(i) = [];
-                            bpms2(i) = [];
                             if length(oldmeters) >= i
                                 oldmeters(i) = [];
                             end
