@@ -374,6 +374,24 @@ for i = 1:length(d) % For each audio file,...
             ti = {ti};
         end
     end
+    
+    if strcmpi(option.normal,'Global')
+        % Normalizing across segments
+        madi = zeros(1,length(di));
+        midi = zeros(1,length(di));
+        for h = 1:length(di) 
+            madi(h) = max(max(max(di{h},[],1),[],2),[],4);
+            midi(h) = min(min(min(di{h},[],1),[],2),[],4);
+        end
+        mad = max(madi);
+        mid = min(midi);
+        for h = 1:length(di)
+            [nl0 nc np nd0] = size(di{h});
+            di{h} = (di{h}-repmat(mid,[nl0 nc 1 nd0]))./... 
+                     repmat(mad-mid,[nl0 nc 1 nd0]);
+        end
+    end
+        
     for h = 1:length(di)    % For each segment,...
         dh0 = di{h};
         if option.vall
@@ -407,10 +425,10 @@ for i = 1:length(d) % For each audio file,...
         state = warning('query','MATLAB:divideByZero');
         warning('off','MATLAB:divideByZero');
         
-        % Let's first normalize all frames globally:
-        dh0 = (dh0-repmat(min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]))./...
-            repmat(max(max(max(dh0,[],1),[],2),[],4)...
-                  -min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]);
+        % % Let's first normalize all frames globally:
+        %dh0 = (dh0-repmat(min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]))./...
+        %    repmat(max(max(max(dh0,[],1),[],2),[],4)...
+        %          -min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]);
         for l = 1:nd0 
             [unused lowc] = find(max(dh0(:,:,:,l))<option.thr);
             dh0(:,lowc,1,l) = 0;
