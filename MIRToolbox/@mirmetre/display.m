@@ -23,6 +23,8 @@ for h = 1:length(d)
             micmac = 1;
         end
         for i2 = 1:length(d{h}{1}{i})
+            text(d{h}{1}{i}(i2).timidx(1)-.3,60./d{h}{1}{i}(i2).bpms(1),...
+                 num2str(d{h}{1}{i}(i2).lvl))
             for i3 = 1:length(d{h}{1}{i}(i2).score)
                 if i3>1
                     plot(d{h}{1}{i}(i2).timidx([i3-1 i3]),...

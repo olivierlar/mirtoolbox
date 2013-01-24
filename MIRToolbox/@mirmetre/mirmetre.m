@@ -368,7 +368,7 @@ for j = 1:length(pt)
                     end
 
                     if found
-                        break
+                        continue
                     end
                     
                     % Candidate level not belonging to current
@@ -397,6 +397,7 @@ for j = 1:length(pt)
                                 slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
                                 slower.bpm = orbpms(i3);
                                 slower.score = mk{i2}(ord(i3)).score(end);
+                                slower.rdiv = rdiv;
                                 break
                             end
                             i3 = i3 - 1;
@@ -406,7 +407,7 @@ for j = 1:length(pt)
                         faster = [];
                         i3 = fo;
                         while i3 <= length(orbpms)
-                            div = orbpms(fo) / ptl(i);
+                            div = orbpms(i3) / ptl(i);
                             rdiv = round(div);
                             if rdiv > 1 && ...
                                     ...~isempty(find(~mod(rdiv,[2 3 5]))) && ...
@@ -418,6 +419,7 @@ for j = 1:length(pt)
                                 faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
                                 faster.bpm = orbpms(i3);
                                 faster.score = mk{i2}(ord(i3)).score(end);
+                                faster.rdiv = rdiv;
                                 break
                             end
                             i3 = i3 + 1;
@@ -428,12 +430,16 @@ for j = 1:length(pt)
                             continue
                         elseif isempty(slower)
                             lvl = faster.lvl;
+                            rdiv = faster.rdiv;
                         elseif isempty(faster)
                             lvl = slower.lvl;
+                            rdiv = slower.rdiv;
                         elseif slower.score < faster.score
                             lvl = faster.lvl;
+                            rdiv = faster.rdiv;
                         else
                             lvl = slower.lvl;
+                            rdiv = slower.rdiv;
                         end
                         
                         if ~found
@@ -492,6 +498,7 @@ for j = 1:length(pt)
                                     % Faster hierarchy,
                                     % onto which slower
                                     % one is fused
+                                bpms2 = bpms{coord(1)};
                                 lvl1 = lvl;
                                     % Level in slower
                                 lvl2 = meter2(coord(2)).lvl;
@@ -501,7 +508,7 @@ for j = 1:length(pt)
                                 % slower than current
                                 meter1 = mk{coord(1)};
                                 meter2 = mk{i2};
-                                bpms{coord(1)} = bpms{i2};
+                                bpms2 = bpms{i2};
                                 lvl1 = meter1(coord(2)).lvl;
                                 lvl2 = lvl;
                             end
@@ -529,17 +536,19 @@ for j = 1:length(pt)
                                     meter2(end+1) = meter1(i4);
                                     meter2(end).lvl = ...
                                         meter2(end).lvl * mult1;
-                                    f = length(meters);
-                                    bpms{coord(1)}(end+1) = ...
+                                    f = length(meter2);
+                                    bpms2(end+1) = ...
                                                 meter1(i4).lastbpm;
                                 end
-                                coord(2) = f;
+                                if coord(2) == i4
+                                    coord(2) = f;
+                                end
                             end
                             mk{coord(1)} = meter2;
+                            bpms{coord(1)} = bpms2;
                             mk(i2) = [];
                             bpms(i2) = [];
                             i2 = i2 - 1;
-                            break
                         end
                         
                         i2 = i2 + 1;
