@@ -375,11 +375,17 @@ for i = 1:length(d) % For each audio file,...
         end
     end
     
+    if option.vall
+        for h = 1:length(di)
+            di{h} = -di{h};
+        end
+    end
+
     if strcmpi(option.normal,'Global')
         % Normalizing across segments
         madi = zeros(1,length(di));
         midi = zeros(1,length(di));
-        for h = 1:length(di) 
+        for h = 1:length(di)
             madi(h) = max(max(max(di{h},[],1),[],2),[],4);
             midi(h) = min(min(min(di{h},[],1),[],2),[],4);
         end
@@ -394,9 +400,6 @@ for i = 1:length(d) % For each audio file,...
         
     for h = 1:length(di)    % For each segment,...
         dh0 = di{h};
-        if option.vall
-            dh0 = -dh0;
-        end
         dh2 = dh0;
         [nl0 nc np nd0] = size(dh0);
         if cha == 1
