@@ -148,11 +148,8 @@ if not(isempty(order))
                     synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                     if isa(a,'mirpitch')
                         deg = get(a,'Degrees');
-                        if isempty(deg)
-                            transcribed = 0;
-                        else
-                            transcribed = ~isempty(deg{k}{i});
-                        end
+                        transcribed = ~(isempty(deg) || isempty(deg{k}) ...
+                                        || isempty(deg{k}{i}));
                     else
                         transcribed = 0;
                     end
