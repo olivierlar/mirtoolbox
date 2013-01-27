@@ -95,8 +95,8 @@ r.timbre.spectralflux = mirflux(f);
 
 r.tonal = mirstruct;
 r.tonal.tmp.chromagram = mirchromagram(a,'Frame','Wrap',0,'Pitch',0);
-r.tonal.chromagram.peak=mirpeaks(r.tonal.tmp.chromagram,'Total',1);
-r.tonal.chromagram.centroid=mircentroid(r.tonal.tmp.chromagram);
+r.tonal.chromagram.peak = mirpeaks(r.tonal.tmp.chromagram,'Total',1);
+r.tonal.chromagram.centroid = mircentroid(r.tonal.tmp.chromagram);
 
 % TONALITY/HARMONY
 % ----------------
