@@ -315,10 +315,12 @@ for song = 1:length(songs)  %For each audio file
                                 pmh = pm{i}{j}{1,h,k};
                                 plot([fpj(1,psh);fpj(2,peh)],...
                                      [pmh;pmh],'rd-','LineWidth',2)
-                                for hh = 1:length(pmh)
-                                    text(mean(fpj(:,psh(hh))),pmh(hh)+40,...
-                                         num2str(deg{i}{j}{1,h,k}(hh)),...
-                                         'FontSize',15,'Color','r');
+                                if ~isempty(deg)
+                                    for hh = 1:length(pmh)
+                                        text(mean(fpj(:,psh(hh))),pmh(hh)+40,...
+                                             num2str(deg{i}{j}{1,h,k}(hh)),...
+                                             'FontSize',15,'Color','r');
+                                    end
                                 end
                             end
                         end

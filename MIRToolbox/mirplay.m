@@ -147,20 +147,21 @@ if not(isempty(order))
                 else
                     synth = zeros(1,ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1);
                     if isa(a,'mirpitch')
-                        deg = get(a,'Degrees');
-                        transcribed = ~(isempty(deg) || isempty(deg{k}) ...
-                                        || isempty(deg{k}{i}));
+                        stp = get(a,'Start');
+                        transcribed = ~(isempty(stp) || isempty(stp{k}) ...
+                                        || isempty(stp{k}{i}));
                     else
                         transcribed = 0;
                     end
                     if transcribed
                         stp = get(a,'Start');
                         enp = get(a,'End');
-                        deg = deg{k}{i}{1}-5;
+                        mep = get(a,'Mean');
                         stp = stp{k}{i}{1};
                         enp = enp{k}{i}{1};
-                        for j = 1:length(deg)
-                            fj = 440 * 2^(deg(j)/12);
+                        mep = mep{k}{i}{1};
+                        for j = 1:length(mep)
+                            fj = 2^(mep(j)/1200);
                             k1 = floor((fp{k}{i}(1,stp(j))-fp{k}{i}(1))*44100)+1;
                             k2 = floor((fp{k}{i}(2,enp(j))-fp{k}{i}(1))*44100)+1;
                             ampj = ones(1,k2-k1+1);

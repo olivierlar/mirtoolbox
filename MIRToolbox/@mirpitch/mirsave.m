@@ -2,7 +2,7 @@ function mirsave(a,f)
 
 d = get(a,'Data');
 amp = get(a,'Amplitude');
-deg = get(a,'Degrees');
+mef = get(a,'Mean');
 n = get(a,'Name');
 fp = get(a,'FramePos');
 
@@ -22,19 +22,19 @@ for k = 1:nf
         for i = 1:length(dk)
             di = dk{i};
             synth = zeros(ceil((fp{k}{i}(end)-fp{k}{i}(1))*44100)+1,1);
-            if isempty(deg)
+            if isempty(mef)
                 transcribed = 0;
             else
-                transcribed = ~isempty(deg{k}{i});
+                transcribed = ~isempty(mef{k}{i});
             end
             if transcribed
                 stp = get(a,'Start');
                 enp = get(a,'End');
-                deg = deg{k}{i}{1}-5;
+                mef = mef{k}{i}{1};
                 stp = stp{k}{i}{1};
                 enp = enp{k}{i}{1};
-                for j = 1:length(deg)
-                    fj = 440 * 2^(deg(j)/12);
+                for j = 1:length(mef)
+                    fj = 2^(mef(j)/1200);
                     k1 = floor((fp{k}{i}(1,stp(j))-fp{k}{i}(1))*44100)+1;
                     k2 = floor((fp{k}{i}(2,enp(j))-fp{k}{i}(1))*44100)+1;
                     synth(k1:k2) = synth(k1:k2) ...
