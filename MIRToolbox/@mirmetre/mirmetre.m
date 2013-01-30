@@ -308,10 +308,10 @@ for j = 1:length(pt)
                 for i2 = 1:length(mk)
                     bpms{i2} = [mk{i2}.lastbpm];
                 end
+                ampli = d{j}{k}(:,l,h);
+                pos = ppp{j}{k}{l};
                 
                 for i = 1:length(ptl)       % For each peak
-                    ampli = d{j}{k}(:,l,h);
-                    pos = ppp{j}{k}{l};
                     score = ampli(pos(i));
                     found = 0;              % Is peak in metrical hierarchies?
                     coord = [];             % Where is peak located
@@ -405,22 +405,37 @@ for j = 1:length(pt)
                                 % Candidate level can be
                                 % integrated in this metrical
                                 % hierarchy
-                                slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
-                                slower.bpm = orbpms(i3);
-                                slower.score = mk{i2}(ord(i3)).score(end);
-                                slower.rdiv = rdiv;
-                                rptli1 = orbpms(i3) * (rdiv - .4);
-                                if ptli1 < rptli1
-                                    ptli1 = rptli1;
+                                if isempty(slower)
+                                    slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
+                                    slower.bpm = orbpms(i3);
+                                    slower.score = mk{i2}(ord(i3)).score(end);
+                                    slower.rdiv = rdiv;
+                                    rptli1 = orbpms(i3) * (rdiv - .4);
+                                    if ptli1 < rptli1
+                                        ptli1 = rptli1;
+                                    end
+                                    rptli2 = orbpms(i3) * (rdiv + .4);
+                                    if ptli2 > rptli2
+                                        ptli2 = rptli2;
+                                    end
+                                    ptli = mean([ptli1,ptli2]);
+                                elseif mk{i2}(ord(i3)).lvl / rdiv ...
+                                        ~= slower.lvl
+                                    slower = [];
+                                    found = 1;
+                                    break
                                 end
-                                rptli2 = orbpms(i3) * (rdiv + .4);
-                                if ptli2 > rptli2
-                                    ptli2 = rptli2;
-                                end
-                                ptli = mean([ptli1,ptli2]);
+                            elseif ~isempty(slower) && ...
+                                    ~mod(mk{i2}(ord(i3)).lvl,slower.lvl)
+                                slower = [];
+                                found = 1;
                                 break
                             end
                             i3 = i3 - 1;
+                        end
+                        
+                        if found
+                            break
                         end
                         
                         % Stored levels faster than candidate
@@ -437,22 +452,37 @@ for j = 1:length(pt)
                                 % Candidate level can be
                                 % integrated in this metrical
                                 % hierarchy
-                                faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
-                                faster.bpm = orbpms(i3);
-                                faster.score = mk{i2}(ord(i3)).score(end);
-                                faster.rdiv = rdiv;
-                                rptli1 = orbpms(i3) / (rdiv + .4);
-                                if ptli1 < rptli1
-                                    ptli1 = rptli1;
+                                if isempty(faster)
+                                    faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
+                                    faster.bpm = orbpms(i3);
+                                    faster.score = mk{i2}(ord(i3)).score(end);
+                                    faster.rdiv = rdiv;
+                                    rptli1 = orbpms(i3) / (rdiv + .4);
+                                    if ptli1 < rptli1
+                                        ptli1 = rptli1;
+                                    end
+                                    rptli2 = orbpms(i3) / (rdiv - .4);
+                                    if ptli2 > rptli2
+                                        ptli2 = rptli2;
+                                    end
+                                    ptli = mean([ptli1,ptli2]);
+                                elseif mk{i2}(ord(i3)).lvl * rdiv ...
+                                        ~= faster.lvl
+                                    faster = [];
+                                    found = 1;
+                                    break
                                 end
-                                rptli2 = orbpms(i3) / (rdiv - .4);
-                                if ptli2 > rptli2
-                                    ptli2 = rptli2;
-                                end
-                                ptli = mean([ptli1,ptli2]);
+                            elseif ~isempty(faster) && ...
+                                    ~mod(faster.lvl,mk{i2}(ord(i3)).lvl)
+                                faster = [];
+                                found = 1;
                                 break
                             end
                             i3 = i3 + 1;
+                        end
+                        
+                        if found
+                            break
                         end
                         
                         if isempty(slower) && isempty(faster)
