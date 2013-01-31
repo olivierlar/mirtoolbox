@@ -204,7 +204,7 @@ function varargout = mirmetre(orig,varargin)
     
         lart.key = 'Lartillot';
         lart.type = 'Integer';
-        lart.default = .15;
+        lart.default = .05;
     option.lart = lart;
 
         lart2.type = 'Integer';
@@ -268,7 +268,7 @@ if not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
                     'Mu',option.mu,'Log',option.log);
     end
 end
-y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi,...
+y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
       'NormalWindow',option.nw);
 if ischar(option.sum)
     y = mirsum(y);
@@ -312,6 +312,14 @@ for j = 1:length(pt)
                 pos = ppp{j}{k}{l};
                 
                 for i = 1:length(ptl)       % For each peak
+                    if ptl(i) < option.mi
+                        continue
+                    end
+                      
+                    if ~find(pos > pos(i)*1.95 & pos < pos(i)*2.05)
+                        continue
+                    end
+                    
                     score = ampli(pos(i));
                     found = 0;              % Is peak in metrical hierarchies?
                     coord = [];             % Where is peak located
@@ -383,6 +391,7 @@ for j = 1:length(pt)
                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
+                    incoherent = zeros(1,length(mk));
                     i2 = 1;
                     while i2 <= length(mk)
                         [orbpms ord] = sort(bpms{i2});
@@ -422,19 +431,19 @@ for j = 1:length(pt)
                                 elseif mk{i2}(ord(i3)).lvl / rdiv ...
                                         ~= slower.lvl
                                     slower = [];
-                                    found = 1;
+                                    incoherent(i2) = 1;
                                     break
                                 end
                             elseif ~isempty(slower) && ...
                                     ~mod(mk{i2}(ord(i3)).lvl,slower.lvl)
                                 slower = [];
-                                found = 1;
+                                incoherent(i2) = 1;
                                 break
                             end
                             i3 = i3 - 1;
                         end
                         
-                        if found
+                        if incoherent(i2)
                             break
                         end
                         
@@ -469,19 +478,19 @@ for j = 1:length(pt)
                                 elseif mk{i2}(ord(i3)).lvl * rdiv ...
                                         ~= faster.lvl
                                     faster = [];
-                                    found = 1;
+                                    incoherent(i2) = 1;
                                     break
                                 end
                             elseif ~isempty(faster) && ...
                                     ~mod(faster.lvl,mk{i2}(ord(i3)).lvl)
                                 faster = [];
-                                found = 1;
+                                incoherent(i2) = 1;
                                 break
                             end
                             i3 = i3 + 1;
                         end
                         
-                        if found
+                        if incoherent(i2)
                             break
                         end
                         
@@ -608,13 +617,14 @@ for j = 1:length(pt)
                             bpms{coord(1)} = bpms2;
                             mk(i2) = [];
                             bpms(i2) = [];
+                            incoherent(i2) = [];
                             i2 = i2 - 1;
                         end
                         
                         i2 = i2 + 1;
                     end
                     
-                    if ~found
+                    if ~found && isempty(find(incoherent))
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
                         mk{end}.lastbpm = ptl(i);
@@ -670,6 +680,11 @@ for j = 1:length(pt)
                                                     for i5 = 1:length(mk{i3})
                                                         mk{i3}(i5).lvl = mk{i3}(i5).lvl * rdiv;
                                                     end
+                                                    if length(oldmeters)>=i3
+                                                        for i5 = 1:length(oldmeters{i3})
+                                                            oldmeters{i3}(i5).lvl = oldmeters{i3}(i5).lvl * rdiv;
+                                                        end
+                                                    end
                                                 end
                                             end
                                             mk{i3}(end).lastbpm = mk{i}(i2).lastbpm;
@@ -704,7 +719,7 @@ for j = 1:length(pt)
                     end
                 end
 
-                for i = 1:length(mk)
+                for i = 1:0 %length(mk)
                     i2 = 1;
                     while i2 <= length(mk{i})
                         if mk{i}(i2).timidx(end) ~= l || ...
@@ -728,7 +743,7 @@ for j = 1:length(pt)
             end
         end
 
-        mk = oldmeters;
+        %mk = oldmeters;
         meters{j}{k} = mk;
     end
 end
