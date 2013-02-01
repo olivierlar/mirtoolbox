@@ -86,6 +86,11 @@ function varargout = mirautocor(orig,varargin)
         end
         max.opposite = 'min';
     option.max = max;
+    
+        xtend.key = {'Extend','Extended'};
+        xtend.type = 'Boolean';
+        xtend.default = 0;
+    option.xtend = xtend;
         
         scaleoptbw.key = 'Normal'; %'Normal' keyword optional
         scaleoptbw.key = 'Boolean';
@@ -314,7 +319,11 @@ else
             else
                 masp = Inf;
             end
-            masp = min(masp,ceil(ls/2));
+            if option.xtend
+                masp = min(masp,ls);
+            else
+                masp = min(masp,ceil(ls/2));
+            end
             if masp <= misp
                 if size(sl,2) > 1
                     warning('WARNING IN MIRAUTOCOR: Frame length is too small.');    
