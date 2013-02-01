@@ -89,6 +89,10 @@ if iscell(x)
                 for j = 1:nf
                     for i = 1:l
                         zij =  z{1,i,j};
+                        if isstruct(zij)
+                            x = z;
+                            return
+                        end
                         if ischar(zij) && length(zij) == 1 && zij>='A' && zij <= 'G'
                             zij = zij-'A';
                         end
