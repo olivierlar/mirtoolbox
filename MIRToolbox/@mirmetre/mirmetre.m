@@ -38,13 +38,13 @@ function varargout = mirmetre(orig,varargin)
         frame.type = 'Integer';
         frame.number = 2;
         frame.default = [0 0];
-        frame.keydefault = [3 .1];
+        frame.keydefault = [5 .05];
     option.frame = frame;
     
         fea.type = 'String';
         fea.choice = {'Envelope','DiffEnvelope','SpectralFlux',...
                       'Pitch','Novelty'};
-        fea.default = 'Novelty';
+        fea.default = 'Envelope'; %'Novelty';
     option.fea = fea;
     
     %% options related to 'Envelope':
@@ -52,7 +52,7 @@ function varargout = mirmetre(orig,varargin)
             envmeth.key = 'Method';
             envmeth.type = 'String';
             envmeth.choice = {'Filter','Spectro'};
-            envmeth.default = 'Filter';
+            envmeth.default = 'Spectro';
         option.envmeth = envmeth;
     
         %% options related to 'Filter':
@@ -89,7 +89,7 @@ function varargout = mirmetre(orig,varargin)
 
             diff.key = 'Diff';
             diff.type = 'Boolean';
-            diff.default = 1; % Different default for mirtempo
+            diff.default = 1;
         option.diff = diff;
 
             diffhwr.key = 'HalfwaveDiff';
@@ -748,8 +748,9 @@ for j = 1:length(pt)
     end
 end
 
-m.meters = meters;
-m = class(m,'mirmetre');
+m = purgedata(p);
+m = set(m,'Data',meters);
+m = class(struct,'mirmetre',mirdata(m));
 o = {m,p};
 
 

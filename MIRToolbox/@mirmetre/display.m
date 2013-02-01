@@ -1,7 +1,7 @@
 function display(m)
 % MIRMETRE/DISPLAY display of metrical hierarchy
 
-d = get(m,'Meters');
+d = get(m,'Data');
 for h = 1:length(d)
     figure,hold on
     for i = 1:length(d{h}{1})
