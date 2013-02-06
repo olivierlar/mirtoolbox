@@ -894,7 +894,7 @@ if option.gauss
             sigma = option.gauss;
             gauss = 1/sigma/2/pi...
                     *exp(- (-4*sigma:4*sigma).^2 /2/sigma^2);
-            y = filter(gauss,1,[m{k}{i};zeros(4*sigma,1)]);
+            y = filter(gauss,1,[m{k}{i};zeros(4*sigma,size(m{k}{1},2))]);
             y = y(4*sigma:end,:,:);
             m{k}{i} = y(1:size(m{k}{i},1),:,:);
         end
