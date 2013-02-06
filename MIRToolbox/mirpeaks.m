@@ -391,17 +391,14 @@ for i = 1:length(d) % For each audio file,...
         end
         mad = max(madi);
         mid = min(midi);
-        for h = 1:length(di)
-            [nl0 nc np nd0] = size(di{h});
-            di{h} = (di{h}-repmat(mid,[nl0 nc 1 nd0]))./... 
-                     repmat(mad-mid,[nl0 nc 1 nd0]);
-        end
     end
         
     for h = 1:length(di)    % For each segment,...
-        dh0 = di{h};
-        dh2 = dh0;
-        [nl0 nc np nd0] = size(dh0);
+        dhu = di{h}; % This copy of the data is kept untransformed and used for output.
+        dht = dhu; % This copy of the data will be transformed (normalization, etc.)
+        
+        [nl0 nc np nd0] = size(dhu);
+        
         if cha == 1
             if iscell(ti)
                 %% problem here!!!
@@ -418,8 +415,15 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
+        
+        if strcmpi(option.normal,'Global')
+            % Normalizing across segments
+            dht = (dht - repmat(mid,[nl0 nc 1 nd0]))./... 
+                  repmat(mad-mid,[nl0 nc 1 nd0]);
+        end
+        
         if option.c    % If a prefered region is specified, the data is amplified accordingly
-            dh0 = dh0.*exp(-(th-option.c(1)).^2/2/option.c(2)^2)...
+            dht = dht.*exp(-(th-option.c(1)).^2/2/option.c(2)^2)...
                                     /option.c(2)/sqrt(2*pi)/2;
         end
 
@@ -428,67 +432,65 @@ for i = 1:length(d) % For each audio file,...
         state = warning('query','MATLAB:divideByZero');
         warning('off','MATLAB:divideByZero');
         
-        % % Let's first normalize all frames globally:
-        %dh0 = (dh0-repmat(min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]))./...
-        %    repmat(max(max(max(dh0,[],1),[],2),[],4)...
-        %          -min(min(min(dh0,[],1),[],2),[],4),[nl0 nc 1 nd0]);
         for l = 1:nd0 
-            [unused lowc] = find(max(dh0(:,:,:,l))<option.thr);
-            dh0(:,lowc,1,l) = 0;
+            [unused lowc] = find(max(dht(:,:,:,l))<option.thr);
+            dht(:,lowc,1,l) = 0;
         end
         
         if strcmpi(option.normal,'Local')
             % Normalizing each frame separately:
-            dh0 = (dh0-repmat(min(min(dh0,[],1),[],4),[nl0 1 1 nd0]))./... 
-                repmat(max(max(dh0,[],1),[],4)...
-                      -min(min(dh0,[],1),[],4),[nl0 1 1 nd0]);
+            dht = (dht-repmat(min(min(dht,[],1),[],4),[nl0 1 1 nd0]))./... 
+                repmat(max(max(dht,[],1),[],4)...
+                      -min(min(dht,[],1),[],4),[nl0 1 1 nd0]);
         end
         warning(state.state,'MATLAB:divideByZero');
 
         szth = size(th);
         szth(1) = 1;
         if option.nobegin
-            dh0 = [Inf(1,nc,np,nd0);dh0];   
+            dht = [Inf(1,nc,np,nd0);dht];   
             % This infinite value at the beginning
             % prevents the selection of the first sample of data
-            dh2 = [Inf(1,nc,np,nd0);dh2];
+            dhu = [Inf(1,nc,np,nd0);dhu];
             th = [NaN(szth);th];
         else
-            dh0 = [-Inf(1,nc,np,nd0);dh0];
+            dht = [-Inf(1,nc,np,nd0);dht];
             % This infinite negative value at the beginning
             % ensures the selection of the first sample of data
-            dh2 = [-Inf(1,nc,np,nd0);dh2];
+            dhu = [-Inf(1,nc,np,nd0);dhu];
             th = [NaN(szth);th];
         end
         if option.noend
-            dh0 = [dh0;Inf(1,nc,np,nd0)];
+            dht = [dht;Inf(1,nc,np,nd0)];
             % idem for the last sample of data
-            dh2 = [dh2;Inf(1,nc,np,nd0)];
+            dhu = [dhu;Inf(1,nc,np,nd0)];
             th = [th;NaN(szth)];
         else
-            dh0 = [dh0;-Inf(1,nc,np,nd0)];
-            dh2 = [dh2;-Inf(1,nc,np,nd0)];
+            dht = [dht;-Inf(1,nc,np,nd0)];
+            dhu = [dhu;-Inf(1,nc,np,nd0)];
             th = [th;NaN(szth)];
         end
         nl0 = nl0+2;
 
         % Rearrange the 4th dimension (if used) into the 1st one.
         nl = nl0*nd0;
-        dh = zeros(nl,nc,np);
-        dh3 = zeros(nl,nc,np);
+        dht4 = zeros(nl,nc,np);
+        dhu4 = zeros(nl,nc,np);
         th2 = zeros(size(th));
         for l = 1:nd0
-            dh((l-1)*nl0+(1:nl0)',:,:) = dh0(:,:,:,l);
-            dh3((l-1)*nl0+(1:nl0)',:,:) = dh2(:,:,:,l);
+            dhu4((l-1)*nl0+(1:nl0)',:,:) = dhu(:,:,:,l);
+            dht4((l-1)*nl0+(1:nl0)',:,:) = dht(:,:,:,l);
             th2((l-1)*nl0+(1:nl0)',:,:) = th(:,:,:);
         end
+        dht = dht4;
+        dhu = dhu4;
         
         th = th2; % The X-abscissa
 
-        ddh = diff(dh);
+        ddh = diff(dht);
         % Let's find the local maxima
         for l = 1:np
-            dl = dh(2:end-1,:,l);
+            dl = dht(2:end-1,:,l);
             for k = 1:nc
                 dk = dl(:,k);
                 mx{1,k,l} = find(and(and(dk >= option.cthr, ...
@@ -516,18 +518,18 @@ for i = 1:length(d) % For each audio file,...
                         mxkj = mxk(j); % The current peak
                         jj = j+1;
                         bufmin = Inf;
-                        bufmax = dh(mxkj,k,l);
-                        oldbufmin = min(dh(1:mxk(1)-1,k,l));
+                        bufmax = dht(mxkj,k,l);
+                        oldbufmin = min(dht(1:mxk(1)-1,k,l));
                         while jj <= length(mxk)
                             if wait && not(mod(jj,5000))
                                 waitbar(jj/length(mxk),wait,['Selecting peaks... (',num2str(length(finalmxk)),' out of ',num2str(jj),')']);
                             end
                             bufmin = min(bufmin, ...
-                                min(dh(mxk(jj-1)+1:mxk(jj)-1,k,l)));
+                                min(dht(mxk(jj-1)+1:mxk(jj)-1,k,l)));
                             if bufmax - bufmin < option.cthr
                                 % There is no contrastive notch
-                                if dh(mxk(jj),k,l) > bufmax && ...
-                                        (dh(mxk(jj),k,l) - bufmax > option.first ...
+                                if dht(mxk(jj),k,l) > bufmax && ...
+                                        (dht(mxk(jj),k,l) - bufmax > option.first ...
                                         || (bufmax - oldbufmin < option.cthr))
                                     % If the new peak is significantly
                                     % higher than the previous one,
@@ -535,11 +537,11 @@ for i = 1:length(d) % For each audio file,...
                                     % position
                                     j = jj;
                                     mxkj = mxk(j); % The current peak
-                                    bufmax = dh(mxkj,k,l);
+                                    bufmax = dht(mxkj,k,l);
                                     oldbufmin = min(oldbufmin,bufmin);
                                     bufmin = Inf;
-                                elseif dh(mxk(jj),k,l) - bufmax <= option.first
-                                    bufmax = max(bufmax,dh(mxk(jj),k,l));
+                                elseif dht(mxk(jj),k,l) - bufmax <= option.first
+                                    bufmax = max(bufmax,dht(mxk(jj),k,l));
                                     oldbufmin = min(oldbufmin,bufmin);
                                 end
                             else
@@ -555,7 +557,7 @@ for i = 1:length(d) % For each audio file,...
                                     finalmxk(end+1) = mxkj;
                                     oldbufmin = bufmin;
                                 end
-                                bufmax = dh(mxk(jj),k,l);
+                                bufmax = dht(mxk(jj),k,l);
                                 j = jj;
                                 mxkj = mxk(j); % The current peak
                                 bufmin = Inf;
@@ -563,7 +565,7 @@ for i = 1:length(d) % For each audio file,...
                             jj = jj+1;
                         end
                         if bufmax - oldbufmin >= option.cthr && ...
-                                bufmax - min(dh(mxk(j)+1:end,k,l)) >= option.cthr
+                                bufmax - min(dht(mxk(j)+1:end,k,l)) >= option.cthr
                             % The last peak candidate is OK and stored
                             finalmxk(end+1) = mxk(j);
                         end
@@ -589,11 +591,11 @@ for i = 1:length(d) % For each audio file,...
                             % current seed
                         fmx = mx{1,k,l}(fmx);
                         if jj<lp && (isempty(fmx) || fmx>=pscankl(jj+1))
-                            [unused fmx] = max(dh(pscankl(jj):...
+                            [unused fmx] = max(dht(pscankl(jj):...
                                                   pscankl(jj+1)-1,k,l));
                             fmx = fmx+pscankl(jj)-1;
                         elseif jj==lp && isempty(fmx)
-                            [unused fmx] = max(dh(pscankl(jj):end,k,l));
+                            [unused fmx] = max(dht(pscankl(jj):end,k,l));
                             fmx = fmx+pscankl(jj)-1;
                         end
                         mxkl = [mxkl fmx];
@@ -610,7 +612,7 @@ for i = 1:length(d) % For each audio file,...
             end
             for l = 1:np
                 for k = 1:nc
-                    [unused ind] = sort(dh(mx{1,k,l}),'descend');
+                    [unused ind] = sort(dht(mx{1,k,l}),'descend');
                     mxlk = mx{1,k,l}(ind);
                     del = [];
                     j = 1;
@@ -664,7 +666,7 @@ for i = 1:length(d) % For each audio file,...
                 % and myl the related track amplitude
                 % In the first frame, tracks can be identified to peaks.
                 mxl = mx{1,1,l}(:)-1;        
-                myl = dh(mx{1,1,l}(:),k,l); 
+                myl = dht(mx{1,1,l}(:),k,l); 
                 
                 % To each peak is associated the related track ID
                 tr2 = 1:length(mx{1,1,l});
@@ -693,7 +695,7 @@ for i = 1:length(d) % For each audio file,...
                     thk1 = th(mxk1,k,l);
                     thk2 = th(mxk2,k,l);
                     matched = zeros(size(thk2));
-                    myk2 = dh(mx{1,k+1,l},k,l); % amplitude
+                    myk2 = dht(mx{1,k+1,l},k,l); % amplitude
                     tr1 = tr2;
                     tr2 = NaN(1,length(mxk2));
                     
@@ -886,7 +888,7 @@ for i = 1:length(d) % For each audio file,...
                 
                 tp{i}{h}{l} = mxl;
                 tv{i}{h}{l} = myl;
-                
+
                 if interpol  
                     tpv{i}{h}{l} = zeros(size(mxl));
                     tpp{i}{h}{l} = zeros(size(mxl));
@@ -894,11 +896,11 @@ for i = 1:length(d) % For each audio file,...
                         for j = 1:size(mxl,1)
                             if myl(j,k)
                                 mj = mxl(j,k);
-                                if mj>2 && mj<size(dh3,1)-1
+                                if mj>2 && mj<size(dhu,1)-1
                                     % More precise peak position
-                                    y0 = dh3(mj,k,l);
-                                    ym = dh3(mj-1,k,l);
-                                    yp = dh3(mj+1,k,l);
+                                    y0 = dhu(mj,k,l);
+                                    ym = dhu(mj-1,k,l);
+                                    yp = dhu(mj+1,k,l);
                                     p = (yp-ym)/(2*(2*y0-yp-ym));
                                     tpv{i}{h}{l}(j,k) = y0 - 0.25*(ym-yp)*p;
                                     if p >= 0
@@ -907,7 +909,7 @@ for i = 1:length(d) % For each audio file,...
                                         tpp{i}{h}{l}(j,k) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
                                     end
                                 elseif mj
-                                    tpv{i}{h}{l}(j,k) = dh3(mj,k,l);
+                                    tpv{i}{h}{l}(j,k) = dhu(mj,k,l);
                                     tpp{i}{h}{l}(j,k) = th(mj,k,l);
                                 end
                             else
@@ -959,10 +961,10 @@ for i = 1:length(d) % For each audio file,...
                                         % Each point in that straight line.
                                         mxm = mxjj + (mxkk-mxjj)*(m-j)/(k-j);
                                         if mxm == floor(mxm)
-                                            dist = dist + 1-dh(mxm,m,l);
+                                            dist = dist + 1-dht(mxm,m,l);
                                         else
-                                            dhm0 = dh(floor(mxm),m,l);
-                                            dhm1 = dh(ceil(mxm),m,l);
+                                            dhm0 = dht(floor(mxm),m,l);
+                                            dhm1 = dht(ceil(mxm),m,l);
                                             dist = dist + 1-...
                                                 (dhm0 + ...
                                                  (dhm1-dhm0)*(mxm-floor(mxm)));
@@ -1049,12 +1051,12 @@ for i = 1:length(d) % For each audio file,...
             for k = 1:nc
                 mxk = mx{1,k,l};
                 if length(mxk) > option.m 
-                    [unused,idx] = sort(dh(mxk,k,l),'descend');
+                    [unused,idx] = sort(dht(mxk,k,l),'descend');
                     idx = idx(1:option.m);
                 elseif strcmpi(option.order,'Amplitude')
-                    [unused,idx] = sort(dh(mxk,k,l),'descend');
+                    [unused,idx] = sort(dht(mxk,k,l),'descend');
                 else
-                    idx = 1:length(dh(mxk,k,l));
+                    idx = 1:length(dht(mxk,k,l));
                 end
                 if strcmpi(option.order,'Abscissa')
                     mx{1,k,l} = sort(mxk(idx));
@@ -1069,16 +1071,16 @@ for i = 1:length(d) % For each audio file,...
             else
                 filn = 10;
             end
-            if filn>1 && size(dh3,1)>5
-                filn = min(filn,floor(size(dh3,1)/3));
-                fild = filtfilt(ones(1,filn)/2,1,dh3(2:end-1,:,:))/filn/2;
+            if filn>1 && size(dhu,1)>5
+                filn = min(filn,floor(size(dhu,1)/3));
+                fild = filtfilt(ones(1,filn)/2,1,dhu(2:end-1,:,:))/filn/2;
             else
-                fild = dh3(2:end-1,:,:);
+                fild = dhu(2:end-1,:,:);
             end
             fild = [zeros(1,size(fild,2),size(fild,3));diff(fild)];
             for l = 1:np
                 for k = 1:nc
-                    idx = 1:size(dh,1);
+                    idx = 1:size(dht,1);
                     mxlk = sort(mx{1,k,l}-1);
                     for j = 1:length(mxlk)
                         
@@ -1100,7 +1102,7 @@ for i = 1:length(d) % For each audio file,...
                         end
                         if j>1 && bef(end)<aft(1)+2
                             idx(mxlk(j-1):mxlk(j)) = 0;
-                            [unused btw] = min(dh3(mxlk(j-1)+1:mxlk(j)+1,k,l));
+                            [unused btw] = min(dhu(mxlk(j-1)+1:mxlk(j)+1,k,l));
                             btw = btw+mxlk(j-1);
                             idx(btw-2:btw+2) = btw-2:btw+2;
                             bef = btw+2;
@@ -1126,12 +1128,12 @@ for i = 1:length(d) % For each audio file,...
                         idx(bef(end)+3:aft(1)-3) = 0;
                     end
                     idx = idx(find(idx));
-                    dh3(idx,k,l) = NaN;
+                    dhu(idx,k,l) = NaN;
                 end
             end
         end
         if option.vall
-            dh3 = -dh3;
+            dhu = -dhu;
         end
         mmx = cell(1,nc,np);
         mmy = cell(1,nc,np);
@@ -1140,7 +1142,7 @@ for i = 1:length(d) % For each audio file,...
             for k = 1:nc
                 mmx{1,k,l} = mod(mx{1,k,l}(:,:,1),nl0)-1;
                 mmy{1,k,l} = ceil(mx{1,k,l}/nl0);
-                mmv{1,k,l} = dh3(mx{1,k,l}(:,:,1),k,l);
+                mmv{1,k,l} = dhu(mx{1,k,l}(:,:,1),k,l);
             end
         end
         pp{i}{h} = mmx;
@@ -1160,11 +1162,11 @@ for i = 1:length(d) % For each audio file,...
                     for j = 1:length(mxlk)
                         mj = mxlk(j); % Current values
                         if strcmpi(option.interpol,'quadratic')
-                            if mj>2 && mj<length(dh3)-1
+                            if mj>2 && mj<length(dhu)-1
                                 % More precise peak position
-                                y0 = dh3(mj,k,l);
-                                ym = dh3(mj-1,k,l);
-                                yp = dh3(mj+1,k,l);
+                                y0 = dhu(mj,k,l);
+                                ym = dhu(mj-1,k,l);
+                                yp = dhu(mj+1,k,l);
                                 p = (yp-ym)/(2*(2*y0-yp-ym));
                                 vih{1,k,l}(j) = y0 - 0.25*(ym-yp)*p;
                                 if p >= 0
@@ -1173,7 +1175,7 @@ for i = 1:length(d) % For each audio file,...
                                     pih{1,k,l}(j) = (1+p)*th(mj,k,l)-p*th(mj-1,k,l);
                                 end
                             else
-                                vih{1,k,l}(j) = dh3(mj,k,l);
+                                vih{1,k,l}(j) = dhu(mj,k,l);
                                 pih{1,k,l}(j) = th(mj,k,l);
                             end
                         end
@@ -1184,15 +1186,15 @@ for i = 1:length(d) % For each audio file,...
             ppv{i}{h} = vih;
         end
         if not(iscell(d{i})) % for chromagram
-            d{i} = dh3(2:end-1,:,:,:);
+            d{i} = dhu(2:end-1,:,:,:);
         else
             if cha == 1
-                d{i}{h} = zeros(1,size(dh3,2),size(dh3,1)-2);
-                for k = 1:size(dh3,2)
-                     d{i}{h}(1,k,:) = dh3(2:end-1,k);
+                d{i}{h} = zeros(1,size(dhu,2),size(dhu,1)-2);
+                for k = 1:size(dhu,2)
+                     d{i}{h}(1,k,:) = dhu(2:end-1,k);
                 end
             else
-                d{i}{h} = dh3(2:end-1,:,:,:);
+                d{i}{h} = dhu(2:end-1,:,:,:);
             end
         end
         if option.only
