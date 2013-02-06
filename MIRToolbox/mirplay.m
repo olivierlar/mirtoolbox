@@ -137,7 +137,7 @@ if not(isempty(order))
                 if isa(a,'miraudio')
                     for j = 1:size(di,2)
                         tic
-                        sound(di(:,j,l),f{k});
+                        soundsc(di(:,j,l),f{k});
                         idealtime = size(di,1)/f{k};
                         practime = toc;
                         if practime < idealtime
