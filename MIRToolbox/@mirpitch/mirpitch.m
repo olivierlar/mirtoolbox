@@ -417,6 +417,7 @@ if option.segm
                 meanp = [];
                 endp = [];
                 deg = [];
+                stabl = [];
                 buffer = [];
                 breaks = [];
                 currentp = [];
@@ -456,15 +457,17 @@ if option.segm
                     if interrupt
                         % Segment interrupted
                         if isempty(buffer) || ...
-                                length(buffer.pitch) <= option.segmin || ...
+                                length(buffer.pitch) < option.segmin || ...
                                 std(buffer.pitch) > 20
-                            if length(startp) > length(endp)
+                             if length(startp) > length(endp)
                                 startp(end) = [];
                             end
                         else
                             meanp(end+1) = mean(buffer.pitch);
                             endp(end+1) = l-1;
-                                                        
+                            stabl(end+1) = ...
+                                length(buffer.pitch) > option.segmin | ...
+                                std(buffer.pitch) > 20;                         
                             deg(end+1) = cent2deg(meanp(end),scale);
                             reson(end+1).pitch = meanp(end);
                             reson(end).amp = mean(buffer.amp);
@@ -486,21 +489,6 @@ if option.segm
                         startp(end+1) = l;
                         buffer.pitch = pf{i}{j}{1,l,k};
                         buffer.amp = pa{i}{j}{1,l,k};
-                        
-                    elseif 0 %abs(pf{i}{j}{1,l,k}-mean(buffer.pitch)) > 65
-                        % Segment interrupted by pitch gap
-                        meanp(end+1) = mean(buffer.pitch);
-                        endp(end+1) = l-1;
-                        %[deg(end+1) scale] = cent2deg(meanp(end),scale);
-                        deg(end+1) = cent2deg(meanp(end),scale);
-                        if 1 %abs(pf{i}{j}{1,l+1,k}-pf{i}{j}{1,l,k}) < 30
-                            % New segment starting
-                            startp(end+1) = l;
-                            buffer.pitch = pf{i}{j}{1,l,k};
-                            buffer.amp = pa{i}{j}{1,l,k};
-                        else
-                            buffer = [];
-                        end
                         
                     else
                         if length(pf{i}{j}{1,l,k})>1
@@ -530,6 +518,7 @@ if option.segm
                         meanp(l) = [];
                         deg(l) = [];
                         endp(l) = [];
+                        stabl(l) = [];
                     else
                         l = l+1;
                     end
@@ -538,6 +527,7 @@ if option.segm
                 ps{i}{j}{k} = startp;
                 pe{i}{j}{k} = endp;
                 pm{i}{j}{k} = meanp;
+                stb{i}{j}{k} = stabl;
                 dg = {}; %{i}{j}{k} = deg;
             end
         end
@@ -547,6 +537,7 @@ elseif isa(x,'mirpitch')
     pe = get(x,'End');
     pm = get(x,'Mean');
     dg = get(x,'Degrees');
+    stb = get(x,'Stable');
 elseif isa(x,'mirmidi')
     nm = get(x,'Data');
     for i = 1:length(nm)
@@ -557,6 +548,7 @@ elseif isa(x,'mirmidi')
         pe{i} = {{1:length(endp)}};
         pm{i} = {{nm{i}(:,4)'-68}};
         dg{i} = pm{i};
+        stb{i} = [];
         pf{i} = {NaN(size(startp'))};
     end
     x = set(x,'FramePos',{fp});
@@ -565,6 +557,7 @@ else
     pe = {};
     pm = {};
     dg = {};
+    stb = {};
 end
 
 if option.stable(1) < Inf
@@ -622,6 +615,7 @@ p.start = ps;
 p.end = pe;
 p.mean = pm;
 p.degrees = dg;
+p.stable = stb;
 s = mirscalar(x,'Data',pf,'Title','Pitch','Unit',punit);
 p = class(p,'mirpitch',s);
 o = {p,x};
