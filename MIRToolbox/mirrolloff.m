@@ -18,7 +18,6 @@ function varargout = mirrolloff(x,varargin)
         p.key = 'Threshold';
         p.type = 'Integer';
         p.default = 85;
-        p.position = 2;
     option.p = p;
 
         minrms.key = 'MinRMS';
