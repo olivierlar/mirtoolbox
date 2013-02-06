@@ -114,7 +114,7 @@ for song = 1:length(songs)  %For each audio file
     else
         %Graphical display
         
-        if nargin<2 || isempty(ax)
+        if nargin<2 || isempty(ax) || ischar(ax)
             figure
         else
             axes(ax)
@@ -388,6 +388,9 @@ for song = 1:length(songs)  %For each audio file
             saveas(fig,[n{i},suffix]);
             disp(['and is saved in file ',n{i},suffix]);
         end
+    end
+    if nargin>1 && ischar(ax)
+        print(ax)
     end
 end
 disp(' ');
