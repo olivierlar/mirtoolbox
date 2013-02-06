@@ -410,7 +410,7 @@ else
     sig = get(e,'Data');
     x = get(e,'Pos');
     sr = get(e,'Sampling');
-    disp('Extracting envelope...')
+    %disp('Extracting envelope...')
     d = cell(1,length(sig));
     for k = 1:length(sig)
         if length(sig)==1

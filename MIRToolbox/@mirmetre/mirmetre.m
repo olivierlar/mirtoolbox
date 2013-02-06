@@ -387,7 +387,13 @@ for j = 1:length(pt)
                     
                     ptli = ptl(i);
                     delta1 = find(ampli(pos(i)+1:end) < 0,1);
+                    if isempty(delta1)
+                        delta1 = length(ampli) - pos(i);
+                    end
                     delta2 = find(ampli(pos(i)-1:-1:1) < 0,1);
+                    if isempty(delta2)
+                        delta2 = pos(i) - 1;
+                    end
                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
