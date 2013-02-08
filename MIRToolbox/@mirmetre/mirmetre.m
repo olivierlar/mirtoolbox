@@ -204,11 +204,11 @@ function varargout = mirmetre(orig,varargin)
     
         lart.key = 'Lartillot';
         lart.type = 'Integer';
-        lart.default = .05;
+        lart.default = .1; %05;
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .2;
+        lart2.default = .1; %.2;
     option.lart2 = lart2;
         
 specif.option = option;
@@ -338,32 +338,49 @@ for j = 1:length(pt)
                     for i2 = 1:length(mk)   % For each metrical hierarchy
                         if ~isempty(bpms{i2})
                             locoord = [];
-                            dist = abs(60/ptli - 60./mean(bpms{i2}));
+                            
+                            dif = 60/ptli - 60./bpms{i2};
+                            dif(:,( dif(1,:).*dif(2,:) < 0)) = 0;
+                            dist = min(abs(dif));
 
-                            i3 = 1;
-                            while i3 <= length(dist)
+                            [unused i3] = min(dist);
+                            if 1 %i3 <= length(dist)
                                 if dist(i3) < option.lart
                                     % Continuing an existing metrical
                                     % level.
                                     if mk{i2}(i3).timidx(end) == l
                                         % Already continued.
-                                        odist = abs(60./mk{i2}(i3).bpms(end) ...
-                                                    - 60./mean(bpms{i2}(:,i3)));
-                                        if dist(i3) < odist
-                                            % New candidate is better.
-                                            mk{i2}(i3).bpms(end) = ptli;
-                                            mk{i2}(i3).score(end) = ...
+                                        if 0
+                                            odif = 60./mk{i2}(i3).bpms(end) ...
+                                                   - 60./bpms{i2}(:,i3);
+                                            if odif(1) * odif(2) < 0
+                                                odist = 0;
+                                            else
+                                                odist = min(abs(odif));
+                                            end
+                                            if dist(i3) < odist
+                                                % New candidate is better.
+                                                mk{i2}(i3).bpms(end) = ptli;
+                                                mk{i2}(i3).score(end) = ...
+                                                    d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                                found = 1;
+                                            end
+                                            locoord = i3;
+                                        else
+                                            mk{i2}(end+1) = mk{i2}(i3);
+                                            mk{i2}(end).bpms(end) = ptli;
+                                            mk{i2}(end).score(end) = ...
                                                 d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                                            found = 1;
+                                            locoord = length(mk{i2});
                                         end
-
-                                        locoord = i3;
                                     else
-                                        if bpms{i2}(i3) > ptli
+                                        if mean(bpms{i2}(:,i3)) > ptli
                                             div = mean(bpms{i2}(:,i3)) / ptl(i);
                                         else
                                             div = ptli / mean(bpms{i2}(:,i3));
                                         end
-                                        if div < 1+option.lart2
+                                        if 1 %div < 1+option.lart2
                                             % Continuing an existing metrical
                                             % level.
                                             found = 1;
@@ -384,7 +401,7 @@ for j = 1:length(pt)
                                         end
                                     end
                                 end
-                                i3 = i3 + 1;
+                                %i3 = i3 + 1;
                             end
                         end
                     end
@@ -411,11 +428,11 @@ for j = 1:length(pt)
                         % Stored levels slower than candidate
                         slower = [];
                         i3 = fo-1;
+                        err = Inf;
                         while i3 > 0
                             div = [ptli1; ptli2] ./ orbpms(:,i3);
                             rdiv = round(ptli / mean(orbpms(:,i3)));
-                            if rdiv > 1
-                                err = Inf;
+                            if 1 % rdiv > 1
                                 if floor(div(1)) < floor(div(2))
                                     newerr = 0;
                                 else
@@ -464,11 +481,11 @@ for j = 1:length(pt)
                         % Stored levels faster than candidate
                         faster = [];
                         i3 = fo;
+                        err = Inf;
                         while i3 <= size(orbpms,2)
                             div = orbpms(:,i3) ./ [ptli2;ptli1];
                             rdiv = round(mean(orbpms(:,i3)) / ptli);
-                            if rdiv > 1
-                                err = Inf;
+                            if 1 %rdiv > 1
                                 if floor(div(1)) < floor(div(2))
                                     newerr = 0;
                                 else
@@ -493,6 +510,7 @@ for j = 1:length(pt)
                                             ptli2 = rptli2;
                                         end
                                         ptli = mean([ptli1,ptli2]);
+                                        err = newerr;
                                     elseif mk{i2}(ord(i3)).lvl * rdiv ...
                                             ~= faster.lvl
                                         faster = [];
@@ -667,8 +685,8 @@ for j = 1:length(pt)
                                 bpms2 = mean([mk{i3}.lastbpm]);
                                 norb = bpms2 ./ [mk{i3}.lvl];
                                 nbpms = mean(norb) * [mk{i3}.lvl];
-                                dist = min(abs(60/mk{i}(i2).lastbpm - 60./bpms2),...
-                                           abs(60/mk{i}(i2).lastbpm - 60./nbpms));
+                                dist = min(abs(60/mean(mk{i}(i2).lastbpm) - 60./bpms2),...
+                                           abs(60/mean(mk{i}(i2).lastbpm) - 60./nbpms));
                                 if ~isempty(find(dist<option.lart));
                                     found = 1;
                                     %coord = [i2 i3];
