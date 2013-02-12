@@ -1,4 +1,4 @@
-function display(d,axis,songs)
+function display(d,axis,songs,suffix)
 % MIRDATA/DISPLAY display of a MIR data
 
 ST = dbstack;
@@ -15,4 +15,8 @@ if nargin<3
     songs = [];
 end
 
-mirdisplay(d,inputname(1),axis,songs);
+if nargin<4
+    suffix = [];
+end
+
+mirdisplay(d,inputname(1),axis,songs,suffix);

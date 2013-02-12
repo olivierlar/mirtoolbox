@@ -1,9 +1,6 @@
-function mirdisplay(d,va,axis,songs)
+function mirdisplay(d,va,axis,songs,suffix)
 % MIRDATA/DISPLAY display of a MIR data
 
-if nargin<3
-    fig = [];
-end
 disp(' ');
 v = d.data;
 f = d.sr;
@@ -85,6 +82,10 @@ else
             if flag
                 fig = get(0,'CurrentFigure');
                 disp(['Its content is displayed in Figure ',num2str(fig),'.']);
+                if nargin>4
+                    saveas(fig,[n{i},suffix],'psc2');
+                    disp(['and is saved in file ',n{i},suffix]);
+                end
             else
                 disp('It does not contain any data.');
             end
