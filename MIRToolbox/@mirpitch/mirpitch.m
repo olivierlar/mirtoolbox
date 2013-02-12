@@ -329,7 +329,7 @@ else
         if option.as || option.ce || option.s
             x = mirframenow(orig,option);
             if option.s
-                s = mirspectrum(x,'Min',option.mi,'Max',option.ma);
+                s = mirspectrum(x,'Min',option.mi,'Max',option.ma); %,'Res'?
                 if option.ac
                     y = y*s;
                 else
@@ -465,9 +465,10 @@ if option.segm
                         else
                             meanp(end+1) = mean(buffer.pitch);
                             endp(end+1) = l-1;
-                            stabl(end+1) = ...
-                                length(buffer.pitch) > option.segmin | ...
-                                std(buffer.pitch) > 20;                         
+                            hp = hist(buffer.pitch,5);
+                            hp = hp/sum(hp);
+                            entrp = -sum(hp.*log(hp+1e-12))./log(length(hp));
+                            stabl(end+1) = entrp>.7;                        
                             deg(end+1) = cent2deg(meanp(end),scale);
                             reson(end+1).pitch = meanp(end);
                             reson(end).amp = mean(buffer.amp);
