@@ -429,7 +429,7 @@ if isamir(x,'miraudio')
         end
         type = 'mirscalar';
     elseif option.novelty
-        s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3);%,'log');
+        s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'dB');
         %c = mircepstrum(x,'Frame',.05,.2);
         %[p ac] = mirpitch(x,'Frame');
         z = mirnovelty(s,'KernelSize',option.kernelsize,...
