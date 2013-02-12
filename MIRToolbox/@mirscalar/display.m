@@ -315,7 +315,7 @@ for song = 1:length(songs)  %For each audio file
                                 pmh = pm{i}{j}{1,h,k};
                                 plot([fpj(1,psh);fpj(2,peh)],...
                                      [pmh;pmh],'rd-','LineWidth',2)
-                                if ~isempty(deg)
+                                if ~isempty(deg) && ~isempty(deg{i})
                                     for hh = 1:length(pmh)
                                         text(mean(fpj(:,psh(hh))),pmh(hh)+40,...
                                              num2str(deg{i}{j}{1,h,k}(hh)),...
@@ -385,7 +385,7 @@ for song = 1:length(songs)  %For each audio file
         disp(['The ',t,' related to file ',n{i},...
             ' is displayed in Figure ',num2str(fig),'.']);
         if nargin>3
-            saveas(fig,[n{i},suffix]);
+            saveas(fig,[n{i},suffix],'psc2');
             disp(['and is saved in file ',n{i},suffix]);
         end
     end
