@@ -412,7 +412,7 @@ for j = 1:length(pt)
                                                 %bpms{i2}(:,i3) = [ptli1; ptli2];
                                                 if i == 1
                                                     bestk{i2} = i3;
-                                                    mk{i2}(i3).lvl
+                                                    mk{i2}(i3).lvl;
                                                 end
 
                                                 locoord = i3;
@@ -738,6 +738,7 @@ for j = 1:length(pt)
                         mk{end}.timidx = l;
                         mk{end}.score = ...
                             d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                        mk{end}.globpms = [];
                         if i == 1
                             bestk{end+1} = 1;
                         end
@@ -745,6 +746,16 @@ for j = 1:length(pt)
                         %found = 1;
                         bpms{end+1} = [ptli1;ptli2];
                         %coord = [length(bpms),1];
+                    end
+                end
+                
+                for i = 1:length(mk)
+                    for i2 = 1:length(mk{i})
+                        if mk{i}(i2).timidx(end) == l
+                            mk{i}(i2).globpms(end+1) =  ...
+                                mk{i}(best).bpms(end) * mk{i}(best).lvl ...
+                                                      / mk{i}(i2).lvl;
+                        end
                     end
                 end
 

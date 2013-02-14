@@ -31,8 +31,8 @@ for h = 1:length(d)
             for i3 = 1:length(d{h}{1}{i}(i2).score)
                 if i3>1
                     plot(mean(fp{h}{1}(:,timidx([i3-1 i3]))),...
-                         60./d{h}{1}{i}(i2).bpms([i3-1 i3]),...
-                         '-','Color',irgb);
+                         60./d{h}{1}{i}(i2).globpms([i3-1 i3]),...
+                         '-r'); %'Color',irgb);
                 end
             end
             for i3 = 1:length(d{h}{1}{i}(i2).score)
