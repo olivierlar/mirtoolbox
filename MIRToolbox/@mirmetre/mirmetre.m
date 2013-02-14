@@ -299,6 +299,7 @@ for j = 1:length(pt)
         ptk = pt{j}{k};
         for h = 1:size(ptk,3)
             mk = {};
+            bestk = {};
             oldmeters = {};
             for l = 1:size(ptk,2)       % For each successive frame
                 ptl = getbpm(p,ptk{1,l,h}); % Peaks
@@ -336,10 +337,22 @@ for j = 1:length(pt)
                     found = 0;              % Is peak in metrical hierarchies?
                     coord = [];             % Where is peak located
                     for i2 = 1:length(mk)   % For each metrical hierarchy
+                        bestscore = -Inf;
+                        for i3 = 1:length(mk{i2})
+                            if mk{i2}(i3).score(end) > bestscore
+                                best = i3;
+                                bestscore = mk{i2}(i3).score(end);
+                            end
+                        end
+                        
                         if ~isempty(bpms{i2})
                             locoord = [];
                             
-                            dif = 60/ptli - 60./bpms{i2};
+                            bpm2 = repmat(bpms{i2}(:,best)*mk{i2}(best).lvl,...
+                                          [1 length(mk{i2})])...
+                                   ./ repmat([mk{i2}.lvl],[2 1]);
+                            
+                            dif = 60/ptli - 60./bpm2; %bpms{i2};
                             dif(:,( dif(1,:).*dif(2,:) < 0)) = 0;
                             dist = min(abs(dif));
 
@@ -396,7 +409,11 @@ for j = 1:length(pt)
                                                 mk{i2}(i3).lastbpm = [ptli1; ptli2];
                                                 mk{i2}(i3).score(end+1) = ...
                                                     d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
-                                                bpms{i2}(:,i3) = [ptli1; ptli2];
+                                                %bpms{i2}(:,i3) = [ptli1; ptli2];
+                                                if i == 1
+                                                    bestk{i2} = i3;
+                                                    mk{i2}(i3).lvl
+                                                end
 
                                                 locoord = i3;
                                             end
@@ -423,6 +440,7 @@ for j = 1:length(pt)
                         if 1
                             [unused ord] = sort(mean(bpms{i2}));
                             orbpms = bpms{i2}(:,ord);
+                            orbest = find(ord == best);
 
                             fo = find(orbpms(2,:) > ptli, 1);
                             if isempty(fo)
@@ -434,10 +452,13 @@ for j = 1:length(pt)
                             i3 = fo-1;
                             err = Inf;
                             while i3 > 0
-                                div = [ptli2; ptli1] ./ orbpms(:,i3);
-                                rdiv = round(ptli / mean(orbpms(:,i3)));
+                                bpm3 = bpms{i2}(:,best) ...
+                                            * mk{i2}(best).lvl ...
+                                            / mk{i2}(ord(i3)).lvl;
+                                div = [ptli2; ptli1] ./ bpm3; %orbpms(:,i3);
+                                rdiv = round(ptli / mean(bpm3));
                                 if rdiv > 1
-                                    if floor(div(1)) < floor(div(2))
+                                    if floor(div(1)) ~= floor(div(2))
                                         newerr = 0;
                                     else
                                         newerr = min(min(mod(div,1)),...
@@ -492,8 +513,11 @@ for j = 1:length(pt)
                             i3 = fo;
                             err = Inf;
                             while i3 <= size(orbpms,2)
-                                div = orbpms(:,i3) ./ [ptli2;ptli1];
-                                rdiv = round(mean(orbpms(:,i3)) / ptli);
+                                bpm3 = bpms{i2}(:,best) ...
+                                            * mk{i2}(best).lvl ...
+                                            / mk{i2}(ord(i3)).lvl;
+                                div = bpm3 ./ [ptli2;ptli1];
+                                rdiv = round(mean(bpm3) / ptli);
                                 if rdiv > 1
                                     if floor(div(1)) < floor(div(2))
                                         newerr = 0;
@@ -602,6 +626,9 @@ for j = 1:length(pt)
                                 mk{i2}(end).score = ampli(pos(i));
                                 coord = [i2 length(mk{i2})];
                                 bpms{i2}(:,end+1) = [ptli1; ptli2];
+                                if i == 1
+                                    bestk{i2} = length(mk{i2});
+                                end
                                 if 0 %lvl<1
                                     for i4 = 1:length(mk{i2})
                                         mk{i2}(i4).lvl = ...
@@ -711,6 +738,9 @@ for j = 1:length(pt)
                         mk{end}.timidx = l;
                         mk{end}.score = ...
                             d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
+                        if i == 1
+                            bestk{end+1} = 1;
+                        end
                         cntr(end+1) = 0;
                         %found = 1;
                         bpms{end+1} = [ptli1;ptli2];
