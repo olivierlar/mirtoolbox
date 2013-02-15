@@ -208,7 +208,7 @@ function varargout = mirmetre(orig,varargin)
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .1; %.2;
+        lart2.default = .35; %.1;
     option.lart2 = lart2;
         
 specif.option = option;
@@ -300,6 +300,7 @@ for j = 1:length(pt)
         for h = 1:size(ptk,3)
             mk = {};
             bestk = {};
+            best = [];
             oldmeters = {};
             for l = 1:size(ptk,2)       % For each successive frame
                 ptl = getbpm(p,ptk{1,l,h}); % Peaks
@@ -340,7 +341,7 @@ for j = 1:length(pt)
                         bestscore = -Inf;
                         for i3 = 1:length(mk{i2})
                             if mk{i2}(i3).score(end) > bestscore
-                                best = i3;
+                                best(i2) = i3;
                                 bestscore = mk{i2}(i3).score(end);
                             end
                         end
@@ -348,7 +349,7 @@ for j = 1:length(pt)
                         if ~isempty(bpms{i2})
                             locoord = [];
                             
-                            bpm2 = repmat(bpms{i2}(:,best)*mk{i2}(best).lvl,...
+                            bpm2 = repmat(bpms{i2}(:,best(i2))*mk{i2}(best(i2)).lvl,...
                                           [1 length(mk{i2})])...
                                    ./ repmat([mk{i2}.lvl],[2 1]);
                             
@@ -358,7 +359,13 @@ for j = 1:length(pt)
 
                             [unused i3] = min(dist);
                             if 1 %i3 <= length(dist)
-                                if dist(i3) < option.lart
+                                if ptli > bpm2(1,i3)
+                                    ratio = ptli/bpm2(1,i3);
+                                else
+                                    ratio = bpm2(1,i3)/ptli;
+                                end
+                                if dist(i3) < option.lart && ...
+                                        mod(ratio,1) < option.lart2
                                     % Continuing an existing metrical
                                     % level.
                                     if mk{i2}(i3).timidx(end) == l
@@ -440,7 +447,7 @@ for j = 1:length(pt)
                         if 1
                             [unused ord] = sort(mean(bpms{i2}));
                             orbpms = bpms{i2}(:,ord);
-                            orbest = find(ord == best);
+                            orbest = find(ord == best(i2));
 
                             fo = find(orbpms(2,:) > ptli, 1);
                             if isempty(fo)
@@ -452,8 +459,8 @@ for j = 1:length(pt)
                             i3 = fo-1;
                             err = Inf;
                             while i3 > 0
-                                bpm3 = bpms{i2}(:,best) ...
-                                            * mk{i2}(best).lvl ...
+                                bpm3 = bpms{i2}(:,best(i2)) ...
+                                            * mk{i2}(best(i2)).lvl ...
                                             / mk{i2}(ord(i3)).lvl;
                                 div = [ptli2; ptli1] ./ bpm3; %orbpms(:,i3);
                                 rdiv = round(ptli / mean(bpm3));
@@ -513,8 +520,8 @@ for j = 1:length(pt)
                             i3 = fo;
                             err = Inf;
                             while i3 <= size(orbpms,2)
-                                bpm3 = bpms{i2}(:,best) ...
-                                            * mk{i2}(best).lvl ...
+                                bpm3 = bpms{i2}(:,best(i2)) ...
+                                            * mk{i2}(best(i2)).lvl ...
                                             / mk{i2}(ord(i3)).lvl;
                                 div = bpm3 ./ [ptli2;ptli1];
                                 rdiv = round(mean(bpm3) / ptli);
@@ -620,12 +627,12 @@ for j = 1:length(pt)
                             if isempty(l0)
                                 % New metrical level
                                 mk{i2}(end+1).lvl = lvl;
-                                mk{i2}(end).lastbpm = [ptli1; ptli2];
+                                mk{i2}(end).lastbpm = [ptli; ptli]; %[ptli1; ptli2];
                                 mk{i2}(end).bpms = ptl(i);
                                 mk{i2}(end).timidx = l;
                                 mk{i2}(end).score = ampli(pos(i));
                                 coord = [i2 length(mk{i2})];
-                                bpms{i2}(:,end+1) = [ptli1; ptli2];
+                                bpms{i2}(:,end+1) = [ptli; ptli]; %[ptli1; ptli2];
                                 if i == 1
                                     bestk{i2} = length(mk{i2});
                                 end
@@ -639,12 +646,12 @@ for j = 1:length(pt)
                                 dist = abs(mean([mk{i2}(l0).lastbpm]) - ptl(i));
                                 [unused md] = min(dist);
                                 if mk{i2}(l0(md)).timidx(end) < l
-                                    mk{i2}(l0(md)).lastbpm = [ptli1; ptli2];
+                                    mk{i2}(l0(md)).lastbpm = [ptli; ptli]; %[ptli1; ptli2];
                                     mk{i2}(l0(md)).bpms(end+1) = ptl(i);
                                     mk{i2}(l0(md)).score(end+1) = ampli(pos(i));
                                     mk{i2}(l0(md)).timidx(end+1) = l;
                                 elseif score > mk{i2}(l0(md)).score
-                                    mk{i2}(l0(md)).lastbpm = [ptli1; ptli2];
+                                    mk{i2}(l0(md)).lastbpm = [ptli; ptli]; %[ptli1; ptli2];
                                     mk{i2}(l0(md)).bpms(end) = ptl(i);
                                     mk{i2}(l0(md)).score(end) = ampli(pos(i));
                                 end
@@ -723,6 +730,7 @@ for j = 1:length(pt)
                             bpms{coord(1)} = bpms2;
                             mk(i2) = [];
                             bpms(i2) = [];
+                            best(i2) = [];
                             incoherent(i2) = [];
                             i2 = i2 - 1;
                         end
@@ -733,7 +741,7 @@ for j = 1:length(pt)
                     if ~found && isempty(find(incoherent))
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
-                        mk{end}.lastbpm = [ptli1; ptli2];
+                        mk{end}.lastbpm = [ptli; ptli]; %[ptli1; ptli2];
                         mk{end}.bpms = ptl(i);
                         mk{end}.timidx = l;
                         mk{end}.score = ...
@@ -744,7 +752,8 @@ for j = 1:length(pt)
                         end
                         cntr(end+1) = 0;
                         %found = 1;
-                        bpms{end+1} = [ptli1;ptli2];
+                        bpms{end+1} = [ptli; ptli]; %[ptli1;ptli2];
+                        best(end+1) = 1;
                         %coord = [length(bpms),1];
                     end
                 end
@@ -753,8 +762,9 @@ for j = 1:length(pt)
                     for i2 = 1:length(mk{i})
                         if mk{i}(i2).timidx(end) == l
                             mk{i}(i2).globpms(end+1) =  ...
-                                mk{i}(best).bpms(end) * mk{i}(best).lvl ...
-                                                      / mk{i}(i2).lvl;
+                                mk{i}(best(i)).bpms(end) ...
+                                    * mk{i}(best(i)).lvl ...
+                                    / mk{i}(i2).lvl;
                         end
                     end
                 end
@@ -812,7 +822,7 @@ for j = 1:length(pt)
                                             mk{i3}(end).timidx = mk{i}(i2).timidx;
                                             mk{i3}(end).score = mk{i}(i2).score;
                                             found = 1;
-                                            bpms{i3}(end+1) = mk{i}(i2).lastbpm;
+                                            bpms{i3}(:,end+1) = mk{i}(i2).lastbpm;
                                             %coord = [i2 i3];
                                             break
                                         end
