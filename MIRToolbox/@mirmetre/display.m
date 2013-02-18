@@ -24,6 +24,9 @@ for h = 1:length(d)
             micmac = 1;
         end
         for i2 = 1:length(d{h}{1}{i})
+            if d{h}{1}{i}(i2).lvl ~= 2
+                %continue
+            end
             timidx = d{h}{1}{i}(i2).timidx;
             text(mean(fp{h}{1}(:,timidx(1)))-.3,...
                  60./d{h}{1}{i}(i2).bpms(1),...
