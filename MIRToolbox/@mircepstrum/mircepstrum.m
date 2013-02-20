@@ -106,7 +106,7 @@ elseif isa(orig,'mirspectrum')
             if not(option.complex)
                 m = abs(m);
             end
-            m = log(m);
+            m = log(m + 1e-12);
             c0=fft(m);
             q0=repmat((0:(size(c0,1)-1))'/f{k},[1,size(m,2),size(m,3)]);
             len = min(len,floor(size(c0,1)/2));
