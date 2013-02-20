@@ -213,7 +213,10 @@ elseif isempty(option.arg2)
                 if manually
                     if strcmpi(option.distance,'cosine')
                         for i = 1:l
-                            vv(:,i) = vv(:,i)/norm(vv(:,i));
+                            nm = norm(vv(:,i));
+                            if ~isnan(nm) && nm
+                                vv(:,i) = vv(:,i)/nm;
+                            end
                         end
                     end
                     hK = ceil(lK/2);
