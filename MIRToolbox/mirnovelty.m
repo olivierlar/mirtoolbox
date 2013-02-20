@@ -35,7 +35,7 @@ function varargout = mirnovelty(orig,varargin)
 
         K.key = {'KernelSize','Width'};
         K.type = 'Integer';
-        K.default = 64;
+        K.default = NaN;
     option.K = K;
     
         gran.key = 'Granul';
@@ -83,8 +83,14 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
 function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
+    if isnan(option.K)
+        if option.cluster || option.flux
+            option.K = 300;
+        else
+            option.K = 64;
+        end
+    end
     if option.cluster || option.flux
-        option.K = 300;
         option.transf = 'Standard';
         option.half = 1;
     end
