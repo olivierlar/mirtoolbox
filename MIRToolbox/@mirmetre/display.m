@@ -4,7 +4,7 @@ function display(m)
 d = get(m,'Data');
 fp = get(m,'FramePos');
 for h = 1:length(d)
-    figure,hold on
+    %figure,hold on
     for i = 1:length(d{h}{1})
         irgb = shiftdim(1-num2col(i),-1);
         mac = 0;
@@ -28,22 +28,24 @@ for h = 1:length(d)
                 %continue
             end
             timidx = d{h}{1}{i}(i2).timidx;
-            text(mean(fp{h}{1}(:,timidx(1)))-.3,...
+            text(fp{h}{1}(1,timidx(1))-1,...
                  60./d{h}{1}{i}(i2).bpms(1),...
-                 num2str(d{h}{1}{i}(i2).lvl))
+                 num2str(d{h}{1}{i}(i2).lvl),'FontSize',10)
             for i3 = 1:length(d{h}{1}{i}(i2).score)
                 if i3>1 && length(d{h}{1}{i}(i2).globpms) >= i3
-                    plot(mean(fp{h}{1}(:,timidx([i3-1 i3]))),...
+                    plot(fp{h}{1}(1,timidx([i3-1 i3])),...
                          60./d{h}{1}{i}(i2).globpms([i3-1 i3]),...
-                         '-+r'); %'Color',irgb);
+                         ':k'); %'Color',irgb);
                 end
             end
             for i3 = 1:length(d{h}{1}{i}(i2).score)
-                rgb = ones(1,1,3) - ...
-                    (d{h}{1}{i}(i2).score(i3) - mic) / micmac * irgb;
-                plot(mean(fp{h}{1}(:,timidx(i3))),...
-                     60./d{h}{1}{i}(i2).bpms(i3),'+','Color',rgb);
-
+                scor = (d{h}{1}{i}(i2).score(i3) - mic) / micmac;
+                rgb = ones(1,1,3) - scor * irgb;
+                plot(fp{h}{1}(1,timidx(i3)),...
+                     60./d{h}{1}{i}(i2).bpms(i3),'+','Color','k','MarkerSize',scor*5);
+                plot(fp{h}{1}(1,timidx([i3 i3])),...
+                    [60./d{h}{1}{i}(i2).globpms(i3) ...
+                     60./d{h}{1}{i}(i2).bpms(i3)],'k');
             end
         end
     end
