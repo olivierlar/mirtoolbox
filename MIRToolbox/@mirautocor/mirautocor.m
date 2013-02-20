@@ -376,13 +376,16 @@ else
 
                 if strcmpi(option.scaleopt,'coeff') && option.gener == 2
                     % to be adapted to generalized autocor
-                    c(:,i,:) = c(:,i,:)/xcorr(sum(sl(:,i,:),3),0);
-                    % This is a kind of generalization of the 'coeff'
-                    % normalization for multi-channels signals. In the
-                    % original 'coeff' option, the autocorrelation at zero
-                    % lag is identically 1.0. In this multi-channels
-                    % version, the autocorrelation at zero lag is such that
-                    % the sum over channels becomes identically 1.0. 
+                    xc = xcorr(sum(sl(:,i,:),3),0);
+                    if xc
+                        c(:,i,:) = c(:,i,:)/xc;
+                        % This is a kind of generalization of the 'coeff'
+                        % normalization for multi-channels signals. In the
+                        % original 'coeff' option, the autocorrelation at zero
+                        % lag is identically 1.0. In this multi-channels
+                        % version, the autocorrelation at zero lag is such that
+                        % the sum over channels becomes identically 1.0. 
+                    end
                 end
             end
             coeffk{l} = c(misp:end,:,:);
