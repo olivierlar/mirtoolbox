@@ -29,7 +29,7 @@ for h = 1:length(d)
             end
             timidx = d{h}{1}{i}(i2).timidx;
             text(fp{h}{1}(1,timidx(1))-1,...
-                 60./d{h}{1}{i}(i2).bpms(1),...
+                 60./d{h}{1}{i}(i2).globpms(1),...
                  num2str(d{h}{1}{i}(i2).lvl),'FontSize',10)
             for i3 = 1:length(d{h}{1}{i}(i2).score)
                 if i3>1 && length(d{h}{1}{i}(i2).globpms) >= i3
@@ -39,7 +39,7 @@ for h = 1:length(d)
                 end
             end
             for i3 = 1:length(d{h}{1}{i}(i2).score)
-                scor = (d{h}{1}{i}(i2).score(i3) - mic) / micmac;
+                scor = (d{h}{1}{i}(i2).score(i3) - mic) / micmac +1e-16;
                 rgb = ones(1,1,3) - scor * irgb;
                 plot(fp{h}{1}(1,timidx(i3)),...
                      60./d{h}{1}{i}(i2).bpms(i3),'+','Color','k','MarkerSize',scor*5);

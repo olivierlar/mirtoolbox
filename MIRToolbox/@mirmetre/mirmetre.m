@@ -204,11 +204,11 @@ function varargout = mirmetre(orig,varargin)
     
         lart.key = 'Lartillot';
         lart.type = 'Integer';
-        lart.default = .15; %05;
+        lart.default = .15;
     option.lart = lart;
 
         lart2.type = 'Integer';
-        lart2.default = .15; %.35;
+        lart2.default = .45;
     option.lart2 = lart2;
         
 specif.option = option;
@@ -316,13 +316,7 @@ for j = 1:length(pt)
                 pos = ppp{j}{k}{l};
                 
                 for i2 = 1:length(mk)   % For each metrical hierarchy
-                    bestscore = -Inf;
-                    for i3 = 1:length(mk{i2})
-                        if mk{i2}(i3).score(end) > bestscore
-                            best(i2) = i3;
-                            bestscore = mk{i2}(i3).score(end);
-                        end
-                    end
+                    best(i2) = findbest(mk{i2},l-1);
                 end
                 
                 for i = 1:length(ptl)       % For each peak
@@ -356,6 +350,11 @@ for j = 1:length(pt)
                             bpm2 = repmat(bpms{i2}(:,best(i2))*mk{i2}(best(i2)).lvl,...
                                           [1 length(mk{i2})])...
                                    ./ repmat([mk{i2}.lvl],[2 1]);
+                            for i3 = 1:size(bpm2,2)
+                                if mk{i2}(i3).timidx < l-5
+                                    bpm2(:,i3) = nan(2,1);
+                                end
+                            end
                             
                             dif = 60/ptli - 60./bpm2;
                             dif(:,( dif(1,:).*dif(2,:) < 0)) = 0;
@@ -404,8 +403,7 @@ for j = 1:length(pt)
                                             d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                         %bpms{i2}(:,i3) = [ptli1; ptli2];
                                         if i == 1
-                                            bestk{i2} = i3;
-                                            mk{i2}(i3).lvl;
+                                            best(i2) = i3;
                                         end
 
                                         locoord = i3;
@@ -587,7 +585,7 @@ for j = 1:length(pt)
                                 coord = [i2 length(mk{i2})];
                                 bpms{i2}(:,end+1) = [ptli; ptli]; %[ptli1; ptli2];
                                 if i == 1
-                                    bestk{i2} = length(mk{i2});
+                                    best(i2) = length(mk{i2});
                                 end
                                 if 0 %lvl<1
                                     for i4 = 1:length(mk{i2})
@@ -609,6 +607,9 @@ for j = 1:length(pt)
                                     mk{i2}(l0(md)).score(end) = ampli(pos(i));
                                 end
                                 coord = [i2 l0(md)];
+                                if i == 1
+                                    best(i2) = l0(md);
+                                end
                             end
                             locoord = coord(2);
                             
@@ -682,6 +683,7 @@ for j = 1:length(pt)
                             mk{coord(1)} = meter2;
                             bpms{coord(1)} = bpms2;
                             mk(i2) = [];
+                            best(coord(1)) = findbest(meter2,l);
                             bpms(i2) = [];
                             best(i2) = [];
                             incoherent(i2) = [];
@@ -799,6 +801,17 @@ m = purgedata(p);
 m = set(m,'Data',meters);
 m = class(struct,'mirmetre',mirdata(m));
 o = {m,p};
+
+
+function best = findbest(m,timidx)
+bestscore = -Inf;
+best = [];
+for i = 1:length(m)
+    if m(i).timidx(end) == timidx && m(i).score(end) > bestscore
+        best = i;
+        bestscore = m(i).score(end);
+    end
+end
 
 
 function bpm = getbpm(p,ptl)
