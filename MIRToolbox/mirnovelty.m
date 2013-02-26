@@ -144,7 +144,7 @@ else
                     else
                         dwk = dw{k};
                     end
-                    if Ks(i)
+                    if ~isnan(Ks(i)) && Ks(i)
                         cgs = min(Ks(i),dwk);
                     else
                         cgs = dwk;
