@@ -73,8 +73,8 @@ r.spectral.brightness = mirbrightness(r.spectral.tmp.s);
 r.spectral.spread = mirspread(r.spectral.tmp.s);
 r.spectral.skewness = mirskewness(r.spectral.tmp.s);
 r.spectral.kurtosis = mirkurtosis(r.spectral.tmp.s);
-r.spectral.rolloff95 = mirrolloff(r.spectral.tmp.s,95);
-r.spectral.rolloff85 = mirrolloff(r.spectral.tmp.s,85);
+r.spectral.rolloff95 = mirrolloff(r.spectral.tmp.s,'Threshold',95);
+r.spectral.rolloff85 = mirrolloff(r.spectral.tmp.s,'Threshold',85);
 r.spectral.spectentropy = mirentropy(r.spectral.tmp.s);
 r.spectral.flatness = mirflatness(r.spectral.tmp.s);
 
