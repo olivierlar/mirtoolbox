@@ -294,10 +294,21 @@ meters = cell(1,length(pt));
 d = get(p,'Data');
 pp = get(p,'Pos');
 ppp = get(p,'PeakPos');
+pv = get(p,'PeakVal');
 for j = 1:length(pt)
     for k = 1:length(pt{j})
         ptk = pt{j}{k};
         for h = 1:size(ptk,3)
+            mipv = +Inf;
+            mapv = -Inf;
+            for l = 1:length(pv{j}{k})
+                if min(pv{j}{k}{l}) < mipv
+                    mipv = min(pv{j}{k}{l});
+                end
+                if max(pv{j}{k}{l}) > mapv
+                    mapv = max(pv{j}{k}{l});
+                end
+            end
             mk = {};
             globpm = [];
             for l = 1:size(ptk,2)       % For each successive frame
@@ -335,7 +346,7 @@ for j = 1:length(pt)
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
                     score = ampli(pos(i));
-                    found = 0;              % Is peak in metrical hierarchies?
+                    found = zeros(length(mk));              % Is peak in metrical hierarchies?
                     coord = [];             % Where is peak located
                     for i2 = 1:length(mk)   % For each metrical hierarchy
                         if ~isempty(bpms{i2})
@@ -344,32 +355,40 @@ for j = 1:length(pt)
                             bpm2 = repmat(globpm(i2), [1 length(mk{i2})])...
                                    ./ [mk{i2}.lvl];
                             for i3 = 1:length(bpm2)
-                                if mk{i2}(i3).timidx < l-5
+                                if 0 %mk{i2}(i3).timidx < l-5
                                     bpm2(i3) = NaN;
                                 end
                             end
                             dist = abs(60/ptli - 60./bpm2);
                             [mindist i3] = min(dist);
                             
-                            if foundk(i2)
-                                cond = mindist < option.lart*2;
-                            else
-                                cond = mindist < option.lart;
-                                if cond
-                                    if ptli > bpm2(i3)
-                                        ratio = ptli/bpm2(i3);
-                                    else
-                                        ratio = bpm2(i3)/ptli;
-                                    end
-                                    if mod(ratio,1) > option.lart2/2
-                                        cond = 0;
-                                    end
-                                end
+                            thr = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2;
+                            
+                            if ~foundk(i2)
+                                thr = min(thr,.1);
                             end
                             
-                            if cond
+                            %pos1 = pos(i); % The actual local maximum in the autocorrelationcurve
+                            %pos2 = find(pp{j}{k}>60/bpm2(i3),1); % The relocated maximum based on the metrical hierarchy
+                            %if pos1 == pos2
+                            %    cond = 1;
+                            %else
+                            %    if pos1 < pos2
+                            %        xm = pos1 + find(diff(ampli(pos1:end)) > 0,1);
+                            %    else
+                            %        xm = pos1 - find(diff(ampli(pos1:-1:1)) > 0,1);
+                            %    end
+                            %    ampli([pos1 xm])
+                            %    thr = min(0,mean(ampli([pos1 xm])));
+%
+                            %    x1 = min(pos1,pos2);
+                            %    x2 = max(pos1,pos2);
+                            %    cond = isempty(find(ampli(x1:x2) < thr,1));
+                            %end
+                            
+                            if mindist < thr
                                 % Continuing an existing metrical level.
-                                found = 1;
+                                found(i2) = 1;
                                 if mk{i2}(i3).timidx(end) ~= l
                                     % Not already continued.
                                     coord = [i2 i3];
@@ -387,11 +406,11 @@ for j = 1:length(pt)
                                         if ~(foundk(i2))
                                             foundk(i2) = 1;
                                             instnt = ptli * mk{i2}(i3).lvl;
-                                            if instnt > globpm(i2)
-                                                globpm(i2) = min(instnt,globpm(i2) * 1.001);
-                                            else
-                                                globpm(i2) = max(instnt,globpm(i2) / 1.001);
-                                            end
+                                            %if abs(60/instnt - 60/globpm(i2)) < .01
+                                                globpm(i2) = instnt;
+                                            %else
+                                            %    1
+                                            %end
                                             mk{i2}(i3).major = 1;
                                         end
                                     end
@@ -400,10 +419,10 @@ for j = 1:length(pt)
                         end
                     end
 
-                    if found
-                        continue
-                    end
-                    
+                    %if found == 1
+                    %    continue
+                    %end
+                                        
                     %%
                     % Candidate level not belonging to current
                     % metrical levels
@@ -411,6 +430,11 @@ for j = 1:length(pt)
                     incoherent = zeros(1,length(mk));
                     i2 = 1;
                     while i2 <= length(mk)
+                        if found(i2)
+                            i2 = i2+1;
+                            continue
+                        end
+                        
                         [unused ord] = sort(bpms{i2});
                         orbpms = bpms{i2}(ord);
                         fo = find(orbpms > ptli, 1);
@@ -423,17 +447,31 @@ for j = 1:length(pt)
                         i3 = fo-1;
                         err = Inf;
                         while i3 > 0
+                            if l - mk{i2}(i3).timidx(end) > 10
+                                i3 = i3-1;
+                                continue
+                            end
+                                
                             bpm3 = globpm(i2) / mk{i2}(ord(i3)).lvl;
-                            div = [ptli2; ptli1] ./ bpm3;
+                            if ~foundk(i2)
+                                div = [ptli ptli] ./ bpm3;
+                            else
+                                div = [ptli2; ptli1] ./ bpm3;
+                            end
                             rdiv = round(ptli / bpm3);
-                            if rdiv > 1 && rdiv < 7 %&& mk{i2}(ord(i3)).major
+                            if rdiv > 1 %&& rdiv < 7 %&& mk{i2}(ord(i3)).major
                                 if floor(div(1)) ~= floor(div(2))
                                     newerr = 0;
                                 else
                                     newerr = min(min(mod(div,1)),...
                                              min(1-mod(div,1)));
                                 end
-                                if newerr < option.lart2
+                                if ~foundk(i2)
+                                    thr = .01;
+                                else
+                                    thr = option.lart2;
+                                end
+                                if newerr < thr
                                     % Candidate level can be
                                     % integrated in this metrical
                                     % hierarchy
@@ -482,17 +520,31 @@ for j = 1:length(pt)
                         i3 = fo;
                         err = Inf;
                         while i3 <= length(orbpms)
+                            if l - mk{i2}(i3).timidx(end) > 10
+                                i3 = i3+1;
+                                continue
+                            end
+                            
                             bpm3 = globpm(i2) / mk{i2}(ord(i3)).lvl;
-                            div = bpm3 ./ [ptli2;ptli1];
+                            if ~foundk(i2)
+                                div = bpm3 ./ [ptli ptli];
+                            else
+                                div = bpm3 ./ [ptli2;ptli1];
+                            end
                             rdiv = round(bpm3 / ptli);
-                            if rdiv > 1 && rdiv < 7 %&& mk{i2}(ord(i3)).major
+                            if rdiv > 1 %&& rdiv < 7 %&& mk{i2}(ord(i3)).major
                                 if floor(div(1)) < floor(div(2))
                                     newerr = 0;
                                 else
                                     newerr = min(min(mod(div,1)),...
                                              min(1-mod(div,1)));
                                 end
-                                if newerr < option.lart2
+                                if ~foundk(i2)
+                                    thr = .01;
+                                else
+                                    thr = option.lart2;
+                                end
+                                if newerr < thr
                                     % Candidate level can be
                                     % integrated in this metrical
                                     % hierarchy
@@ -553,8 +605,8 @@ for j = 1:length(pt)
                             rdiv = slower.rdiv;
                         end
                                                     
-                        if ~found
-                            found = 1;
+                        if ~found(i2)
+                            found(i2) = 1;
                             l0 = find(lvl == [mk{i2}.lvl]);
                             if isempty(l0)
                                 % New metrical level
@@ -585,15 +637,13 @@ for j = 1:length(pt)
                             if ~(foundk(i2))
                                 foundk(i2) = 1;
                                 instnt = ptli * lvl;
-                                if instnt > globpm(i2)
-                                    globpm(i2) = min(instnt,globpm(i2) * 1.001);
-                                else
-                                    globpm(i2) = max(instnt,globpm(i2) / 1.001);
+                                if abs(60/instnt - 60/globpm(i2)) < .01
+                                    globpm(i2) = instnt;
                                 end
                                 mk{i2}(coord(2)).major = 1;
                             end
                             
-                        else
+                        elseif 0
                             % Candidate level also integrated in other
                             % metrical hierarchy. Both hierarchies are fused.
                             if lvl<1
@@ -673,8 +723,8 @@ for j = 1:length(pt)
                         
                         i2 = i2 + 1;
                     end
-                    
-                    if ~found && isempty(find(incoherent))
+                                        
+                    if isempty(find(found)) && isempty(find(incoherent))
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
                         mk{end}.lastbpm = ptli;
@@ -712,7 +762,7 @@ for j = 1:length(pt)
                                                 ./ [mk{i3}.lvl];
                             dist = min(abs(60/mk{i}(i2).lastbpm - 60./bpms2),...
                                        abs(60/mk{i}(i2).lastbpm - 60./nbpms));
-                            if ~isempty(find(dist<option.lart));
+                            if ~isempty(find(dist<.025)); %option.lart));
                                 found = 1;
                                 %coord = [i2 i3];
                                 break
@@ -737,7 +787,7 @@ for j = 1:length(pt)
                                         else
                                             lvl = mk{i}(i2).lvl / rdiv;
                                         end
-                                        if isempty(find(lvl,[mk{i}(i2).lvl]))
+                                        if isempty(find(lvl == [mk{i}(i2).lvl]))
                                             if lvl < 1
                                                 for i5 = 1:length(mk{i3})
                                                     mk{i3}(i5).lvl = mk{i3}(i5).lvl * rdiv;
@@ -746,6 +796,8 @@ for j = 1:length(pt)
                                             mk{i3}(end+1).lvl = lvl;
                                             mk{i3}(end).lastbpm = mk{i}(i2).lastbpm;
                                             mk{i3}(end).bpms = mk{i}(i2).bpms;
+                                            mk{i3}(end).globpms = globpm(i) ...
+                                                        / lvl;
                                             mk{i3}(end).timidx = mk{i}(i2).timidx;
                                             mk{i3}(end).score = mk{i}(i2).score;
                                             found = 1;
