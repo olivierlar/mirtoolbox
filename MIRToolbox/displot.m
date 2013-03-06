@@ -425,7 +425,12 @@ else
                     prej = 0;
                     for j = 1:size(tp,2)
                         if tv(k,j)
-                            if prej% && not(isempty(tp(k,j)))
+                            if prej && prej == j-1% && not(isempty(tp(k,j)))
+                                if tp(k,j) == size(xxx,1) || ...
+                                        tp(k,prej) == size(xxx,1)
+                                    display('warning')
+                                    continue
+                                end
                                 plot([(ttt(prej)+ttt(prej+1))/2,...
                                       (ttt(j)+ttt(j+1))/2],...
                                      [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...

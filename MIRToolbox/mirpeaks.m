@@ -209,6 +209,11 @@ function varargout = mirpeaks(orig,varargin)
         delta.keydefault = Inf;
     option.delta = delta;
     
+        harmo.key = 'Harmonic';
+        harmo.type = 'Boolean';
+        harmo.default = 0;
+    option.harmo = harmo;
+    
         mem.key = 'TrackMem';
         mem.type = 'Integer';
         mem.default = 0;
@@ -654,24 +659,80 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
-        if option.delta % Peak tracking
+        if option.harmo
             tp{i}{h} = cell(1,np);
             if interpol
                 tpp{i}{h} = cell(1,np);
                 tpv{i}{h} = cell(1,np);
             end
             for l = 1:np
-                
+                for k = 1:nc
+                    mxk = mx{1,k,l};        
+                    txk = th(mxk,k);
+                    myk = dht(mxk,k);
+                    [unused idx] = max(myk);
+                    if k == 1
+                        segm = k;
+                    else
+                        dist = abs(txk - txl(1,k-1));
+                        [unused idx2] = min(dist);
+                        if idx2 ~= idx 
+                            mat = max(txk(idx2),txl(1,k-1));
+                            mit = min(txk(idx2),txl(1,k-1));
+                            if mat/mit<1.025
+                                idx = idx2;
+                            end
+                        end
+                        mat = max(txl(1,k-1),txk(idx));
+                        mit = min(txl(1,k-1),txk(idx));
+                        if mat/mit > 1.2
+                            if k - segm < 2
+                                mxl(:,segm:k-1) = NaN;
+                                txl(:,segm:k-1) = NaN;
+                                myl(:,segm:k-1) = 0;
+                            end
+                            segm = k;
+                        end
+                    end
+                    mxl(1,k) = mxk(idx);
+                    txl(1,k) = txk(idx);
+                    myl(1,k) = myk(idx);
+
+                    for n = 1:length(mxk)
+                        if mxk(n) <= mxl(1,k)
+                            continue
+                        end
+                        harmo = mod(txk(n)/txl(1,k),1);
+                        rk = round(txk(n)/txl(1,k));
+                        if rk > 1 && harmo <.2 || harmo > .8
+                            mxl(rk,k) = mxk(n);
+                            txl(rk,k) = txk(n);
+                            myl(rk,k) = myk(n);
+                        end
+                    end
+                end
+                tp{i}{h}{l} = mxl;
+                tpp{i}{h}{l} = txl;
+                tv{i}{h}{l} = myl;
+                tpv{i}{h}{l} = myl;
+            end
+        elseif option.delta % Peak tracking
+            tp{i}{h} = cell(1,np);
+            if interpol
+                tpp{i}{h} = cell(1,np);
+                tpv{i}{h} = cell(1,np);
+            end
+            for l = 1:np
                 % mxl will be the resulting track position matrix
                 % and myl the related track amplitude
                 % In the first frame, tracks can be identified to peaks.
                 mxl = mx{1,1,l}(:)-1;        
                 myl = dht(mx{1,1,l}(:),k,l); 
-                
+                                
                 % To each peak is associated the related track ID
                 tr2 = 1:length(mx{1,1,l});
                 
-                grvy = []; % The graveyard...
+                grvy = []; % The graveyard.
                 
                 wait = 0;
                 if nc-1>500
@@ -1220,7 +1281,7 @@ empty = cell(1,length(d));
 if option.only
     p = set(p,'Data',d,'PeakPos',empty,'PeakVal',empty,'PeakMode',empty);
 end
-if option.delta
+if option.harmo || option.delta
     p = set(p,'TrackPos',tp,'TrackVal',tv);
     if interpol
        p = set(p,'TrackPrecisePos',tpp,'TrackPreciseVal',tpv);
