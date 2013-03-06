@@ -345,7 +345,8 @@ for j = 1:length(pt)
                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
-                    thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2+.025;
+                    thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2 ...
+                           + .035;
                     
                     score = ampli(pos(i));
                     found = zeros(1,length(mk));              % Is peak in metrical hierarchies?
@@ -373,7 +374,7 @@ for j = 1:length(pt)
                         if foundk(i2)
                             thri2 = thri;
                         else
-                            thri2 = min(thri,.05);
+                            thri2 = min(thri,.1); %05);
                         end
                         %locoord = [];
                         if dist(i2) < thri2
@@ -408,17 +409,17 @@ for j = 1:length(pt)
                         end
                     end
                     
-                    if ~isempty(find(found))
+                    if 0 %~isempty(find(found))
                         continue
                     end
                     
                     incoherent = zeros(1,length(mk));
                     i2 = 1;
                     while i2 <= length(mk)
-                        %if found(i2)
-                        %    i2 = i2+1;
-                        %    continue
-                        %end
+                        if found(i2)
+                            i2 = i2+1;
+                            continue
+                        end
                         [unused ord] = sort(bpms{i2});
                         orbpms = bpms{i2}(ord);
                         fo = find(orbpms > ptli, 1);
@@ -709,7 +710,8 @@ for j = 1:length(pt)
                         i2 = i2 + 1;
                     end
                                         
-                    if isempty(find(found)) && isempty(find(incoherent))
+                    if isempty(find(found)) && isempty(find(incoherent)) ...
+                            && d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .15
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
                         mk{end}.lastbpm = ptli;
@@ -736,7 +738,7 @@ for j = 1:length(pt)
                     end
                 end
                 
-                for i = 2:0 %length(mk)
+                for i = 2:length(mk)
                     included = 1;
                     for i2 = 1:length(mk{i})
                         found = 0;
@@ -745,9 +747,10 @@ for j = 1:length(pt)
                             nbpms2 = repmat(globpm(i3),[1,size(mk{i3},2)])...
                                                 ./ [mk{i3}.lvl];
                             dist = abs(60/nbpms1 - 60./nbpms2);
-                            i4 = find(dist<.005,1);
+                            i4 = find(dist<.1,1);
                             if ~isempty(i4);
                                 found = 1;
+                                break
                                 ratio = mk{i3}(i4).lvl / mk{i}(i2).lvl;
                                 for i4 = 1:length(mk{i})
                                     lvl = mk{i}(i4).lvl * ratio;
