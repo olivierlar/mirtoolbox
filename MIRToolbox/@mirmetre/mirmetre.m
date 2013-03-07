@@ -312,6 +312,7 @@ for j = 1:length(pt)
             mk = {};
             globpm = [];
             for l = 1:size(ptk,2)       % For each successive frame
+                oldglobpm = globpm;
                 ptl = getbpm(p,ptk{1,l,h}); % Peaks
 
                 bpms = cell(1,length(mk));
@@ -346,7 +347,7 @@ for j = 1:length(pt)
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
                     thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2 ...
-                           + .035;
+                           + .04;
                     
                     score = ampli(pos(i));
                     found = zeros(1,length(mk));              % Is peak in metrical hierarchies?
@@ -366,6 +367,18 @@ for j = 1:length(pt)
                             end
                             dist2{i2} = abs(60/ptli - 60./bpm2);
                             [dist(i2) indx(i2)] = min(dist2{i2});
+                            if length(oldglobpm) == length(globpm)
+                                bpm3 = repmat(oldglobpm(i2), [1 length(mk{i2})])...
+                                        ./ [mk{i2}.lvl];
+                                dist3 = abs(60/ptli - 60./bpm3);
+                                [disti3 indx3] = min(dist3);
+                                if disti3 < dist(i2) && indx(i2) ~= indx3
+                                    globpm(i2) = oldglobpm(i2);
+                                    dist2{i2} = dist3;
+                                    dist(i2) = disti3;
+                                    indx(i2) = indx3;
+                                end
+                            end
                         end
                     end
                     [unused order] = sort(dist);
@@ -374,7 +387,7 @@ for j = 1:length(pt)
                         if foundk(i2)
                             thri2 = thri;
                         else
-                            thri2 = min(thri,.1); %05);
+                            thri2 = min(thri,.15); %05);
                         end
                         %locoord = [];
                         if dist(i2) < thri2
@@ -393,15 +406,19 @@ for j = 1:length(pt)
                                         d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                     %locoord = indx(i2);
 
-                                    if ~(foundk(i2)) && isempty(find(found,1))
+                                    if ~(foundk(i2))% && isempty(find(found,1))
                                         foundk(i2) = 1;
-                                        instnt = ptli * mk{i2}(indx(i2)).lvl;
-                                        %if abs(60/instnt - 60/globpm(i2)) < .01
-                                            globpm(i2) = instnt;
-                                        %else
-                                        %    1
-                                        %end
                                         mk{i2}(indx(i2)).major = 1;
+                                    end
+                                    if foundk(i2) == 1 && ...
+                                            ~isempty(find(mk{i2}(indx(i2)).lvl ...
+                                                          == [.25 .5 1 2 3 4 5 6 8]))
+                                        instnt = ptli * mk{i2}(indx(i2)).lvl;
+                                        if d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .1 ...
+                                                && abs(60/instnt - 60/globpm(i2)) < .1
+                                            globpm(i2) = instnt;
+                                        end
+                                        foundk(i2) = 2;
                                     end
                                 end
                             end
@@ -445,15 +462,15 @@ for j = 1:length(pt)
                                 div = [ptli2; ptli1] ./ bpm3;
                             end
                             rdiv = round(ptli / bpm3);
-                            if rdiv > 1 %&& rdiv < 7 %&& mk{i2}(ord(i3)).major
+                            if rdiv > 1 && rdiv < 7 %&& mk{i2}(ord(i3)).major
                                 if floor(div(1)) ~= floor(div(2))
                                     newerr = 0;
                                 else
                                     newerr = min(min(mod(div,1)),...
                                              min(1-mod(div,1)));
                                 end
-                                if ~foundk(i2)
-                                    thr = .01;
+                                if 0 %~foundk(i2)
+                                    thr = .02;
                                 else
                                     thr = option.lart2;
                                 end
@@ -518,7 +535,7 @@ for j = 1:length(pt)
                                 div = bpm3 ./ [ptli2;ptli1];
                             end
                             rdiv = round(bpm3 / ptli);
-                            if rdiv > 1 %&& rdiv < 7 %&& mk{i2}(ord(i3)).major
+                            if rdiv > 1 % && rdiv < 7 %&& mk{i2}(ord(i3)).major
                                 if floor(div(1)) < floor(div(2))
                                     newerr = 0;
                                 else
@@ -622,11 +639,16 @@ for j = 1:length(pt)
                             %locoord = coord(2);
                             if ~(foundk(i2))
                                 foundk(i2) = 1;
+                                mk{i2}(coord(2)).major = 1;
+                            end
+                            if foundk(i2) == 1 && ...
+                                    ~isempty(find(mk{i2}(coord(2)).lvl ...
+                                                  == [.25 .5 1 2 3 4 5 6 8]))
                                 instnt = ptli * lvl;
                                 if abs(60/instnt - 60/globpm(i2)) < .01
                                     globpm(i2) = instnt;
                                 end
-                                mk{i2}(coord(2)).major = 1;
+                                foundk(i2) = 2;
                             end
                             
                         elseif 0
