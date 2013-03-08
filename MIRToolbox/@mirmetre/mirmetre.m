@@ -312,7 +312,7 @@ for j = 1:length(pt)
             mk = {};
             globpm = [];
             for l = 1:size(ptk,2)       % For each successive frame
-                oldglobpm = globpm;
+                %oldglobpm = globpm;
                 ptl = getbpm(p,ptk{1,l,h}); % Peaks
 
                 bpms = cell(1,length(mk));
@@ -347,7 +347,7 @@ for j = 1:length(pt)
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
                     thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2 ...
-                           + .04;
+                           + .1;
                     
                     score = ampli(pos(i));
                     found = zeros(1,length(mk));              % Is peak in metrical hierarchies?
@@ -358,7 +358,7 @@ for j = 1:length(pt)
                     dist2 = cell(1,length(mk));
                     for i2 = 1:length(mk)   % For each metrical hierarchy
                         if ~isempty(bpms{i2})
-                            bpm2 = repmat(globpm(i2), [1 length(mk{i2})])...
+                            bpm2 = repmat(globpm(i2,end), [1 length(mk{i2})])...
                                    ./ [mk{i2}.lvl];
                             for i3 = 1:length(bpm2)
                                 if 0 %mk{i2}(i3).timidx < l-5
@@ -367,17 +367,14 @@ for j = 1:length(pt)
                             end
                             dist2{i2} = abs(60/ptli - 60./bpm2);
                             [dist(i2) indx(i2)] = min(dist2{i2});
-                            if length(oldglobpm) == length(globpm)
-                                bpm3 = repmat(oldglobpm(i2), [1 length(mk{i2})])...
-                                        ./ [mk{i2}.lvl];
-                                dist3 = abs(60/ptli - 60./bpm3);
-                                [disti3 indx3] = min(dist3);
-                                if disti3 < dist(i2) && indx(i2) ~= indx3
-                                    globpm(i2) = oldglobpm(i2);
-                                    dist2{i2} = dist3;
-                                    dist(i2) = disti3;
-                                    indx(i2) = indx3;
-                                end
+                                
+                            dist3 = abs(60/ptli - 60./[mk{i2}.lastbpm]);
+                            [disti3 indx3] = min(dist3);
+                            if disti3 < dist(i2) && indx(i2) ~= indx3 ...
+                                    && ~mod(mk{i2}(indx3).lvl,1)
+                                dist2{i2} = dist3;
+                                dist(i2) = disti3;
+                                indx(i2) = indx3;
                             end
                         end
                     end
@@ -410,9 +407,9 @@ for j = 1:length(pt)
                                         foundk(i2) = 1;
                                         mk{i2}(indx(i2)).major = 1;
                                     end
-                                    if foundk(i2) == 1 && ...
-                                            ~isempty(find(mk{i2}(indx(i2)).lvl ...
-                                                          == [.25 .5 1 2 3 4 5 6 8]))
+                                    if 0 %foundk(i2) == 1 && ...
+                                            %~isempty(find(mk{i2}(indx(i2)).lvl ...
+                                             %             == [.25 .5 1 2 3 4 5 6 8]))
                                         instnt = ptli * mk{i2}(indx(i2)).lvl;
                                         if d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .1 ...
                                                 && abs(60/instnt - 60/globpm(i2)) < .1
@@ -455,7 +452,7 @@ for j = 1:length(pt)
                                 continue
                             end
                                 
-                            bpm3 = globpm(i2) / mk{i2}(ord(i3)).lvl;
+                            bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             if ~foundk(i2)
                                 div = [ptli ptli] ./ bpm3;
                             else
@@ -528,7 +525,7 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            bpm3 = globpm(i2) / mk{i2}(ord(i3)).lvl;
+                            bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             if ~foundk(i2)
                                 div = bpm3 ./ [ptli ptli];
                             else
@@ -608,131 +605,52 @@ for j = 1:length(pt)
                             rdiv = slower.rdiv;
                         end
                                                     
-                        if 1 %~found(i2)
-                            found(i2) = 1;
-                            l0 = find(lvl == [mk{i2}.lvl]);
-                            if isempty(l0)
-                                % New metrical level
-                                mk{i2}(end+1).lvl = lvl;
-                                mk{i2}(end).lastbpm = ptli;
-                                mk{i2}(end).bpms = ptl(i);
-                                mk{i2}(end).timidx = l;
-                                mk{i2}(end).score = ampli(pos(i));
-                                mk{i2}(end).major = 0;
-                                coord = [i2 length(mk{i2})];
-                                bpms{i2}(end+1) = ptli;
-                            else
-                                dist = abs(mean([mk{i2}(l0).lastbpm]) - ptl(i));
-                                [unused md] = min(dist);
-                                if mk{i2}(l0(md)).timidx(end) < l
-                                    mk{i2}(l0(md)).lastbpm = ptli;
-                                    mk{i2}(l0(md)).bpms(end+1) = ptl(i);
-                                    mk{i2}(l0(md)).score(end+1) = ampli(pos(i));
-                                    mk{i2}(l0(md)).timidx(end+1) = l;
-                                elseif score > mk{i2}(l0(md)).score
-                                    mk{i2}(l0(md)).lastbpm = ptli;
-                                    mk{i2}(l0(md)).bpms(end) = ptl(i);
-                                    mk{i2}(l0(md)).score(end) = ampli(pos(i));
-                                end
-                                coord = [i2 l0(md)];
+                        found(i2) = 1;
+                        l0 = find(lvl == [mk{i2}.lvl]);
+                        if isempty(l0)
+                            % New metrical level
+                            mk{i2}(end+1).lvl = lvl;
+                            mk{i2}(end).lastbpm = ptli;
+                            mk{i2}(end).bpms = ptl(i);
+                            mk{i2}(end).timidx = l;
+                            mk{i2}(end).score = ampli(pos(i));
+                            mk{i2}(end).major = 0;
+                            coord = [i2 length(mk{i2})];
+                            bpms{i2}(end+1) = ptli;
+                        else
+                            dist = abs(mean([mk{i2}(l0).lastbpm]) - ptl(i));
+                            [unused md] = min(dist);
+                            if mk{i2}(l0(md)).timidx(end) < l
+                                mk{i2}(l0(md)).lastbpm = ptli;
+                                mk{i2}(l0(md)).bpms(end+1) = ptl(i);
+                                mk{i2}(l0(md)).score(end+1) = ampli(pos(i));
+                                mk{i2}(l0(md)).timidx(end+1) = l;
+                            elseif score > mk{i2}(l0(md)).score
+                                mk{i2}(l0(md)).lastbpm = ptli;
+                                mk{i2}(l0(md)).bpms(end) = ptl(i);
+                                mk{i2}(l0(md)).score(end) = ampli(pos(i));
                             end
-                            %locoord = coord(2);
-                            if ~(foundk(i2))
-                                foundk(i2) = 1;
-                                mk{i2}(coord(2)).major = 1;
+                            coord = [i2 l0(md)];
+                        end
+                        %locoord = coord(2);
+                        if ~(foundk(i2))
+                            foundk(i2) = 1;
+                            mk{i2}(coord(2)).major = 1;
+                        end
+                        if 0 %foundk(i2) == 1 && ...
+                             %   ~isempty(find(mk{i2}(coord(2)).lvl ...
+                            %                  == [.25 .5 1 2 3 4 5 6 8]))
+                            instnt = ptli * lvl;
+                            if abs(60/instnt - 60/globpm(i2)) < .01
+                                globpm(i2) = instnt;
                             end
-                            if foundk(i2) == 1 && ...
-                                    ~isempty(find(mk{i2}(coord(2)).lvl ...
-                                                  == [.25 .5 1 2 3 4 5 6 8]))
-                                instnt = ptli * lvl;
-                                if abs(60/instnt - 60/globpm(i2)) < .01
-                                    globpm(i2) = instnt;
-                                end
-                                foundk(i2) = 2;
-                            end
-                            
-                        elseif 0
-                            % Candidate level also integrated in other
-                            % metrical hierarchy. Both hierarchies are fused.
-                            if lvl<1
-                                for i4 = 1:length(mk{i2})
-                                    mk{i2}(i4).lvl = mk{i2}(i4).lvl * rdiv;
-                                end
-                                lvl = lvl * rdiv;
-                            end
-                            
-                            if mk{coord(1)}(coord(2)).lvl > lvl
-                                % Other hierarchy is
-                                % faster than current.
-                                meter1 = mk{i2};
-                                    % Slower hierarchy,
-                                    % which is fused to
-                                    % faster one
-                                meter2 = mk{coord(1)};
-                                    % Faster hierarchy,
-                                    % onto which slower
-                                    % one is fused
-                                bpms2 = bpms{coord(1)};
-                                lvl1 = lvl;
-                                    % Level in slower
-                                lvl2 = meter2(coord(2)).lvl;
-                                    % Level in faster
-                            else
-                                % Other hierarchy is
-                                % slower than current
-                                meter1 = mk{coord(1)};
-                                meter2 = mk{i2};
-                                bpms2 = bpms{i2};
-                                lvl1 = meter1(coord(2)).lvl;
-                                lvl2 = lvl;
-                            end
-                            div = lvl2 / lvl1;
-                            if round(div) == div
-                                % Faster hierarchy is
-                                % exact multiple of
-                                % slower one.
-                                mult1 = round(div);
-                                mult2 = 1;
-                            else
-                                mult1 = lvl2;
-                                mult2 = lvl1;
-                                for i4 = 1:length(meter2)
-                                    meter2(i4).lvl = ...
-                                            meter2(i4).lvl * mult2;
-                                end
-                                globpm(i2) = globpm(i2) / mult2;
-                            end
-                            for i4 = 1:length(meter1)
-                                % Fusing one hierarchy
-                                % into the other..
-                                f = find(meter1(i4).lvl * mult1 ...
-                                         == [meter2.lvl]);
-                                if isempty(f)
-                                    meter2(end+1) = meter1(i4);
-                                    meter2(end).lvl = ...
-                                        meter2(end).lvl * mult1;
-                                    f = length(meter2);
-                                    bpms2(end+1) = meter1(i4).lastbpm;
-                                end
-                                if coord(2) == i4
-                                    coord(2) = f;
-                                end
-                            end
-                            mk{coord(1)} = meter2;
-                            bpms{coord(1)} = bpms2;
-                            
-                            mk(i2) = [];
-                            bpms(i2) = [];
-                            incoherent(i2) = [];
-                            foundk(i2) = [];
-                            globpm(i2) = [];
-                            i2 = i2 - 1;
+                            foundk(i2) = 2;
                         end
                         
                         i2 = i2 + 1;
                     end
                                         
-                    if isempty(find(found)) && isempty(find(incoherent)) ...
+                    if isempty(mk) && isempty(find(found)) && isempty(find(incoherent)) ...
                             && d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .15
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
@@ -746,17 +664,77 @@ for j = 1:length(pt)
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
-                        globpm(end+1) = ptli;
+                        globpm(end+1,:) = NaN;
+                        globpm(end,l) = ptli;
                         %coord = [length(bpms),1];
                     end
                 end
                 
                 for i = 1:length(mk)
+                    glo = 0;
+                    sco = 0;
+                    mxs = 0;
                     for i2 = 1:length(mk{i})
                         if mk{i}(i2).timidx(end) == l
-                            mk{i}(i2).globpms(end+1) = globpm(i) ...
-                                                        / mk{i}(i2).lvl;
+                            dev = abs(60/mk{i}(i2).bpms(end) - ...
+                                      60/globpm(i,end)*mk{i}(i2).lvl);
+                            sco2 = mk{i}(i2).score(end) / (dev + .01);
+                            glo = glo + mk{i}(i2).bpms(end) ...
+                                        * mk{i}(i2).lvl ...
+                                        * sco2;
+                            sco = sco + sco2;
+                            if mk{i}(i2).score(end) > mxs
+                                mxs = mk{i}(i2).score(end);
+                            end
                         end
+                    end
+                    if glo
+                        glo = glo / sco;
+                        l1 = find(~isnan(globpm(i,:)),1);
+                        if l == l1
+                            globpm(i,l1) = glo;
+                        elseif mxs < .15
+                            globpm(i,l) = globpm(i,l-1);
+                        else
+                            lw = 20;
+                            weight = (1:lw)/lw;
+                            weight = weight(max(1,lw+1-(l-l1)):end);
+                            ltglo = sum(globpm(i,max(l1,l-lw):l-1) .* weight)...
+                                  / sum(weight);
+                            oldglo = globpm(i,l-1);
+                            if glo > oldglo
+                                if glo/oldglo < 1.05
+                                    globpm(i,l) = glo;
+                                else
+                                    globpm(i,l) = oldglo*1.05;
+                                end
+                            else
+                                if oldglo/glo < 1.05
+                                    globpm(i,l) = glo;
+                                else
+                                    globpm(i,l) = oldglo/1.05;
+                                end
+                            end
+                            %if abs(60/glo - 60/ltglo) < .1
+                            %    globpm(i,l) = glo;
+                            %else
+                            %    globpm(i,l) = globpm(i,l-1);
+                            %elseif glo > globpm(i,l-1)
+                            %    globpm(i,l) = globpm(i,l-1) + ...
+                            %        min(glo - globpm(i,l-1), .1);
+                            %else
+                            %    globpm(i,l) = globpm(i,l-1) - ...
+                            %        min(globpm(i,l-1) - glo, .1);
+                            %end
+                        end
+                        for i2 = 1:length(mk{i})
+                            if mk{i}(i2).timidx(end) == l
+                                mk{i}(i2).globpms(end+1) = globpm(i,l) ...
+                                                            / mk{i}(i2).lvl;
+                            end
+                        end
+                    else
+                        globpm(i,l) = globpm(i,l-1);
                     end
                 end
                 
@@ -765,8 +743,8 @@ for j = 1:length(pt)
                     for i2 = 1:length(mk{i})
                         found = 0;
                         for i3 = 1:i-1
-                            nbpms1 = globpm(i)/ mk{i}(i2).lvl;
-                            nbpms2 = repmat(globpm(i3),[1,size(mk{i3},2)])...
+                            nbpms1 = globpm(i,l)/ mk{i}(i2).lvl;
+                            nbpms2 = repmat(globpm(i3,l),[1,size(mk{i3},2)])...
                                                 ./ [mk{i3}.lvl];
                             dist = abs(60/nbpms1 - 60./nbpms2);
                             i4 = find(dist<.1,1);
@@ -780,7 +758,7 @@ for j = 1:length(pt)
                                         mk{i3}(end+1).lvl = lvl;
                                         mk{i3}(end).lastbpm = mk{i}(i4).lastbpm;
                                         mk{i3}(end).bpms = mk{i}(i4).bpms(end);
-                                        mk{i3}(end).globpms = globpm(i) ...
+                                        mk{i3}(end).globpms = globpm(i,l) ...
                                                     / lvl;
                                         mk{i3}(end).timidx = mk{i}(i2).timidx(end);
                                         mk{i3}(end).score = mk{i}(i2).score(end);
@@ -799,7 +777,7 @@ for j = 1:length(pt)
                         % meters{i} is completely included into
                         % meters{i2}
                         mk(i) = [];
-                        globpm(i) = [];
+                        globpm(i,:) = [];
                         break
                     end
                 end
