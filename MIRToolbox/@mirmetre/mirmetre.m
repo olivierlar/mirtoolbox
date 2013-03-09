@@ -346,7 +346,7 @@ for j = 1:length(pt)
                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
-                    thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/2 ...
+                    thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/10 ...
                            + .1;
                     
                     score = ampli(pos(i));
@@ -384,7 +384,7 @@ for j = 1:length(pt)
                         if foundk(i2)
                             thri2 = thri;
                         else
-                            thri2 = min(thri,.15); %05);
+                            thri2 = min(thri,.05);
                         end
                         %locoord = [];
                         if dist(i2) < thri2
@@ -664,77 +664,59 @@ for j = 1:length(pt)
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
-                        globpm(end+1,:) = NaN;
+                        globpm(end+1,:) = NaN(1,l);
                         globpm(end,l) = ptli;
                         %coord = [length(bpms),1];
                     end
                 end
                 
                 for i = 1:length(mk)
-                    glo = 0;
-                    sco = 0;
-                    mxs = 0;
-                    for i2 = 1:length(mk{i})
-                        if mk{i}(i2).timidx(end) == l
-                            dev = abs(60/mk{i}(i2).bpms(end) - ...
-                                      60/globpm(i,end)*mk{i}(i2).lvl);
-                            sco2 = mk{i}(i2).score(end) / (dev + .01);
-                            glo = glo + mk{i}(i2).bpms(end) ...
-                                        * mk{i}(i2).lvl ...
-                                        * sco2;
-                            sco = sco + sco2;
-                            if mk{i}(i2).score(end) > mxs
-                                mxs = mk{i}(i2).score(end);
-                            end
-                        end
-                    end
-                    if glo
-                        glo = glo / sco;
-                        l1 = find(~isnan(globpm(i,:)),1);
-                        if l == l1
-                            globpm(i,l1) = glo;
-                        elseif mxs < .15
-                            globpm(i,l) = globpm(i,l-1);
-                        else
-                            lw = 20;
-                            weight = (1:lw)/lw;
-                            weight = weight(max(1,lw+1-(l-l1)):end);
-                            ltglo = sum(globpm(i,max(l1,l-lw):l-1) .* weight)...
-                                  / sum(weight);
-                            oldglo = globpm(i,l-1);
-                            if glo > oldglo
-                                if glo/oldglo < 1.05
-                                    globpm(i,l) = glo;
-                                else
-                                    globpm(i,l) = oldglo*1.05;
-                                end
-                            else
-                                if oldglo/glo < 1.05
-                                    globpm(i,l) = glo;
-                                else
-                                    globpm(i,l) = oldglo/1.05;
-                                end
-                            end
-                            %if abs(60/glo - 60/ltglo) < .1
-                            %    globpm(i,l) = glo;
-                            %else
-                            %    globpm(i,l) = globpm(i,l-1);
-                            %elseif glo > globpm(i,l-1)
-                            %    globpm(i,l) = globpm(i,l-1) + ...
-                            %        min(glo - globpm(i,l-1), .1);
-                            %else
-                            %    globpm(i,l) = globpm(i,l-1) - ...
-                            %        min(globpm(i,l-1) - glo, .1);
-                            %end
-                        end
+                    if l == 1 || isnan(globpm(i,l-1))
+                        glo = 0;
+                        sco = 0;
                         for i2 = 1:length(mk{i})
                             if mk{i}(i2).timidx(end) == l
-                                mk{i}(i2).globpms(end+1) = globpm(i,l) ...
-                                                            / mk{i}(i2).lvl;
+                                sco2 = mk{i}(i2).score(end);
+                                ind = mk{i}(i2).bpms(end) * mk{i}(i2).lvl;
+                                glo = glo + ind * sco2;
+                                sco = sco + sco2;
                             end
                         end
+                        globpm(i,l) = glo / sco;
                     else
-                        globpm(i,l) = globpm(i,l-1);
+                        glog = log2(globpm(i,l-1));
+                        glodif = 0;
+                        sco = 0;
+                        mindif = Inf;
+                        for i2 = 1:length(mk{i})
+                            if mk{i}(i2).timidx(end) == l
+                                sco2 = mk{i}(i2).score(end);
+                                dif = glog - log2(mk{i}(i2).bpms(end) ...
+                                                  * mk{i}(i2).lvl);
+                                glodif = glodif + dif * sco2;
+                                sco = sco + sco2;
+                                if abs(dif) < abs(mindif)
+                                    mindif = dif;
+                                end
+                            end
+                        end
+                        if glodif
+                            glodif = glodif / sco;
+                        end
+                        if abs(glodif) > abs(mindif)
+                            if glodif * mindif < 0
+                                glodif = 0;
+                            else
+                                glodif = mindif;
+                            end
+                        end
+                        globpm(i,l) = globpm(i,l-1) / 2^glodif;
+                    end
+                    for i2 = 1:length(mk{i})
+                        if mk{i}(i2).timidx(end) == l
+                            mk{i}(i2).globpms(end+1) = globpm(i,l) ...
+                                                        / mk{i}(i2).lvl;
+                        end
                     end
                 end
                 
