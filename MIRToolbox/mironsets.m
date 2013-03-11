@@ -527,6 +527,12 @@ if isfield(postoption,'cthr')
         else
             o = mirflux(o,'Halfwave',postoption.hw);
         end
+    elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Novelty')
+        if postoption.diff
+            o = mirenvelope(o,'Diff',postoption.diff,...
+                              'Lambda',postoption.lambda,...
+                              'Complex',postoption.complex);
+        end
     end
 end
 if isfield(option,'sum') && option.sum
