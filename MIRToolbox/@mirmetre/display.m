@@ -29,6 +29,7 @@ for h = 1:length(d)
         end
         for i2 = 1:length(d{h}{1}{i})
             if isempty(d{h}{1}{i}(i2).function)
+                %continue
                 irgb2 = .5+irgb/2;
             else
                 irgb2 = irgb;

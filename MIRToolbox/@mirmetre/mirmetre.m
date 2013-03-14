@@ -379,6 +379,9 @@ for j = 1:length(pt)
                     indx = nan(1,length(mk));
                     dist2 = cell(1,length(mk));
                     for i2 = 1:length(mk)   % For each metrical hierarchy
+                        if ~mk{i2}(1).active
+                            continue
+                        end
                         if ~isempty(bpms{i2})
                             bpm2 = repmat(globpm(i2,end), [1 length(mk{i2})])...
                                    ./ [mk{i2}.lvl];
@@ -389,10 +392,10 @@ for j = 1:length(pt)
                             [disti3 indx3] = min(dist3);
                             
                             if abs(log2(ptli / bpm2(indx2))) > .3 || ...
-                                    abs(log2(ptli / mk{i2}(indx3).lastbpm)) > .3
+                                    0 %abs(log2(ptli / mk{i2}(indx3).lastbpm)) > .3
                                 dist(i2) = Inf;
                                 indx(i2) = 0;
-                            elseif disti3 < .01 || ...
+                            elseif disti3 < .02 || ...
                                     (disti3 < disti2 && ...
                                      indx2 ~= indx3 && ...
                                      ~mod(mk{i2}(indx3).lvl,1))
@@ -434,7 +437,11 @@ for j = 1:length(pt)
                                     %locoord = indx(i2);
 
                                     if ~(foundk(i2))% && isempty(find(found,1))
-                                        foundk(i2) = 1;
+                                        if dist(i2) < min(dist([1:i2-1 i2+1:length(dist)]))
+                                            foundk(i2) = 1;
+                                        else
+                                            foundk(i2) = max(foundk(i2),.5);
+                                        end
                                         globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
                                         for i3 = 1:size(globpm,1)-1
                                             if globpm(i3,l) == 0
@@ -459,6 +466,10 @@ for j = 1:length(pt)
                             i2 = i2+1;
                             continue
                         end
+                        if ~mk{i2}(1).active
+                            i2 = i2+1;
+                            continue
+                        end
                         [unused ord] = sort(bpms{i2});
                         orbpms = bpms{i2}(ord);
                         fo = find(orbpms > ptli, 1);
@@ -471,13 +482,13 @@ for j = 1:length(pt)
                         i3 = fo-1;
                         err = Inf;
                         while i3 > 0
-                            if l - mk{i2}(i3).timidx(end) > 10 || ...
-                                mk{i2}(i3).score(end) < .1
+                            if l - mk{i2}(ord(i3)).timidx(end) > 10 || ...
+                                mk{i2}(ord(i3)).score(end) < .1
                                 i3 = i3-1;
                                 continue
                             end
                             
-                            if ~foundk(i2) && isempty(mk{i2}(i3).function)
+                            if ~foundk(i2) && isempty(mk{i2}(ord(i3)).function)
                                 i3 = i3-1;
                                 continue
                             end
@@ -534,7 +545,7 @@ for j = 1:length(pt)
                                         end
                                     end
                                 end
-                            elseif ~isempty(slower) && ...
+                            elseif 0 && ~isempty(slower) && ...
                                     ~mod(mk{i2}(ord(i3)).lvl,slower.lvl)
                                 slower = [];
                                 incoherent(i2) = 1;
@@ -552,12 +563,12 @@ for j = 1:length(pt)
                         i3 = fo;
                         err = Inf;
                         while i3 <= length(orbpms)
-                            if l - mk{i2}(i3).timidx(end) > 10
+                            if l - mk{i2}(ord(i3)).timidx(end) > 10
                                 i3 = i3+1;
                                 continue
                             end
                             
-                            if ~foundk(i2) && isempty(mk{i2}(i3).function)
+                            if ~foundk(i2) && isempty(mk{i2}(ord(i3)).function)
                                 i3 = i3+1;
                                 continue
                             end
@@ -614,7 +625,7 @@ for j = 1:length(pt)
                                         end
                                     end
                                 end
-                            elseif ~isempty(faster) && ...
+                            elseif 0 && ~isempty(faster) && ...
                                     ~mod(faster.lvl,mk{i2}(ord(i3)).lvl)
                                 faster = [];
                                 incoherent(i2) = 1;
@@ -753,6 +764,7 @@ for j = 1:length(pt)
                             d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                         mk{end}.globpms = [];
                         mk{end}.locked = 0;
+                        mk{end}.active = 1;
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
@@ -767,9 +779,13 @@ for j = 1:length(pt)
                     end
                 end
                 
+                active = zeros(1,length(mk));
                 for i = 1:length(mk)
+                    if ~mk{i}(1).active
+                        continue
+                    end
                     for i2 = 1:length(mk{i})
-                        if ~isempty(mk{i}(i2).function) || ...
+                        if isempty(mk{i}(i2).function) || ...
                                 mk{i}(i2).timidx(end) < l 
                             continue
                         end
@@ -833,6 +849,7 @@ for j = 1:length(pt)
                             end
                         end
                         globpm(i,l) = glo / sco;
+                        active(i) = 1;
                     else
                         glog = log2(globpm(i,l-1));
                         glodif = 0;
@@ -853,6 +870,9 @@ for j = 1:length(pt)
                         end
                         if glodif
                             glodif = glodif / sco;
+                            active(i) = 1;
+                        else
+                            active(i) = 0;
                         end
                         if abs(glodif) > abs(mindif)
                             if glodif * mindif < 0
@@ -870,6 +890,12 @@ for j = 1:length(pt)
                         end
                     end
                 end
+                if ~isempty(find(active,1))
+                    inactive = find(~active);
+                    for i = 1:length(inactive)
+                        mk{inactive(i)}(1).active = 0;
+                    end
+                end
                 
                 i = 1;
                 while i < length(mk)
@@ -877,7 +903,13 @@ for j = 1:length(pt)
                     if mk{i}(1).locked
                         continue
                     end
+                    if ~mk{i}(1).active
+                        continue
+                    end
                     for i3 = 1:i-1
+                        if ~mk{i3}(1).active
+                            continue
+                        end
                         included = 0;
                         for i2 = 1:length(mk{i})
                             if isempty(mk{i}(i2).function)
