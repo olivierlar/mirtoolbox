@@ -383,7 +383,12 @@ for j = 1:length(pt)
                             continue
                         end
                         if ~isempty(bpms{i2})
-                            bpm2 = repmat(globpm(i2,end), [1 length(mk{i2})])...
+                            if l > 1 && ~isnan(globpm(i2,l-1))
+                                globpmi2 = globpm(i2,l-1);
+                            else
+                                globpmi2 = globpm(i2,l);
+                            end
+                            bpm2 = repmat(globpmi2, [1 length(mk{i2})])...
                                    ./ [mk{i2}.lvl];
                             dist2{i2} = abs(60/ptli - 60./bpm2);
                             [disti2 indx2] = min(dist2{i2});
@@ -437,11 +442,18 @@ for j = 1:length(pt)
                                     %locoord = indx(i2);
 
                                     if ~(foundk(i2))% && isempty(find(found,1))
-                                        if dist(i2) < min(dist([1:i2-1 i2+1:length(dist)]))
-                                            foundk(i2) = 1;
-                                        else
-                                            foundk(i2) = max(foundk(i2),.5);
+                                        if isempty(find(foundk,1)) && ...
+                                                isempty(mk{i2}(indx(i2)).function) && ...
+                                                 mk{i2}(indx(i2)).score(end) > .6
+                                            if mk{i2}(indx(i2)).reldiv > 0
+                                                ref = mk{i2}(indx(i2)).lvl / mk{i2}(indx(i2)).reldiv;
+                                            else
+                                                ref = mk{i2}(indx(i2)).lvl * -mk{i2}(indx(i2)).reldiv;
+                                            end
+                                            mk{i2}(indx(i2)).function = ...
+                                                [reldiv; ref];
                                         end
+                                        foundk(i2) = 1;
                                         globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
                                         for i3 = 1:size(globpm,1)-1
                                             if globpm(i3,l) == 0
@@ -488,7 +500,8 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            if ~foundk(i2) && isempty(mk{i2}(ord(i3)).function)
+                            if ...~foundk(i2) &&
+                                    isempty(mk{i2}(ord(i3)).function)
                                 i3 = i3-1;
                                 continue
                             end
@@ -568,10 +581,11 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            if ~foundk(i2) && isempty(mk{i2}(ord(i3)).function)
-                                i3 = i3+1;
-                                continue
-                            end
+                            %if ...~foundk(i2) &&
+                            %        isempty(mk{i2}(ord(i3)).function)
+                            %    i3 = i3+1;
+                            %    continue
+                            %end
                             
                             bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             if ~foundk(i2)
@@ -673,8 +687,8 @@ for j = 1:length(pt)
                             else
                                 same = find(mk{i2}(ref).function(1,:)...
                                             *reldiv < 0);
-                                saillant = isempty(same);
-                                for i3 = 1:0 %length(same)
+                                saillant = 0; %isempty(same);
+                                for i3 = 1:length(same)
                                     refdiv = mk{i2}(ref)...
                                                 .function(1,same(i3));
                                     otherlvl = mk{i2}(ref)...
@@ -683,15 +697,17 @@ for j = 1:length(pt)
                                                  == otherlvl);
                                     if abs(reldiv) < abs(refdiv) % ~mod(refdiv,reldiv)
                                         intradiv = abs(refdiv/reldiv);
-                                        otherfunction = ...
-                                            find(mk{i2}(other).function(1,:)...
-                                                 == -refdiv);
-                                        if round(intradiv) == intradiv
-                                            mk{i2}(ref)...
-                                                .function(:,same(i3)) = ...
-                                                    [-reldiv; lvl];
-                                            mk{i2}(other).function(:,otherfunction)...
-                                                = [intradiv; lvl];
+                                        if ~isempty(mk{i2}(other).function)
+                                            otherfunction = ...
+                                                find(mk{i2}(other).function(1,:)...
+                                                     == -refdiv);
+                                            if round(intradiv) == intradiv
+                                                mk{i2}(ref)...
+                                                    .function(:,same(i3)) = ...
+                                                        [-reldiv; lvl];
+                                                mk{i2}(other).function(:,otherfunction)...
+                                                    = [intradiv; lvl];
+                                            end
                                         end
                                         mk{i2}(end).function = ...
                                             [reldiv,-intradiv; ...
@@ -699,11 +715,11 @@ for j = 1:length(pt)
                                              mk{i2}(other).lvl];
                                         saillant = 2;
                                         break
-                                    %elseif mk{i2}(other).timidx(end)...
-                                    %            ~= l || ...
-                                    %        mk{i2}(other).score(end)...
-                                    %            < ampli(pos(i))
-                                    %    saillant = 1;
+                                    elseif mk{i2}(other).timidx(end)...
+                                                ~= l || ...
+                                            mk{i2}(other).score(end)...
+                                                < ampli(pos(i))
+                                        saillant = 1;
                                     end
                                 end
                                 if saillant == 1
@@ -765,6 +781,7 @@ for j = 1:length(pt)
                         mk{end}.globpms = [];
                         mk{end}.locked = 0;
                         mk{end}.active = 1;
+                        mk{end}.ref = [];
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
@@ -805,33 +822,37 @@ for j = 1:length(pt)
                             refdiv = mk{i}(ref).function(1,same(i3));
                             otherlvl = mk{i}(ref).function(2,same(i3));
                             other = find([mk{i}.lvl] == otherlvl);
-                            if abs(reldiv) < abs(refdiv) % ~mod(refdiv,reldiv)
-                                intradiv = abs(refdiv/reldiv);
-                                otherfunction = ...
-                                    find(mk{i}(other).function(1,:)...
-                                         == -refdiv);
-                                if ~isempty(otherfunction)
-                                    if round(intradiv) == intradiv
-                                        mk{i}(ref)...
-                                            .function(:,same(i3)) = ...
-                                                [-reldiv; mk{i}(i2).lvl];
-                                        mk{i}(other).function(:,otherfunction)...
-                                            = [intradiv; mk{i}(i2).lvl];
-                                        mk{i}(i2).function = ...
-                                            [reldiv,-intradiv; ...
-                                             mk{i}(ref).lvl, mk{i}(other).lvl];
-                                        break
-                                    elseif mk{i}(other).timidx(end) ~= l || ...
-                                            mk{i}(other).score(end)...
-                                                < mk{i}(i2).score(end)
-                                        mk{i}(i2).function = ...
-                                            [reldiv; mk{i}(ref).lvl];
-                                        mk{i}(ref).function(:,end+1) = ...
-                                            [-reldiv; mk{i}(i2).lvl];
-                                        mk{i}(other).function(:,otherfunction) = [];
-                                        break
-                                    end
-                                end
+                            if isempty(other) || ...
+                                    isempty(mk{i}(other).function) || ...
+                                    abs(reldiv) >= abs(refdiv)
+                                continue
+                            end
+                            intradiv = abs(refdiv/reldiv);
+                            otherfunction = ...
+                                find(mk{i}(other).function(1,:)...
+                                     == -refdiv);
+                            if isempty(otherfunction)
+                                continue
+                            end
+                            if round(intradiv) == intradiv
+                                mk{i}(ref)...
+                                    .function(:,same(i3)) = ...
+                                        [-reldiv; mk{i}(i2).lvl];
+                                mk{i}(other).function(:,otherfunction)...
+                                    = [intradiv; mk{i}(i2).lvl];
+                                mk{i}(i2).function = ...
+                                    [reldiv,-intradiv; ...
+                                     mk{i}(ref).lvl, mk{i}(other).lvl];
+                                break
+                            elseif mk{i}(other).timidx(end) ~= l || ...
+                                    mk{i}(other).score(end)...
+                                        < mk{i}(i2).score(end)
+                                mk{i}(i2).function = ...
+                                    [reldiv; mk{i}(ref).lvl];
+                                mk{i}(ref).function(:,end+1) = ...
+                                    [-reldiv; mk{i}(i2).lvl];
+                                mk{i}(other).function(:,otherfunction) = [];
+                                break
                             end
                         end
                     end
