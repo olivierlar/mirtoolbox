@@ -278,13 +278,13 @@ elseif 0
         y = mirsum(y);
     end
 else
-    o = mironsets(x,'Diff','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    ac1 = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
+    %o = mironsets(x,'Diff','Detect',0,...
+    %                'Frame',option.frame.length.val,...
+    %                        option.frame.length.unit,...
+    %                        option.frame.hop.val,...
+    %                        option.frame.hop.unit);
+    %ac1 = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+    %      'NormalWindow',option.nw);
 
     o = mironsets(x,'Diff','Novelty','Detect',0,...
                     'Frame',option.frame.length.val,...
@@ -293,7 +293,7 @@ else
                             option.frame.hop.unit);
     ac2 = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
           'NormalWindow',option.nw);
-    y = ac1+ac2;
+    y = ac2; %1+ac2;
 end
 
 y = mirpeaks(y,'Total',Inf,...
@@ -393,25 +393,32 @@ for j = 1:length(pt)
                             dist2{i2} = abs(60/ptli - 60./bpm2);
                             [disti2 indx2] = min(dist2{i2});
                             
-                            dist3 = abs(60/ptli - 60./[mk{i2}.lastbpm]);
+                            dist3 = NaN(1,length(mk{i2}));
+                            for i3 = 1:length(mk{i2})
+                                t3 = find(mk{i2}(i3).timidx == l-1);
+                                if ~isempty(t3)
+                                    dist3(i3) = abs(60/ptli - ...
+                                                    60./mk{i2}(i3).bpms(t3));
+                                end
+                            end
                             [disti3 indx3] = min(dist3);
                             
                             if abs(log2(ptli / bpm2(indx2))) > .3 || ...
                                     0 %abs(log2(ptli / mk{i2}(indx3).lastbpm)) > .3
                                 dist(i2) = Inf;
                                 indx(i2) = 0;
-                            elseif disti3 < .02 || ...
-                                    (disti3 < disti2 && ...
-                                     indx2 ~= indx3 && ...
-                                     ~mod(mk{i2}(indx3).lvl,1))
+                            elseif disti3 < disti2% && ...
+                                    %(disti3 < .1 || ...
+                                    % indx2 ~= indx3 && ...
+                                    %~mod(mk{i2}(indx3).lvl,1)
                                 dist(i2) = disti3;
                                 indx(i2) = indx3;
                             else
-                                for i3 = 1:length(bpm2)
-                                    if ~foundk(i2) && isempty(mk{i2}(i3).function)
-                                        dist2{i2}(i3) = NaN;
-                                    end
-                                end
+                                %for i3 = 1:length(bpm2)
+                                %    if ~foundk(i2) && isempty(mk{i2}(i3).function)
+                                %        dist2{i2}(i3) = NaN;
+                                %    end
+                                %end
                                 [dist(i2) indx(i2)] = min(dist2{i2});
                             end
                         end
@@ -422,7 +429,7 @@ for j = 1:length(pt)
                         if foundk(i2)
                             thri2 = thri;
                         else
-                            thri2 = min(thri,.05);
+                            thri2 = min(thri,.1);
                         end
                         %locoord = [];
                         if dist(i2) < thri2
@@ -441,10 +448,10 @@ for j = 1:length(pt)
                                         d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                                     %locoord = indx(i2);
 
-                                    if ~(foundk(i2))% && isempty(find(found,1))
+                                    if ~foundk(i2)% && isempty(find(found,1))
                                         if isempty(find(foundk,1)) && ...
                                                 isempty(mk{i2}(indx(i2)).function) && ...
-                                                 mk{i2}(indx(i2)).score(end) > .6
+                                                 mk{i2}(indx(i2)).score(end) > .3
                                             if mk{i2}(indx(i2)).reldiv > 0
                                                 ref = mk{i2}(indx(i2)).lvl / mk{i2}(indx(i2)).reldiv;
                                             else
@@ -454,10 +461,12 @@ for j = 1:length(pt)
                                                 [reldiv; ref];
                                         end
                                         foundk(i2) = 1;
-                                        globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
-                                        for i3 = 1:size(globpm,1)-1
-                                            if globpm(i3,l) == 0
-                                                globpm(i3,l) = globpm(i3,l-1);
+                                        if ~isempty(mk{i2}(indx(i2)).function)
+                                            globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
+                                            for i3 = 1:size(globpm,1)
+                                                if globpm(i3,l) == 0
+                                                    globpm(i3,l) = globpm(i3,l-1);
+                                                end
                                             end
                                         end
                                     end
@@ -471,7 +480,6 @@ for j = 1:length(pt)
                         continue
                     end
                     
-                    incoherent = zeros(1,length(mk));
                     i2 = 1;
                     while i2 <= length(mk)
                         if found(i2)
@@ -505,7 +513,7 @@ for j = 1:length(pt)
                                 i3 = i3-1;
                                 continue
                             end
-                                
+                                                            
                             bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             if ~foundk(i2)
                                 div = [ptli ptli] ./ bpm3;
@@ -513,62 +521,67 @@ for j = 1:length(pt)
                                 div = [ptli2; ptli1] ./ bpm3;
                             end
                             rdiv = round(ptli / bpm3);
-                            if rdiv > 1 && rdiv < 7
-                                if floor(div(1)) ~= floor(div(2))
-                                    newerr = 0;
-                                else
-                                    newerr = min(min(mod(div,1)),...
-                                             min(1-mod(div,1)));
-                                end
-                                if 0 %~foundk(i2)
-                                    thr = .02;
-                                else
-                                    thr = option.lart2;
-                                end
-                                if newerr < thr
-                                    % Candidate level can be
-                                    % integrated in this metrical
-                                    % hierarchy
-                                    if newerr < err
-                                        if isempty(slower)
-                                            slower.ref = ord(i3);
-                                            slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
-                                            slower.bpm = orbpms(i3);
-                                            slower.score = mk{i2}(ord(i3)).score(end);
-                                            slower.rdiv = rdiv;
-                                            rptli1 = orbpms(i3) * (rdiv - .4);
-                                            if ptli1 < rptli1
-                                                ptli1 = rptli1;
-                                            end
-                                            rptli2 = orbpms(i3) * (rdiv + .4);
-                                            if ptli2 > rptli2
-                                                ptli2 = rptli2;
-                                            end
-                                            ptli = mean([ptli1,ptli2]);
-                                            err = newerr;
-                                            %break
-                                        elseif mk{i2}(ord(i3)).lvl / rdiv ...
-                                                ~= slower.lvl
-                                            slower.ref = ord(i3);
-                                            slower.lvl = mk{i2}(ord(i3)).lvl / rdiv;
-                                            slower.rdiv = rdiv;
-                                            %slower = [];
-                                            %incoherent(i2) = 1;
-                                            %break
-                                        end
-                                    end
-                                end
-                            elseif 0 && ~isempty(slower) && ...
-                                    ~mod(mk{i2}(ord(i3)).lvl,slower.lvl)
-                                slower = [];
-                                incoherent(i2) = 1;
-                                break
+                            if rdiv == 0 || rdiv >= 7
+                                i3 = i3-1;
+                                continue
                             end
+                            lvl = mk{i2}(ord(i3)).lvl / rdiv;
+                            
+                            if floor(div(1)) ~= floor(div(2))
+                                newerr = 0;
+                            else
+                                newerr = min(min(mod(div,1)),...
+                                         min(1-mod(div,1)));
+                            end
+                            if 0 %~foundk(i2)
+                                thr = .02;
+                            else
+                                thr = option.lart2;
+                            end
+                            
+                            if newerr > thr
+                                i3 = i3-1;
+                                continue
+                            end
+                            
+                            if ~isempty(find([mk{i2}.lvl] > lvl & ...
+                                             [mk{i2}.lvl] < mk{i2}(ord(i3)).lvl))
+                                i3 = i3-1;
+                                continue
+                            end
+                            
+                            % Candidate level can be
+                            % integrated in this metrical
+                            % hierarchy
+                            if newerr < err
+                                if isempty(slower)
+                                    slower.ref = ord(i3);
+                                    slower.lvl = lvl;
+                                    slower.bpm = orbpms(i3);
+                                    slower.score = mk{i2}(ord(i3)).score(end);
+                                    slower.rdiv = rdiv;
+                                    rptli1 = orbpms(i3) * (rdiv - .4);
+                                    if ptli1 < rptli1
+                                        ptli1 = rptli1;
+                                    end
+                                    rptli2 = orbpms(i3) * (rdiv + .4);
+                                    if ptli2 > rptli2
+                                        ptli2 = rptli2;
+                                    end
+                                    ptli = mean([ptli1,ptli2]);
+                                    err = newerr;
+                                    %break
+                                elseif mk{i2}(ord(i3)).lvl / rdiv ...
+                                        ~= slower.lvl
+                                    slower.ref = ord(i3);
+                                    slower.lvl = lvl;
+                                    slower.rdiv = rdiv;
+                                    %slower = [];
+                                    %break
+                                end
+                            end
+                            
                             i3 = i3 - 1;
-                        end
-
-                        if incoherent(i2)
-                            break
                         end
 
                         % Stored levels faster than candidate
@@ -634,22 +647,12 @@ for j = 1:length(pt)
                                             faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
                                             faster.rdiv = rdiv;
                                             %faster = [];
-                                            %incoherent(i2) = 1;
                                             %break
                                         end
                                     end
                                 end
-                            elseif 0 && ~isempty(faster) && ...
-                                    ~mod(faster.lvl,mk{i2}(ord(i3)).lvl)
-                                faster = [];
-                                incoherent(i2) = 1;
-                                break
                             end
                             i3 = i3 + 1;
-                        end
-
-                        if incoherent(i2)
-                            break
                         end
 
                         if isempty(slower) && isempty(faster)
@@ -768,7 +771,7 @@ for j = 1:length(pt)
                         i2 = i2 + 1;
                     end
                                         
-                    if isempty(find(found)) && isempty(find(incoherent)) ...
+                    if isempty(find(found))...
                             && d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .15
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
@@ -811,8 +814,8 @@ for j = 1:length(pt)
                         end
                         ref = find([mk{i}.lvl] == mk{i}(i2).ref);
                         if isempty(mk{i}(ref).function) || ...
-                                mk{i}(ref).timidx(end) == l && ...
-                                mk{i}(ref).score(end) > mk{i}(i2).score(end)
+                                (mk{i}(ref).timidx(end) == l && ...
+                                 mk{i}(ref).score(end) > mk{i}(i2).score(end))
                             continue
                         end
                         
