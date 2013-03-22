@@ -279,6 +279,12 @@ function varargout = mironsets(x,varargin)
         kernelsize.default = 0;
     option.kernelsize = kernelsize;
     
+%% options related to 'Lartillot':
+        lartillot.key = 'Lartillot';
+        lartillot.type = 'Boolean';
+        lartillot.default = 0;
+    option.lartillot = lartillot;
+
 %%
         nomodif.key = 'NoModif';
         nomodif.type = 'Boolean';
@@ -380,7 +386,7 @@ if option.diffenv
     option.env = 1;
 end
 if isnan(option.env)
-    if option.flux || option.pitch || option.novelty
+    if option.flux || option.pitch || option.novelty || option.lartillot
         option.env = 0;
     else
         option.env = 1;
@@ -432,7 +438,7 @@ if isamir(x,'miraudio')
         s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'dB');
         %c = mircepstrum(x,'Frame',.05,.2);
         %[p ac] = mirpitch(x,'Frame');
-        z = mirnovelty(s,'KernelSize',option.kernelsize,...
+        z = mirnovelty(s,'Flux',...  'KernelSize',option.kernelsize,...
                       ...'Distance','Euclidean',...
                       'Similarity','oneminus');
         if isempty(y)
@@ -441,13 +447,17 @@ if isamir(x,'miraudio')
             y = y+z;
         end
         type = 'mirscalar';
+    elseif option.lartillot
+        y = mirspectrum(x,'max',5000,'Frame',.05,.2,'MinRes',.1,'dB');
+        type = 'mirspectrum';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
         || isamir(x,'mirsimatrix')
     y = mirnovelty(x,'KernelSize',option.kernelsize);
     type = 'mirscalar';
-elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope')
-    y = x; %mirframenow(x,option);
+elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
+        (isamir(x,'mirspectrum') && option.lartillot)
+    y = x;
     type = mirtype(x);
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
@@ -535,6 +545,12 @@ if isfield(postoption,'cthr')
         end
     end
 end
+if isa(o,'mirspectrum')
+    d = get(o,'Data');
+    do = mircompute(@newonset,d);
+    o = mirscalar(o,'Data',do,'Title','Onset curve');
+end
+
 if isfield(option,'sum') && option.sum
     o = mirsum(o,'Adjacent',option.sum);
 end
@@ -614,6 +630,21 @@ end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
     o = set(o,'Title',['Onset curve (',title,')']);
+end
+
+
+function do = newonset(d)
+tc = 10;
+dy = 2;
+do = NaN(1,size(d,2));
+for i = tc+1:size(d,2)
+    do(i) = 0;
+    for j = dy+1:size(d,1)-dy
+        ddj = d(j,i) - max(max(d(j+(-dy:+dy),i-(1:tc))));
+        if ddj > 0
+            do(i) = do(i) + ddj;
+        end
+    end
 end
 
 
