@@ -278,22 +278,23 @@ elseif 0
         y = mirsum(y);
     end
 else
-    %o = mironsets(x,'Diff','Detect',0,...
-    %                'Frame',option.frame.length.val,...
-    %                        option.frame.length.unit,...
-    %                        option.frame.hop.val,...
-    %                        option.frame.hop.unit);
-    %ac1 = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-    %      'NormalWindow',option.nw);
-
-    o = mironsets(x,'Diff','Novelty','Detect',0,...
+    o1 = mironsets(x,'Diff','Detect',0,...
                     'Frame',option.frame.length.val,...
                             option.frame.length.unit,...
                             option.frame.hop.val,...
                             option.frame.hop.unit);
-    ac2 = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+    ac1 = mirautocor(o1,'Min',60/option.ma,'Max',60/option.mi * 2,...
           'NormalWindow',option.nw);
-    y = ac2; %1+ac2;
+
+    %o2 = mironsets(x,'Diff','Novelty','Detect',0,...
+    %                'Frame',option.frame.length.val,...
+    %                        option.frame.length.unit,...
+    %                        option.frame.hop.val,...
+    %                        option.frame.hop.unit);
+    %ac2 = mirautocor(o2,'Min',60/option.ma,'Max',60/option.mi * 2,...
+    %      'NormalWindow',option.nw);
+    
+    y = ac1; %max(ac1,ac2);
 end
 
 y = mirpeaks(y,'Total',Inf,...
@@ -303,13 +304,13 @@ y = mirpeaks(y,'Total',Inf,...
 type = {'mirmetre',mirtype(y)};
     
 
-function o = main(p,option,postoption)
+function m = main(p,option,postoption)
 if iscell(p)
     p = p{1};
 end
 if isamir(p,'mirscalar')
     m = modif(m,postoption);
-    o = {t};
+    m = {t};
     return
 end
 pt = get(p,'PeakPrecisePos');
@@ -503,6 +504,17 @@ for j = 1:length(pt)
                                     end
                                 end
                             end
+                        elseif abs(mk{i2}(indx(i2)).bpms(end) - ...
+                                   globpm(i2,l) / mk{i2}(indx(i2)).lvl) > ...
+                               abs(ptl(i) - ...
+                                   globpm(i2,l) / mk{i2}(indx(i2)).lvl)
+                            coord = [i2 indx(i2)];
+                            % Level already identified to
+                            % one already detected
+                            mk{i2}(indx(i2)).bpms(end) = ptl(i);
+                            mk{i2}(indx(i2)).lastbpm = ptli;
+                            mk{i2}(indx(i2)).score(end) = ...
+                                d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                         end
                         found(i2) = 1;
                     end
@@ -1083,10 +1095,10 @@ for j = 1:length(pt)
     end
 end
 
-m = purgedata(p);
-m = set(m,'Data',meters);
-m = class(struct,'mirmetre',mirdata(m));
-o = {m,p};
+dm = purgedata(p);
+m.autocor = dm;
+dm = set(dm,'Data',meters);
+m = class(m,'mirmetre',mirdata(dm));
 
 
 function bpm = getbpm(p,ptl)

@@ -4,7 +4,7 @@ function display(m)
 d = get(m,'Data');
 fp = get(m,'FramePos');
 for h = 1:length(d)
-    %figure,hold on
+    m.autocor
     for i = 1:length(d{h}{1})
         if i == 1
             irgb = [0 0 0];
