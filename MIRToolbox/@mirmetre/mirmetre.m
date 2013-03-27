@@ -270,8 +270,7 @@ if 0 %not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
 end
 
 if isa(x,'mirautocor')
-    y = x;
-elseif 0
+    %y = x;
     y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
           'NormalWindow',option.nw);
     if ischar(option.sum)
@@ -315,6 +314,7 @@ if isamir(p,'mirscalar')
 end
 pt = get(p,'PeakPrecisePos');
 meters = cell(1,length(pt));
+globpms = cell(1,length(pt));
 d = get(p,'Data');
 pp = get(p,'Pos');
 ppp = get(p,'PeakPos');
@@ -505,9 +505,9 @@ for j = 1:length(pt)
                                 end
                             end
                         elseif abs(mk{i2}(indx(i2)).bpms(end) - ...
-                                   globpm(i2,l) / mk{i2}(indx(i2)).lvl) > ...
+                                   globpm(i2,end) / mk{i2}(indx(i2)).lvl) > ...
                                abs(ptl(i) - ...
-                                   globpm(i2,l) / mk{i2}(indx(i2)).lvl)
+                                   globpm(i2,end) / mk{i2}(indx(i2)).lvl)
                             coord = [i2 indx(i2)];
                             % Level already identified to
                             % one already detected
@@ -547,7 +547,7 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            if ...~foundk(i2) &&
+                            if 0 % ...~foundk(i2) &&
                                     isempty(mk{i2}(ord(i3)).function)
                                 i3 = i3-1;
                                 continue
@@ -1092,11 +1092,13 @@ for j = 1:length(pt)
         end
 
         meters{j}{k} = mk;
+        globpms{j}{k} = globpm;
     end
 end
 
 dm = purgedata(p);
 m.autocor = dm;
+m.globpm = globpms;
 dm = set(dm,'Data',meters);
 m = class(m,'mirmetre',mirdata(dm));
 
