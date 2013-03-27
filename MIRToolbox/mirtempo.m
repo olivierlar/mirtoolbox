@@ -465,6 +465,7 @@ end
 if option.metre
     d = get(p,'Data');
     fp = get(p,'FramePos');
+    g = get(p,'Globpm');
     bpm = cell(1,length(d));
     for j = 1:length(d)
         bpm{j} = cell(1,length(d{j}));
@@ -479,8 +480,10 @@ if option.metre
                     sd(l) = sd(l) * resonance(mb);
                 end
                 [unused best] = max(sd);
+                bpm{j}{k}(d{j}{k}{i}(best).timidx) = ...
+                    g{1}{1}(i,d{j}{k}{i}(best).timidx) ...
+                        / d{j}{k}{i}(best).lvl;
             end
-            bpm{j}{k}(d{j}{k}{i}(best).timidx) = d{j}{k}{i}(best).bpms;
         end 
     end
     t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
