@@ -82,7 +82,7 @@ else
             if flag
                 fig = get(0,'CurrentFigure');
                 disp(['Its content is displayed in Figure ',num2str(fig),'.']);
-                if nargin>4
+                if nargin>4 && ~isempty(suffix)
                     saveas(fig,[n{i},suffix],'psc2');
                     disp(['and is saved in file ',n{i},suffix]);
                 end
