@@ -51,6 +51,11 @@ function varargout = mirflux(orig,varargin)
         inc.type = 'Boolean';
         inc.default = 0;
     option.inc = inc;
+
+        bs.key = 'BackSmooth';
+        bs.type = 'Boolean';
+        bs.default = 0;
+    option.bs = bs;
     
         complex.key = 'Complex';
         complex.type = 'Boolean';
@@ -167,6 +172,9 @@ else
             if size(mi,3) > 1 && size(mi,1) == 1
                 mi = reshape(mi,size(mi,2),size(mi,3))';
             end
+            if strcmpi(option.dist,'Gate')
+                mi = mi - min(min(min(mi)));
+            end
             if option.complex
                 phi = ph{h}{i};
             end
@@ -202,7 +210,26 @@ else
                                                       mi(:,j+1,k),...
                                                       option.gap);
                             elseif option.inc
-                                fl(1,j,k) = dist(mi(:,j,k),mi(:,j+1,k),1);
+                                back = mi(:,j,k);
+                                if option.bs
+                                    for l = 1:20
+                                        back(1+floor(l/2):end-ceil(l/2)) = ...
+                                            max(back(1:end-l),back(1+l:end));
+                                    end
+                                end
+                                fl(1,j,k) = dist(back,mi(:,j+1,k),1);
+                                
+                                if 0
+                                    figure(1)
+                                    hold off
+                                    plot(mi(:,j,k))
+                                    hold on
+                                    plot(back,'r')
+                                    plot(mi(:,j+1,k),'k')
+                                    figure(2)
+                                    plot(mean(fp{h}{i}(:,1:j)),fl(1,1:j,k))
+                                    drawnow
+                                end
                             else
                                 fl(1,j,k) = pdist(mi(:,[j j+1],k)',...
                                                   option.dist);
@@ -270,6 +297,10 @@ if inc
 else
     y = sum(abs(mj-mi));
 end
+
+
+function y = Gate(mi,mj,inc)
+y = sum( (mj./mi) .* mj .* (mj>mi));
 
 
 function d = Cosine(r,s,inc)
