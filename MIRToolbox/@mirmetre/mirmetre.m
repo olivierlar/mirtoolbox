@@ -41,145 +41,27 @@ function varargout = mirmetre(orig,varargin)
         frame.keydefault = [5 .05];
     option.frame = frame;
     
-        fea.type = 'String';
-        fea.choice = {'Envelope','DiffEnvelope','SpectralFlux',...
-                      'Pitch','Novelty'};
-        fea.default = 'Envelope'; %'Novelty';
-    option.fea = fea;
+        envelope.key = 'Envelope';
+        envelope.type = 'Boolean';
+        envelope.default = 0;
+    option.envelope = envelope;
     
-    %% options related to 'Envelope':
+        novelty.key = 'Novelty';
+        novelty.type = 'Boolean';
+        novelty.default = 0;
+    option.novelty = novelty;
     
-            envmeth.key = 'Method';
-            envmeth.type = 'String';
-            envmeth.choice = {'Filter','Spectro'};
-            envmeth.default = 'Spectro';
-        option.envmeth = envmeth;
+        mix.key = 'Mix';
+        mix.type = 'Boolean';
+        mix.default = 0;
+    option.mix = mix;
     
-        %% options related to 'Filter':
-
-                fb.key = 'Filterbank';
-                fb.type = 'Integer';
-                fb.default = 10;
-            option.fb = fb;
-
-                fbtype.key = 'FilterbankType';
-                fbtype.type = 'String';
-                fbtype.choice = {'Gammatone','Scheirer','Klapuri'};
-                fbtype.default = 'Gammatone';
-            option.fbtype = fbtype;
-
-                ftype.key = 'FilterType';
-                ftype.type = 'String';
-                ftype.choice = {'IIR','HalfHann'};
-                ftype.default = 'IIR';
-            option.ftype = ftype;
-
-        %% options related to 'Spectro':
-        
-                band.type = 'String';
-                band.choice = {'Freq','Mel','Bark','Cents'};
-                band.default = 'Freq';
-            option.band = band;
-
-        
-            chwr.key = 'HalfwaveCenter';
-            chwr.type = 'Boolean';
-            chwr.default = 0;
-        option.chwr = chwr;
-
-            diff.key = 'Diff';
-            diff.type = 'Boolean';
-            diff.default = 1;
-        option.diff = diff;
-
-            diffhwr.key = 'HalfwaveDiff';
-            diffhwr.type = 'Integer';
-            diffhwr.default = 0;
-            diffhwr.keydefault = 1;
-        option.diffhwr = diffhwr;
-        
-            lambda.key = 'Lambda';
-            lambda.type = 'Integer';
-            lambda.default = 1;
-        option.lambda = lambda;
-
-            mu.key = 'Mu'; 
-            mu.type = 'Integer'; 
-            mu.default = 0; 
-	        option.mu = mu; 
-        
-            log.key = 'Log';
-            log.type = 'Boolean';
-            log.default = 0;
-        option.log = log;
-
-            c.key = 'Center';
-            c.type = 'Boolean';
-            c.default = 0;
-        option.c = c;
-
-            aver.key = 'Smooth';
-            aver.type = 'Integer';
-            aver.default = 0;
-            aver.keydefault = 30;
-        option.aver = aver;
-
-            sampling.key = 'Sampling';
-            sampling.type = 'Integer';
-            sampling.default = 0;
-        option.sampling = sampling;
-
-    %% options related to 'SpectralFlux'
-    
-            complex.key = 'Complex';
-            complex.type = 'Boolean';
-            complex.default = 0;
-        option.complex = complex;
-
-            inc.key = 'Inc';
-            inc.type = 'Boolean';
-            inc.default = 1;
-        option.inc = inc;
-
-            median.key = 'Median';
-            median.type = 'Integer';
-            median.number = 2;
-            median.default = [.2 1.3];
-        option.median = median;
-
-            hw.key = 'Halfwave';
-            hw.type = 'Boolean';
-            hw.default = 1;
-        option.hw = hw;                
-        
-        
 %% option related to mirautocor:                
     
         nw.key = 'NormalWindow';
         nw.default = 0;
     option.nw = nw;
 
-%% options related to mirspectrum:
-    
-        spe.key = 'Spectrum';
-        spe.type = 'Integer';
-        spe.default = 0;
-        spe.keydefault = 1;
-    option.spe = spe;
-
-        zp.key = 'ZeroPad';
-        zp.type = 'Integer';
-        zp.default = 10000;
-        zp.keydefault = Inf;
-    option.zp = zp;
-    
-        prod.key = 'Prod';
-        prod.type = 'Integers';
-        prod.default = 0;
-        prod.keydefault = 2:6;
-    option.prod = prod;
-
-    
 %% options related to the peak detection
         
         thr.key = 'Threshold';
@@ -224,76 +106,50 @@ if isamir(x,'mirmetre')
     y = x;
     return
 end
-if 0 %not(isamir(x,'mirautocor')) && not(isamir(x,'mirspectrum'))
-    if isframed(x) && strcmpi(option.fea,'Envelope') && not(isamir(x,'mirscalar'))
-        warning('WARNING IN MIRMETRE: The input should not be already decomposed into frames.');
-        disp('Suggestion: Use the ''Frame'' option instead.')
-    end
-    if strcmpi(option.sum,'Before')
-        optionsum = 1;
-    elseif strcmpi(option.sum,'Adjacent')
-        optionsum = 5;
-    else
-        optionsum = 0;
-    end
-    if option.frame.length.val
-        x = mironsets(x,option.fea,'Filterbank',option.fb,...
-                    'FilterbankType',option.fbtype,...
-                    'FilterType',option.ftype,...
-                    'Sum',optionsum,'Method',option.envmeth,...
-                    option.band,'Center',option.c,...
-                    'HalfwaveCenter',option.chwr,'Diff',option.diff,...
-                    'HalfwaveDiff',option.diffhwr,'Lambda',option.lambda,...
-                    'Smooth',option.aver,'Sampling',option.sampling,...
-                    'Complex',option.complex,'Inc',option.inc,...
-                    'Median',option.median(1),option.median(2),...
-                    'Halfwave',option.hw,'Detect',0,...
-                    'Mu',option.mu,'Log',option.log,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    else
-        x = mironsets(x,option.fea,'Filterbank',option.fb,...
-                    'FilterbankType',option.fbtype,...
-                    'FilterType',option.ftype,...
-                    'Sum',optionsum,'Method',option.envmeth,...
-                    option.band,'Center',option.c,...
-                    'HalfwaveCenter',option.chwr,'Diff',option.diff,...
-                    'HalfwaveDiff',option.diffhwr,'Lambda',option.lambda,...
-                    'Smooth',option.aver,'Sampling',option.sampling,...
-                    'Complex',option.complex,'Inc',option.inc,...
-                    'Median',option.median(1),option.median(2),...
-                    'Halfwave',option.hw,'Detect',0,...
-                    'Mu',option.mu,'Log',option.log);
-    end
-end
 
 if isa(x,'mirautocor')
-    %y = x;
     y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
           'NormalWindow',option.nw);
     if ischar(option.sum)
         y = mirsum(y);
     end
 else
-    o1 = mironsets(x,'Diff','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    ac1 = mirautocor(o1,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
+    if option.mix
+        o1 = mironsets(x,'Diff','Detect',0,...
+                        'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
+        ac1 = mirautocor(o1,'Min',60/option.ma,'Max',60/option.mi * 2,...
+              'NormalWindow',option.nw);
 
-    %o2 = mironsets(x,'Diff','Novelty','Detect',0,...
-    %                'Frame',option.frame.length.val,...
-    %                        option.frame.length.unit,...
-    %                        option.frame.hop.val,...
-    %                        option.frame.hop.unit);
-    %ac2 = mirautocor(o2,'Min',60/option.ma,'Max',60/option.mi * 2,...
-    %      'NormalWindow',option.nw);
-    
-    y = ac1; %max(ac1,ac2);
+        o2 = mironsets(x,'Diff','Novelty','Detect',0,...
+                        'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
+        ac2 = mirautocor(o2,'Min',60/option.ma,'Max',60/option.mi * 2,...
+              'NormalWindow',option.nw);
+        y = max(ac1,ac2);
+        
+    elseif option.novelty
+        o = mironsets(x,'Diff','Novelty','Detect',0,...
+                        'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
+        y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+              'NormalWindow',option.nw);
+    else
+        o = mironsets(x,'Diff','Detect',0,...
+                        'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
+        y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+              'NormalWindow',option.nw);
+
+    end
 end
 
 y = mirpeaks(y,'Total',Inf,...
