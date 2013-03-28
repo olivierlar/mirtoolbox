@@ -280,10 +280,10 @@ function varargout = mironsets(x,varargin)
     option.kernelsize = kernelsize;
     
 %% options related to 'Lartillot':
-        lartillot.key = 'Lartillot';
-        lartillot.type = 'Boolean';
-        lartillot.default = 0;
-    option.lartillot = lartillot;
+        lart.key = 'Lartillot';
+        lart.type = 'Boolean';
+        lart.default = 0;
+    option.lart = lart;
 
 %%
         nomodif.key = 'NoModif';
@@ -386,7 +386,7 @@ if option.diffenv
     option.env = 1;
 end
 if isnan(option.env)
-    if option.flux || option.pitch || option.novelty || option.lartillot
+    if option.flux || option.pitch || option.novelty || option.lart
         option.env = 0;
     else
         option.env = 1;
@@ -438,7 +438,7 @@ if isamir(x,'miraudio')
         s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'dB');
         %c = mircepstrum(x,'Frame',.05,.2);
         %[p ac] = mirpitch(x,'Frame');
-        z = mirnovelty(s,'Flux',...  'KernelSize',option.kernelsize,...
+        z = mirnovelty(s,'KernelSize',option.kernelsize,... 'Flux',...  
                       ...'Distance','Euclidean',...
                       'Similarity','oneminus');
         if isempty(y)
@@ -447,8 +447,9 @@ if isamir(x,'miraudio')
             y = y+z;
         end
         type = 'mirscalar';
-    elseif option.lartillot
+    elseif option.lart
         y = mirspectrum(x,'max',5000,'Frame',.05,.2,'MinRes',.1,'dB');
+        y = mirflux(y,'Inc','BackSmooth','Dist','Gate');
         type = 'mirspectrum';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
@@ -456,7 +457,7 @@ elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
     y = mirnovelty(x,'KernelSize',option.kernelsize);
     type = 'mirscalar';
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
-        (isamir(x,'mirspectrum') && option.lartillot)
+        (isamir(x,'mirspectrum') && option.lart)
     y = x;
     type = mirtype(x);
 else
@@ -569,6 +570,7 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
+    o = mirenvelope(o,'Center');
     o = mirenvelope(o,'Normal');
 end
 o = mirframenow(o,postoption);
@@ -637,15 +639,16 @@ function do = newonset(d)
 tc = 10;
 dy = 2;
 do = NaN(1,size(d,2));
-for i = tc+1:size(d,2)
+for i = 1:size(d,2)
     do(i) = 0;
     for j = dy+1:size(d,1)-dy
-        ddj = d(j,i) - max(max(d(j+(-dy:+dy),i-(1:tc))));
+        ddj = d(j,i) - max(max(d(j+(-dy:+dy),i-1:-1:max(i-tc,1))));
         if ddj > 0
             do(i) = do(i) + ddj;
         end
     end
 end
+do
 
 
 function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
