@@ -302,8 +302,10 @@ function varargout = mirtempo(x,varargin)
     option.perio = perio;
     
         metre.key = 'Metre';
-        metre.type = 'Boolean';
+        metre.type = 'String';
+        metre.choice = {0,'Envelope','Novelty','Mix'};
         metre.default = 0;
+        metre.keydefault = 'Envelope';
     option.metre = metre;
     
         lart.key = 'Lartillot';
@@ -350,10 +352,10 @@ if option.metre
         option.frame.hop.val = .05;
         option.frame.hop.unit = '/1';
     end
-    y = mirmetre(x,'Frame',option.frame.length.val,...
-                           option.frame.length.unit,...
-                           option.frame.hop.val,...
-                           option.frame.hop.unit);
+    y = mirmetre(x,option.metre,'Frame',option.frame.length.val,...
+                                        option.frame.length.unit,...
+                                        option.frame.hop.val,...
+                                        option.frame.hop.unit);
 else
 
     if option.perio
