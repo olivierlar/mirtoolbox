@@ -283,6 +283,7 @@ function varargout = mironsets(x,varargin)
         lart.key = 'Lartillot';
         lart.type = 'Boolean';
         lart.default = 0;
+        lart.when = 'Both';
     option.lart = lart;
 
 %%
@@ -528,9 +529,6 @@ if isfield(postoption,'cthr')
         if postoption.chwr
             o = mirenvelope(o,'HalfwaveCenter');
         end
-        if postoption.c
-            o = mirenvelope(o,'Center');
-        end
     elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux')
         if postoption.median
             o = mirflux(o,'Median',postoption.median(1),postoption.median(2),...
@@ -570,7 +568,9 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
-    o = mirenvelope(o,'Center');
+    if postoption.c || postoption.lart
+        o = mirenvelope(o,'Center');
+    end
     o = mirenvelope(o,'Normal');
 end
 o = mirframenow(o,postoption);
