@@ -56,6 +56,11 @@ function varargout = mirmetre(orig,varargin)
         mix.default = 0;
     option.mix = mix;
     
+        sgate.key = 'SmoothGate';
+        sgate.type = 'Boolean';
+        sgate.default = 0;
+    option.sgate = sgate;
+    
 %% option related to mirautocor:                
     
         nw.key = 'NormalWindow';
@@ -140,6 +145,14 @@ elseif option.mix
 
 elseif option.novelty
     o = mironsets(x,'Diff','Novelty','Detect',0,...
+                    'Frame',option.frame.length.val,...
+                            option.frame.length.unit,...
+                            option.frame.hop.val,...
+                            option.frame.hop.unit);
+    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+          'NormalWindow',option.nw);
+elseif option.sgate
+    o = mironsets(x,'SmoothGate','Detect',0,...
                     'Frame',option.frame.length.val,...
                             option.frame.length.unit,...
                             option.frame.hop.val,...
@@ -444,7 +457,7 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            if ~isempty(find([mk{i2}.lvl] > lvl & ...
+                            if 0 && ~isempty(find([mk{i2}.lvl] > lvl & ...
                                              [mk{i2}.lvl] < mk{i2}(ord(i3)).lvl))
                                 i3 = i3-1;
                                 continue
@@ -640,6 +653,12 @@ for j = 1:length(pt)
                             mk{i2}(end).score = ampli(pos(i));
                             mk{i2}(end).ref = mk{i2}(ref).lvl;
                             mk{i2}(end).reldiv = reldiv;
+                            
+                            if reldiv < 0 && ~isempty(mk{i2}(ref).element)
+                                mk{i2}(ref).element = [];
+                                mk{i2}(end).element = 1;
+                            end
+                            
                             coord = [i2 length(mk{i2})];
                             bpms{i2}(end+1) = ptli;
                         else
@@ -684,6 +703,7 @@ for j = 1:length(pt)
                         mk{end}.locked = 0;
                         mk{end}.active = 1;
                         mk{end}.ref = [];
+                        mk{end}.element = 1;
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
@@ -822,7 +842,7 @@ for j = 1:length(pt)
                     end
                 end
                 
-                i = 1;
+                i = 0;
                 while i < length(mk)
                     i = i + 1;
                     if mk{i}(1).locked
@@ -831,8 +851,85 @@ for j = 1:length(pt)
                     if ~mk{i}(1).active
                         continue
                     end
-                    for i3 = 1:0 %i-1
+                    
+                    for i3 = 1:length(mk{i})
+                        score1 = 0;
+                        if mk{i}(i3).element
+                            nbpms1 = globpm(i,l)/ mk{i}(i3).lvl;
+                            lvl1 = mk{i}(i3).lvl;
+                        end
+                        if mk{i}(i3).score(end) > score1
+                            score1 = mk{i}(i3).score(end);
+                        end
+                    end
+                    
+                    i3 = 1;
+                    while i3 < i
                         if ~mk{i3}(1).active
+                            i3 = i3 + 1;
+                            continue
+                        end
+                        
+                        included = 0;
+                        score2 = 0;
+                        for i2 = 1:length(mk{i3})
+                            if mk{i3}(i2).element
+                                nbpms2 = globpm(i3,l)/ mk{i3}(i2).lvl;
+                                lvl2 = mk{i3}(i2).lvl;
+                                if abs(60/nbpms1 - 60./nbpms2) < .01
+                                    included = i2;
+                                end
+                            end
+                            if mk{i3}(i2).score(end) > score2
+                                score2 = mk{i3}(i2).score(end);
+                            end
+                        end
+                        
+                        if included
+                            if score1 > score2
+                                majo = i;
+                                mino = i3;
+                                ratio = lvl1 / lvl2;
+                            else
+                                majo = i3;
+                                mino = i;
+                                ratio = lvl2 / lvl1;
+                            end
+                            
+                            for i2 = 1:length(mk{mino})
+                                lvl = mk{mino}(i2).lvl * ratio;
+                                i5 = find(lvl == [mk{majo}.lvl],1);
+                                if isempty(i5)
+                                    mk{majo}(end+1).lvl = lvl;
+                                    mk{majo}(end).lastbpm = mk{mino}(i2).lastbpm;
+                                    mk{majo}(end).bpms = mk{mino}(i2).bpms;
+                                    mk{majo}(end).globpms = globpm(i,mk{mino}(i2).timidx) ...
+                                        / mk{mino}(i2).lvl;
+                                    mk{majo}(end).timidx = mk{mino}(i2).timidx;
+                                    mk{majo}(end).score = mk{mino}(i2).score;
+                                    mk{majo}(end).ref = mk{mino}(i2).ref * ratio;
+                                    mk{majo}(end).reldiv = mk{mino}(i2).reldiv;
+                                    bpms{majo}(end+1) = mk{mino}(i2).lastbpm;
+
+                                end
+                            end
+                            
+                            mk(mino) = [];
+                            globpm(mino,:) = [];
+                            bpms(mino) = [];
+                            if score1 > score2
+                                i3 = i3 - 1;
+                            else
+                                i = i - 1;
+                                break
+                            end
+                        end
+                        
+                        i3 = i3 + 1;
+                    end
+                    
+                    for i3 = 1:0 length(mk)
+                        if i == i3 || ~mk{i3}(1).active
                             continue
                         end
                         included = 0;
