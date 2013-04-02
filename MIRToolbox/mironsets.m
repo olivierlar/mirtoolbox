@@ -279,12 +279,12 @@ function varargout = mironsets(x,varargin)
         kernelsize.default = 0;
     option.kernelsize = kernelsize;
     
-%% options related to 'Lartillot':
-        lart.key = 'Lartillot';
-        lart.type = 'Boolean';
-        lart.default = 0;
-        lart.when = 'Both';
-    option.lart = lart;
+%% options related to 'SmoothGate':
+        sgate.key = 'SmoothGate';
+        sgate.type = 'Boolean';
+        sgate.default = 0;
+        sgate.when = 'Both';
+    option.sgate = sgate;
 
 %%
         nomodif.key = 'NoModif';
@@ -387,7 +387,7 @@ if option.diffenv
     option.env = 1;
 end
 if isnan(option.env)
-    if option.flux || option.pitch || option.novelty || option.lart
+    if option.flux || option.pitch || option.novelty || option.sgate
         option.env = 0;
     else
         option.env = 1;
@@ -415,7 +415,6 @@ if isamir(x,'miraudio')
                           'PreDecim',option.decim,'PostDecim',0,...
                           'Mu',option.mu,...
                           'PowerSpectrum',option.powerspectrum);
-        type = 'mirenvelope';
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex);
@@ -424,7 +423,6 @@ if isamir(x,'miraudio')
         else
             y = y+z;
         end
-        type = 'mirscalar';
     end
     if option.pitch
         [unused ac] = mirpitch(x,'Frame','Min',option.min,'Max',option.max);
@@ -434,7 +432,6 @@ if isamir(x,'miraudio')
         else
             y = y+z;
         end
-        type = 'mirscalar';
     elseif option.novelty
         s = mirspectrum(x,'max',1000,'Frame',.05,.2,'MinRes',3,'dB');
         %c = mircepstrum(x,'Frame',.05,.2);
@@ -447,24 +444,20 @@ if isamir(x,'miraudio')
         else
             y = y+z;
         end
-        type = 'mirscalar';
-    elseif option.lart
+    elseif option.sgate
         y = mirspectrum(x,'max',5000,'Frame',.05,.2,'MinRes',.1,'dB');
         y = mirflux(y,'Inc','BackSmooth','Dist','Gate');
-        type = 'mirspectrum';
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
         || isamir(x,'mirsimatrix')
     y = mirnovelty(x,'KernelSize',option.kernelsize);
-    type = 'mirscalar';
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
-        (isamir(x,'mirspectrum') && option.lart)
+        (isamir(x,'mirspectrum') && option.sgate)
     y = x;
-    type = mirtype(x);
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
-    type = 'mirscalar';
 end
+type = 'mirenvelope';
 
 
 %% MAIN
@@ -529,7 +522,8 @@ if isfield(postoption,'cthr')
         if postoption.chwr
             o = mirenvelope(o,'HalfwaveCenter');
         end
-    elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux')
+    elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux') && ...
+            ~postoption.sgate
         if postoption.median
             o = mirflux(o,'Median',postoption.median(1),postoption.median(2),...
                           'Halfwave',postoption.hw);
@@ -568,7 +562,7 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
-    if postoption.c || postoption.lart
+    if postoption.c || postoption.sgate
         o = mirenvelope(o,'Center');
     end
     o = mirenvelope(o,'Normal');
