@@ -421,8 +421,7 @@ for j = 1:length(pt)
                                 continue
                             end
                             
-                            if 0 % ...~foundk(i2) &&
-                                    isempty(mk{i2}(ord(i3)).function)
+                            if mk{i2}(ord(i3)).reldiv > 0
                                 i3 = i3-1;
                                 continue
                             end
@@ -481,7 +480,7 @@ for j = 1:length(pt)
                                     if ptli2 > rptli2
                                         ptli2 = rptli2;
                                     end
-                                    ptli = mean([ptli1,ptli2]);
+                                    %ptli = mean([ptli1,ptli2]);
                                     err = newerr;
                                     %break
                                 elseif mk{i2}(ord(i3)).lvl / rdiv ...
@@ -659,6 +658,28 @@ for j = 1:length(pt)
                                 mk{i2}(end).element = 1;
                             end
                             
+                            for i3 = 1:length(mk{i2})
+                                if ptli > mk{i2}(i3).lastbpm
+                                    div = ptli / mk{i2}(i3).lastbpm;
+                                    if round(div) > 1 && ...
+                                            min(mod(div,1),1-mod(div,1)) < .2
+                                        ptli3 = mk{i2}(i3).lastbpm;
+                                        nlvl = lvl * round(div);
+                                        olvl = mk{i2}(i3).lvl;
+                                        if nlvl ~= olvl && ...
+                                                abs(60/ptli3 - ...
+                                                    60/(globpm(i2,l)/nlvl)) < ...
+                                                abs(60/ptli3 - ...
+                                                    60/(globpm(i2,l)/olvl))
+                                            mk{i2}(i3).lvl = nlvl;
+                                            mk{i2}(i3).function = [];
+                                            mk{i2}(i3).ref = lvl;
+                                            mk{i2}(i3).reldiv = round(div);
+                                        end
+                                    end
+                                end
+                            end
+                            
                             coord = [i2 length(mk{i2})];
                             bpms{i2}(end+1) = ptli;
                         else
@@ -704,6 +725,7 @@ for j = 1:length(pt)
                         mk{end}.active = 1;
                         mk{end}.ref = [];
                         mk{end}.element = 1;
+                        mk{end}.reldiv = 0;
                         %found(end+1) = 1;
                         bpms{end+1} = ptli;
                         foundk(end+1) = 1;
