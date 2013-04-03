@@ -668,9 +668,9 @@ for j = 1:length(pt)
                                         olvl = mk{i2}(i3).lvl;
                                         if nlvl ~= olvl && ...
                                                 abs(60/ptli3 - ...
-                                                    60/(globpm(i2,l)/nlvl)) < ...
+                                                    60/(globpm(i2,end)/nlvl)) < ...
                                                 abs(60/ptli3 - ...
-                                                    60/(globpm(i2,l)/olvl))
+                                                    60/(globpm(i2,end)/olvl))
                                             mk{i2}(i3).lvl = nlvl;
                                             mk{i2}(i3).function = [];
                                             mk{i2}(i3).ref = lvl;
@@ -877,7 +877,9 @@ for j = 1:length(pt)
                     for i3 = 1:length(mk{i})
                         score1 = 0;
                         if mk{i}(i3).element
-                            nbpms1 = globpm(i,l)/ mk{i}(i3).lvl;
+                            nbpms1a = globpm(i,l)/ mk{i}(i3).lvl;
+                            nbpms1b = mk{i}(i3).lastbpm;
+                            element1 = i3;
                             lvl1 = mk{i}(i3).lvl;
                         end
                         if mk{i}(i3).score(end) > score1
@@ -896,9 +898,12 @@ for j = 1:length(pt)
                         score2 = 0;
                         for i2 = 1:length(mk{i3})
                             if mk{i3}(i2).element
-                                nbpms2 = globpm(i3,l)/ mk{i3}(i2).lvl;
+                                nbpms2a = globpm(i3,l)/ mk{i3}(i2).lvl;
+                                nbpms2b = mk{i3}(i2).lastbpm;
+                                element2 = i2;
                                 lvl2 = mk{i3}(i2).lvl;
-                                if abs(60/nbpms1 - 60./nbpms2) < .01
+                                if abs(60/nbpms1a - 60./nbpms2a) < .01 || ...
+                                        abs(60/nbpms1b - 60./nbpms2b) < .01
                                     included = i2;
                                 end
                             end
@@ -909,29 +914,31 @@ for j = 1:length(pt)
                         
                         if included
                             if score1 > score2
-                                majo = i;
+                                majo = [i element1];
                                 mino = i3;
-                                ratio = lvl1 / lvl2;
+                                %ratio = lvl1 / lvl2;
                             else
-                                majo = i3;
+                                majo = [i3 element2];
                                 mino = i;
-                                ratio = lvl2 / lvl1;
+                                %ratio = lvl2 / lvl1;
                             end
                             
                             for i2 = 1:length(mk{mino})
-                                lvl = mk{mino}(i2).lvl * ratio;
-                                i5 = find(lvl == [mk{majo}.lvl],1);
+                                div = round(mk{majo(1)}(majo(2)).lastbpm ...
+                                            / mk{mino}(i2).lastbpm);
+                                lvl =  div * mk{majo(1)}(majo(2)).lvl;
+                                i5 = find(lvl == [mk{majo(1)}.lvl],1);
                                 if isempty(i5)
-                                    mk{majo}(end+1).lvl = lvl;
-                                    mk{majo}(end).lastbpm = mk{mino}(i2).lastbpm;
-                                    mk{majo}(end).bpms = mk{mino}(i2).bpms;
-                                    mk{majo}(end).globpms = globpm(i,mk{mino}(i2).timidx) ...
-                                        / mk{mino}(i2).lvl;
-                                    mk{majo}(end).timidx = mk{mino}(i2).timidx;
-                                    mk{majo}(end).score = mk{mino}(i2).score;
-                                    mk{majo}(end).ref = mk{mino}(i2).ref * ratio;
-                                    mk{majo}(end).reldiv = mk{mino}(i2).reldiv;
-                                    bpms{majo}(end+1) = mk{mino}(i2).lastbpm;
+                                    mk{majo(1)}(end+1).lvl = lvl;
+                                    mk{majo(1)}(end).lastbpm = mk{mino}(i2).lastbpm;
+                                    mk{majo(1)}(end).bpms = mk{mino}(i2).bpms;
+                                    mk{majo(1)}(end).globpms = globpm(majo(1),end)...
+                                                        / lvl;
+                                    mk{majo(1)}(end).timidx = mk{mino}(i2).timidx;
+                                    mk{majo(1)}(end).score = mk{mino}(i2).score;
+                                    mk{majo(1)}(end).ref = mk{majo(1)}(majo(2)).lvl;
+                                    mk{majo(1)}(end).reldiv = div;
+                                    bpms{majo(1)}(end+1) = mk{mino}(i2).lastbpm;
 
                                 end
                             end
