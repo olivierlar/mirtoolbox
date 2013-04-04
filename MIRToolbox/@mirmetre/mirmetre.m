@@ -948,8 +948,9 @@ for j = 1:length(pt)
                                     mk{majo(1)}(end+1).lvl = lvl;
                                     mk{majo(1)}(end).lastbpm = mk{mino}(i2).lastbpm;
                                     mk{majo(1)}(end).bpms = mk{mino}(i2).bpms;
-                                    mk{majo(1)}(end).globpms = globpm(majo(1),end)...
-                                                        / lvl;
+                                    mk{majo(1)}(end).globpms = ...
+                                        globpm(majo(1), mk{mino}(i2).timidx)...
+                                        / lvl;
                                     mk{majo(1)}(end).timidx = mk{mino}(i2).timidx;
                                     mk{majo(1)}(end).score = mk{mino}(i2).score;
                                     mk{majo(1)}(end).ref = mk{majo(1)}(majo(2)).lvl;
