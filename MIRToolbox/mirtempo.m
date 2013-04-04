@@ -474,21 +474,27 @@ if option.metre
         for k = 1:length(d{j})
             bpm{j}{k} = NaN(1,size(fp{j}{k},2));
             for i = 1:length(d{j}{k})
+                scori = cell(1,length(d{j}{k}{i}));
+                for l = 1:length(d{j}{k}{i})
+                    scori{l} = d{j}{k}{i}(l).score;
+                    for l2 = 1:length(d{j}{k}{i})
+                        if l ~= l2 && ...
+                                ~mod(d{j}{k}{i}(l2).lvl,d{j}{k}{i}(l).lvl)
+                            [unused ia ib] = intersect(d{j}{k}{i}(l).timidx,...
+                                                       d{j}{k}{i}(l2).timidx);
+                            scori{l}(ia) = scori{l}(ia) + ...
+                                           d{j}{k}{i}(l2).score(ib);
+                        end
+                    end
+                end
+                
                 sd = zeros(1,length(d{j}{k}{i}));
                 mb = zeros(1,length(d{j}{k}{i}));
                 for l = 1:length(d{j}{k}{i})
-                    for l2 = 1:l-1
-                        if ~mod(d{j}{k}{i}(l2).lvl,d{j}{k}{i}(l).lvl)
-                            [unused ia ib] = intersect(d{j}{k}{i}(l).timidx,...
-                                                       d{j}{k}{i}(l2).timidx)
-                            d{j}{k}{i}(l).score(ia) = max(d{j}{k}{i}(l).score(ia),...
-                                                          d{j}{k}{i}(l2).score(ib));
-                        end
-                    end
-                    sd(l) = sum(d{j}{k}{i}(l).score);
                     mb = mean(d{j}{k}{i}(l).bpms);
-                    sd(l) = sd(l) * resonance(mb);
+                    sd(l) = sum(scori{l}) * resonance(mb);
                 end
+                
                 [unused best] = max(sd);
                 bpm{j}{k}(d{j}{k}{i}(best).timidx) = ...
                     g{1}{1}(i,d{j}{k}{i}(best).timidx) ...
@@ -1471,6 +1477,9 @@ end
 
 
 function r = resonance(bpm)
+if bpm > 120
+    bpm = 240 - bpm;
+end
 r = max(1 - 0.25*(log2(max(60/bpm,1e-12)/.5)).^2, 0);
                             
                             
