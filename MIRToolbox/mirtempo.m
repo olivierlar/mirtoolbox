@@ -308,6 +308,12 @@ function varargout = mirtempo(x,varargin)
         metre.keydefault = 'Envelope';
     option.metre = metre;
     
+        change.key = 'Change';
+        change.type = 'Boolean';
+        change.default = 0;
+        change.when = 'After';
+    option.change = change;
+    
         lart.key = 'Lartillot';
         lart.type = 'Integer';
         lart.default = 0;
@@ -463,6 +469,12 @@ function o = main(p,option,postoption)
 if iscell(p)
     p = p{1};
 end
+    
+if isamir(p,'mirscalar')
+    t = modif(p,postoption);
+    o = {t};
+    return
+end
 
 if option.metre
     d = get(p,'Data');
@@ -506,12 +518,7 @@ if option.metre
     o = {t,p};
     return
 end
-    
-if isamir(p,'mirscalar')
-    t = modif(p,postoption);
-    o = {t};
-    return
-end
+
 pt = get(p,'TrackPrecisePos');
 track = 1;
 if isempty(pt) || isempty(pt{1})
@@ -1500,7 +1507,15 @@ end
 
 
 function t = modif(t,option)
-if option.wrap
+if option.change
+    d = get(t,'Data');
+    for i = 1:length(d)
+        for j = 1:length(d{i})
+            d{i}{j} = [NaN diff(log2(d{i}{j}))];
+        end
+    end
+    t = set(t,'Data',d);
+elseif option.wrap
     d = get(t,'Data');
     for i = 1:length(d)
         for j = 1:length(d{i})
