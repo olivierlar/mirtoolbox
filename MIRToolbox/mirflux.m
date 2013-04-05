@@ -162,6 +162,9 @@ else
     ff = cell(1,length(m));
     newsr = cell(1,length(m));
     dist = str2func(option.dist);
+    if option.bs
+        [tmp s] = gettmp(s);
+    end
     for h = 1:length(m)
         ff{h} = cell(1,length(m{h}));
         if not(iscell(m{h}))
@@ -172,7 +175,7 @@ else
             if size(mi,3) > 1 && size(mi,1) == 1
                 mi = reshape(mi,size(mi,2),size(mi,3))';
             end
-            if strcmpi(option.dist,'Gate')
+            if 0 %strcmpi(option.dist,'Gate')
                 mi = mi - min(min(min(mi)));
             end
             if option.complex
@@ -204,25 +207,28 @@ else
                         mi = (mi - mimi)/(max(max(mi)) - mimi);
                     end
                     for k = 1:np
+                        if option.bs
+                            mi = [-Inf(size(mi,1),4,np) mi];
+                        end
                         for j = 1:nc-1
                             if option.gap
                                 fl(1,j,k) = detectgap(mi(:,j,k),...
                                                       mi(:,j+1,k),...
                                                       option.gap);
                             elseif option.inc
-                                back = mi(:,j,k);
-                                
                                 if option.bs
+                                    back = mi(:,j+4,k);
                                     for l = 1:20
                                         back(1+floor(l/2):end-ceil(l/2)) = ...
                                             max(back(1:end-l),back(1+l:end));
                                     end
-                                    mi(:,j,k) = back;
-                                    back = max(mi(:, max(j-5,1):j ,k), [],2);
+                                    mi(:,j+4,k) = back;
+                                    back = max(mi(:, j:j+4 ,k), [],2);
+                                    fl(1,j,k) = dist(back,mi(:,j+5,k),1);
+                                else
+                                    back = mi(:,j,k);
+                                    fl(1,j,k) = dist(back,mi(:,j+1,k),1);
                                 end
-                                
-                                fl(1,j,k) = dist(back,mi(:,j+1,k),1);
-                                
                                 if 0
                                     figure%(1)
                                     %hold off
@@ -255,6 +261,10 @@ else
                         'Title',t,'Parameter',param);
     if not(isequal(postoption,struct))
         f = modif(f,postoption);
+    end
+    if option.bs
+        tmp = mi(:,max(1,end-4):end-1,k);
+        f = settmp(f,tmp);
     end
 end
 
