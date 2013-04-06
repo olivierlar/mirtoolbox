@@ -175,8 +175,8 @@ else
             if size(mi,3) > 1 && size(mi,1) == 1
                 mi = reshape(mi,size(mi,2),size(mi,3))';
             end
-            if 0 %strcmpi(option.dist,'Gate')
-                mi = mi - min(min(min(mi)));
+            if strcmpi(option.dist,'Gate')
+                mi = mi +80; %- min(min(min(mi)));
             end
             if option.complex
                 phi = ph{h}{i};
@@ -208,7 +208,10 @@ else
                     end
                     for k = 1:np
                         if option.bs
-                            mi = [-Inf(size(mi,1),4,np) mi];
+                            if isempty(tmp)
+                                tmp = -Inf(size(mi,1),4,np);
+                            end
+                            mi = [tmp mi];
                         end
                         for j = 1:nc-1
                             if option.gap
