@@ -346,7 +346,7 @@ function [y type] = init(x,option)
 if iscell(x)
     x = x{1};
 end
-if isamir(x,'mirscalar')
+if isamir(x,'mirscalar') || isamir(x,'mirmetre')
     y = x;
     return
 end
@@ -470,13 +470,12 @@ if iscell(p)
     p = p{1};
 end
     
-if isamir(p,'mirscalar')
-    t = modif(p,postoption);
-    o = {t};
+if isamir(p,'mirscalar') 
+    o = modif(p,postoption);
     return
 end
 
-if option.metre
+if isa(p,'mirmetre')
     d = get(p,'Data');
     fp = get(p,'FramePos');
     g = get(p,'Globpm');
@@ -485,9 +484,14 @@ if option.metre
         bpm{j} = cell(1,length(d{j}));
         for k = 1:length(d{j})
             bpm{j}{k} = NaN(1,size(fp{j}{k},2));
+            scork = -Inf(1,size(fp{j}{k},2));
+            bestk = NaN(1,size(fp{j}{k},2));
+            errok = Inf(1,size(fp{j}{k},2));
             for i = 1:length(d{j}{k})
+                % For each metrical hierarchy...
                 scori = cell(1,length(d{j}{k}{i}));
                 for l = 1:length(d{j}{k}{i})
+                    % For each metrical level...
                     scori{l} = d{j}{k}{i}(l).score;
                     for l2 = 1:length(d{j}{k}{i})
                         if l ~= l2 && ...
@@ -498,23 +502,59 @@ if option.metre
                                            d{j}{k}{i}(l2).score(ib);
                         end
                     end
+                    idx = find(d{j}{k}{i}(l).score > ...
+                                    scork(d{j}{k}{i}(l).timidx) | ...
+                               (d{j}{k}{i}(l).score == ...
+                                    scork(d{j}{k}{i}(l).timidx) & ...
+                                abs(d{j}{k}{i}(l).bpms - ...
+                                    d{j}{k}{i}(l).globpms) < ...
+                                        errok(d{j}{k}{i}(l).timidx)));
+                    scork(d{j}{k}{i}(l).timidx(idx)) = ...
+                        d{j}{k}{i}(l).score(idx);
+                    errok(d{j}{k}{i}(l).timidx(idx)) = ...
+                        abs(d{j}{k}{i}(l).bpms(idx) - ...
+                            d{j}{k}{i}(l).globpms(idx));
+                    bestk(d{j}{k}{i}(l).timidx(idx)) = i;
                 end
                 
                 sd = zeros(1,length(d{j}{k}{i}));
-                mb = zeros(1,length(d{j}{k}{i}));
                 for l = 1:length(d{j}{k}{i})
                     mb = mean(d{j}{k}{i}(l).bpms);
                     sd(l) = sum(scori{l}) * resonance(mb);
                 end
                 
                 [unused best] = max(sd);
-                bpm{j}{k}(d{j}{k}{i}(best).timidx) = ...
-                    g{1}{1}(i,d{j}{k}{i}(best).timidx) ...
-                        / d{j}{k}{i}(best).lvl;
+                idx = find(bestk == i);
+                if isempty(idx)
+                    continue
+                end
+                idx0 = idx([find(diff([-Inf idx]) > 1)]);
+                idx1 = [idx0(2:end)-1 idx(end)];
+                for l = 1:length(idx0)
+                    if idx1(l) - idx0(l) < 1
+                        continue
+                    end
+                    if 1 || idx0(l) == 1 || isnan(bestk(idx0(l)-1))
+                        bpm{j}{k}(idx0(l):idx1(l)) = ...
+                            g{j}{k}(i,idx0(l):idx1(l)) ...
+                                / d{j}{k}{i}(best).lvl;
+                    else
+                        dist = abs(bpm{j}{k}(idx0(l)-1) - ...
+                                   g{j}{k}(i,idx0(l)) ...
+                                        ./ [d{j}{k}{i}.lvl]);
+                        [unused bestl] = min(dist);
+                        bpm{j}{k}(idx0(l):idx1(l)) = ...
+                            g{j}{k}(i,idx0(l):idx1(l)) ...
+                                / d{j}{k}{i}(bestl).lvl;
+                    end
+                end
+                
+                %bpm{j}{k}(idx) = g{j}{k}(i,idx) / d{j}{k}{i}(best).lvl;
             end
         end 
     end
     t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
+    t = modif(t,postoption);
     o = {t,p};
     return
 end
