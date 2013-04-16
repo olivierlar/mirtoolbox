@@ -45,6 +45,11 @@ function varargout = mirmetre(orig,varargin)
         envelope.type = 'Boolean';
         envelope.default = 0;
     option.envelope = envelope;
+
+        flux.key = 'Flux';
+        flux.type = 'Boolean';
+        flux.default = 0;
+    option.flux = flux;
     
         novelty.key = 'Novelty';
         novelty.type = 'Boolean';
@@ -145,6 +150,14 @@ elseif option.mix
 
 elseif option.novelty
     o = mironsets(x,'Diff','Novelty','Detect',0,...
+                    'Frame',option.frame.length.val,...
+                            option.frame.length.unit,...
+                            option.frame.hop.val,...
+                            option.frame.hop.unit);
+    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
+          'NormalWindow',option.nw);
+elseif option.flux
+    o = mironsets(x,'SpectralFlux','Detect',0,...
                     'Frame',option.frame.length.val,...
                             option.frame.length.unit,...
                             option.frame.hop.val,...
@@ -448,7 +461,7 @@ for j = 1:length(pt)
                         err = Inf;
                         while i3 > 0
                             if l - mk{i2}(ord(i3)).timidx(end) > 10 || ...
-                                    mk{i2}(ord(i3)).score(end) < .1 || ...
+                                    mk{i2}(ord(i3)).score(end) < .1 || ... %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
                                     ~isempty(mk{i2}(ord(i3)).complex)
                                 i3 = i3-1;
                                 continue
@@ -462,7 +475,7 @@ for j = 1:length(pt)
                                                             
                             bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             
-                            if abs(60/ptli - 60/bpm3) > dist(i2)
+                            if abs(60/ptli - 60/bpm3) > dist(i2)  %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
                                 i3 = i3-1;
                                 continue
                             end
