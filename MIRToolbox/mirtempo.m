@@ -303,7 +303,7 @@ function varargout = mirtempo(x,varargin)
     
         metre.key = 'Metre';
         metre.type = 'String';
-        metre.choice = {0,'Envelope','Novelty','Mix','SmoothGate'};
+        metre.choice = {0,'Envelope','Novelty','Flux','Mix','SmoothGate'};
         metre.default = 0;
         metre.keydefault = 'Envelope';
     option.metre = metre;
@@ -1554,7 +1554,7 @@ if option.change
             d{i}{j} = [NaN diff(log2(d{i}{j}))];
         end
     end
-    t = set(t,'Data',d);
+    t = set(t,'Data',d,'Title','Tempo Change','Unit','log2(bpm)');
 elseif option.wrap
     d = get(t,'Data');
     for i = 1:length(d)

@@ -417,7 +417,7 @@ if isamir(x,'miraudio')
                           'PowerSpectrum',option.powerspectrum);
     end
     if option.flux
-        z = mirflux(x,'Inc',option.inc,'Complex',option.complex);
+        z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City');
         if isempty(y)
             y = z;
         else
