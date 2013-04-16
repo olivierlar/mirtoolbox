@@ -33,7 +33,7 @@ else
     d = get(m,'Data');
     fp = get(m,'FramePos');
     [mo ms] = mircompute(@algo,d,fp,option.gate);
-    mo = mirscalar(m,'Data',mo,'Title','Metrical Centroid');
+    mo = mirscalar(m,'Data',mo,'Title','Metrical Centroid','Unit','BPM');
     ms = mirscalar(m,'Data',ms,'Title','Metrical Strength');
 end
 [mo ms] = modif(mo,ms,postoption);
@@ -58,14 +58,33 @@ for i = 1:length(d)
             tk = find(d{i}(ord(k)).timidx == timidx(j),1);
             if ~isempty(tk)
                 t(k) = tk;
-                submax = 0;
-                for h = 1:k-1
-                    if ~isempty(t(h)) && ~mod(lvl(k),lvl(h))
-                        t0 = find(d{i}(ord(h)).timidx == timidx(j),1);
-                        if ~isempty(t0) && d{i}(ord(h)).score(t(h)) > submax
-                            submax = d{i}(ord(h)).score(t(h));
+                if k == 1
+                    submax = 0;
+                else
+                    sub = zeros(1,k-1);
+                    mult = [];
+                    for h = 1:k-1
+                        if isempty(t(h)) || ...
+                                isempty(find(d{i}(ord(h)).timidx == timidx(j),1))
+                            continue
+                        end
+                        if ~mod(lvl(k),lvl(h))
+                            sub(h) = d{i}(ord(h)).score(t(h));
+                            mult(end+1) = h;
+                        else
+                            ismult = find(~mod(lvl(h),lvl(mult)),1);
+                            if ~isempty(ismult)
+                                h0 = mult(ismult);
+                                div1 = round(lvl(h)/lvl(h0));
+                                div2 = round(lvl(k)/lvl(h0));
+                                if div2 - div1 == 1
+                                    sub(h0) = min(sub(h0),...
+                                                d{i}(ord(h)).score(t(h)));
+                                end
+                            end
                         end
                     end
+                    submax = max(sub);
                 end
                 if gate
                     if d{i}(ord(k)).score(t(k)) > submax
