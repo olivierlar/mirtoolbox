@@ -53,6 +53,11 @@ function varargout = mirnovelty(orig,varargin)
         flux.default = 0;
     option.flux = flux;
 
+        new.key = 'New';
+        new.type = 'Boolean';
+        new.default = 0;
+    option.new = new;
+    
         half.key = 'Half';
         half.type = 'Boolean';
         half.default = 0;
@@ -84,13 +89,13 @@ function [x type] = init(x,option)
 type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     if isnan(option.K)
-        if option.cluster || option.flux
+        if option.cluster || option.flux || option.new
             option.K = 300;
         else
             option.K = 64;
         end
     end
-    if option.cluster || option.flux
+    if option.cluster || option.flux || option.new
         option.transf = 'Standard';
         option.half = 1;
     end
@@ -108,7 +113,35 @@ if iscell(orig)
     orig = orig{1};
 end
 
-if option.flux
+if option.new
+    s = get(orig,'Data');
+    dw = 64; %get(orig,'DiagWidth');
+    for i = 1:length(s)
+        for j = 1:length(s{i})
+            figure,hold on
+            for k = 1:size(s{i}{j},2)
+                range = max(1,k-dw):k-1;
+                weigh = (k - fliplr(range)-1) / k;
+                sco = 0;
+                if ~isempty(range)
+                    for l = k:-1:max(1,k-dw)
+                        dist = abs(s{i}{j}(l,k) - s{i}{j}(l,range)) ...
+                               + weigh;
+                           if k == 400
+                        plot(abs(s{i}{j}(l,k) - s{i}{j}(l,range)))
+                        plot(dist,'r')
+                        drawnow
+                           end
+                        sco = sco + min(dist);
+                    end
+                end
+                score{i}{j}(k) = sco;
+            end
+        end
+    end
+    n = mirscalar(orig,'Data',score,'Title','Novelty'); 
+
+elseif option.flux
     fl = mirflux(orig);
     if 1
         n = mirscalar(fl,'Title','Novelty');
