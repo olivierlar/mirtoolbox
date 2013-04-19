@@ -115,27 +115,36 @@ end
 
 if option.new
     s = get(orig,'Data');
-    dw = 64; %get(orig,'DiagWidth');
+    dw = 5; %40;
     for i = 1:length(s)
         for j = 1:length(s{i})
-            figure,hold on
-            for k = 1:size(s{i}{j},2)
-                range = max(1,k-dw):k-1;
-                weigh = (k - fliplr(range)-1) / k;
-                sco = 0;
-                if ~isempty(range)
-                    for l = k:-1:max(1,k-dw)
-                        dist = abs(s{i}{j}(l,k) - s{i}{j}(l,range)) ...
-                               + weigh;
-                           if k == 400
-                        plot(abs(s{i}{j}(l,k) - s{i}{j}(l,range)))
-                        plot(dist,'r')
-                        drawnow
-                           end
-                        sco = sco + min(dist);
+            for k = 2:size(s{i}{j},2)
+                delt = min(k-1,dw+1);
+                dist = zeros(1,delt);
+                for l = 1:delt
+                    dist(l) = pdist([s{i}{j}(1:k,k)';s{i}{j}(1:k,k-l)'],option.dist);
+                    if l == 1
+                        l0 = l;
+                    elseif dist(l) > dist(l0)
+                        dist(l0) = dist(l);
+                        dist(l) = Inf;
+                    else
+                        l0 = l;
                     end
                 end
-                score{i}{j}(k) = sco;
+                best = Inf;
+                for l = 1:delt
+                    %dist(l) = dist(l) + (l-1)/(dw+1);
+                    if dist(l) < best
+                        best = dist(l);
+                        bestl = l;
+                    end
+                end
+                score{i}{j}(k) = best;
+                if bestl > 1
+                    score{i}{j}(k-1:k-bestl+1) = ...
+                        min(score{i}{j}(k-1:k-bestl+1),best);
+                end
             end
         end
     end
