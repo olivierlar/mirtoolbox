@@ -90,7 +90,7 @@ type = 'mirscalar';
 if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     if isnan(option.K)
         if option.cluster || option.flux || option.new
-            option.K = 300;
+            option.K = Inf; %150;
         else
             option.K = 64;
         end
@@ -115,36 +115,66 @@ end
 
 if option.new
     s = get(orig,'Data');
-    dw = 5; %40;
+    dw = 0; %40;
     for i = 1:length(s)
         for j = 1:length(s{i})
-            for k = 2:size(s{i}{j},2)
-                delt = min(k-1,dw+1);
-                dist = zeros(1,delt);
+            sij0 = s{i}{j}(:);
+            sij0(sij0 == 1) = [];
+            Msij = max(sij0);
+            msij = min(sij0);
+            k0 = 1;
+            for k = 3:size(s{i}{j},2)
+                delt = min(k-2,dw+1);
+                dist = NaN(1,delt);
                 for l = 1:delt
-                    dist(l) = pdist([s{i}{j}(1:k,k)';s{i}{j}(1:k,k-l)'],option.dist);
+                    bloc = s{i}{j}(k-l-1:-1:1,1:k-l);
+                    stop = find(s{i}{j}(k-l-1:-1:1,k) ...
+                                > min(s{i}{j}(k-l-1:-1:1,k-l),...
+                                      max(mean(bloc,2) - 2 * std(bloc,0,2),...
+                                          min(bloc,[],2))));
+                    if length(stop) < 2
+                        stop = k-l-1;
+                    else
+                        stop(end+1) = stop(end)+1;
+                        stopp = find(diff(stop(1:end-1)) == 1 & diff(stop,2) == 0,1);
+                        stop = stop(stopp);
+                    end
+                    if ~isempty(stop)
+                        dist(l) = ...stop * ...
+                                  sum(diff([s{i}{j}(k-l-stop:k-l-1,k),...
+                                            s{i}{j}(k-l-stop:k-l-1,k-l)],...
+                                           1,2));% ...
+                                      %.*((s{i}{j}(k-l-stop:k-l-1,k-1) - msij)...
+                                      %   /(Msij-msij)).^1); ...
+                                  %/ max(k-1, 100);
+                    end
                     if l == 1
-                        l0 = l;
-                    elseif dist(l) > dist(l0)
+                        dist0 = dist(l);
+                    end
+                    if l > 1 && dist(l) > dist(l0) && k-l >= k0
                         dist(l0) = dist(l);
-                        dist(l) = Inf;
+                        dist(l) = 0;
                     else
                         l0 = l;
+                        if l > 1 && k-l >= k0
+                            dist(l0) = dist0;
+                            k0 = k-1;
+                        end
                     end
                 end
-                best = Inf;
+                best = 0;
                 for l = 1:delt
                     %dist(l) = dist(l) + (l-1)/(dw+1);
-                    if dist(l) < best
+                    if dist(l) > best
                         best = dist(l);
                         bestl = l;
                     end
                 end
                 score{i}{j}(k) = best;
-                if bestl > 1
-                    score{i}{j}(k-1:k-bestl+1) = ...
-                        min(score{i}{j}(k-1:k-bestl+1),best);
-                end
+                %if bestl > 1
+                %    score{i}{j}(k-1:k-bestl+1) = ...
+                %        min(score{i}{j}(k-1:k-bestl+1),best);
+                %end
             end
         end
     end

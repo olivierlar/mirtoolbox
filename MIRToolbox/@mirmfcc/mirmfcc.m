@@ -6,7 +6,9 @@ function varargout = mirmfcc(orig,varargin)
 %
 %   Optional arguments:
 %       c = mirmfcc(...,'Rank',N) computes the coefficients of rank(s) N
-%           (default: N = 1:13).
+%           (default: N = 1:13). Beware that the coefficient related to the
+%           average energy is by convention here of rank 0. This zero value 
+%           can be included to the array N as well.
 %   If a is a frame decomposition, the temporal evolution of the MFCC,
 %       along the successive frames, is returned. In this case, a second
 %       option is available:
