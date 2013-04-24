@@ -92,7 +92,7 @@ if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
         if option.cluster || option.flux || option.new
             option.K = Inf; %150;
         else
-            option.K = 64;
+            option.K = 16; %64;
         end
     end
     if option.cluster || option.flux || option.new
@@ -115,62 +115,67 @@ end
 
 if option.new
     s = get(orig,'Data');
-    dw = 0; %40;
+    %dw = 0; %40;
     for i = 1:length(s)
         for j = 1:length(s{i})
-            sij0 = s{i}{j}(:);
-            sij0(sij0 == 1) = [];
-            Msij = max(sij0);
-            msij = min(sij0);
-            k0 = 1;
+            %sij0 = s{i}{j}(:);
+            %sij0(sij0 == 1) = [];
+            %Msij = max(sij0);
+            %msij = min(sij0);
+            %k0 = 1;
             for k = 3:size(s{i}{j},2)
-                delt = min(k-2,dw+1);
-                dist = NaN(1,delt);
-                for l = 1:delt
+                %delt = min(k-2,dw+1);
+                %dist = NaN(1,delt);
+                %for l = 1:delt
+                l = 1;
                     bloc = s{i}{j}(k-l-1:-1:1,1:k-l);
                     stop = find(s{i}{j}(k-l-1:-1:1,k) ...
                                 > min(s{i}{j}(k-l-1:-1:1,k-l),...
                                       max(mean(bloc,2) - 2 * std(bloc,0,2),...
                                           min(bloc,[],2))));
                     if length(stop) < 2
-                        stop = k-l-1;
+                        stop = k-l;
                     else
                         stop(end+1) = stop(end)+1;
                         stopp = find(diff(stop(1:end-1)) == 1 & diff(stop,2) == 0,1);
-                        stop = stop(stopp);
+                        if isempty(stopp)
+                            stop = k-l;
+                        else
+                            stop = stop(stopp);
+                        end
                     end
                     if ~isempty(stop)
-                        dist(l) = ... stop * ...
-                                  sum(diff([s{i}{j}(k-l-stop:k-l-1,k),...
-                                            s{i}{j}(k-l-stop:k-l-1,k-l)],...
-                                           1,2));% ...
+                        %dist(l) = ... stop * ...
+                          dist = sum(diff([s{i}{j}(k-l-stop+1:k-l-1,k),...
+                                    s{i}{j}(k-l-stop+1:k-l-1,k-l)],...
+                                   1,2));% ...
                                       %.*((s{i}{j}(k-l-stop:k-l-1,k-1) - msij)...
                                       %   /(Msij-msij)).^1); ...
                                   %/ max(k-1, 100);
                     end
-                    if l == 1
-                        dist0 = dist(l);
-                    end
-                    if l > 1 && dist(l) > dist(l0) && k-l >= k0
-                        dist(l0) = dist(l);
-                        dist(l) = 0;
-                    else
-                        l0 = l;
-                        if l > 1 && k-l >= k0
-                            dist(l0) = dist0;
-                            k0 = k-1;
-                        end
-                    end
-                end
-                best = 0;
-                for l = 1:delt
+                    %if l == 1
+                    %    dist0 = dist(l);
+                    %end
+                    %if l > 1 && dist(l) > dist(l0) && k-l >= k0
+                    %    dist(l0) = dist(l);
+                    %    dist(l) = 0;
+                    %else
+                    %    l0 = l;
+                    %    if l > 1 && k-l >= k0
+                    %        dist(l0) = dist0;
+                    %        k0 = k-1;
+                    %    end
+                    %end
+                %end
+                %best = 0;
+                %for l = 1:delt
                     %dist(l) = dist(l) + (l-1)/(dw+1);
-                    if dist(l) > best
-                        best = dist(l);
-                        bestl = l;
-                    end
-                end
-                score{i}{j}(k) = best;
+                %    if dist(l) > best
+                %        best = dist(l);
+                %        bestl = l;
+                %    end
+                %end
+                score{i}{j}(k) = max(dist,0); %best;
                 %if bestl > 1
                 %    score{i}{j}(k-1:k-bestl+1) = ...
                 %        min(score{i}{j}(k-1:k-bestl+1),best);
