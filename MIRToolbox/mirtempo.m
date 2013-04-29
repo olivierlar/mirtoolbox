@@ -305,7 +305,7 @@ function varargout = mirtempo(x,varargin)
         metre.type = 'String';
         metre.choice = {0,'Envelope','Novelty','Flux','Mix','SmoothGate'};
         metre.default = 0;
-        metre.keydefault = 'Envelope';
+        metre.keydefault = 'SmoothGate';
     option.metre = metre;
     
         change.key = 'Change';
