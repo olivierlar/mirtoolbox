@@ -65,7 +65,12 @@ function varargout = mirmetre(orig,varargin)
         sgate.type = 'Boolean';
         sgate.default = 0;
     option.sgate = sgate;
-    
+
+        minres.key = 'MinRes';
+        minres.type = 'Integer';
+        minres.default = .1;
+    option.minres = minres;
+
 %% option related to mirautocor:                
     
         nw.key = 'NormalWindow';
@@ -165,7 +170,7 @@ elseif option.flux
     y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
           'NormalWindow',option.nw);
 elseif option.sgate
-    o = mironsets(x,'SmoothGate','Detect',0,...
+    o = mironsets(x,'SmoothGate','MinRes',option.minres,'Detect',0,...
                     'Frame',option.frame.length.val,...
                             option.frame.length.unit,...
                             option.frame.hop.val,...

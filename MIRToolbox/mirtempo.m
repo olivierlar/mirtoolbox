@@ -308,6 +308,11 @@ function varargout = mirtempo(x,varargin)
         metre.keydefault = 'SmoothGate';
     option.metre = metre;
     
+        minres.key = 'MinRes';
+        minres.type = 'Integer';
+        minres.default = .1;
+    option.minres = minres;
+    
         change.key = 'Change';
         change.type = 'Boolean';
         change.default = 0;
@@ -361,7 +366,8 @@ if option.metre
     y = mirmetre(x,option.metre,'Frame',option.frame.length.val,...
                                         option.frame.length.unit,...
                                         option.frame.hop.val,...
-                                        option.frame.hop.unit);
+                                        option.frame.hop.unit,...
+                                'MinRes',option.minres);
 else
 
     if option.perio

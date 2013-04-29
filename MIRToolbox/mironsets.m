@@ -285,6 +285,11 @@ function varargout = mironsets(x,varargin)
         sgate.default = 0;
         sgate.when = 'Both';
     option.sgate = sgate;
+    
+        minres.key = 'MinRes';
+        minres.type = 'Integer';
+        minres.default = .1;
+    option.minres = minres;
 
 %%
         nomodif.key = 'NoModif';
@@ -417,7 +422,7 @@ if isamir(x,'miraudio')
                           'PowerSpectrum',option.powerspectrum);
     end
     if option.flux
-        z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City');
+        z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???
         if isempty(y)
             y = z;
         else
@@ -445,7 +450,8 @@ if isamir(x,'miraudio')
             y = y+z;
         end
     elseif option.sgate
-        y = mirspectrum(x,'max',5000,'Frame',.05,.2,'MinRes',.1,'dB');
+        y = mirspectrum(x,'max',5000,'Frame',.05,.2,...
+                          'MinRes',option.minres,'dB');
         y = mirflux(y,'Inc','BackSmooth','Dist','Gate');
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
