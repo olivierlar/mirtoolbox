@@ -158,7 +158,7 @@ else
     else
         t = [t,' flux'];
     end
-    disp(['Computing ' t '...'])
+    %disp(['Computing ' t '...'])
     ff = cell(1,length(m));
     newsr = cell(1,length(m));
     dist = str2func(option.dist);
@@ -221,10 +221,11 @@ else
                             elseif option.inc
                                 if option.bs
                                     back = mi(:,j+4,k);
-                                    for l = 1:20
+                                    %for l = 1:20
+                                    l = 210;
                                         back(1+floor(l/2):end-ceil(l/2)) = ...
                                             max(back(1:end-l),back(1+l:end));
-                                    end
+                                    %end
                                     mi(:,j+4,k) = back;
                                     back = max(mi(:, j:j+4 ,k), [],2);
                                     fl(1,j,k) = dist(back,mi(:,j+5,k),1);
