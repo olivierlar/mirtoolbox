@@ -160,6 +160,11 @@ function varargout = mirenvelope(orig,varargin)
         powerspectrum.type = 'Boolean';
         powerspectrum.default = 1;
     option.powerspectrum = powerspectrum;
+
+        timesmooth.key = 'TimeSmooth';
+        timesmooth.type = 'Boolean';
+        timesmooth.default = 0;
+    option.timesmooth = timesmooth;
     
 %% Options related to all methods:
     
@@ -296,7 +301,8 @@ if not(isamir(x,'mirenvelope'))
                                   option.frame.phase.unit,...
                                   option.frame.phase.atend,...
                                   'Window','hanning',option.band,...
-                                  'Power',option.powerspectrum);
+                                  'Power',option.powerspectrum,...
+                                  'TimeSmooth',option.timesmooth);
     end
 end
 
