@@ -7,6 +7,11 @@ function varargout = mirrms(x,varargin)
         notchunking.when = 'After';
         notchunking.default = 1;
     option.notchunking = notchunking;
+    
+        median.key = 'Median';
+        median.type = 'Boolean';
+        median.default = 0;
+    option.median = median;
         
         warning.key = 'Warning';
         warning.type = 'Boolean';
@@ -31,12 +36,17 @@ function x = main(x,option,postoption)
 if iscell(x)
     x = x{1};
 end
+if option.median
+    method = @median;
+else
+    method = @mean;
+end
 if ~isamir(x,'mirscalar')
     if option.warning && ~isamir(x,'miraudio')
         warning(['Do you really intend to apply MIRRMS on a ',class(x),'?']);
     end
     d = get(x,'Data');
-    v = mircompute(@algo,d);
+    v = mircompute(@algo,d,method);
     x = mirscalar(x,'Data',v,'Title','RMS energy');
 end
 if isstruct(postoption) && isfield(postoption,'notchunking') ...
@@ -45,13 +55,13 @@ if isstruct(postoption) && isfield(postoption,'notchunking') ...
 end
 
 
-function e = algo(d)
+function e = algo(d,method)
 nc = size(d,2);
 nch = size(d,3);
 e = zeros(1,nc,nch);
 for i = 1:nch
     for j = 1:nc
-        e(1,j,i) = d(:,j,i)'*d(:,j,i);
+        e(1,j,i) = method(d(:,j,i).^2); %d(:,j,i)'*d(:,j,i);
     end
 end
 
@@ -62,4 +72,4 @@ x = set(x,'Data',v);
 
     
 function d = afternorm(d,l)
-d = sqrt(d)/sqrt(l);
+d = sqrt(d);%/sqrt(l);
