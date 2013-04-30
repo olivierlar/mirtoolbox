@@ -85,11 +85,14 @@ function varargout = mirspectrum(orig,varargin)
 %           instead of a FFT, with a number of bins per octave fixed to nb.
 %           Default value for nb: 12 bins per octave.
 %
-%       mirspectrum(...,'Smooth',o): smooths the envelope using a movering
+%       mirspectrum(...,'Smooth',o): smooths the envelope using a moving
 %           average of order o.
 %           Default value when the option is toggled on: o=10
 %       mirspectrum(...,'Gauss',o): smooths the envelope using a gaussian
 %           of standard deviation o samples.
+%           Default value when the option is toggled on: o=10
+%       mirspectrum(...,'TimeSmooth',o): smooths each frequency channel of
+%           a spectrogram using a moving average of order o.
 %           Default value when the option is toggled on: o=10
 %       mirspectrum(...,'Phase',0): do not compute the FFT phase.
     
@@ -258,6 +261,13 @@ function varargout = mirspectrum(orig,varargin)
         gauss.keydefault = 10;
         gauss.when = 'After';
     option.gauss = gauss;
+
+        timesmooth.key = 'TimeSmooth';
+        timesmooth.type = 'Integer';
+        timesmooth.default = 0;
+        timesmooth.keydefault = 10;
+        timesmooth.when = 'After';
+    option.timesmooth = timesmooth;
     
         rapid.key = 'Rapid';
         rapid.type = 'Boolean';
@@ -537,6 +547,14 @@ for k = 1:length(m)
     if not(iscell(m{k}))
         m{k} = {m{k}};
         f{k} = {f{k}};
+    end
+end
+if option.timesmooth
+    B = ones(1,option.timesmooth)/option.timesmooth;
+    for h = 1:length(m)
+        for l = 1:length(m{k})
+            m{h}{l} = filter(B,1,m{h}{l},[],2);
+        end
     end
 end
 if get(s,'Power') == 1 && ...
