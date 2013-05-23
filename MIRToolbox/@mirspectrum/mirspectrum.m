@@ -554,6 +554,11 @@ if option.timesmooth
     for h = 1:length(m)
         for l = 1:length(m{k})
             m{h}{l} = filter(B,1,m{h}{l},[],2);
+            %mhl = m{h}{l};
+            %for i = 1:size(m{h}{l},2)
+            %    m{h}{l}(:,i) = min(mhl(:,max(1,i-option.timesmooth+1):i),...
+            %                       [],2);
+            %end
         end
     end
 end

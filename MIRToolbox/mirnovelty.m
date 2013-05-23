@@ -57,7 +57,12 @@ function varargout = mirnovelty(orig,varargin)
         new.type = 'Boolean';
         new.default = 0;
     option.new = new;
-    
+
+        simple.key = 'Simple';
+        simple.type = 'Boolean';
+        simple.default = 0;
+    option.simple = simple;
+
         half.key = 'Half';
         half.type = 'Boolean';
         half.default = 0;
@@ -80,6 +85,12 @@ function varargout = mirnovelty(orig,varargin)
         integr.when = 'After';
     option.integr = integr;
 
+        filter.key = 'Filter';
+        filter.type = 'Boolean';
+        filter.default = 0;
+        filter.when = 'After';
+    option.filter = filter;
+
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
@@ -93,7 +104,8 @@ varargout = mirfunction(@mirnovelty,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 type = 'mirscalar';
-if not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
+if ~option.simple && ...
+        not(isamir(x,'mirscalar') && strcmp(get(x,'Title'),'Novelty'))
     if isnan(option.K)
         if option.cluster || option.flux || option.new
             option.K = Inf; %150;
@@ -121,8 +133,24 @@ end
 
 if isa(orig,'mirscalar')
     score = get(orig,'Data');
-else
 
+elseif option.simple
+    d = get(orig,'Data');
+    for i = 1:length(d)
+        for j = 1:length(d{i})
+            buf = zeros(size(d{i}{j},1),1,size(d{i}{j},3),size(d{i}{j},4));
+            for k = 1:size(d{i}{j},2)
+                score{i}{j}(k) = sum(max(d{i}{j}(:,k,:,:) - buf,0).^3);
+                buf = max(d{i}{j}(:,k,:,:),buf);
+                low = find(d{i}{j}(:,k) < .001);
+                buf(low) = d{i}{j}(low,k);
+            end
+            score{i}{j} = atan((score{i}{j}/max(score{i}{j}))*20);
+        end
+    end
+    n = mirscalar(orig,'Data',score,'Title','Novelty'); 
+
+else
     if option.new
         s = get(orig,'Data');
         %dw = 0; %40;
@@ -133,6 +161,7 @@ else
                 %Msij = max(sij0);
                 %msij = min(sij0);
                 %k0 = 1;
+                score{i}{j} = zeros(1,size(s{i}{j},2));
                 for k = 3:size(s{i}{j},2)
                     %delt = min(k-2,dw+1);
                     %dist = NaN(1,delt);
@@ -319,6 +348,19 @@ if not(isempty(postoption))
                     end
                     score{k}{l}(i,:) = sco;
                 end
+            end
+        end
+    end
+    if postoption.filter
+        %a1 = exp(-1/(.1*4));
+        a2 = exp(-1/(.5*4));
+        %resp1 = filter(1-a1,[1 -a1],ones(4,1));
+        resp1 = [.5;.8;1];
+        resp2 = filter(1-a2,[1 -a2],[ones(10,1);zeros(30,1)]);
+        resp = [resp1;resp2(11:30)];
+        for k = 1:length(score)
+            for l = 1:length(score{k})
+                score{k}{l} = conv(score{k}{l},resp,'same');
             end
         end
     end
