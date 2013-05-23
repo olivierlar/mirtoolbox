@@ -161,7 +161,9 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         d2.method = method;
         y = {};
         for i = 1:size(chunks,2)
-            disp([meth,num2str(i),'/',num2str(nch),'...'])
+            if mirverbose
+                disp([meth,num2str(i),'/',num2str(nch),'...'])
+            end
             d2 = set(d2,'Chunk',[chunks(1,i) chunks(2,i) (i == size(chunks,2))]);
             
             if not(ischar(specif.eachchunk) && ...
