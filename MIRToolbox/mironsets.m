@@ -132,7 +132,13 @@ function varargout = mironsets(x,varargin)
             powerspectrum.type = 'Boolean';
             powerspectrum.default = 1;
         option.powerspectrum = powerspectrum;        
-                    
+
+            timesmooth.key = 'TimeSmooth';
+            timesmooth.type = 'Boolean';
+            timesmooth.default = 0;
+            timesmooth.keydefault = 10;
+        option.timesmooth = timesmooth;        
+
         sum.key = 'Sum';
         sum.type = 'Boolean';
         sum.default = 1;
@@ -419,7 +425,8 @@ if isamir(x,'miraudio')
                           'Tau',option.tau,'UpSample',option.up,...
                           'PreDecim',option.decim,'PostDecim',0,...
                           'Mu',option.mu,...
-                          'PowerSpectrum',option.powerspectrum);
+                          'PowerSpectrum',option.powerspectrum,...
+                          'TimeSmooth',option.timesmooth);
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???
@@ -506,9 +513,6 @@ if isa(o,'mirenvelope')
 end
 if isfield(postoption,'cthr')
     if isa(o,'mirenvelope')
-        if postoption.log
-            o = mirenvelope(o,'Log');
-        end
         if postoption.power
             o = mirenvelope(o,'Power');
         end
@@ -552,6 +556,9 @@ end
 
 if isfield(option,'sum') && option.sum
     o = mirsum(o,'Adjacent',option.sum);
+end
+if isa(o,'mirenvelope') && isfield(postoption,'log') && postoption.log
+    o = mirenvelope(o,'Log');
 end
 if isfield(option,'presel') && ...
         ischar(option.presel) && strcmpi(option.presel,'Klapuri99')
