@@ -28,7 +28,7 @@ for i = 1:nf
     di = di/max(max(max(abs(di))))*.9999;
     di = reshape(di,[],1);
     
-    if ~isempty(pp)
+    if ~isempty(pp) && ~isempty(pp{i}{1})
         pi = pp{i}{1}{1};
         d2i = zeros(length(di),1);
         for h = 1:length(pi)
