@@ -139,6 +139,11 @@ function varargout = mironsets(x,varargin)
             timesmooth.keydefault = 10;
         option.timesmooth = timesmooth;        
 
+            terhardt.key = 'Terhardt';
+            terhardt.type = 'Boolean';
+            terhardt.default = 0;
+        option.terhardt = terhardt;
+
         sum.key = 'Sum';
         sum.type = 'Boolean';
         sum.default = 1;
@@ -426,7 +431,8 @@ if isamir(x,'miraudio')
                           'PreDecim',option.decim,'PostDecim',0,...
                           'Mu',option.mu,...
                           'PowerSpectrum',option.powerspectrum,...
-                          'TimeSmooth',option.timesmooth);
+                          'TimeSmooth',option.timesmooth,...
+                          'Terhardt',option.terhardt);
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???

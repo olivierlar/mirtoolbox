@@ -164,7 +164,13 @@ function varargout = mirenvelope(orig,varargin)
         timesmooth.key = 'TimeSmooth';
         timesmooth.type = 'Boolean';
         timesmooth.default = 0;
+        timesmooth.keydefault = 10;
     option.timesmooth = timesmooth;
+    
+        terhardt.key = 'Terhardt';
+        terhardt.type = 'Boolean';
+        terhardt.default = 0;
+    option.terhardt = terhardt;
     
 %% Options related to all methods:
     
@@ -301,8 +307,10 @@ if not(isamir(x,'mirenvelope'))
                                   option.frame.phase.unit,...
                                   option.frame.phase.atend,...
                                   'Window','hanning',option.band,...
+                                  ...'dB',
                                   'Power',option.powerspectrum,...
-                                  'TimeSmooth',option.timesmooth);
+                                  'TimeSmooth',option.timesmooth,...
+                                  'Terhardt',option.terhardt);%,'Mel');
     end
 end
 
