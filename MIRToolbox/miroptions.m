@@ -282,7 +282,8 @@ while i <= length(varg)
                     end
                     if strcmpi(type,'String')
                         if length(varg) > i && ...
-                                (ischar(varg{i+1}) || varg{i+1} == 0)
+                                (ischar(varg{i+1}) || ...
+                                    varg{i+1} == 0 || varg{i+1} == 1)
                             if isfield(option.(field),'choice')
                                 match2 = 0;
                                 arg2 = varg{i+1};

@@ -252,8 +252,10 @@ function varargout = mirenvelope(orig,varargin)
     option.gauss = gauss;
 
         norm.key = 'Normal';
-        norm.type = 'Boolean';
+        norm.type = 'String';
+        norm.choice = {0,1,'AcrossSegments'};
         norm.default = 0;
+        norm.keydefault = 1;
         norm.when = 'After';
     option.norm = norm;
 
@@ -539,6 +541,12 @@ for k = 1:length(d)
         [sos,g] = zp2sos(z,p,gain);
         Hd = dfilt.df2tsos(sos,g);
     end
+    if ischar(postoption.norm) && strcmpi(postoption.norm,'AcrossSegments')
+        mdk = 0;
+        for i = 1:length(d{k})
+            mdk = max(mdk,max(abs(d{k}{i})));
+        end
+    end
     for i = 1:length(d{k})
         if isfield(postoption,'sampling') && postoption.sampling
             if and(sr{k}, not(sr{k} == postoption.sampling))
@@ -659,9 +667,12 @@ for k = 1:length(d)
             if postoption.c
                 d{k}{i} = center(d{k}{i});
             end    
-            if postoption.norm
+            if postoption.norm == 1
                 d{k}{i} = d{k}{i}./repmat(max(abs(d{k}{i})),...
                                          [size(d{k}{i},1),1,1]);
+            elseif ischar(postoption.norm) && ...
+                    strcmpi(postoption.norm,'AcrossSegments')
+                d{k}{i} = d{k}{i}./repmat(mdk,[size(d{k}{i},1),1,1]);
             end        
         end
     end
