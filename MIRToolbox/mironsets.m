@@ -233,6 +233,13 @@ function varargout = mironsets(x,varargin)
         up.default = 0;
         up.keydefault = 2;
     option.up = up;
+    
+        normal.key = 'Normal';
+        normal.type = 'String';
+        normal.choice = {0,1,'AcrossSegments'};
+        normal.default = 1;
+        normal.when = 'After';
+    option.normal = normal;
 
 %% options related to 'SpectralFlux'
         flux.key = 'SpectralFlux';
@@ -584,7 +591,9 @@ if isfield(postoption,'detect')
     if postoption.c || postoption.sgate
         o = mirenvelope(o,'Center');
     end
-    o = mirenvelope(o,'Normal');
+    if postoption.normal
+        o = mirenvelope(o,'Normal',postoption.normal);
+    end
 end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
