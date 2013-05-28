@@ -457,8 +457,8 @@ if option.segm
                     if interrupt
                         % Segment interrupted
                         if isempty(buffer) || ...
-                                length(buffer.pitch) < option.segmin || ...
-                                std(buffer.pitch) > 20
+                                ...%length(buffer.pitch) < option.segmin || ...
+                                std(buffer.pitch) > 25
                              if length(startp) > length(endp)
                                 startp(end) = [];
                             end
@@ -508,6 +508,60 @@ if option.segm
                 if length(startp) > length(meanp)
                     startp(end) = [];
                 end
+                
+                l = 1;
+                while l <= length(endp)
+                    if ~isempty(intersect(startp(l)-(1:5),breaks)) && ...
+                            ~isempty(intersect(endp(l)+(1:5),breaks))
+                        minlength = option.segmin;
+                    else
+                        minlength = 2;
+                    end
+                    if endp(l)-startp(l) > minlength
+                    % Segment sufficiently long
+                        if l>1 && ...
+                           startp(l) <= endp(l-1)+option.segtime && ...
+                           ...%(0 || ... deg(l) == deg(l-1) || ...
+                            abs(meanp(l)-meanp(l-1)) < 50
+                                % Segment fused with previous one
+                                startp(l) = [];
+                                meanp(l-1) = mean(meanp(l-1:l));
+                                meanp(l) = [];
+                                deg(l-1) = cent2deg(meanp(l-1),scale);
+                                deg(l) = [];
+                                endp(l-1) = [];
+                                found = 1;
+                        else
+                                l = l+1;
+                        end
+                    % Other cases: Segment too short
+                    elseif l>1 && ...
+                            startp(l) <= endp(l-1)+option.segtime && ...
+                            abs(meanp(l)-meanp(l-1)) < 50
+                        % Segment fused with previous one
+                        startp(l) = [];
+                        %meanp(l-1) = mean(meanp(l-1:l));
+                        meanp(l) = [];
+                        deg(l) = [];
+                        endp(l-1) = [];
+                    elseif l < length(meanp) && ...
+                            startp(l+1) <= endp(l)+option.segtime && ...
+                            abs(meanp(l+1)-meanp(l)) < 50
+                        % Segment fused with next one
+                        startp(l+1) = [];
+                        meanp(l) = meanp(l+1); %mean(meanp(l:l+1));
+                        meanp(l+1) = [];
+                        deg(l) = deg(l+1);
+                        deg(l+1) = [];
+                        endp(l) = [];
+                    else
+                        % Segment removed
+                        startp(l) = [];
+                        meanp(l) = [];
+                        deg(l) = [];
+                        endp(l) = [];
+                    end
+                end               
                                
                 l = 1;
                 while l <= length(endp)
