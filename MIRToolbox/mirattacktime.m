@@ -22,13 +22,19 @@ function varargout = mirattacktime(orig,varargin)
         single.default = 0;
     option.single = single;
     
+        log.key = 'LogOnset';
+        log.type = 'Boolean';
+        log.default = 0;
+    option.log = log;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Single',option.single,'Filter');
+o = mironsets(x,'Attack','Single',option.single,...
+                'Log',option.log,'Filter','Normal','AcrossSegments');
 type = mirtype(x);
 
 
