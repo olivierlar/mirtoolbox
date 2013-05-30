@@ -146,11 +146,11 @@ function [f,p,m,fe] = mirsegment(x,varargin)
             thron.default = .02;
         option.thron = thron;
 
-        strat.choice = {'Novelty','HCDF','RMS'}; % should remain as last field
+        strat.choice = {'Novelty','HCDF','RMS','Silence'}; % should remain as last field
         strat.default = 'Novelty';
         strat.position = 2;
     option.strat = strat;
-   
+
 specif.option = option;
 
 
@@ -191,9 +191,6 @@ elseif isa(x,'mirdata')
     [unused option] = miroptions(@mirframe,x,specif,varargin);
     if ischar(option.strat)
         dx = get(x,'Data');
-        if size(dx{1},2) > 1
-            error('ERROR IN MIRSEGMENT: The segmentation of audio signal already decomposed into frames is not available for the moment.');
-        end
         if strcmpi(option.strat,'Novelty')
             if not(option.frame.length.val)
                 if strcmpi(option.ana,'Keystrength')
@@ -244,10 +241,12 @@ elseif isa(x,'mirdata')
                 option.frame.hop.val = .5;
             end
             fr = mirframenow(x,option);
-            %[df m fe] = mirhcdf(fr);
             df = mirrms(fr);
             fp = get(df,'FramePos');
-            p = mircompute(@findsilence,df,fp,option.throff,option.thron);
+            p = mircompute(@findsilenceRMS,df,fp,option.throff,option.thron);
+        elseif strcmpi(option.strat,'Silence')
+            t = get(x,'Pos');
+            p = mircompute(@findsilenceenvelope,x,t,3,.3,2);
         end
         f = mirsegment(x,p);
     else
@@ -275,19 +274,25 @@ elseif isa(x,'mirdata')
         cl = cell(1,length(dx));
         l = cell(1,length(dx));
         for k = 1:length(dx)
-            dxk = dx{k}{1}; % values in kth audio file
-            dtk = dt{k}{1}; % time positions in kth audio file
+            dxk = dx{k}; % values in kth audio file
+            dtk = dt{k}; % time positions in kth audio file
             if isa(option.strat,'mirdata')
                 dsk = ds{k}{1}; % segmentation times in kth audio file
+            elseif iscell(ds)
+                dsk = ds{k};
             elseif size(ds,2) == length(dx)
                 dsk = {ds(:,k)};
             else
                 dsk = ds;
             end
-            fsk = [];   % the structured array of segmentation times 
-                         % needs to be flatten
+            if length(dxk) == 1
+                fsk = [];   % the structured array of segmentation times 
+                            % is flatten
+            else
+                fsk = cell(1,length(dxk));
+            end
             for j = 1:length(dsk)
-                if isa(option.strat,'mirdata')
+                if iscell(dsk) %isa(option.strat,'mirdata')
                     dsj = dsk{j}; % segmentation times in jth segment
                 else
                     dsj = dsk;
@@ -314,8 +319,8 @@ elseif isa(x,'mirdata')
                         mirerror('MIRSEGMENT',...
                             'Segmentation matrix is not of required size.');
                     end
-                    dsm(dsm <= dtk(1)) = [];
-                    dsm(dsm >= dtk(end)) = [];
+                    dsm(dsm <= dtk{j}(1)) = [];
+                    dsm(dsm >= dtk{j}(end)) = [];
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
@@ -323,25 +328,33 @@ elseif isa(x,'mirdata')
                     % Practically, the peak picking for instance is based 
                     % therefore on a frame analysis (such as novelty), and
                     % segmentation are inferred between these frames...
-                    fsk = [fsk dsm];
+                    
+                    if length(dxk) == 1
+                        fsk = [fsk dsm];
+                    end
+                end
+                if length(dxk)>1
+                    fsk{j} = sort(dsm);
                 end
             end
 
-            fsk = sort(fsk); % Here is the chronological ordering
+            if length(dxk) == 1
+                fsk = sort(fsk); % Here is the chronological ordering
+            end
             
             if isempty(fsk)
-                ffsk = {[dtk(1);dtk(end)]};
-                sxk = {dxk};
-                stk = {dtk};
-                lk = {dtk(end)-dtk(1)};
+                ffsk = {[dtk{1}(1);dtk{end}(end)]};
+                sxk = {dxk{1}};
+                stk = {dtk{1}};
+                lk = {dtk{end}(end)-dtk{1}(1)};
                 n = 1;
-            else
+            elseif length(dxk) == 1
                 ffsk = cell(1,length(fsk)+1);
-                ffsk{1} = [dtk(1);fsk(1)];
+                ffsk{1} = [dtk{1}(1);fsk(1)];
                 for h = 1:length(fsk)-1
                     ffsk{h+1} = [fsk(h);fsk(h+1)];
                 end
-                ffsk{end} = [fsk(end);dtk(end)];
+                ffsk{end} = [fsk(end);dtk{end}(end)];
                 
                 n = length(ffsk);
 
@@ -349,24 +362,63 @@ elseif isa(x,'mirdata')
                                     % segmentations in the channel
                 crd0 = 0;
                 for i = 1:n
-                    crd0 = crd0 + find(dtk(crd0+1:end)>=ffsk{i}(1),1);
+                    crd0 = crd0 + find(dtk{1}(crd0+1:end)>=ffsk{i}(1),1);
                     crd(i) = crd0;
                 end
-                crd(n+1) = size(dxk,1)+1;
+                crd(n+1) = size(dxk{1},1)+1;
 
                 sxk = cell(1,n); % each cell contains a segment
                 stk = cell(1,n); % each cell contains
                                  % the corresponding time positions
                 lk = cell(1,n);  % each cell containing the segment length
                 for i = 1:n
-                    sxk{i} = dxk(crd(i):crd(i+1)-1,1,:);
-                    stk{i} = dtk(crd(i):crd(i+1)-1);
+                    sxk{i} = dxk{1}(crd(i):crd(i+1)-1,1,:);
+                    stk{i} = dtk{1}(crd(i):crd(i+1)-1);
                     lk{i} = size(stk{i},1);
+                end
+            else
+                sxk = {};
+                stk = {};
+                fpsk = {};
+                lk = {};
+                n = 0;
+                for i = 1:length(dxk)
+                    if isempty(fsk{i})
+                        fpsk{end+1} = [dtk{i}(1);dtk{i}(end)];
+                        sxk{end+1} = dxk{i};
+                        stk{end+1} = dtk{i};
+                        lk{end+1} = dtk{i}(end)-dtk{i}(1);
+                        n = n+1;
+                    else
+                        ffsk = cell(1,length(fsk{i})+1);
+                        ffsk{1} = [dtk{i}(1);fsk{i}(1)];
+                        for h = 1:length(fsk{i})-1
+                            ffsk{h+1} = [fsk{i}(h);fsk{i}(h+1)];
+                        end
+                        ffsk{end} = [fsk{i}(end);dtk{i}(end)];
+                        ni = length(ffsk);
+                        crd = zeros(1,ni+1); % the sample positions of the
+                                            % segmentations in the channel
+                        crd0 = 0;
+                        for j = 1:ni
+                            crd0 = crd0 + find(dtk{i}(crd0+1:end)>=ffsk{j}(1),1);
+                            crd(j) = crd0;
+                        end
+                        crd(ni+1) = size(dxk{i},1)+1;
+
+                        for j = 1:ni
+                            sxk{end+1} = dxk{i}(crd(j):crd(j+1)-1,1,:);
+                            stk{end+1} = dtk{i}(crd(j):crd(j+1)-1);
+                            lk{end+1} = size(stk{end},1);
+                            fpsk{end+1} = ffsk{j};
+                        end
+                        n = n+ni;
+                    end
                 end
             end
             sx{k} = sxk;
             st{k} = stk;
-            fp{k} = ffsk;
+            fp{k} = fpsk;
             l{k} = lk;
             cl{k} = 1:n;
         end
@@ -381,7 +433,7 @@ else
 end 
 
 
-function p = findsilence(d,fp,throff,thron)
+function p = findsilenceRMS(d,fp,throff,thron)
 d = [0 d 0];
 begseg = find(d(1:end-1)<thron & d(2:end)>=thron);
 nseg = length(begseg);
@@ -397,3 +449,32 @@ begseg(removed) = [];
 %endseg(removed) = [];
 %endseg(end) = min(endseg(end),length(d)+1);
 p = fp(1,begseg); %; fp(2,endseg-1)];
+
+
+function p = findsilenceenvelope(d,t,l,thr1,thr2)
+high = 0;
+p = [];
+i = 1;
+while i <= length(d)
+    if d(i) > high
+        high = d(i);
+    elseif d(i) < high*thr1 && i <= length(d)-l
+        pi = find(d(i+1:end) > high*thr1,1);
+        if isempty(pi)
+            break
+        end
+        low = min(d(i:i+pi));
+        i = i+pi;
+        if pi < l
+            break
+        end
+        pi = find(d(i:end) > low*thr2,1);
+        if isempty(pi)
+            break
+        end
+        i = i+pi-1;
+        p(end+1) = t(i);
+        high = d(i);
+    end
+    i = i+1;
+end
