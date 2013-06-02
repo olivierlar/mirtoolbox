@@ -245,16 +245,19 @@ elseif isa(x,'mirdata')
             fp = get(df,'FramePos');
             p = mircompute(@findsilenceRMS,df,fp,option.throff,option.thron);
         elseif strcmpi(option.strat,'Silence')
-            t = get(x,'Pos');
-            p = mircompute(@findsilenceenvelope,x,t,3,.3,2);
+            o = mironsets(x,'Normal','AcrossSegments');
+            t = get(o,'Pos');
+            p = mircompute(@findsilenceenvelope,o,t,3,.3,2);
         end
         f = mirsegment(x,p);
     else
         dx = get(x,'Data');
         dt = get(x,'Time');
-
+        de = [];
+        
         if isa(option.strat,'mirpitch')
             ds = get(option.strat,'Start');
+            de = get(option.strat,'End');
             fp = get(option.strat,'FramePos');
         elseif isa(option.strat,'mirscalar')
             ds = get(option.strat,'PeakPos');
@@ -276,8 +279,10 @@ elseif isa(x,'mirdata')
         for k = 1:length(dx)
             dxk = dx{k}; % values in kth audio file
             dtk = dt{k}; % time positions in kth audio file
+            dek = [];
             if isa(option.strat,'mirdata')
                 dsk = ds{k}{1}; % segmentation times in kth audio file
+                dek = de{k}{1};
             elseif iscell(ds)
                 dsk = ds{k};
             elseif size(ds,2) == length(dx)
@@ -294,16 +299,23 @@ elseif isa(x,'mirdata')
             for j = 1:length(dsk)
                 if iscell(dsk) %isa(option.strat,'mirdata')
                     dsj = dsk{j}; % segmentation times in jth segment
+                    if ~isempty(dek)
+                        dej = dek{j};
+                    end
                 else
                     dsj = dsk;
                 end
                 if not(iscell(dsj))
                     dsj = {dsj};
+                    if ~isempty(dek)
+                        dej = {dej};
+                    end
                 end
                 for m = 1:length(dsj)
                     % segmentation times in mth bank channel
                     if isa(option.strat,'mirscalar')
-                        dsm = mean(fp{k}{m}(:,dsj{m}));
+                        dsm = fp{k}{m}(1,dsj{m});
+                        dem = fp{k}{m}(2,dej{m});
                     elseif isa(option.strat,'mirdata')
                         dsm = xx{k}{m}(dsj{m});
                     else
@@ -321,6 +333,10 @@ elseif isa(x,'mirdata')
                     end
                     dsm(dsm <= dtk{j}(1)) = [];
                     dsm(dsm >= dtk{j}(end)) = [];
+                    if ~isempty(dek)
+                        dem(dem <= dtk{j}(1)) = [];
+                        dem(dem >= dtk{j}(end)) = [];
+                    end
                     % It is presupposed here that the segmentations times
                     % for a given channel are not decomposed per frames,
                     % because the segmentation of the frame decomposition
@@ -348,7 +364,32 @@ elseif isa(x,'mirdata')
                 stk = {dtk{1}};
                 lk = {dtk{end}(end)-dtk{1}(1)};
                 n = 1;
+            elseif ~isempty(de)
+                ffsk = cell(1,length(fsk));
+                for h = 1:length(fsk)
+                    ffsk{h} = [fsk(h);dem(h)];
+                end
+                
+                n = length(ffsk);
+
+                crd = zeros(2,n); % the sample positions of the
+                                    % segmentations in the channel
+                for i = 1:n
+                    crd(1,i) = find(dtk{1} >= ffsk{i}(1),1);
+                    crd(2,i) = find(dtk{1} >= ffsk{i}(2),1);
+                end
+                sxk = cell(1,n); % each cell contains a segment
+                stk = cell(1,n); % each cell contains
+                                 % the corresponding time positions
+                lk = cell(1,n);  % each cell containing the segment length
+                for i = 1:n
+                    sxk{i} = dxk{1}(crd(1,i):crd(2,i),1,:);
+                    stk{i} = dtk{1}(crd(1,i):crd(2,i));
+                    lk{i} = size(stk{i},1);
+                end
+                fpsk = ffsk;
             elseif length(dxk) == 1
+                % Input audio is not already segmented
                 ffsk = cell(1,length(fsk)+1);
                 ffsk{1} = [dtk{1}(1);fsk(1)];
                 for h = 1:length(fsk)-1
@@ -376,6 +417,7 @@ elseif isa(x,'mirdata')
                     stk{i} = dtk{1}(crd(i):crd(i+1)-1);
                     lk{i} = size(stk{i},1);
                 end
+                fpsk = ffsk;
             else
                 sxk = {};
                 stk = {};
@@ -464,6 +506,9 @@ while i <= length(d)
             break
         end
         low = min(d(i:i+pi));
+        if high-low < .02
+            break
+        end
         i = i+pi;
         if pi < l
             break
