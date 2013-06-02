@@ -29,7 +29,7 @@ for i = 1:l
                 end
             end
         end
-        if nargout == 1 
+        if 1%nargout == 1 
             res = algo(vk{:});
         elseif nargout == 2
             [res res2] = algo(vk{:});

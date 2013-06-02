@@ -23,6 +23,11 @@ function varargout = mirattackleap(orig,varargin)
         log.default = 0;
     option.log = log;
 
+        minlog.key = 'MinLog';
+        minlog.type = 'Integer';
+        minlog.default = 0;
+    option.minlog = minlog;    
+
 specif.option = option;
 
 varargout = mirfunction(@mirattackleap,orig,varargin,nargout,specif,@init,@main);
@@ -30,7 +35,8 @@ varargout = mirfunction(@mirattackleap,orig,varargin,nargout,specif,@init,@main)
 
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
-                'Log',option.log,'Filter','Normal','AcrossSegments');
+                'Log',option.log,'MinLog',option.minlog,...
+                'Filter','Normal','AcrossSegments');
 type = mirtype(x);
 
 
