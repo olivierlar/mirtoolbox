@@ -167,6 +167,12 @@ function varargout = mironsets(x,varargin)
         oplog.when = 'After';
     option.log = oplog;
 
+        minlog.key = 'MinLog';
+        minlog.type = 'Integer';
+        minlog.default = 0;
+        minlog.when = 'After';
+    option.minlog = minlog;
+
         oppow.key = 'Power';
         oppow.type = 'Boolean';
         oppow.default = 0;
@@ -570,6 +576,9 @@ end
 if isfield(option,'sum') && option.sum
     o = mirsum(o,'Adjacent',option.sum);
 end
+if isa(o,'mirenvelope') && ~isequal(postoption.normal,0) && ~get(o,'Log')
+    o = mirenvelope(o,'Normal',postoption.normal);
+end
 if isa(o,'mirenvelope') && isfield(postoption,'log') && postoption.log
     o = mirenvelope(o,'Log');
 end
@@ -587,13 +596,13 @@ if isfield(option,'presel') && ...
     o = mirsum(o,'Weights',(filtfreq(1:end-1)+filtfreq(2:end))/2);
     o = mirenvelope(o,'Smooth',12);
 end
-if isfield(postoption,'detect')
+%if isfield(postoption,'detect')
     if postoption.c || postoption.sgate
         o = mirenvelope(o,'Center');
     end
-    if postoption.normal
-        o = mirenvelope(o,'Normal',postoption.normal);
-    end
+%end
+if isa(o,'mirenvelope') && postoption.minlog
+    o = mirenvelope(o,'MinLog',postoption.minlog);
 end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
