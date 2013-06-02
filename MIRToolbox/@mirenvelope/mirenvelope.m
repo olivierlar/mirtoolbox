@@ -211,6 +211,12 @@ function varargout = mirenvelope(orig,varargin)
         oplog.when = 'After';
     option.log = oplog;
 
+        minlog.key = 'MinLog';
+        minlog.type = 'Integer';
+        minlog.default = 0;
+        minlog.when = 'After';
+    option.minlog = minlog;
+
         oppow.key = 'Power';
         oppow.type = 'Boolean';
         oppow.default = 0;
@@ -250,6 +256,12 @@ function varargout = mirenvelope(orig,varargin)
         gauss.keydefault = 30;
         gauss.when = 'After';
     option.gauss = gauss;
+
+   %     iir.key = 'IIR';
+   %     iir.type = 'Boolean';
+   %     iir.default = 0;
+   %     iir.when = 'After';
+   % option.iir = iir;
 
         norm.key = 'Normal';
         norm.type = 'String';
@@ -333,6 +345,7 @@ if isamir(orig,'mirscalar')
     e.downsampl = 0;
     e.hwr = 0;
     e.diff = 0;
+    e.log = 0;
     e.method = 'Scalar';
     e.phase = {{}};
     e = class(e,'mirenvelope',mirtemporal(orig));
@@ -395,7 +408,7 @@ elseif strcmpi(option.method,'Spectro')
     e.downsampl = 0;
     e.hwr = 0;
     e.diff = 0;
-    %e.todelete = {};
+    e.log = 0;
     e.method = 'Spectro';
     e.phase = ph;
     e = class(e,'mirenvelope',mirtemporal(orig));
@@ -418,6 +431,7 @@ else
     e.downsampl = 1;
     e.hwr = 0;
     e.diff = 0;
+    e.log = 0;
     e.method = option.filter;
     e.phase = {};
     e = class(e,'mirenvelope',mirtemporal(orig));
@@ -580,7 +594,7 @@ for k = 1:length(d)
                 d{k}{i}(1:tdk,:,:) = repmat(d{k}{i}(tdk,:,:),[tdk,1,1]); 
                 d{k}{i}(end-tdk+1:end,:,:) = repmat(d{k}{i}(end-tdk,:,:),[tdk,1,1]);
             end
-            if postoption.log
+            if postoption.log && ~get(e,'Log')
                 d{k}{i} = log10(d{k}{i});
             end
             if postoption.mu
@@ -657,6 +671,15 @@ for k = 1:length(d)
                 y = y(4*sigma:end,:,:);
                 d{k}{i} = y(1:size(d{k}{i},1),:,:);
             end
+            %if postoption.iir
+            %    a2 = exp(-1/(.4*sr{k}));
+            %    d{k}{i} = filter(1-a2,[1 -a2],d{k}{i});
+            %                 %    [d{k}{i};zeros(postoption.filter,...
+            %                 %                   size(d{k}{i},2),...
+            %                 %                   size(d{k}{i},3))]);
+            %    %d{k}{i} = y(1+ceil(postoption.filter/2):...
+            %    %             end-floor(postoption.filter/2),:,:);
+            %end
             if postoption.chwr
                 d{k}{i} = center(d{k}{i});
                 d{k}{i} = hwr(d{k}{i});
@@ -666,14 +689,20 @@ for k = 1:length(d)
             end
             if postoption.c
                 d{k}{i} = center(d{k}{i});
-            end    
-            if postoption.norm == 1
-                d{k}{i} = d{k}{i}./repmat(max(abs(d{k}{i})),...
-                                         [size(d{k}{i},1),1,1]);
-            elseif ischar(postoption.norm) && ...
-                    strcmpi(postoption.norm,'AcrossSegments')
-                d{k}{i} = d{k}{i}./repmat(mdk,[size(d{k}{i},1),1,1]);
-            end        
+            end  
+            if get(e,'Log')
+                if postoption.minlog
+                    d{k}{i}(d{k}{i} < -postoption.minlog) = NaN;
+                end
+            else
+                if postoption.norm == 1
+                    d{k}{i} = d{k}{i}./repmat(max(abs(d{k}{i})),...
+                                             [size(d{k}{i},1),1,1]);
+                elseif ischar(postoption.norm) && ...
+                        strcmpi(postoption.norm,'AcrossSegments')
+                    d{k}{i} = d{k}{i}./repmat(mdk,[size(d{k}{i},1),1,1]);
+                end
+            end
         end
     end
     if isfield(postoption,'sampling')
@@ -702,6 +731,9 @@ if isfield(postoption,'sampling')
     end
     if postoption.chwr
         e = set(e,'Halfwave',1,'Centered',1);
+    end
+    if postoption.log
+        e = set(e,'Log',1);
     end
 end
 e = set(e,'Data',d,'Time',tp);
