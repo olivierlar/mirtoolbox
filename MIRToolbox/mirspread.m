@@ -37,7 +37,7 @@ else
     t = ['Spread of ',get(x,'Title')];
 end
 S = mirscalar(x,'Data',y,'Title',t);
-if isstruct(postoption) && ...
+if isstruct(postoption)  && strcmpi(get(x,'Title'),'Spectrum') && ...
         isfield(postoption,'minrms') && postoption.minrms
     S = after(x,S,postoption.minrms);
 end

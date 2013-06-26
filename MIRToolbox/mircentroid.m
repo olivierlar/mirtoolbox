@@ -97,7 +97,7 @@ c = (p'*d) ./ sum(d);
 
 function c = after(x,c,minrms,maxentropy)
 v = get(c,'Data');
-if minrms
+if minrms && strcmpi(get(x,'Title'),'Spectrum')
     r = mirrms(x,'Warning',0);
     v = mircompute(@trimrms,v,get(r,'Data'),minrms);
 end

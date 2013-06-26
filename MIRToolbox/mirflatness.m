@@ -58,7 +58,7 @@ else
     t = ['Flatness of ',get(x,'Title')];
 end
 f = mirscalar(x,'Data',y,'Title',t,'Unit','');
-if isstruct(postoption) && ...
+if isstruct(postoption) && strcmpi(get(x,'Title'),'Spectrum') && ...
         isfield(postoption,'minrms') && postoption.minrms
     f = after(x,f,postoption.minrms);
 end
