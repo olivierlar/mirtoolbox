@@ -475,10 +475,10 @@ if isempty(sg)
         if i < size(chunks,2)
             ds = get(new{1},'Data');
             ps = get(new{1},'Pos');
-           % ftell(d2.tmpfile.fid)
+            %ftell(d2.tmpfile.fid)
             count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
             count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
-           % ftell(d2.tmpfile.fid)
+            %ftell(d2.tmpfile.fid)
             clear ds ps
         end
         res = new;
@@ -686,14 +686,19 @@ for i = 1:length(argin)
             end
             sz = (ch(2)-ch(1)+1);
             current = ftell(tmpfile.fid);
-            fseek(tmpfile.fid,current-sz*(channels+1)*8,'bof');
+            origin = current-sz*(channels+1)*8;
+            if origin < 0
+                sz = sz + origin/(channels+1)/8;
+                origin = 0;
+            end
+            fseek(tmpfile.fid,origin,'bof');
             %ftell(tmpfile.fid)
             [data count] = fread(tmpfile.fid,[sz,channels],'double');
             %count
             data = reshape(data,[sz,1,channels]);
             [pos count] = fread(tmpfile.fid,sz,'double');
             %count
-           % ftell(tmpfile.fid)
+            %ftell(tmpfile.fid)
             fseek(tmpfile.fid,current-sz*(channels+1)*8,'bof');
             a = set(a,'Data',{{data}},'Pos',{{pos}});
             if ch(3)
