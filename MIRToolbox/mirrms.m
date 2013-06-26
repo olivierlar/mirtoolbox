@@ -36,7 +36,7 @@ function x = main(x,option,postoption)
 if iscell(x)
     x = x{1};
 end
-if option.median
+if ~isempty(option) && option.median
     method = @median;
 else
     method = @mean;
@@ -61,7 +61,8 @@ nch = size(d,3);
 e = zeros(1,nc,nch);
 for i = 1:nch
     for j = 1:nc
-        e(1,j,i) = method(d(:,j,i).^2); %d(:,j,i)'*d(:,j,i);
+        dj = d(:,j,i).^2;
+        e(1,j,i) = method(dj);
     end
 end
 
@@ -72,4 +73,4 @@ x = set(x,'Data',v);
 
     
 function d = afternorm(d,l)
-d = sqrt(d);%/sqrt(l);
+d = sqrt(d);
