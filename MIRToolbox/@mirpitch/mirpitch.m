@@ -124,7 +124,12 @@ function varargout = mirpitch(orig,varargin)
         ce.type = 'Boolean';
         ce.default = 0;
     option.ce = ce;
-        
+
+        comb.key = 'Comb';
+        comb.type = 'Boolean';
+        comb.default = 0;
+    option.comb = comb;
+    
 %% peak picking options
 
         m.key = 'Total';
@@ -208,7 +213,13 @@ function varargout = mirpitch(orig,varargin)
             segtime.type = 'Integer';
             segtime.when = 'Both';
             segtime.default = 20;
-        option.segtime = segtime;        
+        option.segtime = segtime;      
+        
+            octgap.key = 'OctaveGap';
+            octgap.type = 'Boolean';
+            octgap.when = 'Both';
+            octgap.default = 0;
+        option.octgap = octgap;
 
         ref.key = 'Ref';
         ref.type = 'Integer';
@@ -328,7 +339,9 @@ else
         end
         if option.as || option.ce || option.s
             x = mirframenow(orig,option);
-            if option.s
+            if option.comb
+                y = mirspectrum(x,'Min',option.mi,'Max',2000,'Res',1);%,'Sum');
+            elseif option.s
                 s = mirspectrum(x,'Min',option.mi,'Max',option.ma); %,'Res'?
                 if option.ac
                     y = y*s;
@@ -364,10 +377,12 @@ type = {'mirpitch',mirtype(y)};
     
 
 function o = main(x,option,postoption)
-if option.multi && option.m == 1
+if option.comb == 2
     option.m = Inf;
-end
-if (option.mono && option.m == Inf) || option.segm
+    option.order = 'Abscissa';
+elseif option.multi && option.m == 1
+    option.m = Inf;
+elseif (option.mono && option.m == Inf) || option.segm
     option.m = 1;
 end
 if iscell(x)
@@ -379,6 +394,47 @@ if iscell(x)
 else
     x2 = [];
 end
+
+if option.comb == 1
+    d = get(x,'Data');
+    pos = get(x,'Pos');
+    cb = cell(1,length(d));
+    for i = 1:length(d)
+        cb{i} = cell(1,length(d{i}));
+        for j = 1:length(d{i})
+            cb{i}{j} = zeros(size(d{i}{j},1),...
+                             size(d{i}{j},2),...
+                             size(d{i}{j},3));
+            dij = d{i}{j}/max(max(max(d{i}{j})));
+            for h = 1:size(d{i}{j},1)
+                ph = pos{i}{j}(h,1,1);
+                ip = h;
+                for k = 2:size(d{i}{j},1)
+                    [unused mp] = min(abs(pos{i}{j}(ip(end)+1:end,1,1) ...
+                                          - ph * k));
+                    if isempty(mp)
+                        break
+                    end
+                    ip(end+1) = ip(end) + mp;
+                end
+                if length(ip) == 1
+                    break
+                end
+                cbh = sum(dij(ip,:,:));
+                for k = 1:length(ip)
+                    cbh = cbh .* ...
+                        (.5 * (2 - ...
+                               exp(-(max(dij(ip(1:k),:,:),[],1).^2 * 5000))));
+                end
+                cb{i}{j}(h,:,:) = cbh;
+            end
+            cb{i}{j}(h+1:end,:,:) = [];
+            pos{i}{j}(h+1:end,:,:) = [];
+        end
+    end
+    x = set(x,'Data',cb,'Pos',pos,'Title','Spectral Comb');
+end
+
 if not(isa(x,'mirpitch') || isa(x,'mirmidi'))
     x = mirpeaks(x,'Total',option.m,'Track',option.track,...
                    'Contrast',option.cthr,'Threshold',option.thr,...
@@ -394,6 +450,60 @@ end
 fp = get(x,'FramePos');
 
 punit = 'Hz';
+
+if option.comb == 2
+    pp = get(x,'PeakPos');
+    pv = get(x,'PeakVal');
+    pm = get(x,'PeakMode');
+    f = get(x,'Pos');
+    for i = 1:length(pf)
+        for j = 1:length(pf{i})
+            maxf = f{i}{j}(end,1);
+            for h = 1:length(pf{i}{j})
+                sco = zeros(length(pf{i}{j}{h}),1);
+                for k = 1:length(pf{i}{j}{h})
+                    fk = pf{i}{j}{h}(k);
+                    if fk > option.ma
+                        break
+                    end
+                    ws = zeros(round(maxf / fk) ,1);
+                    %err = mod(pf{i}{j}{h}/fk,1);
+                    %err = min(err,1-err);
+                    ws(1) = pa{i}{j}{h}(k);
+                    for l = k+1:length(pf{i}{j}{h})
+                        r = round(pf{i}{j}{h}(l) / fk);
+                        if r == 1
+                            continue
+                        end
+                        err = mod(pf{i}{j}{h}(l) / fk ,1);
+                        err = min(err,1-err);
+                        ws(r) = max(ws(r),pa{i}{j}{h}(l).*exp(-err^2*50));
+                    end
+                    
+                    sco(k) = sum(ws);
+                    if length(ws)>3 && ws(3)<.5
+                        sco(k) = sco(k)/2;
+                    end
+                    %if length(ws)>5 && ws(5)<.5
+                    %    sco(k) = sco(k)/2;
+                    %end
+                        %/(1+length(find(ws(2:end-1)<.01)));
+                    %sco(k) = sum(pa{i}{j}{h}.*exp(-err));
+                end
+                %pa{i}{j}{h} = sco;
+                [unused b] = max(sco);
+                pf{i}{j}{h} = pf{i}{j}{h}(b);
+                pa{i}{j}{h} = pa{i}{j}{h}(b);
+                pp{i}{j}{h} = pp{i}{j}{h}(b);
+                pv{i}{j}{h} = pv{i}{j}{h}(b);
+                pm{i}{j}{h} = pm{i}{j}{h}(b);
+            end
+        end
+    end
+    x = set(x,'PeakPrecisePos',pf,'PeakPreciseVal',pa,...
+              'PeakPos',pp,'PeakVal',pv,'PeakMode',pm);
+end
+
 if (option.cent || option.segm) && ...
         (~isa(x,'mirpitch') || strcmp(get(x,'Unit'),'Hz'))
     punit = 'cents';
@@ -565,17 +675,58 @@ if option.segm
                                
                 l = 1;
                 while l <= length(endp)
-                    if max([pa{i}{j}{1,startp(l):endp(l),k}]) < maxp/10 ...
-                            && isempty(pa{i}{j}{1,startp(l)-1,k}) ...
-                            && isempty(pa{i}{j}{1,endp(l)+1,k})
+                    if (max([pa{i}{j}{1,startp(l):endp(l),k}]) < maxp/20 ...
+                                && isempty(pa{i}{j}{1,startp(l)-1,k}) ...
+                                && isempty(pa{i}{j}{1,endp(l)+1,k})) ...
+                            || endp(l) - startp(l) < option.segmin
                         % Segment removed
+                        fusetest = endp(l) - startp(l) < option.segmin;                        
                         startp(l) = [];
                         meanp(l) = [];
                         deg(l) = [];
                         endp(l) = [];
                         stabl(l) = [];
+                        
+                        if fusetest && ...
+                                l > 1 && l <= length(meanp) && ...
+                                abs(meanp(l-1)-meanp(l)) < 50
+                            % Preceding segment fused with next one
+                            startp(l) = [];
+                            meanp(l-1) = meanp(l); %mean(meanp(l:l+1));
+                            meanp(l) = [];
+                            deg(l-1) = deg(l);
+                            deg(l) = [];
+                            endp(l-1) = [];
+                        end
                     else
                         l = l+1;
+                    end
+                end
+
+                if option.octgap
+                    l = 2;
+                    while l <= length(endp)
+                        if abs(meanp(l-1) - meanp(l) - 1200) < 50
+                            % Segment removed
+                            startp(l) = [];
+                            meanp(l-1) = meanp(l);
+                            meanp(l) = [];
+                            deg(l-1) = deg(l);
+                            deg(l) = [];
+                            endp(l-1) = [];
+                            stabl(l) = [];
+                        elseif abs(meanp(l) - meanp(l-1) - 1200) < 50
+                            % Segment removed
+                            startp(l) = [];
+                            meanp(l) = meanp(l-1);
+                            meanp(l) = [];
+                            deg(l) = deg(l-1);
+                            deg(l) = [];
+                            endp(l-1) = [];
+                            stabl(l) = [];
+                        else
+                            l = l+1;
+                        end
                     end
                 end
                 
