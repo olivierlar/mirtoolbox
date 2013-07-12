@@ -102,19 +102,43 @@ function varargout = mirsimatrix(orig,varargin)
         frame.default = [.05 1];
     option.frame = frame;
     
+        rate.type = 'Integer';
+        rate.position = 2;
+        rate.default = 20;
+    option.rate = rate;
+    
 specif.option = option;
 specif.nochunk = 1;
 varargout = mirfunction(@mirsimatrix,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-if isamir(x,'miraudio')
-    if isframed(x)
-        x = mirspectrum(x);
-    else
-        x = mirspectrum(x,'Frame',option.frame.length.val,option.frame.length.unit,...
-                                  option.frame.hop.val,option.frame.hop.unit,...
-                                  option.frame.phase.val,option.frame.phase.unit);
+if isnumeric(x)
+    m.diagwidth = Inf;
+    m.view = 's';
+    m.half = 0;
+    m.similarity = NaN;
+    m.graph = {};
+    m.branch = {};
+    m.warp = [];
+    m.clusters = [];
+
+    m = class(m,'mirsimatrix',mirdata);
+    m = set(m,'Title','Dissimilarity matrix');
+    fp = repmat(((1:size(x,1))-.5)/option.rate,[2,1]);
+    x = set(m,'Data',{{x}},'Pos',[],...
+              'FramePos',{{fp}},'Name',{inputname(1)});
+else
+    if not(isamir(x,'mirsimatrix'))
+        if isamir(x,'miraudio')
+            if isframed(x)
+                x = mirspectrum(x);
+            else
+                x = mirspectrum(x,'Frame',option.frame.length.val,option.frame.length.unit,...
+                                          option.frame.hop.val,option.frame.hop.unit,...
+                                          option.frame.phase.val,option.frame.phase.unit);
+            end
+        end
     end
 end
 type = 'mirsimatrix';
