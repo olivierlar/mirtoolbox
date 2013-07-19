@@ -380,6 +380,7 @@ else
     fs = get(orig,'Sampling');
     fp = get(orig,'FramePos');
     fr = get(orig,'FrameRate');
+    lg = get(orig,'Length');
     m = cell(1,length(sig));
     p = cell(1,length(sig));
     f = cell(1,length(sig));
@@ -410,6 +411,7 @@ else
                 end
                 dj = reshape(dj,[size(dj,2),1,size(dj,3)]);
                 fp{i}{J} = fp{i}{J}([1;end]);
+                lg{i}{J} = diff(fp{i}{J}) * fs{i};
             end
                         
             if option.constq
@@ -529,7 +531,8 @@ else
             f{i} = fi{1};
         end
     end
-    s = set(s,'Frequency',f,'Magnitude',m,'Phase',p,'FramePos',fp);
+    s = set(s,'Frequency',f,'Magnitude',m,'Phase',p,...
+              'FramePos',fp,'Length',lg);
     if not(isempty(postoption)) && isstruct(postoption)
         s = post(s,postoption);
     end
