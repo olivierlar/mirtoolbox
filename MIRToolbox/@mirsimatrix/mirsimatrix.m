@@ -81,8 +81,9 @@ function varargout = mirsimatrix(orig,varargin)
     option.half = half;
 
         warp.key = 'Warp';
-        warp.type = 'Boolean';
+        warp.type = 'Integer';
         warp.default = 0;
+        warp.keydefault = .5;
         warp.when = 'After';
     option.warp = warp;
     
@@ -244,8 +245,6 @@ elseif isempty(option.arg2)
                         end
                     end
                     hK = ceil(lK/2);
-                    win = window(@hanning,lK);
-                    win = win(ceil(length(win)/2):end)';
                     if not(isempty(postoption)) && ...
                             strcmpi(postoption.view,'TimeLag')
                         for i = 1:l
@@ -273,6 +272,8 @@ elseif isempty(option.arg2)
                             end
                         end
                     else
+                        win = window(@hanning,lK);
+                        win = win(ceil(length(win)/2):end);
                         for i = 1:l
                             if mirwaitbar && (mod(i,100) == 1 || i == l)
                                 waitbar(i/l,handle);
@@ -282,16 +283,16 @@ elseif isempty(option.arg2)
                                 continue
                             end
                             if strcmpi(option.distance,'cosine')
-                                dkij = cosine(vv(:,i),vv(:,i:j));
+                                dkij = cosine(vv(:,i),vv(:,i:j))';
                             else
                                 mm = squareform(pdist(vv(:,i:j)',...
                                                       option.distance));
                                 dkij = mm(:,1);
                             end
                             dkij = dkij.*win(1:length(dkij));
-                            dk{z}(i,i:j,g) = dkij;
+                            dk{z}(i,i:j,g) = dkij';
                             if ~option.half
-                                dk{z}(i:j,i,g) = dkij';
+                                dk{z}(i:j,i,g) = dkij;
                             end
                         end
                     end
@@ -476,7 +477,7 @@ if not(isempty(postoption))
                 i/size(dz,1)
             end
             for j = 1:size(dz,2)
-                if dz(i,j)>.5
+                if dz(i,j) > postoption.warp
                     continue
                 end
                 ending = [i; j];
@@ -490,9 +491,9 @@ if not(isempty(postoption))
                             addpaths(newpaths,paths{i,j+1},ending,dz(i,j),...
                                      bests,bestsindex,paths,0);
                 if isempty(newpaths) && (i == 1 || j == 1 || ...
-                                         (dz(i-1,j-1)>.5 && ...
-                                          dz(i-1,j)>.5 && ...
-                                          dz(i,j-1)>.5))
+                                         (dz(i-1,j-1)> postoption.warp && ...
+                                          dz(i-1,j)> postoption.warp && ...
+                                          dz(i,j-1)> postoption.warp))
                     newpaths = {[ending; 0]};
                 end
                 paths{i+1,j+1} = newpaths;
@@ -626,8 +627,8 @@ else
     if newscore > oldscore
         replace = 1;
     elseif newscore == oldscore
-        paths{real(previous)+1,imag(previous)+1}{previndex}
-        newpaths{pathindex}
+        paths{real(previous)+1,imag(previous)+1}{previndex};
+        newpaths{pathindex};
     end
 end
 if replace
@@ -674,7 +675,7 @@ d = (trace(S1/S2)+trace(S2/S1)+(m1-m2)'*inv(S1+S2)*(m1-m2))/2 - size(S1,1);
     
 
 function s = exponential(d)
-    s = exp(-d);
+    s = (exp(-d) - exp(-1)) / (1-exp(-1));
     
     
 function s = oneminus(d)
