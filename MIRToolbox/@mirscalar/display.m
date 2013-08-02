@@ -388,6 +388,7 @@ for song = 1:length(songs)  %For each audio file
             saveas(fig,[n{i},suffix],'psc2');
             disp(['and is saved in file ',n{i},suffix]);
         end
+        axis tight
     end
     if nargin>1 && ischar(ax)
         print(ax)

@@ -29,6 +29,7 @@ for i = 1:length(d)
     xlabel(['values',u]);
     ylabel('number of occurrences')
     title(t)
+    axis tight
     nl = size(d{i},1);
     if nl>1
         legend(l,'Location','Best')

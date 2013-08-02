@@ -298,7 +298,7 @@ for h = 1:length(d)
                 dk = dk./repmat(ee,[nl,1,nc]);
             end
         end
-        if isfield(para,'trim') && not(isequal(para.trim,0)) ...
+        if isfield(para,'trim') && not(isequal(para.trim,0)) ... %%%% NOT A POST OPERATION!!
                 && not(strcmpi(para.trim,'NoTrim'))
             if not(para.trimthreshold)
                 para.trimthreshold = 0.06;
