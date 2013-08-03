@@ -17,7 +17,7 @@ function varargout = mircentroid(x,varargin)
         peaks.keydefault = 'NoInterpol';
     option.peaks = peaks;
     
-        minrms.key = 'MinRMS';
+        minrms.key = 'MinRMS'; % Should we change this?
         minrms.when = 'After';
         minrms.type = 'Numerical';
         minrms.default = .005;
@@ -113,6 +113,7 @@ r = r/max(max(r));
 pos = find(r<minrms);
 for i = 1:length(pos)
     d{pos(i)} = NaN;
+    % Adding warning messages?
 end
 d = {d};
 
