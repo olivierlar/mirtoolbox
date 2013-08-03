@@ -57,7 +57,7 @@ for i = 1:l
         m{i} = cell(1,length(dd));
         fpi = cell(1,length(dd));
         for j = 1:length(dd)
-            m{i}{j} = mean(dd{j});
+            m{i}{j} = mean(dd{j},2);
             fpi{j} = [fp{i}{j}(1);fp{i}{j}(end)];
         end
         fp{i} = fpi;
