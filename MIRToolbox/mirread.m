@@ -96,8 +96,7 @@ if load
     end
 else
     if isequal(reader,@mp3read)
-        [dd,f,b] = reader(file);
-        dsize = size(dd);
+        [dsize,f,b] = reader(file,'size');
     else
         [unused,f,b] = reader(file,1);
         dsize = reader(file,'size');

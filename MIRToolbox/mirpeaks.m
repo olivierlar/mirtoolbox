@@ -415,6 +415,10 @@ for i = 1:length(d) % For each audio file,...
             if iscell(th)  % Non-numerical abscissae are transformed into numerical ones. 
                 th = repmat((1:size(th,1))',[1,nc,np]);
             else
+                if 0 %size(th,2) == 1 && nc>1
+                    error('Problematic case. New code below to be used.');
+                    th = repmat(th,[1,nc,1]);
+                end
                 if size(th,3)<np
                     th = repmat(th,[1,1,np]);
                 end
