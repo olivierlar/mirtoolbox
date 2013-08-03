@@ -389,6 +389,7 @@ for song = 1:length(songs)  %For each audio file
             disp(['and is saved in file ',n{i},suffix]);
         end
         axis tight
+        axis 'auto y'
     end
     if nargin>1 && ischar(ax)
         print(ax)

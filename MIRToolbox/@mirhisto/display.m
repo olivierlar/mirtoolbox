@@ -30,6 +30,7 @@ for i = 1:length(d)
     ylabel('number of occurrences')
     title(t)
     axis tight
+    axis 'auto y'
     nl = size(d{i},1);
     if nl>1
         legend(l,'Location','Best')

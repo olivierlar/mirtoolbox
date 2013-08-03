@@ -130,6 +130,7 @@ if curve
                         end
                         hold on
                         axis tight
+                        axis 'auto y'
                     end
                 end
             end
