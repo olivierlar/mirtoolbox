@@ -145,12 +145,18 @@ if curve
                     colr = cl(h); %cl{i}(h);
                 end
                 if not(isempty(x{h}))
-                    rectangle('Position',[x{h}(1),...
-                                          min(min(y{h}(:,:,i))),...
-                                          x{h}(end)-x{h}(1),...
-                                          max(max(y{h}(:,:,i)))-...
-                                          min(min(y{h}(:,:,i)))]+1e-16,...
-                        'EdgeColor',num2col(colr),'Curvature',.1,'LineWidth',1)
+                    yhi = y{h}(:,:,i);
+                    yhi(isnan(yhi)) = [];
+                    yhi(isinf(yhi)) = [];
+                    if ~isempty(yhi)
+                        rectangle('Position',[x{h}(1),...
+                                              min(min(yhi)),...
+                                              x{h}(end)-x{h}(1),...
+                                              max(max(yhi))-...
+                                              min(min(yhi))]+1e-16,...
+                                  'EdgeColor',num2col(colr),...
+                                  'Curvature',.1,'LineWidth',1)
+                    end
                 end
             end
         end
@@ -222,11 +228,11 @@ if curve
             xlabel(xlab)
         end
         if l > 1
-            %if iscell(x)
-            %    num = x{i}(1);
-            %else
+            if isempty(ch)
+                num = i;
+            else
                 num = ch(i);
-            %end
+            end
             pos = get(gca,'Position');
             axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],'Visible','off');
             text(0,0,num2str(num),'FontSize',12,'Color','r')
@@ -478,7 +484,7 @@ else
                             end
                             if not(isempty(ppj))
                                 %plot((segt(j)+segt(j+1))/2,xx(ppj),'+k','MarkerSize',10)
-                                plot((ttt(j)+ttt(j+1))/2,(xxx(ppj)+xxx(ppj+1))/2,'+w','MarkerSize',10)
+                                plot((ttt(j)+ttt(j+1))/2,(xxx(ppj)+xxx(ppj+1))/2,'+k','MarkerSize',10)
                             end
                         end
                     end
@@ -492,7 +498,7 @@ else
                         end
                         if not(isempty(ppj))
                             %plot((segt(j)+segt(j+1))/2,xx(ppj),'+k','MarkerSize',10)
-                            plot((ttt(ppj)+ttt(ppj+1))/2,(xxx(j)+xxx(j+1))/2,'+w','MarkerSize',10)
+                            plot((ttt(ppj)+ttt(ppj+1))/2,(xxx(j)+xxx(j+1))/2,'+k','MarkerSize',10)
                         end
                     end
                 end
@@ -501,7 +507,7 @@ else
                 title(t)
             end
             if i == 1
-                xlabel('time axis (in s.)');
+                xlabel(xlab); %'time axis (in s.)');
             end
             if l > 1
                 if iscell(x)
