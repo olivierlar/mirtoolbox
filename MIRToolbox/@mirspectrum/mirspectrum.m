@@ -534,12 +534,12 @@ else
     s = set(s,'Frequency',f,'Magnitude',m,'Phase',p,...
               'FramePos',fp,'Length',lg);
     if not(isempty(postoption)) && isstruct(postoption)
-        s = post(s,postoption);
+        s = post(s,postoption,orig);
     end
 end
 
    
-function s = post(s,option)
+function s = post(s,option,orig)
 if option.collapsed
     option.band = 'Cents';
 end
@@ -567,6 +567,7 @@ if option.timesmooth
 end
 if get(s,'Power') == 1 && ...
         (option.pow || any(option.mprod) || any(option.msum)) 
+                % mprod could be tried without power?
     for h = 1:length(m)
         for l = 1:length(m{k})
             m{h}{l} = m{h}{l}.^2;
@@ -593,16 +594,31 @@ if any(option.mprod)
     s = set(s,'Title','Spectral product');
 end
 if any(option.msum)
+    %dac = get(ac,'Data');
+    %fac = get(ac,'Pos');
     for h = 1:length(m)
         for l = 1:length(m{k})
             z0 = m{h}{l};
+            %fl = f{h}{l};
             z1 = z0;
+            %mac = max(max(dac{1}{1}));
+            %mz = max(max(z1));
             for k = 1:length(option.msum)
                 mpr = option.msum(k);
                 if mpr
                     zi = ones(size(z0));
                     zi(1:floor(end/mpr),:,:) = z0(mpr:mpr:end,:,:);
                     z1 = z1+zi;
+                    
+                    %%% New version under construction:
+                    %flim = find(fl(:,1)>fl(end,1)/mpr,1);
+                    %for i = 1:flim
+                    %    [unused fk] = min(abs(fl(i,1)*mpr-fl(:,1)));
+                    %    %[unused fack] = min(abs(fl(i,1)-fac{h}{l}(:,1)));
+                    %    %nz = find(...z0(i,:)>mz/25 & ...
+                    %    %          dac{h}{l}(fack,:)>mac/10);
+                    %    z1(i,:) = z1(i,:)+z0(fk,:);
+                    %end
                 end
             end
             m{h}{l} = z1;
