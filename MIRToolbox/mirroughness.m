@@ -13,6 +13,10 @@ function varargout = mirroughness(x,varargin)
 %           mirroughness(...,'Sethares') (default): based on the summation
 %               of roughness between all pairs of sines (obtained through
 %               spectral peak-picking).
+%               mirroughness(...,'Min'): Variant of the Sethares model
+%                   where the summation is weighted by the minimum
+%                   amplitude of each pair of sines, instead of the product
+%                   of their amplitudes.
 %           mirroughness(...,'Vassilakis'): variant of 'Sethares' model
 %               with a more complex weighting (Vassilakis, 2001, Eq. 6.23).
 
@@ -25,7 +29,17 @@ function varargout = mirroughness(x,varargin)
         cthr.type = 'Integer';
         cthr.default = .01;
     option.cthr = cthr;
-    
+
+        omin.key = 'Min';
+        omin.type = 'Boolean';
+        omin.default = 0;
+    option.min = omin;
+
+        normal.key = 'Normal';
+        normal.type = 'Boolean';
+        normal.default = 0;
+    option.normal = normal;
+
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
@@ -58,6 +72,9 @@ end
 if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
     pf = get(p,'PeakPosUnit');
     pv = get(p,'PeakVal');
+    if option.normal
+        d = get(p,'Data');
+    end
     rg = cell(1,length(pf));
     for h = 1:length(pf)
         rg{h} = cell(1,length(pf{h}));
@@ -74,12 +91,22 @@ if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
                     v1 = repmat(pvj,[1 length(pvj)]);
                     v2 = repmat(pvj',[length(pvj) 1]);
                     rj = plomp(f1,f2);
+                    if option.min
+                        v12 = min(v1,v2);
+                    else
+                        v12 = v1.*v2;
+                    end
                     if strcmpi(option.meth,'Sethares')
-                        rj = v1.*v2.*rj;
+                        rj = v12.*rj;
                     elseif strcmpi(option.meth,'Vassilakis')
                         rj = (v1.*v2).^.1.*.5.*(2*v2./(v1+v2)).^3.11.*rj;
                     end
                     rg{h}{i}(1,j,k) = sum(sum(rj));
+                    if option.normal
+                        rg{h}{i}(1,j,k) = rg{h}{i}(1,j,k) ...
+                            / sum(d{h}{i}(:,j,k).^2);
+                            .../ sum(sum(triu(v1.*v2,1)));
+                    end
                 end
             end
         end
