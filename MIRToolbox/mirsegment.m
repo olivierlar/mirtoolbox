@@ -282,7 +282,9 @@ elseif isa(x,'mirdata')
             dek = [];
             if isa(option.strat,'mirdata')
                 dsk = ds{k}{1}; % segmentation times in kth audio file
-                dek = de{k}{1};
+                if ~isempty(de)
+                    dek = de{k}{1};
+                end
             elseif iscell(ds)
                 dsk = ds{k};
             elseif size(ds,2) == length(dx)
@@ -297,6 +299,7 @@ elseif isa(x,'mirdata')
                 fsk = cell(1,length(dxk));
             end
             for j = 1:length(dsk)
+                dej = [];
                 if iscell(dsk) %isa(option.strat,'mirdata')
                     dsj = dsk{j}; % segmentation times in jth segment
                     if ~isempty(dek)
@@ -315,7 +318,9 @@ elseif isa(x,'mirdata')
                     % segmentation times in mth bank channel
                     if isa(option.strat,'mirscalar')
                         dsm = fp{k}{m}(1,dsj{m});
-                        dem = fp{k}{m}(2,dej{m});
+                        if ~isempty(dej)
+                            dem = fp{k}{m}(2,dej{m});
+                        end
                     elseif isa(option.strat,'mirdata')
                         dsm = xx{k}{m}(dsj{m});
                     else
@@ -364,6 +369,7 @@ elseif isa(x,'mirdata')
                 stk = {dtk{1}};
                 lk = {dtk{end}(end)-dtk{1}(1)};
                 n = 1;
+                fpsk = ffsk;
             elseif ~isempty(de)
                 ffsk = cell(1,length(fsk));
                 for h = 1:length(fsk)
