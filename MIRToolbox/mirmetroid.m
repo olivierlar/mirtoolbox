@@ -1,8 +1,24 @@
 function varargout = mirmetroid(orig,varargin)
+%   mc = mirmetroid(x) provides an estimation of dynamic metrical centroid.
+%   [mc,ms] = mirmetroid(x) also provides an estimation of dynamic metrical
+%   strength.
+%
+% When mirmetroid is used for academic research, please cite the following 
+%   publication:
+%   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
+%       Grandjean, D., "Estimating tempo and metrical features by tracking 
+%       the whole metrical hierarchy", 3rd International Conference on 
+%       Music & Emotion, Jyväskylä, 2013.
+%
+%   Optional arguments:
+%       mirmetroid(..., ?Gate?) uses a simpler method, where the weights
+%           are simply identified to the corresponding autocorrelation
+%           scores, leading to possible abrupt changes in the metrical
+%           centroid curve.
 
         gate.key = 'Gate';
         gate.type = 'Boolean';
-        gate.default = 1;
+        gate.default = 0;
     option.gate = gate;
 
         combine.key = 'Combine';
@@ -18,7 +34,7 @@ varargout = mirfunction(@mirmetroid,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 if ~isamir(x,'mirscalar') && ~isamir(x,'mirmetre')
-    x = mirmetre(x,'SmoothGate');
+    x = mirmetre(x);
 end
 type = {'mirscalar', 'mirscalar','mirmetre'};
 
@@ -116,7 +132,7 @@ if option.combine
 end
 
 
-function [m ms] = combine(m,ms)
+function [m sms] = combine(m,ms)
 m(isnan(m)) = 0;
-m = sum(m.*ms,1)./sum(ms,1);
-ms = sum(ms,1);
+sms = sum(ms,1);
+m = sum(m.*ms,1)./sms;
