@@ -64,6 +64,24 @@ function varargout = mirtempo(x,varargin)
 %               if no value for thr is given, the value tr=0.1 is chosen
 %                   by default.
 %
+%   mirtempo(..., ?Metre?) tracks tempo by building a hierarchical metrical
+%       structure (using mirmetre). This enables to find coherent metrical 
+%       levels leading to a continuous tempo curve.
+%   When the ?Metre? option is used for academic research, please cite the 
+%       following publication:
+%   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
+%       Grandjean, D., "Estimating tempo and metrical features by tracking 
+%       the whole metrical hierarchy", 3rd International Conference on 
+%       Music & Emotion, Jyväskylä, 2013.
+%
+%   mirtempo(..., ?Change?) computes the difference between successive 
+%       values of the tempo curve. Tempo change is expressed independently 
+%       from the choice of a metrical level by computing the ratio of tempo 
+%       values between successive frames, and is expressed in logarithmic 
+%       scale (base 2), so that no tempo change gives a value of 0, 
+%       increase of tempo gives positive value, and decrease of tempo gives
+%       negative value.
+%
 %   [t,p] = mirtempo(...) also displays the result of the signal analysis
 %       leading to the tempo estimation, and shows in particular the
 %       peaks corresponding to the tempo values.
@@ -302,10 +320,8 @@ function varargout = mirtempo(x,varargin)
     option.perio = perio;
     
         metre.key = 'Metre';
-        metre.type = 'String';
-        metre.choice = {0,'Envelope','Novelty','Flux','Mix','SmoothGate'};
+        metre.type = 'Boolean';
         metre.default = 0;
-        metre.keydefault = 'SmoothGate';
     option.metre = metre;
     
         minres.key = 'MinRes';
@@ -347,11 +363,11 @@ if option.metre
         option.frame.hop.val = .05;
         option.frame.hop.unit = '/1';
     end
-    y = mirmetre(x,option.metre,'Frame',option.frame.length.val,...
-                                        option.frame.length.unit,...
-                                        option.frame.hop.val,...
-                                        option.frame.hop.unit,...
-                                'MinRes',option.minres);
+    y = mirmetre(x,'Frame',option.frame.length.val,...
+                           option.frame.length.unit,...
+                           option.frame.hop.val,...
+                           option.frame.hop.unit,...
+                           'MinRes',option.minres);
 else
 
     if option.perio
