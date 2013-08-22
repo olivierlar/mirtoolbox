@@ -29,11 +29,11 @@ for i = 1:l
                 end
             end
         end
-        if 1%nargout == 1 
+        if nargout == 1 
             res = algo(vk{:});
         elseif nargout == 2
             [res res2] = algo(vk{:});
-        else %% used for miremotion, provokes bug else...
+        else
             [res res2 res3 res4] = algo(vk{:}); 
         end
         if iscell(res)
