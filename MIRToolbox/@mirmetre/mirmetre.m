@@ -1,83 +1,47 @@
 function varargout = mirmetre(orig,varargin)
-%   m = mirmetre(x) estimates the metrical hierarchy.
+%   m = mirmetre(x) provides a detailed description of the hierarchical 
+%       metrical structure by detecting periodicities from the onset 
+%       detection curve and tracking a broad set of metrical levels.
+%
+% When mirmetre is used for academic research, please cite the following 
+%   publication:
+%   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
+%       Grandjean, D., "Estimating tempo and metrical features by tracking 
+%       the whole metrical hierarchy", 3rd International Conference on 
+%       Music & Emotion, Jyväskylä, 2013.
+%
 %   Optional arguments:
-%       mirtempo(...,'Frame',l,h) orders a frame decomposition of window
+%       mirmetre(...,'Frame',l,h) orders a frame decomposition of window
 %           length l (in seconds) and hop factor h, expressed relatively to
 %           the window length. For instance h = 1 indicates no overlap.
-%           Default values: l = 3 seconds and h = .1
-%       The options related to the onset detection phase can be specified 
-%               (see help mironsets):
-%               onset detection strategies: 'Envelope', 'DiffEnvelope'
-%               (corresponding to 'Envelope', 'Diff'), 'SpectralFlux,
-%               'Pitch', 'Log', 'Mu', 'Filterbank'
-%               mironsets(...,'Sum',w) specifies when to sum the channels.
-%                   Possible values:
-%                       w = 'Before': sum before the autocorrelation or
-%                           spectrum computation.
-%                       w = 'After': autocorrelation or spectrum computed
-%                           for each band, and summed into a "summary".
-%               mirenvelope options: 'HalfwaveCenter','Diff' (toggled on by
-%                   default here),'HalfwaveDiff','Center','Smooth',
-%                   'Sampling'
-%               mirflux options: 'Inc','Halfwave','Complex','Median'
+%           Default values: l = 5 seconds and h = .05
+%       mirmetre(..., ?Min?, mi) indicates the lowest periodicity taken 
+%           into consideration, expressed in bpm. Default value: 24 bpm.
+%       mirmetre(..., ?Max?, ma) specifies the highest periodicity taken 
+%           into consideration, expressed in bpm. Default value: Inf, 
+%           meaning that no limit is set a priori on the highest 
+%           periodicity.
+%       mirmetre(..., ?Contrast?, c) specifies the contrast factor for the 
+%           peak picking. Default value: c = 0.05.
+%       mirmetre(..., ?Threshold?, c) specifies the contrast factor for the
+%           peak picking. Default value: c = 0.
 %
 %   [m,p] = mirmetre(...) also displays the autocorrelation function
 %       leading to the tempo estimation, and shows in particular the
 %       peaks corresponding to the tempo values.
 
-
-        sum.key = 'Sum';
-        sum.type = 'String';
-        sum.choice = {'Before','After','Adjacent',0};
-        sum.default = 'Before';
-    option.sum = sum;
         
-%% options related to mironsets:    
-
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
-        frame.default = [0 0];
-        frame.keydefault = [5 .05];
+        %frame.default = [0 0];
+        frame.default = [5 .05];
     option.frame = frame;
     
-        envelope.key = 'Envelope';
-        envelope.type = 'Boolean';
-        envelope.default = 0;
-    option.envelope = envelope;
-
-        flux.key = 'Flux';
-        flux.type = 'Boolean';
-        flux.default = 0;
-    option.flux = flux;
-    
-        novelty.key = 'Novelty';
-        novelty.type = 'Boolean';
-        novelty.default = 0;
-    option.novelty = novelty;
-    
-        mix.key = 'Mix';
-        mix.type = 'Boolean';
-        mix.default = 0;
-    option.mix = mix;
-    
-        sgate.key = 'SmoothGate';
-        sgate.type = 'Boolean';
-        sgate.default = 0;
-    option.sgate = sgate;
-
         minres.key = 'MinRes';
         minres.type = 'Integer';
         minres.default = .1;
     option.minres = minres;
-
-%% option related to mirautocor:                
-    
-        nw.key = 'NormalWindow';
-        nw.default = 0;
-    option.nw = nw;
-
-%% options related to the peak detection
         
         thr.key = 'Threshold';
         thr.type = 'Integer';
@@ -113,86 +77,38 @@ specif.option = option;
 varargout = mirfunction(@mirmetre,orig,varargin,nargout,specif,@init,@main);
 
 
-function [y type] = init(x,option)
+function [x type] = init(x,option)
 if iscell(x)
     x = x{1};
 end
+
 if isamir(x,'mirmetre')
-    y = x;
     return
 end
 
-if isamir(x,'mirautocor')
-    y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-    if ischar(option.sum)
-        y = mirsum(y);
+if ~isamir(x,'mirautocor')
+    if isamir(x,'mirenvelope')
+        x = mironsets(x,'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
+    else
+        x = mironsets(x,'SmoothGate','MinRes',option.minres,'Detect',0,...
+                        'Frame',option.frame.length.val,...
+                                option.frame.length.unit,...
+                                option.frame.hop.val,...
+                                option.frame.hop.unit);
     end
-elseif isamir(x,'mirenvelope')
-    x = mironsets(x,'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    y = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
-                     'NormalWindow',option.nw);
-elseif option.mix
-    o1 = mironsets(x,'Diff','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    ac1 = mirautocor(o1,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-
-    o2 = mironsets(x,'Diff','Novelty','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    ac2 = mirautocor(o2,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-    y = max(ac1,ac2);
-
-elseif option.novelty
-    o = mironsets(x,'Diff','Novelty','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-elseif option.flux
-    o = mironsets(x,'SpectralFlux','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-elseif option.sgate
-    o = mironsets(x,'SmoothGate','MinRes',option.minres,'Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-else
-    o = mironsets(x,'Diff','Detect',0,...
-                    'Frame',option.frame.length.val,...
-                            option.frame.length.unit,...
-                            option.frame.hop.val,...
-                            option.frame.hop.unit);
-    y = mirautocor(o,'Min',60/option.ma,'Max',60/option.mi * 2,...
-          'NormalWindow',option.nw);
-
 end
 
-y = mirpeaks(y,'Total',Inf,...
+x = mirautocor(x,'Min',60/option.ma,'Max',60/option.mi * 2,...
+                 'NormalWindow',0);
+
+x = mirpeaks(x,'Total',Inf,...
                'Threshold',option.thr,'Contrast',option.cthr,...
                'NoBegin','NoEnd',...
                'Normalize','Local','Order','Amplitude');
-type = {'mirmetre',mirtype(y)};
+type = 'mirmetre';
     
 
 function m = main(p,option,postoption)
@@ -287,7 +203,7 @@ for j = 1:length(pt)
                         dist1 = abs(60/ptli - 60./bpm2);
                         
                         for i3 = 1:length(mk{i2})
-                            if l - mk{i2}(i3).timidx(end) > 10
+                            if 0 %l - mk{i2}(i3).timidx(end) > 10
                                 dist1(i3) = NaN;
                             end
                         end
@@ -467,7 +383,7 @@ for j = 1:length(pt)
                         err = Inf;
                         while i3 > 0
                             if l - mk{i2}(ord(i3)).timidx(end) > 10 || ...
-                                    mk{i2}(ord(i3)).score(end) < .1 || ... %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
+                                    ...mk{i2}(ord(i3)).score(end) < .1 || ... %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
                                     ~isempty(mk{i2}(ord(i3)).complex)
                                 i3 = i3-1;
                                 continue
@@ -481,7 +397,7 @@ for j = 1:length(pt)
                                                             
                             bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                             
-                            if abs(60/ptli - 60/bpm3) > dist(i2)  %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
+                            if 0 %abs(60/ptli - 60/bpm3) > dist(i2)  %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
                                 i3 = i3-1;
                                 continue
                             end
