@@ -40,6 +40,17 @@ function varargout = mironsets(x,varargin)
 %                   'Halfwave' (toggled on by default here),
 %                   'Complex' (toggled off by default),
 %                   'Median' (toggled on by default here)
+%           f = 'Emerge': is an improved version of the 'SpectralFlux'
+%               method that is able to detect more notes and in the same 
+%               time ignore the spectral variation produced by vibrato.
+%%%%
+%   When the 'Emerge' method is used for academic research, please cite the 
+%       following publication:
+%   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
+%       Grandjean, D., "Estimating tempo and metrical features by tracking 
+%       the whole metrical hierarchy", 3rd International Conference on 
+%       Music & Emotion, Jyväskylä, 2013.
+%%%%
 %           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
 %                of same default characteristics than those returned
 %                by mirpitch, with however a range of frequencies set by 
@@ -303,8 +314,8 @@ function varargout = mironsets(x,varargin)
         kernelsize.default = 0;
     option.kernelsize = kernelsize;
     
-%% options related to 'SmoothGate':
-        sgate.key = 'SmoothGate';
+%% options related to 'Emerge':
+        sgate.key = {'SmoothGate','Emerge'};
         sgate.type = 'Boolean';
         sgate.default = 0;
         sgate.when = 'Both';
@@ -478,6 +489,9 @@ if isamir(x,'miraudio')
     elseif option.sgate
         y = mirspectrum(x,'max',5000,'Frame',.05,.2,...
                           'MinRes',option.minres,'dB');
+        if isa(y,'mirdesign')
+            y = set(y,'ChunkSizeFactor',get(x,'ChunkSizeFactor')*5); %20/option.minres);
+        end
         y = mirflux(y,'Inc','BackSmooth','Dist','Gate');
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
@@ -683,7 +697,7 @@ end
 do
 
 
-function st = startattack(d,pp,st) %pv,pm,ppp,ppv)
+function [st pp] = startattack(d,pp,st) %pv,pm,ppp,ppv)
 pp = sort(pp{1});
 if isempty(pp)
     st = {{} {}};
