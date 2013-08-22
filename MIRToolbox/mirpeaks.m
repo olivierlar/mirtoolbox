@@ -391,8 +391,8 @@ for i = 1:length(d) % For each audio file,...
         madi = zeros(1,length(di));
         midi = zeros(1,length(di));
         for h = 1:length(di)
-            madi(h) = max(max(max(di{h},[],1),[],2),[],4);
-            midi(h) = min(min(min(di{h},[],1),[],2),[],4);
+            madi(h) = max(max(max(max(di{h},[],1),[],2),[],3),[],4);
+            midi(h) = min(min(min(min(di{h},[],1),[],2),[],3),[],4);
         end
         mad = max(madi);
         mid = min(midi);
