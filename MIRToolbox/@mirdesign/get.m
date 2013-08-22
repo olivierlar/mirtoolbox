@@ -137,6 +137,9 @@ if ischar(varargin{1})
         case 'Scale'
             varargout = {a.scale};
             return 
+        case 'ChunkSizeFactor'
+            varargout = {a.chunksizefactor};
+            return 
     end
 end
 

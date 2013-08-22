@@ -108,7 +108,8 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 chunks = [];
             end
         else
-            chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap);
+            chunks = compute_frames(fr,sr,sr2,w,lsz,...
+                                    CHUNKLIM/d.chunksizefactor,d.overlap);
         end
     end
     

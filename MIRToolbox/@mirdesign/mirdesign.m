@@ -17,6 +17,7 @@ if nargin == 0
     d.sampling = 0;
     d.length = 0;
     d.resampling = 0;
+    d.chunksizefactor = 0;
     d.nochunk = 0;
     d.ascending = 0;
     d.overlap = 0;
@@ -48,6 +49,7 @@ elseif isa(orig,'mirdesign')
     d.sampling = orig.sampling;
     d.length = orig.length;
     d.resampling = orig.resampling;
+    d.chunksizefactor = orig.chunksizefactor;
     d.nochunk = orig.nochunk;
     d.ascending = orig.ascending;
     d.overlap = orig.overlap;
@@ -80,6 +82,7 @@ else
         d.sampling = 0;
         d.length = 0;
         d.resampling = 0;
+        d.chunksizefactor = 1;
         d.nochunk = 0;
         if not(isempty(orig)) && ...
                 strcmp(func2str(orig),'mirenvelope') && d.option.zp == 2
@@ -122,6 +125,7 @@ else
         d.sampling = argin.sampling;
         d.length = argin.length;
         d.resampling = argin.resampling;
+        d.chunksizefactor = argin.chunksizefactor;
         if (isfield(specif,'nochunk') && specif.nochunk) 
             d.nochunk = 1; % was previously 2
         elseif not(isempty(argin.stored))
@@ -134,6 +138,7 @@ else
         else
             d.nochunk = argin.nochunk;
         end
+        d.chunksizefactor = argin.chunksizefactor;
         if strcmp(func2str(orig),'mirenvelope')
             if d.option.zp == 2
                 d.ascending = not(isempty(d.segment));

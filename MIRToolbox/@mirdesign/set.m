@@ -83,6 +83,8 @@ while length(propertyArgIn) >= 2,
            a.channel = val;
        case 'Scale'
            a.scale = val;
+       case 'ChunkSizeFactor'
+           a.chunksizefactor = val;
        otherwise
            error(['Unknown MIRdesign property: ' prop])
    end
