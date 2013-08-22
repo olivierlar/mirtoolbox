@@ -427,8 +427,8 @@ for i = 1:length(d) % For each audio file,...
         
         if strcmpi(option.normal,'Global')
             % Normalizing across segments
-            dht = (dht - repmat(mid,[nl0 nc 1 nd0]))./... 
-                  repmat(mad-mid,[nl0 nc 1 nd0]);
+            dht = (dht - repmat(mid,[nl0 nc np nd0]))./... 
+                  repmat(mad-mid,[nl0 nc np nd0]);
         end
         
         if option.c    % If a prefered region is specified, the data is amplified accordingly
