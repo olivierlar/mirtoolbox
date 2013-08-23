@@ -23,7 +23,7 @@ if iscell(x)
 end
 y = peaksegments(@skewness,get(x,'Data'),...
                            get(x,'Pos'),...
-                           get(mircentroid(x),'Data'),...
+                           get(mircentroid(x,'MaxEntropy',0),'Data'),...
                            get(mirspread(x),'Data'));
 if isa(x,'mirspectrum')
     t = 'Spectral skewness';
@@ -36,4 +36,4 @@ s = mirscalar(x,'Data',y,'Title',t,'Unit','');
 
 
 function s = skewness(d,p,c,sp)
-s = sum((p-c).^3.*d) ./ sum(d) ./ sp.^3;
+s = sum((p-c).^3.* (d/sum(d)) ) ./ sp.^3;

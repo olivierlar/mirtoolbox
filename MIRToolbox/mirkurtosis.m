@@ -23,7 +23,7 @@ if iscell(x)
 end
 y = peaksegments(@kurtosis,get(x,'Data'),...
                            get(x,'Pos'),...
-                           get(mircentroid(x),'Data'),...
+                           get(mircentroid(x,'MaxEntropy',0),'Data'),...
                            get(mirspread(x),'Data'));
 if isa(x,'mirspectrum')
     t = 'Spectral kurtosis';
@@ -36,4 +36,4 @@ k = mirscalar(x,'Data',y,'Title',t,'Unit','');
 
 
 function k = kurtosis(d,p,c,s)
-k = sum((p-c).^4.*d) ./ sum(d) ./ s.^4;
+k = sum((p-c).^4.*(d/sum(d))) ./ s.^4;
