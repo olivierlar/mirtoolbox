@@ -508,7 +508,11 @@ else
                 title(t)
             end
             if i == 1
-                xlabel(xlab); %'time axis (in s.)');
+                if manychannels
+                    xlabel(xlab);
+                else
+                    xlabel('time axis (in s.)');
+                end
             end
             if l > 1
                 if iscell(x)
