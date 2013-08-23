@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.4.1.8 3-July-2013
+% Version 1.5 23-August-2013
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -37,6 +37,8 @@
 %
 %RHYTHM
 % mirtempo         - Tempo (in beats per minute)
+% mirmetre         - Metrical analysis
+% mirmetroid       - Dynamic metrical centroid and strength
 % mirfluctuation   - Fluctuation strength (periodicities in each channel)
 % mirbeatspectrum  - Beat spectrum, characterizing the rhythmic content
 % mirpulseclarity  - Rhythmic clarity, i.e., beat strength

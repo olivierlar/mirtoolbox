@@ -138,6 +138,10 @@ if not(isempty(order))
                     for j = 1:size(di,2)
                         tic
                         sound(di(:,j,l),f{k});
+                        % We should scale, in order to avoid clipping 
+                        % (when reading AIF files for instance).
+                        % But global scaling across segments, to avoid
+                        % problem with silent segments.
                         idealtime = size(di,1)/f{k};
                         practime = toc;
                         if practime < idealtime
