@@ -555,7 +555,9 @@ for k = 1:length(d)
         [sos,g] = zp2sos(z,p,gain);
         Hd = dfilt.df2tsos(sos,g);
     end
-    if ischar(postoption.norm) && strcmpi(postoption.norm,'AcrossSegments')
+    if isfield(postoption,'norm') && ...
+            ischar(postoption.norm) && ...
+            strcmpi(postoption.norm,'AcrossSegments')
         mdk = 0;
         for i = 1:length(d{k})
             mdk = max(mdk,max(abs(d{k}{i})));
