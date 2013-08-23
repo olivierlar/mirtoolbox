@@ -28,7 +28,7 @@ if iscell(x)
 end
 y = peaksegments(@spread,get(x,'Data'),...
                          get(x,'Pos'),...
-                         get(mircentroid(x),'Data'));
+                         get(mircentroid(x,'MaxEntropy',0),'Data'));
 if isa(x,'mirspectrum')
     t = 'Spectral spread';
 elseif isa(x,'mirenvelope')
@@ -44,7 +44,7 @@ end
 
 
 function s = spread(d,p,c)
-s = sqrt( sum((p-c).^2.*d) ) ./ sum(d);
+s = sqrt( sum((p-c).^2 .* (d/sum(d)) ) );
 
 
 function S = after(x,S,minrms)
