@@ -87,6 +87,7 @@ else
                 
     df = cell(1,length(d));
     fp2 = cell(1,length(d));
+    p2 = cell(1,length(d));
     for i = 1:length(d)
         df{i} = cell(1,length(d{i}));
         fp2{i} = cell(1,length(d{i}));
@@ -115,9 +116,11 @@ else
                 df{i}{j}(:,k,:) = dfk;
                 fp2{i}{j}(:,k) = [fpk(1);fpk(end)];
             end
+            p = get(fk,'Pos');
+            p2{i}{j} = repmat(p{1}{1},[1 n 1]);
         end
     end
-    f = set(fk,'Data',df,'FramePos',fp2);
+    f = set(fk,'Data',df,'FramePos',fp2,'Pos',p2);
     
     mirverbose(vb);
 end
