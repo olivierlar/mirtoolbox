@@ -2,9 +2,10 @@ function display(m)
 % MIRMETRE/DISPLAY display of metrical hierarchy
 
 d = get(m,'Data');
+ac = get(m,'Autocor');
 fp = get(m,'FramePos');
 for h = 1:length(d)
-    m.autocor
+    display(ac{h});
     for i = 1:length(d{h}{1})
         if i == 1
             irgb = [0 0 0];

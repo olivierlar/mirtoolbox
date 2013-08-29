@@ -40,6 +40,9 @@ if isa(c,'miremotion')
     dd = cell(1,l);
     cd = cell(1,l);
 end
+if isa(c,'mirmetre')
+    ac = cell(1,l);
+end
 for i = 1:l
     argin = varargin{i};
     p{i} = getargin(argin,'Pos');
@@ -82,6 +85,9 @@ for i = 1:l
         dd{i} = getargin(argin,'DimData');
         cd{i} = getargin(argin,'ClassData');
     end
+    if isa(c,'mirmetre')
+        ac{i} = getargin(argin,'Autocor');
+    end
 end
 c = set(c,'Pos',p,'Data',d,'FramePos',fp,'FrameRate',fr,'Channels',ch,...
           'Sampling',sr,'NBits',nb,'Name',n,'Label',la,'Length',le,...
@@ -103,11 +109,14 @@ end
 if isa(c,'miremotion')
     c = set(c,'DimData',dd,'ClassData',cd);
 end
+if isa(c,'mirmetre')
+    c = set(c,'Autocor',ac);
+end
       
       
 function y = getargin(argin,field)
 yi = get(argin,field);
-if isempty(yi) || ischar(yi)
+if isempty(yi) || ischar(yi) || ~iscell(yi)
     y = yi;
 else
     y = yi{1};
