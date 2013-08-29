@@ -60,7 +60,7 @@ function varargout = mirmetre(orig,varargin)
         
         ma.key = 'Max';
         ma.type = 'Integer';
-        ma.default = Inf;
+        ma.default = 500;
     option.ma = ma;
     
         lart.key = 'Lartillot';
@@ -203,6 +203,12 @@ for j = 1:length(pt)
                         dist1 = abs(60/ptli - 60./bpm2);
                         
                         for i3 = 1:length(mk{i2})
+                            if mk{i2}(i3).timidx(end) == l
+                                dist1(i3) = NaN;
+                            end
+                        end
+                        
+                        for i3 = 1:length(mk{i2})
                             if 0 %l - mk{i2}(i3).timidx(end) > 10
                                 dist1(i3) = NaN;
                             end
@@ -248,12 +254,18 @@ for j = 1:length(pt)
                         
                         dist3 = NaN(1,length(mk{i2}));
                         for i3 = 1:length(mk{i2})
+                            if mk{i2}(i3).timidx(end) == l
+                                dist3(i3) = NaN;
+                                continue
+                            end
+                            
                             t3 = find(mk{i2}(i3).timidx == l-1);
                             if ~isempty(t3)
                                 dist3(i3) = abs(60/ptli - ...
                                                 60./mk{i2}(i3).bpms(t3));
                             end
                         end
+                        
                         [disti3 indx3] = min(dist3);
                         if disti3 < disti2
                             dist(i2) = disti3;
@@ -294,15 +306,16 @@ for j = 1:length(pt)
                             thri2 = min(thri,.1);
                         end
                         
-                        if dist(i2) > thri2
+                        if isnan(dist(i2)) || dist(i2) > thri2
                             continue
                         end
                         
                         % Continuing an existing metrical level.
+                        
                         if mk{i2}(indx(i2)).timidx(end) ~= l
+                            % Metrical level not extended yet.
+                            
                             %coord = [i2 indx(i2)];
-                            % Level not identified to
-                            % one already detected
                             mk{i2}(indx(i2)).timidx(end+1) = l;
                             mk{i2}(indx(i2)).bpms(end+1) = ptl(i);
                             mk{i2}(indx(i2)).lastbpm = ptli;
@@ -312,6 +325,8 @@ for j = 1:length(pt)
                             if foundk(i2)% && isempty(find(found,1))
                                 active(i2) = 1;
                             else
+                                % Metrical hierarchy not extended yet.
+                                
                                 if isempty(mk{i2}(indx(i2)).function)
                                     if isempty(find(foundk,1)) && ...
                                             mk{i2}(indx(i2)).score(end) > .15% .3 %.15
@@ -336,22 +351,24 @@ for j = 1:length(pt)
                                 %else
                                 %    foundk(i2) = -1;
                                 %end
-                                if ~isempty(mk{i2}(indx(i2)).function)
-                                    globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
-                                    for i3 = 1:size(globpm,1)
-                                        if globpm(i3,l) == 0
-                                            globpm(i3,l) = globpm(i3,l-1);
-                                        end
+                            end
+                            
+                            if ~isempty(mk{i2}(indx(i2)).function)
+                                globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
+                                for i3 = 1:size(globpm,1)
+                                    if globpm(i3,l) == 0
+                                        globpm(i3,l) = globpm(i3,l-1);
                                     end
                                 end
                             end
+                            
                         elseif abs(mk{i2}(indx(i2)).bpms(end) - ...
                                    globpm(i2,end) / mk{i2}(indx(i2)).lvl) > ...
                                abs(ptl(i) - ...
                                    globpm(i2,end) / mk{i2}(indx(i2)).lvl)
+                            % Metrical level already extended but replaced
+                            
                             %coord = [i2 indx(i2)];
-                            % Level already identified to
-                            % one already detected
                             mk{i2}(indx(i2)).bpms(end) = ptl(i);
                             mk{i2}(indx(i2)).lastbpm = ptli;
                             mk{i2}(indx(i2)).score(end) = ...
@@ -516,7 +533,7 @@ for j = 1:length(pt)
                                              min(1-mod(div,1)));
                                 end
                                 if ~foundk(i2)
-                                    thr = .01;
+                                    thr = .1; %.01;
                                 else
                                     thr = option.lart2;
                                 end
@@ -871,6 +888,7 @@ for j = 1:length(pt)
                     end
                 end
                 
+                %%
                 %if 1 %~isempty(find(active,1))
                     inactive = find(~active);
                     for i = 1:length(inactive)
@@ -878,6 +896,7 @@ for j = 1:length(pt)
                     end
                 %end
                 
+                %%
                 i = 1;
                 while i < length(mk)
                     i = i + 1;
