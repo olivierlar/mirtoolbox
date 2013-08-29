@@ -61,8 +61,11 @@ for i = 1:l
             if iscell(ddj)
                 ddj = uncell(ddj);
             end
-            ddj(isnan(ddj)) = [];
-            m{i}{j} = median(ddj,2);
+            for k = 1:size(ddj,1)
+                ddk = ddj(k,:);
+                ddk(isnan(ddk)) = [];
+                m{i}{j}(k,1) = median(ddk,2);
+            end
             fpi{j} = [fp{i}{j}(1);fp{i}{j}(end)];
         end
         fp{i} = fpi;
