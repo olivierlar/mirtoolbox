@@ -207,32 +207,38 @@ else
                         mi = (mi - mimi)/(max(max(mi)) - mimi);
                     end
                     for k = 1:np
-                        if option.bs
-                            if isempty(tmp)
-                                tmp = -Inf(size(mi,1),4,np);
-                            end
-                            mi = [tmp mi];
-                        end
-                        for j = 1:nc-1
-                            if option.gap
+                        if option.gap
+                            for j = 1:nc-1
                                 fl(1,j,k) = detectgap(mi(:,j,k),...
                                                       mi(:,j+1,k),...
                                                       option.gap);
-                            elseif option.inc
-                                if option.bs
-                                    back = mi(:,j+4,k);
-                                    %for l = 1:20
-                                    l = 210;
-                                        back(1+floor(l/2):end-ceil(l/2)) = ...
-                                            max(back(1:end-l),back(1+l:end));
-                                    %end
-                                    mi(:,j+4,k) = back;
-                                    back = max(mi(:, j:j+4 ,k), [],2);
-                                    fl(1,j,k) = dist(back,mi(:,j+5,k),1);
-                                else
-                                    back = mi(:,j,k);
-                                    fl(1,j,k) = dist(back,mi(:,j+1,k),1);
-                                end
+                            end
+                        elseif option.bs
+                            if isempty(tmp)
+                                %tmp = zeros(size(mi,1),1);
+                                tmp = -Inf(size(mi,1),4,np);
+                            end
+                            %back = tmp;
+                            mi = [tmp mi];
+                            for j = 1:nc-1
+                                back = mi(:,j+4,k);
+                                %for l = 1:20
+                                l = 210;
+                                    back(1+floor(l/2):end-ceil(l/2)) = ...
+                                        max(back(1:end-l),back(1+l:end));
+                                %end
+                                mi(:,j+4,k) = back;
+                                back = max(mi(:, j:j+4 ,k), [],2);
+                                fl(1,j,k) = dist(back,mi(:,j+5,k),1);
+                                
+                                %m0 = [max(back(1),back(2)); ...
+                                %      max(max(back(1:end-2),...
+                                %          back(2:end-1)),...
+                                %          back(3:end)); ...
+                                %      max(back(end-1),back(end))];
+                                %fl(1,j,k) = dist(m0,mi(:,j,k),1);
+                                %back = max(back*.9,mi(:,j,k));
+                                
                                 if 0
                                     figure%(1)
                                     %hold off
@@ -244,14 +250,21 @@ else
                                     %plot(mean(fp{h}{i}(:,1:j)),fl(1,1:j,k))
                                     %drawnow
                                 end
-                            else
+                            end
+                        elseif option.inc
+                            for j = 1:nc-1
+                                back = mi(:,j,k);
+                                fl(1,j,k) = dist(back,mi(:,j+1,k),1);
+                            end
+                        else
+                            for j = 1:nc-1
                                 fl(1,j,k) = pdist(mi(:,[j j+1],k)',...
                                                   option.dist);
                             end
                         end
                     end
-                    fp{h}{i} = fpi(:,2:end);
                 end
+                fp{h}{i} = fpi(:,2:end);
                 ff{h}{i} = fl;
             end
         end
@@ -318,7 +331,19 @@ end
 
 
 function y = Gate(mi,mj,inc)
-y = sum( mj .* (mj>mi)); % .* (mj./mi)
+y = sum(mj .* (mj>mi)); %max?
+
+
+%function y = NewGate(mi,mj,inc)
+%N = 9;
+%M = zeros(length(mi)-N+1,N);
+%for i = 1:N
+%    M(:,i) = mi(i:end-(N-i));
+%end
+%mj0 = mj(ceil(N/2):end-floor(N/2));
+%y = abs(repmat(mj0,[1 N]) - M);
+%y = min(y,[],2);
+%y = sum(y); %.*mj0);
 
 
 function d = Cosine(r,s,inc)
