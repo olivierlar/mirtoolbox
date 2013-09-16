@@ -42,6 +42,7 @@ if isa(c,'miremotion')
 end
 if isa(c,'mirmetre')
     ac = cell(1,l);
+    g = cell(1,l);
 end
 for i = 1:l
     argin = varargin{i};
@@ -87,6 +88,7 @@ for i = 1:l
     end
     if isa(c,'mirmetre')
         ac{i} = getargin(argin,'Autocor');
+        g{i} = getargin(argin,'Globpm');
     end
 end
 c = set(c,'Pos',p,'Data',d,'FramePos',fp,'FrameRate',fr,'Channels',ch,...
@@ -110,7 +112,7 @@ if isa(c,'miremotion')
     c = set(c,'DimData',dd,'ClassData',cd);
 end
 if isa(c,'mirmetre')
-    c = set(c,'Autocor',ac);
+    c = set(c,'Autocor',ac,'Globpm',g);
 end
       
       
