@@ -13,6 +13,8 @@ while length(propertyArgIn) >= 2,
    switch prop
        case 'Autocor'
            ac = val;
+       case 'Globpm'
+           gbpm = val;
        otherwise
            d = set(d,prop,val);
    end
