@@ -5,7 +5,11 @@ d = get(m,'Data');
 ac = get(m,'Autocor');
 fp = get(m,'FramePos');
 for h = 1:length(d)
-    display(ac{h});
+    if iscell(ac)
+        display(ac{h});
+    else
+        display(ac);
+    end
     for i = 1:length(d{h}{1})
         if i == 1
             irgb = [0 0 0];
