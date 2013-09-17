@@ -665,42 +665,117 @@ for i = 1:length(d) % For each audio file,...
         end
         if option.harmo
             tp{i}{h} = cell(1,np);
-            if interpol
+            %if interpol
                 tpp{i}{h} = cell(1,np);
                 tpv{i}{h} = cell(1,np);
-            end
+            %end
             for l = 1:np
+                mxl = NaN(1,nc);
+                txl = NaN(1,nc);
+                myl = zeros(1,nc);
+                segm = 0;
                 for k = 1:nc
                     mxk = mx{1,k,l};        
                     txk = th(mxk,k);
                     myk = dht(mxk,k);
-                    [unused idx] = max(myk);
-                    if k == 1
-                        segm = k;
-                    else
-                        dist = abs(txk - txl(1,k-1));
-                        [unused idx2] = min(dist);
-                        if idx2 ~= idx 
-                            mat = max(txk(idx2),txl(1,k-1));
-                            mit = min(txk(idx2),txl(1,k-1));
-                            if mat/mit<1.025
-                                idx = idx2;
+                    
+                    if isempty(mxk)
+                        continue
+                    end
+                    
+                    [maxk idx] = max(myk);
+                    
+                    if maxk < .7
+                        continue
+                    end
+                    
+                    if idx > 1
+                        if k > 1 && ~isempty(find(txl(:,k-1)))
+                            [unused r] = min(abs(txk(idx)-txl(:,k-1)));
+                            if r > 1
+                                [unused ik] = min(abs(txk(idx)/r - th(:,k)));
+                                if dht(ik,k) / maxk > .8
+                                    mxl(1,k) = ik;
+                                    txl(1,k) = th(ik,k);
+                                    myl(1,k) = dht(ik,k);
+                                    idx = 0;
+                                end
                             end
                         end
-                        mat = max(txl(1,k-1),txk(idx));
-                        mit = min(txl(1,k-1),txk(idx));
-                        if mat/mit > 1.2
-                            if k - segm < 2
-                                mxl(:,segm:k-1) = NaN;
-                                txl(:,segm:k-1) = NaN;
-                                myl(:,segm:k-1) = 0;
+                        if idx
+                            idxr = [];
+                            for n = 1:idx-1
+                                if myk(n)/myk(idx) < .9
+                                    continue
+                                end
+                                harmo = mod(txk(idx)/txk(n),1);
+                                if round(txk(idx)/txk(n)) > 1 && ...
+                                        (harmo <.25 || harmo > .75)
+                                    idxr(end+1) = n;
+                                end
                             end
-                            segm = k;
+                            if ~isempty(idxr)
+                                [unused best] = max(myl(idxr));
+                                idx = idxr(best);
+                            end
                         end
                     end
-                    mxl(1,k) = mxk(idx);
-                    txl(1,k) = txk(idx);
-                    myl(1,k) = myk(idx);
+                    
+                    %idx = find(myk>.7);
+                    %if isempty(idx)
+                    %    continue
+                    %end
+                    
+                    %if k == 1
+                    %    idx = idx(1);
+                    %else
+                    %    [unused c] = min(abs(txk(idx)-txl(1,k-1)));
+                    %    idx = idx(c);
+                    %end
+                    
+                    if idx
+                        if ~segm
+                            segm = k;
+                        elseif 0
+                            dist = abs(txk - txl(1,k-1));
+                            [unused idx2] = min(dist);
+                            if idx2 ~= idx 
+                                mat = max(txk(idx2),txl(1,k-1));
+                                mit = min(txk(idx2),txl(1,k-1));
+                                if mat/mit<1.025
+                                    idx = idx2;
+                                end
+                            end
+                            mat = max(txl(1,k-1),txk(idx));
+                            mit = min(txl(1,k-1),txk(idx));
+                            if mat/mit > 1.2
+                                if k - segm < 2
+                                    mxl(:,segm:k-1) = NaN;
+                                    txl(:,segm:k-1) = NaN;
+                                    myl(:,segm:k-1) = 0;
+                                end
+                                segm = k;
+                            end
+                        end
+
+                        %ser = cell(1,length(mxk));
+                        %for n1 = 1:length(mxk)
+                        %    ser{n1} = 1;
+                        %    for n2 = n1+1:length(mxk)
+                        %        harmo = mod(txk(n2)/txk(n1),1);
+                        %        rk = round(txk(n2)/txk(n1));
+                        %        if rk > 1 && ~ismember(rk,ser{n1}) && ...
+                        %                harmo <.2 || harmo > .8
+                        %            ser{n1}(end+1) = rk;
+                        %        end
+                        %    end
+                        %end
+                        %ser;
+
+                        mxl(1,k) = mxk(idx);
+                        txl(1,k) = txk(idx);
+                        myl(1,k) = myk(idx);
+                    end
 
                     for n = 1:length(mxk)
                         if mxk(n) <= mxl(1,k)
@@ -708,11 +783,23 @@ for i = 1:length(d) % For each audio file,...
                         end
                         harmo = mod(txk(n)/txl(1,k),1);
                         rk = round(txk(n)/txl(1,k));
-                        if rk > 1 && harmo <.2 || harmo > .8
+                        if (size(mxl,1) < rk || myk(n) > myl(rk,k)) && ...
+                                harmo <.25 || harmo > .75
+                            if rk > size(mxl,1)
+                                mxl(size(mxl)+1:rk,:) = NaN;
+                                txl(size(mxl)+1:rk,:) = NaN;
+                                myl(size(mxl)+1:rk,:) = 0;
+                            end
                             mxl(rk,k) = mxk(n);
                             txl(rk,k) = txk(n);
                             myl(rk,k) = myk(n);
                         end
+                    end
+                    
+                    if size(myl,1) > 2 && myl(2,k) == NaN
+                        mxl(:,k) = NaN;
+                        txl(:,k) = NaN;
+                        myl(:,k) = NaN;
                     end
                 end
                 tp{i}{h}{l} = mxl;
