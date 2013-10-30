@@ -144,6 +144,10 @@ for j = 1:length(pt)
             mk = {};
             globpm = [];
             for l = 1:size(ptk,2)       % For each successive frame
+                %if ~mod(l,100)
+                %    l
+                %end
+                
                 ptl = getbpm(p,ptk{1,l,h}); % Peaks
 
                 bpms = cell(1,length(mk));
@@ -202,11 +206,11 @@ for j = 1:length(pt)
                                ./ [mk{i2}.lvl];
                         dist1 = abs(60/ptli - 60./bpm2);
                         
-                        for i3 = 1:length(mk{i2})
-                            if mk{i2}(i3).timidx(end) == l
-                                dist1(i3) = NaN;
-                            end
-                        end
+                        %for i3 = 1:length(mk{i2})
+                        %    if mk{i2}(i3).timidx(end) == l
+                        %        dist1(i3) = NaN;
+                        %    end
+                        %end
                         
                         for i3 = 1:length(mk{i2})
                             if 0 %l - mk{i2}(i3).timidx(end) > 10
@@ -362,7 +366,7 @@ for j = 1:length(pt)
                                 end
                             end
                             
-                        elseif abs(mk{i2}(indx(i2)).bpms(end) - ...
+                        elseif 0 && abs(mk{i2}(indx(i2)).bpms(end) - ...
                                    globpm(i2,end) / mk{i2}(indx(i2)).lvl) > ...
                                abs(ptl(i) - ...
                                    globpm(i2,end) / mk{i2}(indx(i2)).lvl)
@@ -420,8 +424,17 @@ for j = 1:length(pt)
                             end
                                 
                             rdiv = round(ptli / bpm3);
+                            if rdiv == 1
+                                i3 = i3-1;
+                                continue
+                            end
+                            
                             lvl = mk{i2}(ord(i3)).lvl / rdiv;
-
+                            if ~isempty(find(lvl == [mk{i2}.lvl],1))
+                                i3 = i3-1;
+                                continue
+                            end
+                                
                             if rdiv == 0 || rdiv > 8 || ...
                                     abs(60/ptli - ...
                                         60/(globpm(i2,end) / lvl))...
@@ -511,17 +524,25 @@ for j = 1:length(pt)
 
                                 bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
                                                                 
-                                if ~foundk(i2)
+                                %if ~foundk(i2)
                                     div = bpm3 ./ [ptli ptli];
-                                else
-                                    div = bpm3 ./ [ptli2;ptli1];
-                                end
+                                %else
+                                %    div = bpm3 ./ [ptli2;ptli1];
+                                %end
                                 rdiv = round(bpm3 / ptli);
+                                if rdiv == 1
+                                    i3 = i3+1;
+                                    continue
+                                end
+                                lvl = mk{i2}(ord(i3)).lvl * rdiv;
+                                if ~isempty(find(lvl == [mk{i2}.lvl],1))
+                                    i3 = i3+1;
+                                    continue
+                                end
                                 if rdiv <= 1 || ...
                                         abs(60/ptli - ...
-                                            60/(globpm(i2,end) / ...
-                                                mk{i2}(ord(i3)).lvl / ...
-                                                rdiv)) > dist(i2)
+                                            60/(globpm(i2,end) / lvl)) ...
+                                           > dist(i2)
                                     i3 = i3+1;
                                     continue
                                 end
@@ -544,7 +565,7 @@ for j = 1:length(pt)
                                     if newerr < err
                                         if isempty(faster)
                                             faster.ref = ord(i3);
-                                            faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
+                                            faster.lvl = lvl;
                                             faster.bpm = orbpms(i3);
                                             faster.score = mk{i2}(ord(i3)).score(end);
                                             faster.rdiv = rdiv;
@@ -556,13 +577,13 @@ for j = 1:length(pt)
                                             if ptli2 > rptli2
                                                 ptli2 = rptli2;
                                             end
-                                            ptli = mean([ptli1,ptli2]);
+                                            %ptli = mean([ptli1,ptli2]);
                                             err = newerr;
                                             %break
                                         elseif mk{i2}(ord(i3)).lvl * rdiv ...
                                                 ~= faster.lvl
                                             faster.ref = ord(i3);
-                                            faster.lvl = mk{i2}(ord(i3)).lvl * rdiv;
+                                            faster.lvl = lvl;
                                             faster.rdiv = rdiv;
                                             %faster = [];
                                             %break
@@ -877,6 +898,9 @@ for j = 1:length(pt)
                             else
                                 glodif = mindif;
                             end
+                        end
+                        if abs(glodif) > .05
+                            glodif = .05 * sign(glodif);
                         end
                         globpm(i,l) = globpm(i,l-1) / 2^glodif;
                     end
