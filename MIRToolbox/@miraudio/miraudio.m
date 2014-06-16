@@ -49,6 +49,8 @@ function varargout = miraudio(orig,varargin)
 %           index l. If l=0, the audio signal(s) are labelled using the
 %           whole file name.
 
+% MP3 behave badly!
+
 
 if isempty(orig)
     varargout = {{}};

@@ -297,24 +297,20 @@ else
             pl = pl-repmat(pl(1,:,:),[size(pl,1),1,1]);
             ls = size(sl,1);
             if mi
-                misp = find(pl(:,1,1)>=mi);
+                misp = find(pl(:,1,1)>=mi,1);
                 if isempty(misp)
                     warning('WARNING IN MIRAUTOCOR: The specified range of delays exceeds the temporal length of the signal.');
                     disp('Minimum delay set to zero.')
                     misp = 1;  % misp is the lowest index of the lag range
                     mi = 0;
-                else
-                    misp = misp(1);
                 end
             else
                 misp = 1;
             end
             if ma
-                masp = find(pl(:,1,1)>=ma);
+                masp = find(pl(:,1,1)>=ma,1);
                 if isempty(masp)
                     masp = Inf;
-                else
-                    masp = masp(1);
                 end
             else
                 masp = Inf;
@@ -389,7 +385,7 @@ else
                 end
             end
             coeffk{l} = c(misp:end,:,:);
-            pl = pl(find(pl(:,1,1) >=mi),:,:);
+            pl = pl(misp:end,:,:);
             lagsk{l} = pl(1:min(size(coeffk{l},1),size(pl,1)),:,:);
             windk{l} = kw;
         end
