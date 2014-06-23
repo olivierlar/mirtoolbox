@@ -50,6 +50,7 @@ if iscell(x)
     a = x{2};
     s = mirsegment(a,o);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
+    % x = mircentroid(s);
     dp = get(x,'Data');
 else
     do = [];
@@ -95,7 +96,11 @@ else
                 vij = 120;
             else
                 tij = da{i}{1}{1}(j-1);
-                dij = dr{i}{1}{1}(j-1) - tij;
+                if isempty(dr{i})
+                    dij = 0;
+                else
+                    dij = dr{i}{1}{1}(j-1) - tij;
+                end
                 vij = round(do{i}{1}{1}(j-1)/max(do{i}{1}{1})*120);
             end
             for k = 1:size(dp{i}{j},3)
