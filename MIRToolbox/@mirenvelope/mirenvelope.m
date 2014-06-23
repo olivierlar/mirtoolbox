@@ -96,7 +96,7 @@ function varargout = mirenvelope(orig,varargin)
     
         filter.key = 'FilterType';
         filter.type = 'String';
-        filter.choice = {'IIR','HalfHann',0};
+        filter.choice = {'IIR','HalfHann','Butter',0};
         if isamir(orig,'mirenvelope')
             filter.default = 0; % no more envelope extraction, already done
         else
@@ -293,7 +293,7 @@ varargout = mirfunction(@mirenvelope,orig,varargin,nargout,specif,@init,@main);
 
 function [x type] = init(x,option)
 type = 'mirenvelope';
-if isamir(x,'mirscalar')
+if isamir(x,'mirscalar') %% Should return in other cases as well?
     return
 end
 if ischar(option.presel) && strcmpi(option.presel,'Klapuri06')
@@ -459,6 +459,10 @@ else
             a = 1;
             b = hann(sr{k}*.4);
             b = b(ceil(length(b)/2):end);
+        elseif strcmpi(option.filter,'Butter')
+            % From Timbre Toolbox
+            w = 5 / ( sr{k}/2 );
+            [b,a] = butter(3, w);
         end
         d{k} = cell(1,length(sig{k}));
         for i = 1:length(sig{k})
