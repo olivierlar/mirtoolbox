@@ -25,17 +25,19 @@ if not(isamir(orig,'mirpattern'))
     fp = get(orig,'FramePos');
     pp = get(orig,'PeakPos');
     for i = 1:length(b)
-        bi = b{i}{1}{1};
-        pi1 = sort(pp{i}{1}{bi(1,1)});
-        pi2 = sort(pp{i}{1}{bi(end,1)}); 
-        p.pattern{1}.occurrence{1}.start = ...
-            fp{i}{1}(1,bi(1,1)) - mean(fp{i}{1}(1:2,pi1(bi(1,2))));
-        p.pattern{end}.occurrence{2}.start = ...
-            fp{i}{1}(1,bi(1,1));
-        p.pattern{end}.occurrence{1}.end = ...
-            fp{i}{1}(1,bi(end,1)) - mean(fp{i}{1}(1:2,pi2(bi(end,2))));
-        p.pattern{end}.occurrence{2}.end = ...
-            fp{i}{1}(1,bi(end,1));
+        for j = 1:length(b{i}{1})
+            bi = b{i}{1}{j};
+            pi1 = sort(pp{i}{1}{bi(1,1)});
+            pi2 = sort(pp{i}{1}{bi(end,1)}); 
+            p.pattern{j}.occurrence{1}.start = ...
+                fp{i}{1}(1,bi(1,1)) - mean(fp{i}{1}(1:2,pi1(bi(1,2))));
+            p.pattern{j}.occurrence{2}.start = ...
+                fp{i}{1}(1,bi(1,1));
+            p.pattern{j}.occurrence{1}.end = ...
+                fp{i}{1}(1,bi(end,1)) - mean(fp{i}{1}(1:2,pi2(bi(end,2))));
+            p.pattern{j}.occurrence{2}.end = ...
+                fp{i}{1}(1,bi(end,1));
+        end
     end
     p = class(p,'mirpattern',mirdata(orig));
 end
