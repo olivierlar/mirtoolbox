@@ -84,7 +84,10 @@ switch propName
                         if size(poi,3) > 1 && size(poi,1) == 1
                             val{k}{i}{1,j,h} = ppi{1,j,h};
                         else
-                            val{k}{i}{1,j,h} = poi(ppi{1,j,h},1);
+                            for x = 1:size(ppi{1,j,h},1)
+                                val{k}{i}{1,j,h}(x,:) = ...
+                                    poi(ppi{1,j,h}(x,:),1);
+                            end
                         end
                     end
                 end
@@ -178,7 +181,7 @@ switch propName
                     else
                         for h = 1:size(ppi,2)
                             for j = 1:size(ppi,1)
-                                if ppi(j,h)
+                                if ~isnan(ppi(j,h)) && ppi(j,h)
                                     val{k}{i}{1}(j,h) = poi(ppi(j,h),1);
                                 else
                                     val{k}{i}{1}(j,h) = 0;
