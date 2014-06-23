@@ -128,6 +128,9 @@ for song = 1:length(songs)  %For each audio file
         
         nl = 0;
         for j = 1:length(vi)
+            if 0 %iscell(vi{j}) && length(vi{j}) == 1
+                vi{j} = vi{j}{1};
+            end
             if ~isempty(vi{j})
                 nl = size(vi{j},1);    % Number of bins
                 nc = size(vi{j},2);    % Number of frames
@@ -281,7 +284,7 @@ for song = 1:length(songs)  %For each audio file
                         %if not(isempty(vj(h,:,k)))
                         if isnan(vold)
                             plot(mean(fpj,1),vj(h,:,k)',...
-                                '+-','Color',num2col(h))
+                                '-','Color',num2col(h))
                         else
                             plot([fold mean(fpj,1)],[vold(h) vj(h,:,k)]',...
                                 '+-','Color',num2col(h))
