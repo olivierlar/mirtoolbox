@@ -8,7 +8,7 @@ function varargout = mirmetre(orig,varargin)
 %   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
 %       Grandjean, D., "Estimating tempo and metrical features by tracking 
 %       the whole metrical hierarchy", 3rd International Conference on 
-%       Music & Emotion, Jyväskylä, 2013.
+%       Music & Emotion, Jyv?skyl?, 2013.
 %
 %   Optional arguments:
 %       mirmetre(...,'Frame',l,h) orders a frame decomposition of window
@@ -40,7 +40,7 @@ function varargout = mirmetre(orig,varargin)
     
         minres.key = 'MinRes';
         minres.type = 'Integer';
-        minres.default = .1;
+        minres.default = 10; %.1;
     option.minres = minres;
         
         thr.key = 'Threshold';
@@ -60,17 +60,18 @@ function varargout = mirmetre(orig,varargin)
         
         ma.key = 'Max';
         ma.type = 'Integer';
-        ma.default = 500;
+        ma.default = 1000; %500
     option.ma = ma;
     
-        lart.key = 'Lartillot';
-        lart.type = 'Integer';
-        lart.default = .1;
-    option.lart = lart;
-
-        lart2.type = 'Integer';
-        lart2.default = .2;
-    option.lart2 = lart2;
+        tol.key = 'Tolerance';
+        tol.type = 'Integer';
+        tol.default = .2;
+    option.tol = tol;
+    
+        goto.key = {'Goto'};
+        goto.type = 'Boolean';
+        goto.default = 0;
+    option.goto = goto;
         
 specif.option = option;
 
@@ -93,7 +94,13 @@ if ~isamir(x,'mirautocor')
                                 option.frame.hop.val,...
                                 option.frame.hop.unit);
     else
-        x = mironsets(x,'SmoothGate','MinRes',option.minres,'Detect',0,...
+        if option.goto
+            sg = 'Goto';
+        else
+            sg = 'Lartillot';
+        end
+        x = mironsets(x,'SmoothGate',sg,'MinRes',option.minres,...
+                        'Detect',0,...
                         'Frame',option.frame.length.val,...
                                 option.frame.length.unit,...
                                 option.frame.hop.val,...
@@ -142,6 +149,7 @@ for j = 1:length(pt)
                 end
             end
             mk = {};
+            activestruct = []; %% Obsolete, activestruct can be entirely removed.
             globpm = [];
             for l = 1:size(ptk,2)       % For each successive frame
                 %if ~mod(l,100)
@@ -158,6 +166,7 @@ for j = 1:length(pt)
                 foundk = zeros(1,length(mk));
                 active = zeros(1,length(mk));
                 new = 0; %zeros(1,length(mk));
+                foundomin = zeros(1,length(mk));
                 
                 ampli = d{j}{k}(:,l,h);
                 pos = ppp{j}{k}{l};
@@ -184,19 +193,19 @@ for j = 1:length(pt)
                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
-                    thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/10 ...
-                           + .1;
+                    %thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/10 ...
+                    %       + .1;
                     
                     score = ampli(pos(i));
                     found = zeros(1,length(mk));              % Is peak in metrical hierarchies?
-                    %coord = [];             % Where is peak located
                     
                     dist = inf(1,length(mk));
                     indx = nan(1,length(mk));
                     
                     i2 = 1;
                     while i2 <= length(mk)   % For each metrical hierarchy
-                        if ~mk{i2}(1).active || isempty(bpms{i2})
+                        if ~activestruct(i2) || ...
+                                ~mk{i2}(1).active || isempty(bpms{i2})
                             i2 = i2+1;
                             continue
                         end
@@ -205,30 +214,16 @@ for j = 1:length(pt)
                         bpm2 = repmat(globpmi2, [1 length(mk{i2})])...
                                ./ [mk{i2}.lvl];
                         dist1 = abs(60/ptli - 60./bpm2);
-                        
-                        %for i3 = 1:length(mk{i2})
-                        %    if mk{i2}(i3).timidx(end) == l
-                        %        dist1(i3) = NaN;
-                        %    end
-                        %end
-                        
-                        for i3 = 1:length(mk{i2})
-                            if 0 %l - mk{i2}(i3).timidx(end) > 10
-                                dist1(i3) = NaN;
-                            end
-                        end
-                        
+                                                
                         dist2 = dist1;
 
-                        %nf = [];
-                        for i3 = 1:length(mk{i2})
-                            if isempty(mk{i2}(i3).function)
-                                dist1(i3) = NaN;
-                            %else
-                            %    nf(end+1) = i3;
+                        if 0 % This short-cut has been toggled off, why?
+                            for i3 = 1:length(mk{i2})
+                                if isempty(mk{i2}(i3).function)
+                                    dist1(i3) = NaN;
+                                end
                             end
-                        end
-                        %if 1 %~foundk(i2)
+
                             [disti1 indx1] = min(dist1);
                             if disti1 < thri && ...
                                     abs(log2(ptli / bpm2(indx1))) < .2
@@ -238,32 +233,18 @@ for j = 1:length(pt)
                                 new = 0;
                                 continue
                             end
-                        %end                        
+                        end
                         
-                        %lvls = sort([mk{i2}(nf).lvl]);
-                        %for i3 = 1:0 %length(mk{i2})
-                        %    lvl3 = mk{i2}(i3).lvl;
-                        %    if isempty(mk{i2}(i3).function)
-                        %        l1 = find(lvls(end:-1:1) < mk{i2}(i3).lvl,1);
-                        %        l2 = find(lvls > mk{i2}(i3).lvl,1);
-                        %        if (~isempty(l1) && ...
-                        %                mod(lvl3,lvls(end-l1+1))) || ...
-                        %                (~isempty(l2) && ...
-                        %                 mod(lvls(l2),lvl3)) 
-                        %            dist2(i3) = NaN;
-                        %        end
-                        %    end
-                        %end
                         [disti2 indx2] = min(dist2);
                         
                         dist3 = NaN(1,length(mk{i2}));
                         for i3 = 1:length(mk{i2})
                             if mk{i2}(i3).timidx(end) == l
-                                dist3(i3) = NaN;
+                                dist3(i3) = NaN; %unnecessary
                                 continue
                             end
                             
-                            t3 = find(mk{i2}(i3).timidx == l-1);
+                            t3 = find(mk{i2}(i3).timidx == l-1); %simplify
                             if ~isempty(t3)
                                 dist3(i3) = abs(60/ptli - ...
                                                 60./mk{i2}(i3).bpms(t3));
@@ -283,16 +264,8 @@ for j = 1:length(pt)
                             if abs(log2(ptli / bpm2(indx(i2)))) > .2 %.1
                                 dist(i2) = Inf;
                                 indx(i2) = 0;
-                                new = 1;
-                                %if 0 %length(mk{i2}(1).timidx) == 1
-                                %    mk(i2) = [];
-                                %    globpm(i2,:) = [];
-                                %    bpms(i2) = [];
-                                %    active(i2) = [];
-                                %    new(i2) = [];
-                                %else
-                                    i2 = i2+1;
-                                %end
+                                new = 1; % New hierarchy (?)
+                                i2 = i2+1;
                                 continue
                             else
                                 new = 0;
@@ -304,11 +277,16 @@ for j = 1:length(pt)
                     
                     [unused order] = sort(dist);
                     for i2 = order
-                        if foundk(i2)
-                            thri2 = thri;
-                        else
-                            thri2 = min(thri,.1);
+                        if ~activestruct(i2)
+                            continue
                         end
+                        
+                        %if foundk(i2)
+                        %    thri2 = thri;
+                        %else
+                        %    thri2 = min(thri,.1);
+                        %end
+                        thri2 = .07; %.01; %.07;
                         
                         if isnan(dist(i2)) || dist(i2) > thri2
                             continue
@@ -319,21 +297,20 @@ for j = 1:length(pt)
                         if mk{i2}(indx(i2)).timidx(end) ~= l
                             % Metrical level not extended yet.
                             
-                            %coord = [i2 indx(i2)];
                             mk{i2}(indx(i2)).timidx(end+1) = l;
                             mk{i2}(indx(i2)).bpms(end+1) = ptl(i);
                             mk{i2}(indx(i2)).lastbpm = ptli;
                             mk{i2}(indx(i2)).score(end+1) = ...
                                 d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
 
-                            if foundk(i2)% && isempty(find(found,1))
+                            if foundk(i2)
                                 active(i2) = 1;
                             else
                                 % Metrical hierarchy not extended yet.
                                 
                                 if isempty(mk{i2}(indx(i2)).function)
                                     if isempty(find(foundk,1)) && ...
-                                            mk{i2}(indx(i2)).score(end) > .15% .3 %.15
+                                            mk{i2}(indx(i2)).score(end) > .15 %.3 %.15
                                         i3 = find([mk{i2}.lvl] == ...
                                                   mk{i2}(indx(i2)).ref,1);
                                         if ~isempty(mk{i2}(i3).function)
@@ -345,19 +322,14 @@ for j = 1:length(pt)
                                 else
                                     active(i2) = 1;
                                 end
-                                %if 1 %~isempty(find(foundk,1)) || ...
-                                     %   max(mk{i2}(indx(i2)).globpms(end),...
-                                     %       mk{i2}(indx(i2)).lastbpm) / ...
-                                     %   min(mk{i2}(indx(i2)).globpms(end),...
-                                     %       mk{i2}(indx(i2)).lastbpm)...
-                                     %       < 1.05
-                                    foundk(i2) = 1;
-                                %else
-                                %    foundk(i2) = -1;
-                                %end
+                                foundk(i2) = 1;
                             end
                             
-                            if ~isempty(mk{i2}(indx(i2)).function)
+                            if ~foundomin(i2) && ...
+                                    ~isempty(mk{i2}(indx(i2)).function)
+                                % Global BPM determined using only the most
+                                % dominant level.
+                                foundomin(i2) = 1;
                                 globpm(i2,l) = ptli * mk{i2}(indx(i2)).lvl;
                                 for i3 = 1:size(globpm,1)
                                     if globpm(i3,l) == 0
@@ -365,25 +337,24 @@ for j = 1:length(pt)
                                     end
                                 end
                             end
-                            
-                        elseif 0 && abs(mk{i2}(indx(i2)).bpms(end) - ...
-                                   globpm(i2,end) / mk{i2}(indx(i2)).lvl) > ...
-                               abs(ptl(i) - ...
-                                   globpm(i2,end) / mk{i2}(indx(i2)).lvl)
-                            % Metrical level already extended but replaced
-                            
-                            %coord = [i2 indx(i2)];
-                            mk{i2}(indx(i2)).bpms(end) = ptl(i);
-                            mk{i2}(indx(i2)).lastbpm = ptli;
-                            mk{i2}(indx(i2)).score(end) = ...
-                                d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h);
                         end
                         found(i2) = foundk(i2);
                     end
                     
                     i2 = 1;
                     while i2 <= length(mk)
-                        %if found(i2)
+                        if ~activestruct(i2)
+                            globpm(i2,l) = NaN;
+                            for i3 = 1:size(globpm,1)
+                                if globpm(i3,l) == 0
+                                    globpm(i3,l) = globpm(i3,l-1);
+                                end
+                            end
+                            i2 = i2+1;
+                            continue
+                        end
+                        
+                        %if found(i2)%%%%%%%%%%%%%%%%%%%%%%%%
                         %    i2 = i2+1;
                         %    continue
                         %end
@@ -456,7 +427,7 @@ for j = 1:length(pt)
                             if ~foundk(i2)
                                 thr = .02;
                             else
-                                thr = option.lart2;
+                                thr = option.tol;
                             end
                             
                             if newerr > thr
@@ -556,7 +527,7 @@ for j = 1:length(pt)
                                 if ~foundk(i2)
                                     thr = .1; %.01;
                                 else
-                                    thr = option.lart2;
+                                    thr = option.tol;
                                 end
                                 if newerr < thr
                                     % Candidate level can be
@@ -692,38 +663,7 @@ for j = 1:length(pt)
                                 mk{i2}(ref).element = [];
                                 mk{i2}(end).element = 1;
                             end
-                            
-                            %for i3 = 1:length(mk{i2})
-                            %    if ptli > mk{i2}(i3).lastbpm
-                                    %div = ptli / mk{i2}(i3).lastbpm;
-                                    %if round(div) > 1 && ...
-                                    %        min(mod(div,1),1-mod(div,1)) < .2
-                                    %    ptli3 = mk{i2}(i3).lastbpm;
-                                    %    nlvl = lvl * round(div);
-                                    %    olvl = mk{i2}(i3).lvl;
-                                        %if 0 && nlvl ~= olvl && ...
-                                        %        abs(60/ptli3 - ...
-                                        %            60/(globpm(i2,end)/nlvl)) < ...
-                                        %        abs(60/ptli3 - ...
-                                        %            60/(globpm(i2,end)/olvl))
-                                        %    i4 = find([mk{i2}.lvl] == nlvl,1);
-                                        %    if isempty(i4)
-                                        %        mk{i2}(i3).lvl = nlvl;
-                                        %        mk{i2}(i3).function = [];
-                                        %        mk{i2}(i3).ref = lvl;
-                                        %        mk{i2}(i3).reldiv = round(div);
-                                        %        if mk{i2}(i3).element
-                                        %            mk{i2}(i3).element = [];
-                                        %            mk{i2}(end).element = 1;
-                                        %        end
-                                        %    else
-                                        %        mk{i2}(i4).active = 1;
-                                        %    end
-                                        %end
-                                    %end
-                            %    end
-                            %end
-                            
+                                                        
                             coord = [i2 length(mk{i2})];
                             bpms{i2}(end+1) = ptli;
                         else
@@ -741,7 +681,7 @@ for j = 1:length(pt)
                             end
                             coord = [i2 l0(md)];
                         end
-                        if ~(foundk(i2))
+                        if ~foundk(i2)
                             foundk(i2) = 1;
                             globpm(i2,l) = ptli * mk{i2}(coord(2)).lvl;
                             for i3 = 1:size(globpm,1)-1
@@ -788,14 +728,32 @@ for j = 1:length(pt)
                         foundk = abs(foundk);
                         active(end+1) = 1;
                         %new(end+1) = 0;
+                        foundomin(end+1) = 1;
+                        activestruct(end+1) = 1;
                     end
                 end
                 
+                %activestruct(~foundomin) = 0;
+                
                 %%
                 for i = 1:length(mk)
-                    if ~mk{i}(1).active
-                        continue
-                    end
+                    %if ~activestruct(i) || ~mk{i}(1).active
+                    %    globpm(i,l) = NaN;
+                    %    for i2 = 1:length(mk{i})
+                    %        if mk{i}(i2).timidx(end) == l
+                    %            mk{i}(i2).globpms(end+1) = globpm(i,l) ...
+                    %                                        / mk{i}(i2).lvl;
+                    %        end
+                    %    end
+                    %    continue
+                    %end
+                    
+                    %% Should we reactivate that test?
+                    %if ~mk{i}(1).active
+                    %    continue
+                    %end
+                    %%
+                    
                     for i2 = 1:length(mk{i})
                         if isempty(mk{i}(i2).function) || ...
                                 mk{i}(i2).timidx(end) < l 
@@ -828,7 +786,7 @@ for j = 1:length(pt)
                             intradiv = abs(refdiv/reldiv);
                             otherfunction = ...
                                 find(mk{i}(other).function(1,:)...
-                                     == -refdiv);
+                                     == -refdiv,1);
                             if isempty(otherfunction)
                                 continue
                             end
@@ -855,7 +813,7 @@ for j = 1:length(pt)
                         end
                     end
                     
-                    if l == 1 || isnan(globpm(i,l-1))
+                    if l == 1 || isnan(globpm(i,l-1)) || ~globpm(i,l-1)
                         glo = 0;
                         sco = 0;
                         for i2 = 1:length(mk{i})
@@ -927,7 +885,7 @@ for j = 1:length(pt)
                     if mk{i}(1).locked
                         continue
                     end
-                    if ~mk{i}(1).active
+                    if ~mk{i}(1).active || ~activestruct(i)
                         continue
                     end
                     
