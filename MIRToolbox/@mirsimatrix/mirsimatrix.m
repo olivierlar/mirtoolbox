@@ -146,6 +146,9 @@ type = 'mirsimatrix';
 
 
 function m = main(orig,option,postoption)
+if postoption.filt
+    postoption.view = 'TimeLag';
+end
 if iscell(orig)
     orig = orig{1};
 end
@@ -197,7 +200,11 @@ elseif isempty(option.arg2)
             if not(isempty(postoption)) && ...
                 strcmpi(postoption.view,'TimeLag')
                 if isinf(lK)
-                    lK = l;
+                    if option.half
+                        lK = l;
+                    else
+                        lK = l*2-1;
+                    end
                 end
                 dk{z} = NaN(lK,l,nc);
             else
@@ -262,12 +269,18 @@ elseif isempty(option.arg2)
                                                       option.distance));
                                 dkij = mm(:,1);
                             end
-                            for j = 0:ij-i
-                                if hK-j>0
-                                    dk{z}(hK-j,i,g) = dkij(j+1);   
+                            if option.half
+                                for j = 1:length(dkij)
+                                    dk{z}(j,i+j-1,g) = dkij(j);
                                 end
-                                if hK+j<=lK
-                                    dk{z}(hK+j,i+j,g) = dkij(j+1);
+                            else
+                                for j = 0:ij-i
+                                    if hK-j>0
+                                        dk{z}(hK-j,i,g) = dkij(j+1);   
+                                    end
+                                    if hK+j<=lK
+                                        dk{z}(hK+j,i+j,g) = dkij(j+1);
+                                    end
                                 end
                             end
                         end
@@ -399,37 +412,58 @@ if not(isempty(postoption))
             end
             m = set(m,'Data',d);
             m.view = 'h';
-        elseif strcmpi(postoption.view,'TimeLag') || postoption.filt
+        elseif strcmpi(postoption.view,'TimeLag')
             for k = 1:length(d)
                 for z = 1:length(d{k})
                     if isinf(m.diagwidth)
-                        nlines = 2*size(d{k}{z},1)*2-1;
-                        half = size(d{k}{z},1);
+                        if option.half
+                            nlines = size(d{k}{z},1);
+                            half = floor(size(d{k}{z},1)/2);
+                        else
+                            nlines = 2*size(d{k}{z},1)-1;
+                            half = size(d{k}{z},1);
+                        end
                     else
                         nlines = m.diagwidth;
                         half = (m.diagwidth+1)/2;
                     end
                     dz = NaN(nlines,size(d{k}{z},2));
-                    for l = 1:nlines
-                        dia = abs(half-l);
-                        if l<half
-                            dz(l,1:end-dia) = diag(d{k}{z},dia)';
-                        else
-                            dz(l,dia+1:end) = diag(d{k}{z},dia)';
+                    if option.half
+                        for l = 1:nlines
+                            dz(l,l:end) = diag(d{k}{z},l-1)';
                         end
-                    end
-                    if lK < m.diagwidth
-                        nlines2 = floor(lK/2);
-                        if size(dz,1)>lK
-                            dz = dz(half-nlines2:half+nlines2,:);
+                    else
+                        for l = 1:nlines
+                            dia = abs(half-l);
+                            if l<half
+                                dz(l,1:end-dia) = diag(d{k}{z},dia)';
+                            else
+                                dz(l,dia+1:end) = diag(d{k}{z},dia)';
+                            end
                         end
-                        m.diagwidth = lK;
+                        if lK < m.diagwidth
+                            nlines2 = floor(lK/2);
+                            if size(dz,1)>lK
+                                dz = dz(half-nlines2:half+nlines2,:);
+                            end
+                            m.diagwidth = lK;
+                        end
                     end
                     d{k}{z}= dz;
                 end
             end
             m = set(m,'Data',d);
             m.view = 'l';
+        end
+    end
+    if strcmpi(m.view,'l') && ~m.half && option.half
+        for k = 1:length(d)
+            for z = 1:length(d{k})
+                for l = 1:size(d{k}{z},1)
+                    dz(l,1:l-1) = NaN;
+                end
+                d{k}{z}= dz;
+            end
         end
     end
     if ischar(postoption.simf)
@@ -458,10 +492,19 @@ if not(isempty(postoption))
         fp = get(m,'FramePos');
         for k = 1:length(d)
             for z = 1:length(d{k})
-                dz = filter(ones(postoption.filt,1),1,d{k}{z});
-                d{k}{z} = dz(postoption.filt:end,1:end-postoption.filt+1);
-                fp{k}{z} = [fp{k}{z}(1,1:end-postoption.filt+1);...
-                            fp{k}{z}(1,postoption.filt:end)];
+                dz = filter(ones(postoption.filt,1),1,d{k}{z}')';
+                if option.half
+                    d{k}{z} = dz(1:end-postoption.filt,...
+                                 postoption.filt+1:end);
+                    fp{k}{z} = [fp{k}{z}(1,1:end-postoption.filt);...
+                                fp{k}{z}(2,postoption.filt+1:end)];         
+                else
+                    d{k}{z} = dz(1+ceil(postoption.filt/2):...
+                                 end-floor(postoption.filt/2),...
+                                 postoption.filt+1:end);
+                    fp{k}{z} = [fp{k}{z}(1,1:end-postoption.filt);...
+                                fp{k}{z}(2,postoption.filt+1:end)];
+                end
             end
         end
         m = set(m,'Data',d,'FramePos',fp);
