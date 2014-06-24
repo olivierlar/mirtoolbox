@@ -53,8 +53,10 @@ function varargout = mirflux(orig,varargin)
     option.inc = inc;
 
         bs.key = 'BackSmooth';
-        bs.type = 'Boolean';
-        bs.default = 0;
+        bs.type = 'String';
+        bs.choice = {'Goto','Lartillot'};
+        bs.default = '';
+        bs.keydefault = 'Goto';%'Lartillot';%'Goto';%
     option.bs = bs;
     
         complex.key = 'Complex';
@@ -122,7 +124,11 @@ if isamir(x,'miraudio')
     end
 end
 if isa(x,'mirdesign')
-    x = set(x,'Overlap',1);
+    if strcmpi(option.bs,'Goto')
+        x = set(x,'Overlap',2);
+    else
+        x = set(x,'Overlap',1);
+    end
 end
 type = 'mirscalar';
 
@@ -175,8 +181,8 @@ else
             if size(mi,3) > 1 && size(mi,1) == 1
                 mi = reshape(mi,size(mi,2),size(mi,3))';
             end
-            if strcmpi(option.dist,'Gate')
-                mi = mi +80; %- min(min(min(mi)));
+            if strcmpi(option.bs,'Lartillot')
+                mi = mi + 120; %- min(min(min(mi)));
             end
             if option.complex
                 phi = ph{h}{i};
@@ -186,7 +192,7 @@ else
             np = size(mi,3);
             if nc == 1
                 warning('WARNING IN MIRFLUX: Flux can only be computed on signal decomposed into frames.');
-                ff{h}{i} = NaN(1,1,np);
+                ff{h}{i} = [];
             else
                 if option.complex
                     fl = zeros(1,nc-2,np);
@@ -201,7 +207,12 @@ else
                     end
                     fp{h}{i} = fpi(:,3:end);
                 else
-                    fl = zeros(1,nc-1,np);
+                    if strcmpi(option.bs,'Goto')
+                        limit = nc-2;
+                    else
+                        limit = nc-1;
+                    end
+                    fl = zeros(1,limit,np);
                     if option.gap
                         mimi = min(min(mi));
                         mi = (mi - mimi)/(max(max(mi)) - mimi);
@@ -213,39 +224,58 @@ else
                                                       mi(:,j+1,k),...
                                                       option.gap);
                             end
-                        elseif option.bs
-                            if isempty(tmp)
-                                %tmp = zeros(size(mi,1),1);
-                                tmp = -Inf(size(mi,1),4,np);
+                        elseif ~isempty(option.bs)
+                            p = get(s,'Pos');
+                            res = diff(p{1}{1}(1:2));
+                            if strcmpi(option.bs,'Goto')
+                                l = round(43/res); 
+                            else
+                                l = round(17/res); 
                             end
-                            %back = tmp;
+                            memo = 4;%; 50;
+                            if isempty(tmp)
+                                tmp = -Inf(size(mi,1),memo-1,np);
+                            end
                             mi = [tmp mi];
-                            for j = 1:nc-1
-                                back = mi(:,j+4,k);
-                                %for l = 1:20
-                                l = 210;
-                                    back(1+floor(l/2):end-ceil(l/2)) = ...
-                                        max(back(1:end-l),back(1+l:end));
-                                %end
-                                mi(:,j+4,k) = back;
-                                back = max(mi(:, j:j+4 ,k), [],2);
-                                fl(1,j,k) = dist(back,mi(:,j+5,k),1);
-                                
-                                %m0 = [max(back(1),back(2)); ...
-                                %      max(max(back(1:end-2),...
-                                %          back(2:end-1)),...
-                                %          back(3:end)); ...
-                                %      max(back(end-1),back(end))];
-                                %fl(1,j,k) = dist(m0,mi(:,j,k),1);
-                                %back = max(back*.9,mi(:,j,k));
-                                
+                            mi2 = mi;
+                            if 0
+                                bk = zeros(size(mi));
+                                bs = zeros(size(mi));
+                            end
+                            for j = 1:limit
+                                mj = mi(:,j+memo-1,k);
+                                mj2 = zeros(length(mj)-l,l-1);
+                                for j2 = 1:l-1
+                                    mj2(:,j2) = mj(j2:j2+length(mj)-l-1);
+                                end
+                                mj(1+floor(l/2):end-ceil(l/2)) = max(mj2,[],2); ...
+                                    %max(mj(1:end-l),mj(1+l:end));
+                                mi2(:,j+memo-1,k) = mj;
+                                if strcmpi(option.bs,'Goto')
+                                    back = max(mj,mi(:,j+memo-2,k));
+                                else
+                                    back = max(mi2(:,j:j+memo-1,k),[],2);
+                                end
+                                if 0
+                                    bk(:,j+1) = back;
+                                    fbs = find(mi(:,j+memo,k) > back);
+                                    bs(fbs,j+1) = mi(fbs,j+memo,k);
+                                end
+                                if strcmpi(option.bs,'Goto')
+                                    forth = mi(:,j+memo+1,k);
+                                    forth(1+floor(l/2):end-ceil(l/2)) = ...
+                                        min(forth(1:end-l),forth(1+l:end));
+                                    fl(1,j,k) = Goto(back,mi(:,j+memo,k),forth,mi(:,j+memo+1,k));
+                                else
+                                    fl(1,j,k) = dist(back,mi(:,j+memo,k));
+                                end
                                 if 0
                                     figure%(1)
                                     %hold off
-                                    plot(mi(:,j,k))
+                                    plot(mi2(:,j+memo-1,k))
                                     hold on
                                     plot(back,'r')
-                                    plot(mi(:,j+1,k),'k')
+                                    plot(mi(:,j+memo,k),'k')
                                     %figure(2)
                                     %plot(mean(fp{h}{i}(:,1:j)),fl(1,1:j,k))
                                     %drawnow
@@ -264,7 +294,11 @@ else
                         end
                     end
                 end
-                fp{h}{i} = fpi(:,2:end);
+                if strcmpi(option.bs,'Goto')
+                    fp{h}{i} = fpi(:,2:end-1);
+                else
+                    fp{h}{i} = fpi(:,2:end);
+                end
                 ff{h}{i} = fl;
             end
         end
@@ -275,12 +309,12 @@ else
         end
     end
     f = mirscalar(s,'Data',ff,'FramePos',fp,'Sampling',newsr,...
-                        'Title',t,'Parameter',param);
+                    'Title',t,'Parameter',param);
     if not(isequal(postoption,struct))
         f = modif(f,postoption);
     end
-    if option.bs
-        tmp = mi(:,max(1,end-4):end-1,k);
+    if ~isempty(option.bs) && nc > 1
+        tmp = mi2(:,max(1,end-memo+1):end-1,k);
         f = settmp(f,tmp);
     end
 end
@@ -332,6 +366,12 @@ end
 
 function y = Gate(mi,mj,inc)
 y = sum(mj .* (mj>mi)); %max?
+%y = sum(max(mj-mi,0));
+
+
+function y = Goto(mi,mj,mk,mk2)
+%y = sum(max(mj,mk2) .* (mj>mi).* (mk>mi));
+y = sum( (max(mj,mk2) - mi) .* (mj>mi).* (mk>mi));
 
 
 %function y = NewGate(mi,mj,inc)
