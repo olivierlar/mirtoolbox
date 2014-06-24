@@ -119,6 +119,17 @@ function varargout = mirpitch(orig,varargin)
         s.type = 'Boolean';
         s.default = 0;
     option.s = s;
+
+            res.key = 'Res';
+            res.type = 'Integer';
+            res.default = NaN;
+        option.res = res;
+  
+            db.key = 'dB';
+            db.type = 'Integer';
+            db.default = 0;
+            db.keydefault = Inf;
+        option.db = db;
         
         ce.key = 'Cepstrum';
         ce.type = 'Boolean';
@@ -200,13 +211,13 @@ function varargout = mirpitch(orig,varargin)
             segmin.key = 'SegMinLength';
             segmin.type = 'Integer';
             segmin.when = 'Both';
-            segmin.default = 7;
+            segmin.default = 2;
         option.segmin = segmin;
         
             segpitch.key = 'SegPitchGap';
             segpitch.type = 'Integer';
             segpitch.when = 'Both';
-            segpitch.default = 10;
+            segpitch.default = 45;
         option.segpitch = segpitch;        
 
             segtime.key = 'SegTimeGap';
@@ -252,6 +263,11 @@ function varargout = mirpitch(orig,varargin)
         tolo.type = 'Boolean';
         tolo.default = 0;
     option.tolo = tolo;
+
+        harmonic.key = 'Harmonic';
+        harmonic.type = 'Boolean';
+        harmonic.default = 0;
+    option.harmonic = harmonic;
     
 specif.option = option;
 specif.chunkframebefore = 1;
@@ -280,6 +296,11 @@ if option.tolo
     option.enh = 2:10;
     option.gener = .67;
     option.filtertype = '2Channels';
+elseif option.harmonic
+    option.s = 1;
+    option.frame.hop.val = .1;
+    option.res = 1;
+    option.db = Inf;
 end
 if not(option.ac) && not(option.as) && not(option.ce) && not(option.s)
     option.ac = 1;
@@ -342,7 +363,8 @@ else
             if option.comb
                 y = mirspectrum(x,'Min',option.mi,'Max',2000,'Res',1);%,'Sum');
             elseif option.s
-                s = mirspectrum(x,'Min',option.mi,'Max',option.ma); %,'Res'?
+                s = mirspectrum(x,'Min',option.mi,'Max',option.ma,...
+                                  'Res',option.res,'dB',option.db);
                 if option.ac
                     y = y*s;
                 else
@@ -382,8 +404,11 @@ if option.comb == 2
     option.order = 'Abscissa';
 elseif option.multi && option.m == 1
     option.m = Inf;
-elseif (option.mono && option.m == Inf) || option.segm
+elseif (option.mono && option.m == Inf) %|| option.segm
     option.m = 1;
+elseif option.harmonic
+    option.cthr = .01;
+    option.thr = .5;
 end
 if iscell(x)
     if length(x)>1
@@ -435,18 +460,37 @@ if option.comb == 1
     x = set(x,'Data',cb,'Pos',pos,'Title','Spectral Comb');
 end
 
-if not(isa(x,'mirpitch') || isa(x,'mirmidi'))
-    x = mirpeaks(x,'Total',option.m,'Track',option.track,...
-                   'Contrast',option.cthr,'Threshold',option.thr,...
-                   'Reso',option.reso,'NoBegin','NoEnd',...
-                   'Order',option.order);
-end
-if isa(x,'mirscalar')
+if isa(x,'mirpitch')
     pf = get(x,'Data');
+    pa = get(x,'Amplitude');
+    if option.m < Inf
+        for i = 1:length(pf)
+            for j = 1:length(pf{i})
+                for h = 1:length(pf{i}{j})
+                    pf{i}{j}{h} = pf{i}{j}{h}(1:option.m,:);
+                    pa{i}{j}{h} = pa{i}{j}{h}(1:option.m,:);
+                end
+            end
+        end
+    end
 else
-    pf = get(x,'PeakPrecisePos');
-    pa = get(x,'PeakPreciseVal');
+    if not(isa(x,'mirpitch') || isa(x,'mirmidi'))
+        x = mirpeaks(x,'Total',option.m,'Track',option.track,...
+                       'Contrast',option.cthr,'Threshold',option.thr,...
+                       'Reso',option.reso,'NoBegin','NoEnd',...
+                       'Order',option.order,'Harmonic',option.harmonic);
+    end
+    if isa(x,'mirscalar')
+        pf = get(x,'Data');
+    elseif option.harmonic
+        pf = get(x,'TrackPos');
+        pa = get(x,'TrackVal');
+    else
+        pf = get(x,'PeakPrecisePos');
+        pa = get(x,'PeakPreciseVal');
+    end
 end
+
 fp = get(x,'FramePos');
 
 punit = 'Hz';
@@ -522,6 +566,22 @@ if option.segm
     scale = [];
     for i = 1:length(pf)
         for j = 1:length(pf{i})
+            if size(pf{i}{j},2) == 1 && size(pf{i}{j}{1},2) > 1
+                pfj = cell(1,size(pf{i}{j}{1},2));
+                paj = cell(1,size(pa{i}{j}{1},2));
+                for l = 1:size(pf{i}{j}{1},2)
+                    if isnan(pf{i}{j}{1}(l))
+                        pfj{l} = [];
+                        paj{l} = 0;
+                    else
+                        pfj{l} = pf{i}{j}{1}(l);
+                        paj{l} = pa{i}{j}{1}(l);
+                    end
+                end
+                pf{i}{j} = pfj;
+                pa{i}{j} = paj;
+            end
+            
             for k = 1:size(pf{i}{j},3)
                 startp = [];
                 meanp = [];
@@ -533,23 +593,57 @@ if option.segm
                 currentp = [];
                 maxp = 0;
                 reson = [];
+                attack = [];
+                
+                if ~isempty(pf{i}{j}{1,1,k})
+                    pf{i}{j}{1,1,k} = pf{i}{j}{1,1,k}(1);
+                    pa{i}{j}{1,1,k} = pa{i}{j}{1,1,k}(1);
+                end
+                if ~isempty(pf{i}{j}{1,end,k})
+                    pf{i}{j}{1,end,k} = pf{i}{j}{1,end,k}(1);
+                    pa{i}{j}{1,end,k} = pa{i}{j}{1,end,k}(1);
+                end
+                
                 for l = 2:size(pf{i}{j},2)-1
-                    if pa{i}{j}{1,l,k} > maxp
-                        maxp = pa{i}{j}{1,l,k};
+                    if ~isempty(pa{i}{j}{1,l,k}) && ...
+                            pa{i}{j}{1,l,k}(1) > maxp
+                        maxp = pa{i}{j}{1,l,k}(1);
                     end
                     if ~isempty(reson) && l-reson(1).end>50
                         reson(1) = [];
+                    end
+                    
+                    if ~isempty(pf{i}{j}{1,l,k})
+                        if 1 %isempty(pf{i}{j}{1,l-1,k})
+                            pf{i}{j}{1,l,k} = pf{i}{j}{1,l,k}(1);
+                            pa{i}{j}{1,l,k} = pa{i}{j}{1,l,k}(1);                            
+                        else
+                            [dpf idx] = min(abs(pf{i}{j}{1,l,k} - ...
+                                                pf{i}{j}{1,l-1,k}));
+                            if idx > 1 && ...
+                                    pa{i}{j}{1,l,k}(1) - pa{i}{j}{1,l,k}(idx) > .02
+                                pf{i}{j}{1,l,k} = pf{i}{j}{1,l,k}(1);
+                                pa{i}{j}{1,l,k} = pa{i}{j}{1,l,k}(1);
+                            else
+                                pf{i}{j}{1,l,k} = pf{i}{j}{1,l,k}(idx);
+                                pa{i}{j}{1,l,k} = pa{i}{j}{1,l,k}(idx);
+                            end
+                        end
                     end
                     
                     interrupt = 0;
                     if l == size(pf{i}{j},2)-1 || ...
                             isempty(pf{i}{j}{1,l,k}) || ...
                             (~isempty(buffer) && ...
-                             abs(pf{i}{j}{1,l,k} - mean(buffer.pitch)) ...
+                             abs(pf{i}{j}{1,l,k} - pf{i}{j}{1,l-1,k})...
                                 > option.segpitch) || ...
-                            (0 && ~isempty(pa{i}{j}{1,l-1,k}) && ...
-                             pa{i}{j}{1,l,k} - pa{i}{j}{1,l-1,k} > .3)
-                         interrupt = 1;
+                            (~isempty(currentp) && ...
+                             abs(pf{i}{j}{1,l,k} - currentp) > ...
+                                option.segpitch)
+                        interrupt = 1;
+                    elseif (~isempty(pa{i}{j}{1,l-1,k}) && ...
+                             pa{i}{j}{1,l,k} - pa{i}{j}{1,l-1,k} > .01)
+                        interrupt = 2;
                     end
                     
                     if ~interrupt
@@ -568,12 +662,17 @@ if option.segm
                         % Segment interrupted
                         if isempty(buffer) || ...
                                 ...%length(buffer.pitch) < option.segmin || ...
-                                std(buffer.pitch) > 25
+                                0 %std(buffer.pitch) > 25
                              if length(startp) > length(endp)
                                 startp(end) = [];
                             end
                         else
-                            meanp(end+1) = mean(buffer.pitch);
+                            if isempty(currentp)
+                                strong = find(buffer.amp > max(buffer.amp)*.75);
+                                meanp(end+1) = mean(buffer.pitch(strong));
+                            else
+                                meanp(end+1) = currentp;
+                            end
                             endp(end+1) = l-1;
                             hp = hist(buffer.pitch,5);
                             hp = hp/sum(hp);
@@ -583,8 +682,9 @@ if option.segm
                             reson(end+1).pitch = meanp(end);
                             reson(end).amp = mean(buffer.amp);
                             reson(end).end = l-1;
+                            attack(end+1) = max(buffer.amp) > .05;
                         end
-                                                
+                              
                         if isempty(pf{i}{j}{1,l,k})
                             buffer = [];
                         else
@@ -607,12 +707,14 @@ if option.segm
                         end
                         buffer.pitch(end+1) = pf{i}{j}{1,l,k};
                         buffer.amp(end+1) = pa{i}{j}{1,l,k};
-                    end
-                    
-                    if isempty(currentp) && ...
-                            isstruct(buffer) && length(buffer.pitch)>2
-                        currentp = mean(buffer.pitch);
-                    end
+                        if length(buffer.pitch) > 4 && ...
+                                std(buffer.pitch(1:end)) < 5 && ...
+                                buffer.amp(end) > max(buffer.amp)*.5
+                            currentp = mean(buffer.pitch(1:end));
+                        %else
+                        %    l
+                        end
+                    end                    
                 end
                 
                 if length(startp) > length(meanp)
@@ -621,24 +723,29 @@ if option.segm
                 
                 l = 1;
                 while l <= length(endp)
-                    if ~isempty(intersect(startp(l)-(1:5),breaks)) && ...
-                            ~isempty(intersect(endp(l)+(1:5),breaks))
-                        minlength = option.segmin;
+                    if 1 %~isempty(intersect(startp(l)-(1:5),breaks)) && ...
+                         %  ~isempty(intersect(endp(l)+(1:5),breaks))
+                        if 1 %attack(l)
+                            minlength = option.segmin;
+                        else
+                            minlength = 6;
+                        end
                     else
                         minlength = 2;
                     end
                     if endp(l)-startp(l) > minlength
                     % Segment sufficiently long
-                        if l>1 && ...
+                        if l>1 && ~attack(l) && ...
                            startp(l) <= endp(l-1)+option.segtime && ...
-                           ...%(0 || ... deg(l) == deg(l-1) || ...
                             abs(meanp(l)-meanp(l-1)) < 50
                                 % Segment fused with previous one
                                 startp(l) = [];
-                                meanp(l-1) = mean(meanp(l-1:l));
+                                %meanp(l-1) = mean(meanp(l-1:l));
                                 meanp(l) = [];
                                 deg(l-1) = cent2deg(meanp(l-1),scale);
                                 deg(l) = [];
+                                attack(l-1) = max(attack(l),attack(l-1));
+                                attack(l) = [];
                                 endp(l-1) = [];
                                 found = 1;
                         else
@@ -653,8 +760,10 @@ if option.segm
                         %meanp(l-1) = mean(meanp(l-1:l));
                         meanp(l) = [];
                         deg(l) = [];
+                        attack(l-1) = max(attack(l),attack(l-1));
+                        attack(l) = [];
                         endp(l-1) = [];
-                    elseif l < length(meanp) && ...
+                    elseif 0 && l < length(meanp) && ...
                             startp(l+1) <= endp(l)+option.segtime && ...
                             abs(meanp(l+1)-meanp(l)) < 50
                         % Segment fused with next one
@@ -663,12 +772,15 @@ if option.segm
                         meanp(l+1) = [];
                         deg(l) = deg(l+1);
                         deg(l+1) = [];
+                        attack(l) = max(attack(l),attack(l+1));
+                        attack(l+1) = [];
                         endp(l) = [];
                     else
                         % Segment removed
                         startp(l) = [];
                         meanp(l) = [];
                         deg(l) = [];
+                        attack(l) = [];
                         endp(l) = [];
                     end
                 end               
@@ -686,6 +798,7 @@ if option.segm
                         deg(l) = [];
                         endp(l) = [];
                         stabl(l) = [];
+                        attack(l) = [];
                         
                         if fusetest && ...
                                 l > 1 && l <= length(meanp) && ...
@@ -696,6 +809,8 @@ if option.segm
                             meanp(l) = [];
                             deg(l-1) = deg(l);
                             deg(l) = [];
+                            attack(l-1) = max(attack(l),attack(l-1));
+                            attack(l) = [];
                             endp(l-1) = [];
                         end
                     else
@@ -713,6 +828,7 @@ if option.segm
                             meanp(l) = [];
                             deg(l-1) = deg(l);
                             deg(l) = [];
+                            attack(l) = [];
                             endp(l-1) = [];
                             stabl(l) = [];
                         elseif abs(meanp(l) - meanp(l-1) - 1200) < 50
@@ -722,6 +838,7 @@ if option.segm
                             meanp(l) = [];
                             deg(l) = deg(l-1);
                             deg(l) = [];
+                            attack(l) = [];
                             endp(l-1) = [];
                             stabl(l) = [];
                         else
@@ -812,7 +929,7 @@ if option.median
         end
     end
 end
-if isa(x,'mirscalar')
+if 0 %isa(x,'mirscalar')
     p.amplitude = 0;
 else
     p.amplitude = pa;
