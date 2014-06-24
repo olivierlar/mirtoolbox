@@ -17,6 +17,11 @@ function varargout = mirattacktime(orig,varargin)
         scale.default = 'Lin';
     option.scale = scale;
     
+        cthr.key = 'Contrast';
+        cthr.type = 'Integer';
+        cthr.default = NaN;
+    option.cthr = cthr;
+
         single.key = 'Single';
         single.type = 'Boolean';
         single.default = 0;
@@ -38,7 +43,7 @@ varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main)
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Single',option.single,...
+o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Filter','Normal','AcrossSegments');
 type = mirtype(x);
@@ -63,7 +68,7 @@ if isempty(pa)
 end
 pa = sort(pa{1});
 po = sort(po{1});
-fp = [pa';po'];
+fp = [pa(:)';po(:)'];
 
 
 function at = algo(po,pa,sc)
