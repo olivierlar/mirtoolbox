@@ -62,7 +62,7 @@ if isempty(pa)
 end
 pa = sort(pa{1});
 po = sort(po{1});
-fp = [pa';po'];
+fp = [pa(:)';po(:)'];
 
 
 function lp = algo(po,pa,d)
