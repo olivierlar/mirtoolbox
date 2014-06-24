@@ -553,10 +553,11 @@ for k = 1:length(m)
     end
 end
 if option.timesmooth
+    [state s] = gettmp(s);
     B = ones(1,option.timesmooth)/option.timesmooth;
     for h = 1:length(m)
         for l = 1:length(m{k})
-            m{h}{l} = filter(B,1,m{h}{l},[],2);
+            [m{h}{l} state] = filter(B,1,m{h}{l},state,2);
             %mhl = m{h}{l};
             %for i = 1:size(m{h}{l},2)
             %    m{h}{l}(:,i) = min(mhl(:,max(1,i-option.timesmooth+1):i),...
@@ -564,6 +565,7 @@ if option.timesmooth
             %end
         end
     end
+    s = settmp(s,state);
 end
 if get(s,'Power') == 1 && ...
         (option.pow || any(option.mprod) || any(option.msum)) 
