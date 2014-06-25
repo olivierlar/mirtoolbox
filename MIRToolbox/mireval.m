@@ -160,22 +160,68 @@ else
             toc
         end
         y{f} = yf;
+        
         if (mirtemporary && length(order)>1) || not(isempty(export))
-            if isempty(export)
-                export = 'mirtemporary.txt';
-            end
-            if strncmpi(export,'Separately',10)
-                filename = a{f};
-                filename(filename == '/') = '.';
-                filename = ['Backup/' filename export(11:end)];
-                if i == 1
-                    mkdir('Backup');
+            
+            if 0 % Private use.
+                ff = find(a{f} == '/');
+                if isempty(ff)
+                    ff = 0;
+                else
+                    ff = ff(end);
                 end
-                mirexport(filename,yf);
-            elseif i==1
-                mirexport(export,yf);
+                listing = dir([a{f}(1:ff),'Fabien''s annotations/',...
+                               a{f}(ff+1:end-4),'*']);
+                an = importdata([a{f}(1:ff),'Fabien''s annotations/',...
+                                 listing.name]);
+                dt1 = mirgetdata(yf.t1);
+                ok1 = find(dt1 > an*.96 & dt1 < an*1.04);
+                if isempty(ok1)
+                    ok1 = 0;
+                end
+                dt2 = mirgetdata(yf.t2);
+                ok2 = find(dt2 > an*.96 & dt2 < an*1.04);
+                if isempty(ok2)
+                    ok2 = 0;
+                end
+            
+                if isempty(export)
+                    export = 'mirtemporary.txt';
+                end
+                if strncmpi(export,'Separately',10)
+                    filename = a{f};
+                    %filename(filename == '/') = '.';
+                    %filename = ['Backup/' filename];
+                    filename = [filename export(11:end)];
+                    %if i == 1
+                    %    mkdir('Backup');
+                    %end
+                    mirexport(filename,yf);
+                elseif i==1
+                    mirexport([export,'1'],ok1,an,yf.t1);
+                    mirexport([export,'2'],ok2,an,yf.t2);
+                else
+                    mirexport([export,'1'],ok1,an,yf.t1,'#add');
+                    mirexport([export,'2'],ok2,an,yf.t2,'#add');
+                end
+                
             else
-                mirexport(export,yf,'#add');
+                if isempty(export)
+                    export = 'mirtemporary.txt';
+                end
+                if strncmpi(export,'Separately',10)
+                    filename = a{f};
+                    filename(filename == '/') = '.';
+                    filename = ['Backup/' filename export(11:end)];
+                    if i == 1
+                        mkdir('Backup');
+                    end
+                    mirexport(filename,yf);
+                elseif i==1
+                    mirexport(export,yf);
+                else
+                    mirexport(export,yf,'#add');
+                end
             end
         end
         clear yf

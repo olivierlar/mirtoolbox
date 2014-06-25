@@ -23,7 +23,6 @@ function varargout = mirnovelty(orig,varargin)
 %               corresponding to f(x) = exp(-x)
 %       mirnovelty(...,'KernelSize',s) selects the kernel-based method and
 %           specifies the length of the gaussian kernel, in samples.
-%           default value: s = 64.
 %       mirnovelty(...,'Normal',0) does not normalize the novelty curve
 %           between the values 0 and 1.
 %       mirnovelty(...,'Horizontal') uses the 'Horizontal' option in
@@ -119,6 +118,8 @@ if ~option.simple && ...
         if strcmpi(option.transf,'Standard')
             option.transf = 'TimeLag';
         end
+    %elseif isinf(option.K)
+    %    option.transf = 'TimeLag';
     end
     
     x = mirsimatrix(x,'Distance',option.dist,'Similarity',option.sm,...
@@ -381,7 +382,8 @@ y = {n orig};
 
 
 function y = checkergauss(N,transf)
-hN = ceil(N/2);
+%hN = ceil(N/2);
+hN = (N-1)/2+1;
 if strcmpi(transf,'TimeLag') || strcmpi(transf,'Standard')
     y = zeros(2*N,N);
     for j = 1:N

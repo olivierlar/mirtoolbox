@@ -59,7 +59,10 @@ if iscell(o)
     o = o{1};
 end
 sr = get(o,'Sampling');
+
 p = mirpeaks(o); %%%%<<<<<<< MORE OPTIONS HERE
+    % And what is peaks already computed? p = o?
+    
 pv = get(p,'PeakVal');
 v = mircompute(@algo,pv,o,option,sr);
 e = mirscalar(o,'Data',v,'Title','Event density','Unit','per second');

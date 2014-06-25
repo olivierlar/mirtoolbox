@@ -393,9 +393,11 @@ if max(fpsz,fpsz2) > CHUNKLIM
             chend(end) = [];
         end
     end
-    if frov > 1 % If case of overlap
+    
+    if frov > 1 % If case of overlap <<<< Check if OK or not? (Was commented out before)
         chbeg = chend-frch+1;
     end
+    
     chunks = [fp(1,chbeg) ; fp(2,chend)+1]; % After resampling, one sample may be missing, leading to a complete frame drop.
     chunks(end) = min(chunks(end),fp(end)); % Last chunk should not extend beyond audio size.
 else

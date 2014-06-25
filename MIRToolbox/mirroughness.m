@@ -84,7 +84,7 @@ if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
             rg{h}{i} = zeros(1,length(pfi));
             for k = 1:size(pfi,3)
                 for j = 1:size(pfi,2)
-                    pfj = pfi{1,j,k};
+                    pfj = pfi{1,j,k}';
                     pvj = pvi{1,j,k};
                     f1 = repmat(pfj,[1 length(pfj)]);
                     f2 = repmat(pfj',[length(pfj) 1]);

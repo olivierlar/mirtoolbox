@@ -18,6 +18,9 @@ if length(y) == 1
         x = x{1};
     end
 end
+if 0% iscell(y)
+    y = y{1};
+end
 if isempty(y)
     res = 0;
     return
@@ -209,10 +212,10 @@ if curve
                             if not(isempty(rp)) && not(isempty(rp{h}))
                                 rpj = rp{h}{1,j,i};
                                 if ~isempty(rpj)
-                                    plot(xj(rpj),yk(rpj),'dr') 
-                                    for g = 1:length(rpj)
-                                        line([xj(ppj(g)),xj(rpj(g))],...
-                                             [yk(ppj(g)),yk(rpj(g))],...
+                                    plot(xj(rpj(1,:)),yk(rpj(1,:)),'dr') 
+                                    for g = 1:size(rpj,2)
+                                        line([xj(rpj(1,g)),xj(rpj(2,g))],...
+                                             [yk(rpj(1,g)),yk(rpj(2,g))],...
                                              'Color','r')
                                     end
                                 end
@@ -412,6 +415,7 @@ else
                 else
                     xxx = (0:size(yy,1))';
                 end
+                %colormap('gray')
                 surfplot(ttt,xxx,yy);
                 if not(isempty(ticky))
                     set(gca,'ytick',ticky);
@@ -432,11 +436,11 @@ else
                 for k = 1:size(tp,1)
                     prej = 0;
                     for j = 1:size(tp,2)
-                        if tv(k,j)
+                        if ~isnan(tv(k,j)) && tv(k,j)
                             if prej && prej == j-1% && not(isempty(tp(k,j)))
                                 if tp(k,j) == size(xxx,1) || ...
                                         tp(k,prej) == size(xxx,1)
-                                    display('warning')
+                                    %display('warning')
                                     continue
                                 end
                                 plot([(ttt(prej)+ttt(prej+1))/2,...

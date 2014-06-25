@@ -49,7 +49,7 @@ function varargout = mironsets(x,varargin)
 %   Lartillot, O., Cereghetti, D., Eliard, K., Trost, W. J., Rappaz, M.-A.,
 %       Grandjean, D., "Estimating tempo and metrical features by tracking 
 %       the whole metrical hierarchy", 3rd International Conference on 
-%       Music & Emotion, Jyväskylä, 2013.
+%       Music & Emotion, Jyv?skyl?, 2013.
 %%%%
 %           f = 'Pitch ':computes a frame-decomposed autocorrelation function ,
 %                of same default characteristics than those returned
@@ -101,7 +101,7 @@ function varargout = mironsets(x,varargin)
 
             filter.key = 'FilterType';
             filter.type = 'String';
-            filter.choice = {'IIR','HalfHann'};
+            filter.choice = {'IIR','HalfHann','Butter'};
             filter.default = 'IIR';
         option.filter = filter;
 
@@ -125,7 +125,12 @@ function varargout = mironsets(x,varargin)
             decim.type = 'Integer';
             decim.default = 0;
         option.decim = decim;
-    
+
+            hilb.key = {'Hilbert'};
+            hilb.type = 'Boolean';
+            hilb.default = 0;
+        option.hilb = hilb;        
+        
 %%      options related to 'Spectro':
 
             band.type = 'String';
@@ -316,14 +321,16 @@ function varargout = mironsets(x,varargin)
     
 %% options related to 'Emerge':
         sgate.key = {'SmoothGate','Emerge'};
-        sgate.type = 'Boolean';
-        sgate.default = 0;
+        sgate.type = 'String';
+        sgate.choice = {'Goto','Lartillot'};
+        sgate.default = '';
+        sgate.keydefault = 'Lartillot';
         sgate.when = 'Both';
     option.sgate = sgate;
     
         minres.key = 'MinRes';
         minres.type = 'Integer';
-        minres.default = .1;
+        minres.default = 10;
     option.minres = minres;
 
 %%
@@ -427,7 +434,8 @@ if option.diffenv
     option.env = 1;
 end
 if isnan(option.env)
-    if option.flux || option.pitch || option.novelty || option.sgate
+    if option.flux || option.pitch || option.novelty || ...
+            ~isempty(option.sgate)
         option.env = 0;
     else
         option.env = 1;
@@ -451,6 +459,7 @@ if isamir(x,'miraudio')
         y = mirenvelope(fb,option.envmeth,option.band,...
                           'Frame',option.specframe(1),option.specframe(2),...
                           'FilterType',option.filter,...
+                          'Hilbert',option.hilb,...
                           'Tau',option.tau,'UpSample',option.up,...
                           'PreDecim',option.decim,'PostDecim',0,...
                           'Mu',option.mu,...
@@ -486,19 +495,30 @@ if isamir(x,'miraudio')
         else
             y = y+z;
         end
-    elseif option.sgate
-        y = mirspectrum(x,'max',5000,'Frame',.05,.2,...
-                          'MinRes',option.minres,'dB');
-        if isa(y,'mirdesign')
-            y = set(y,'ChunkSizeFactor',get(x,'ChunkSizeFactor')*5); %20/option.minres);
+    elseif ~isempty(option.sgate)
+        if strcmpi(option.sgate,'Goto')
+            x = miraudio(x,'Sampling',22050);
+            y = mirspectrum(x,'Frame',.04644,.25);
+        else
+            y = mirspectrum(x,'Frame',.05,.2,....
+                            'MinRes',option.minres,'dB','max',5000);
+            if option.minres < 1 && isa(y,'mirdesign')
+                y = set(y,'ChunkSizeFactor',get(x,'ChunkSizeFactor')*5); %20/option.minres);
+            end
         end
-        y = mirflux(y,'Inc','BackSmooth','Dist','Gate');
+        y = mirflux(y,'Inc','BackSmooth',option.sgate,'Dist','Gate');
+    %% other ideas
+        %y = mircepstrum(x,'min',50,'Hz','max',600,'Hz','Frame',.05,.2);
+        %y = mirnovelty(y);%,'Width',1000);
+        %y = mirsimatrix(y,'Width',1000); %'Distance','NewGate'
+        %y = mirpeaks(y,'Contrast',.1,'Threshold',.3);
+        %y = mirautocor(x,'Freq','max',5000,'Hz','Frame',.05,.2);
     end
 elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
         || isamir(x,'mirsimatrix')
     y = mirnovelty(x,'KernelSize',option.kernelsize);
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
-        (isamir(x,'mirspectrum') && option.sgate)
+        (isamir(x,'mirspectrum') && ~isempty(option.sgate))
     y = x;
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
@@ -566,7 +586,7 @@ if isfield(postoption,'cthr')
             o = mirenvelope(o,'HalfwaveCenter');
         end
     elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux') && ...
-            ~postoption.sgate
+            isempty(postoption.sgate)
         if postoption.median
             o = mirflux(o,'Median',postoption.median(1),postoption.median(2),...
                           'Halfwave',postoption.hw);
@@ -582,9 +602,16 @@ if isfield(postoption,'cthr')
     end
 end
 if isa(o,'mirspectrum')
+    [tmp o] = gettmp(o);
     d = get(o,'Data');
-    do = mircompute(@newonset,d);
+    [do tmp] = mircompute(@newonset,d,tmp);
     o = mirscalar(o,'Data',do,'Title','Onset curve');
+    o = settmp(o,tmp);
+%elseif isa(o,'mircepstrum')
+%    pp = get(o,'PeakPosUnit');
+%    pv = get(o,'PeakVal');
+%    do = mircompute(@cepstronset,pp,pv);
+%    o = mirscalar(o,'Data',do,'Title','Onset curve');
 end
 
 if isfield(option,'sum') && option.sum
@@ -612,7 +639,7 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
-    if postoption.c || postoption.sgate
+    if postoption.c || ~isempty(postoption.sgate)
         o = mirenvelope(o,'Center');
     end
     if isa(o,'mirenvelope') && postoption.minlog
@@ -665,11 +692,16 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
         [st pp] = mircompute(@startattack,d,pp,st);
         %[st pp pv pm ppp ppv] = mircompute(@startattack,d,pp,pv,pm,ppp,ppv);
     else
-        st = [];
+        st = {{{}}};
     end
     if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
                                   && ~strcmpi(postoption.release,'Off')
-        [rl pp pv pm ppp ppv st] = mircompute(@endrelease,d,pp,pv,pm,ppp,ppv,st,postoption.release);
+        v = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
+            'Contrast',postoption.cthr,'Threshold',.7,...
+            'Valleys','Order','Abscissa','NoBegin');
+        rl = get(v,'PeakPos');
+        rl = mircompute(@endrelease,d,pp,rl);
+        %[rl pp pv pm ppp ppv st] = mircompute(@endrelease,d,pp,pv,pm,ppp,ppv,st,postoption.release);
         o = set(o,'ReleasePos',rl);
     end
     o = set(o,'AttackPos',st,'PeakPos',pp,'PeakVal',pv,'PeakMode',pm,...
@@ -681,7 +713,119 @@ if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
 end
 
 
-function do = newonset(d)
+function [do tmp] = newonset(d,tmp)
+d = d - max(max(max(d)));
+do = zeros(1,size(d,2));
+if isempty(tmp)
+    activ = [];
+    inactiv = [];
+    old = [];
+else
+    activ = tmp.activ;
+    inactiv = tmp.inactiv;
+    old = tmp.old;
+end
+for i = 1:size(d,2)
+    dd = diff(d(:,i));
+    new = find(dd(1:end-1) > 0 & dd(2:end) < 0) + 1;
+    oldnew = [new d(new,i)];
+    if ~isempty(old)
+        maj = find(d(new,i) > -20);
+        while ~isempty(maj)
+            [min_o best_o] = min(abs(old(:,1) - new(maj(1))));
+            min_a = Inf;
+            for k = 1:length(activ)
+                da = abs(activ(k).idx(end) - new(maj(1)));
+                if da < min_a
+                    min_a = da;
+                    best_a = k;
+                end
+            end
+            if min_a == min_o
+                activ(best_a).idx(end+1) = new(maj(1));
+                activ(best_a).mag(end+1) = d(new(maj(1)),i);
+                activ(best_a).tim(end+1) = i;
+                if length(activ(best_a).idx) < 10
+                    do(i) = do(i) + d(new(maj(1)),i) + 20;
+                end
+            elseif old(best_o,2) < -20
+                found = 0;
+                for k = 1:length(inactiv)
+                    if inactiv(k).idx(end) == old(best_o,1)
+                        activ(end+1) = inactiv(k);
+                        inactiv(k) = [];
+                        activ(end).idx(end+1) = new(maj(1));
+                        activ(end).mag(end+1) = d(new(maj(1)),i);
+                        activ(end).tim(end+1) = i;
+                        if length(activ(end).idx) < 10
+                            do(i) = do(i) + d(new(maj(1)),i) + 20;
+                        end
+                        found = 1;
+                        break
+                    end
+                end
+                if ~found
+                    activ(end+1).idx = new(maj(1));
+                    activ(end).mag = d(new(maj(1)),i);
+                    activ(end).tim = i;
+                    do(i) = do(i) + d(new(maj(1)),i) + 20;
+                end
+            end
+            new(maj(1)) = [];
+            maj(1) = [];
+            maj = maj - 1;
+        end
+                
+        j = 1;
+        while j <= length(inactiv)
+            if isempty(new)
+                inactiv(j:end) = [];
+                break
+            end
+            
+            [unused best_i] = min(abs(new - inactiv(j).idx(end)));
+            if unused < 100
+                inactiv(j).idx(end+1) = new(best_i);
+                inactiv(j).mag(end+1) = d(new(best_i));
+                inactiv(j).tim(end+1) = i;
+                j = j+1;
+            else
+                inactiv(j) = [];
+            end
+            new(best_i) = [];
+        end
+        
+        j = 1;
+        while j <= length(activ)
+            if activ(j).tim(end) < i
+                if isempty(new)
+                    activ(j) = [];
+                    continue
+                end
+                if isempty(inactiv)
+                    inactiv = activ(j);
+                else
+                    inactiv(end+1) = activ(j);
+                end
+                activ(j) = [];
+                [unused best_i] = min(abs(new - inactiv(end).idx(end)));
+                inactiv(end).idx(end+1) = new(best_i);
+                inactiv(end).mag(end+1) = d(new(best_i));
+                inactiv(end).tim(end+1) = i;
+                new(best_i) = [];
+            else
+                j = j+1;
+            end
+        end
+    end
+    old = oldnew;
+end
+tmp.activ = activ;
+tmp.inactiv = inactiv;
+tmp.old = old;
+
+
+function do = oldnewonset(d)
 tc = 10;
 dy = 2;
 do = NaN(1,size(d,2));
@@ -720,9 +864,32 @@ if length(st)>length(pp)
 else
     pp = pp(1:length(st));
 end
+
+%thres = .015;
+for i = 1:length(st)
+    dd = diff(d(st(i):pp(i)));
+    [mad mdd] = max(dd);
+    
+    f2 = find(dd(mdd+1:end)<mad/5,1);
+    if ~isempty(f2)
+        pp(i) = st(i) + mdd + f2 - 1;
+    end
+    
+    f1 = find(dd(mdd-1:-1:1)<mad/5,1);
+    if ~isempty(f1)
+        st(i) = st(i) + mdd - f1;
+    end
+
+    %sti = find(dd > max(dd)/3,1);
+    %ppi = find(dd(end:-1:1) > max(dd)/3,1);
+    %st(i) = st(i) + sti - 1;
+    %pp(i) = pp(i) - ppi + 1;
+end
+
 st = {{st} {pp}};
 return
 
+%%
 pv = pv{1};
 pm = pm{1};
 ppp = ppp{1};
@@ -785,12 +952,42 @@ end
 st = {{st} {pp} {pv} {pm} {ppp} {ppv}};
 
 
-function rt = endrelease(d,pp,pv,pm,ppp,ppv,st,meth)
+function [rt pp] = endrelease(d,pp,rt) %pv,pm,ppp,ppv,rt,meth)
+pp = sort(pp{1});
 if isempty(pp)
-    rt = [];
+    rt = {{} {}};
     return
 end
-pp = sort(pp{1});
+
+rt = rt{1};
+if ~isempty(rt) && rt(end)<pp(end)
+    dd = diff(d,1,1);       % d'
+    p = find(dd((pp(end)+1)-1:end)>=0,1);
+    if isempty(p)
+        rte = length(d);
+    else
+        rte = ((pp(end)+1)+p)+1;
+    end
+    rt = [rt rte];
+end
+
+%thres = .015;
+for i = 1:length(rt)
+    dd = diff(d(rt(i):-1:pp(i)));
+    [mad mdd] = max(dd);
+    ed = find(dd(mdd+1:end)<mad/5,1);
+    if ~isempty(ed)
+        pp(i) = rt(i) - mdd - ed - 1;
+    end
+    
+    pp(i + find(pp(i+1:end) <= rt(i))) = [];
+end
+
+rt = {{[pp;rt]}};
+return
+
+%%
+
 pv = pv{1};
 pm = pm{1};
 ppp = ppp{1};

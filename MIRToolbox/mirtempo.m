@@ -234,7 +234,7 @@ function varargout = mirtempo(x,varargin)
 
         r.key = 'Resonance';
         r.type = 'String';
-        r.choice = {'ToiviainenSnyder','vanNoorden',0,'off','no'};
+        r.choice = {'ToiviainenSnyder','vanNoorden',0,'off','no','New'};
         r.default = 'ToiviainenSnyder';
     option.r = r;
     
@@ -320,20 +320,26 @@ function varargout = mirtempo(x,varargin)
     option.perio = perio;
     
         metre.key = 'Metre';
-        metre.type = 'Boolean';
+        metre.type = 'Integer';
         metre.default = 0;
+        metre.keydefault = 2;
     option.metre = metre;
     
         minres.key = 'MinRes';
         minres.type = 'Integer';
-        minres.default = .1;
+        minres.default = 1; %.1;
     option.minres = minres;
     
-        change.key = 'Change';
+        change.key = 'Change'; %% Does not work without 'Metre' so far..
         change.type = 'Boolean';
         change.default = 0;
         change.when = 'After';
     option.change = change;
+    
+        fill.key = 'Fill';
+        fill.type = 'Boolean';
+        fill.default = 1;
+    option.fill = fill;
     
         mean.key = 'Mean';
         mean.type = 'Boolean';
@@ -353,6 +359,7 @@ if iscell(x)
 end
 if isamir(x,'mirscalar') || isamir(x,'mirmetre')
     y = x;
+    type = {'mirscalar',mirtype(y)};            
     return
 end
 
@@ -479,52 +486,188 @@ if isa(p,'mirmetre')
     for j = 1:length(d)
         bpm{j} = cell(1,length(d{j}));
         for k = 1:length(d{j})
-            bpm{j}{k} = NaN(1,size(fp{j}{k},2));
-            scork = -Inf(1,size(fp{j}{k},2));
+            if option.fill
+                bpm{j}{k} = NaN(option.m,size(fp{j}{k},2));
+            end
+            scork = zeros(1,size(fp{j}{k},2));
             bestk = NaN(1,size(fp{j}{k},2));
             errok = Inf(1,size(fp{j}{k},2));
+            spans = zeros(1,length(d{j}{k}));
             for i = 1:length(d{j}{k})
                 % For each metrical hierarchy...
-                scori = cell(1,length(d{j}{k}{i}));
+                scori = zeros(length(d{j}{k}{i}),size(fp{j}{k},2));
+                
+                [unused ll] = sort([d{j}{k}{i}.lvl]);%,'descend');
+                d{j}{k}{i} = d{j}{k}{i}(ll);
                 for l = 1:length(d{j}{k}{i})
                     % For each metrical level...
-                    scori{l} = d{j}{k}{i}(l).score;
-                    for l2 = 1:length(d{j}{k}{i})
-                        if l ~= l2 && ...
-                                ~mod(d{j}{k}{i}(l2).lvl,d{j}{k}{i}(l).lvl)
-                            [unused ia ib] = intersect(d{j}{k}{i}(l).timidx,...
-                                                       d{j}{k}{i}(l2).timidx);
-                            scori{l}(ia) = scori{l}(ia) + ...
-                                           d{j}{k}{i}(l2).score(ib);
-                        end
-                    end
-                    idx = find(d{j}{k}{i}(l).score > ...
-                                    scork(d{j}{k}{i}(l).timidx) | ...
-                               (d{j}{k}{i}(l).score == ...
-                                    scork(d{j}{k}{i}(l).timidx) & ...
-                                abs(d{j}{k}{i}(l).bpms - ...
-                                    d{j}{k}{i}(l).globpms) < ...
-                                        errok(d{j}{k}{i}(l).timidx)));
-                    scork(d{j}{k}{i}(l).timidx(idx)) = ...
-                        d{j}{k}{i}(l).score(idx);
-                    errok(d{j}{k}{i}(l).timidx(idx)) = ...
-                        abs(d{j}{k}{i}(l).bpms(idx) - ...
-                            d{j}{k}{i}(l).globpms(idx));
-                    bestk(d{j}{k}{i}(l).timidx(idx)) = i;
+                    scori(l,d{j}{k}{i}(l).timidx) = d{j}{k}{i}(l).score;...
+%                        .* max(0, 1 - abs(60./d{j}{k}{i}(l).bpms ...
+%                                          - 60./d{j}{k}{i}(l).globpms) * 10);
+                    
+                    %for l2 = 1:l-1
+                    %    if 0 && ~mod(d{j}{k}{i}(l2).lvl,d{j}{k}{i}(l).lvl) ...
+                    %            ...d{j}{k}{i}(l2).lvl == 2*d{j}{k}{i}(l).lvl ...
+                    %            && 60/max(d{j}{k}{i}(l2).bpms)<2.3
+                    %        scori(l,:) = min(scori(l,:),scori(l2,:));
+                    %    end                                       
+                        %if ~mod(d{j}{k}{i}(l2).lvl,d{j}{k}{i}(l).lvl)
+                        %    [unused ia ib] = intersect(d{j}{k}{i}(l).timidx,...
+                        %                               d{j}{k}{i}(l2).timidx);
+                        %    iab = find(scori{l}(ia));
+                        %    scori{l}(ia(iab)) = ...
+                        %        max(scori{l}(ia(iab)), ...
+                        %            d{j}{k}{i}(l2).score(ib(iab)));
+                        %end
+                    %end
+                    
+                    idx = find(scori(l,:) > scork);% | ...
+                               %(scori(l,:) == scork & ...
+                               % abs(d{j}{k}{i}(l).bpms - ...
+                               %     d{j}{k}{i}(l).globpms) < ...
+                               %         errok(d{j}{k}{i}(l).timidx)));
+                    scork(idx) = scori(l,idx);
+                    errok(idx) = 0; %abs(d{j}{k}{i}(l).bpms(idx) - ...
+                                    %d{j}{k}{i}(l).globpms(idx));
+                    bestk(idx) = i;
+                    spans(i) = max(spans(i),length(idx));
                 end
                 
                 sd = zeros(1,length(d{j}{k}{i}));
                 for l = 1:length(d{j}{k}{i})
-                    mb = mean(d{j}{k}{i}(l).bpms);
-                    sd(l) = sum(scori{l}) * resonance(mb);
+                    sd(l) = sum(scori(l,:));% * resonance(mb);
                 end
                 
-                [unused best] = max(sd);
+                %figure,plot([d{j}{k}{i}.lvl],sd,'+-');
+                [unused bests] = sort(sd,'descend');
+                
+                if 0
+                    best = bests(1:min(option.m,length(bests)));
+
+                else
+                    if option.metre == 1
+                        metstr = struct;
+                        metstr.lvl = d{j}{k}{i}(bests(1)).lvl;
+                        metstr.score = score(d{j}{k}{i},sd,bests(1));
+                        metstr.indx = bests(1);
+                        for h = 2:length(bests)
+                            % For each periodicity, from best to worst
+                            found = 0;
+                            for l = 1:length(metstr)
+                                if mod(max(metstr(l).lvl,...
+                                           d{j}{k}{i}(bests(h)).lvl),...
+                                       min(metstr(l).lvl,...
+                                           d{j}{k}{i}(bests(h)).lvl))
+                                       found = 1;
+                                       break
+                                end
+                            end
+                            if ~found
+                                metstr(end+1).lvl = d{j}{k}{i}(bests(h)).lvl;
+                                metstr(end).score = score(d{j}{k}{i},sd,bests(h));
+                                metstr(end).indx = bests(h);
+                            end
+                        end
+                        bests = [metstr.indx];
+                    else
+                        metstr = {};
+                        proc = [];
+                        for h = 1:length(bests)
+                            % For each periodicity, from best to worst
+                            if ismember(bests(h),proc)
+                                continue
+                            end
+
+                            metstr2 = struct;
+                            metstr2.lvl = d{j}{k}{i}(bests(h)).lvl;
+                            metstr2.score = score(d{j}{k}{i},sd,bests(h));
+                            metstr2.indx = bests(h);
+
+                            %for l = 1:bests(h)-1
+                            %    if ~mod(d{j}{k}{i}(bests(h)).lvl,...
+                            %            d{j}{k}{i}(l).lvl)
+                            %        % Subharmonic, integrated in the hierarchy
+                            %        %proc(end+1) = l;
+                            %        metstr2(end+1).lvl = d{j}{k}{i}(l).lvl;
+                            %        metstr2(end).score = score(d{j}{k}{i},sd,l);
+                            %        metstr2(end).indx = l;
+                            %    end
+                            %end
+
+                            metstr2 = recurs1(metstr2,d{j}{k}{i},sd,bests(h));
+
+                            metstr = [metstr recurs2(metstr2,d{j}{k}{i},sd,bests(h))];
+                        end
+                        sumscore = zeros(1,length(metstr));
+                        for h = 1:length(metstr)
+                            sumscore(h) = sum([metstr{h}.score]);
+                        end
+                        [unused best] = max(sumscore);
+                        bests = [metstr{best}.indx];
+                    end
+                    
+                    sd1 = zeros(1,length(bests));
+                    for l = 1:length(d{j}{k}{i})
+                        d{j}{k}{i}(l).function = [];
+                    end
+                    for l = 1:length(bests)
+                        d{j}{k}{i}(bests(l)).function = [1 1];
+                        mb = median(d{j}{k}{i}(bests(l)).bpms);
+                        sd1(l) = sd(bests(l));
+                        if ischar(option.r)
+                            sd1(l) = sd1(l) * resonance(mb,option.r);
+                        end
+                    end
+                    [unused best] = sort(sd1,'descend');
+                    best = bests(best(1:min(option.m,length(best))));
+                
+                end
+                
+                if 0
+                    %d{j}{k}{i}(bests(1)).lvl;
+                    stru = bests(1);
+                    for l = 1:length(d{j}{k}{i})
+                        if l ~= bests(1) && ...
+                                (~mod(d{j}{k}{i}(bests(1)).lvl,d{j}{k}{i}(l).lvl) || ...
+                                 ~mod(d{j}{k}{i}(l).lvl,d{j}{k}{i}(bests(1)).lvl))
+                             stru(end+1) = l;
+                        end
+                    end
+                    sd1 = zeros(1,length(stru));
+                    for l = 1:length(stru)
+                        mb = median(d{j}{k}{i}(stru(l)).bpms);
+                        sd1(l) = sd(stru(l)) * resonance(mb);
+                    end
+                    [unused best1] = sort(sd1,'descend');
+                    best = stru(best1(1));
+
+                    if option.m == 2 && length(bests) > 1
+                        if l == 1
+                            stru = bests(2);
+                            for l = 1:length(d{j}{k}{i})
+                                if l ~= bests(1) && l ~= bests(2) && ...
+                                        (~mod(d{j}{k}{i}(bests(2)).lvl,d{j}{k}{i}(l).lvl) || ...
+                                         ~mod(d{j}{k}{i}(l).lvl,d{j}{k}{i}(bests(2)).lvl))
+                                     stru(end+1) = l;
+                                end
+                            end
+                            sd2 = zeros(1,length(stru));
+                            for l = 1:length(stru)
+                                mb = median(d{j}{k}{i}(stru(l)).bpms);
+                                sd2(l) = sd(stru(l)) * resonance(mb);
+                            end
+                            [unused best2] = max(sd2);
+                            best(2) = stru(best2);
+                        else
+                            best(2) = stru(best1(2));
+                        end
+                    end
+                end
+                
                 idx = find(bestk == i);
                 if isempty(idx)
                     continue
                 end
-                
                 % Detecting contiguous region where one single hierarchy is
                 % dominant
                 idx0 = idx(find(diff([-Inf idx]) > 1)); % Starting times
@@ -534,27 +677,47 @@ if isa(p,'mirmetre')
                     if idx1(l) - idx0(l) < 1
                         continue
                     end
-                    if 1 || idx0(l) == 1 || isnan(bestk(idx0(l)-1))
-                        bpm{j}{k}(idx0(l):idx1(l)) = ...
-                            g{j}{k}(i,idx0(l):idx1(l)) ...
-                                / d{j}{k}{i}(best).lvl;
-                    else
-                        dist = abs(bpm{j}{k}(idx0(l)-1) - ...
-                                   g{j}{k}(i,idx0(l)) ...
-                                        ./ [d{j}{k}{i}.lvl]);
-                        [unused bestl] = min(dist);
-                        bpm{j}{k}(idx0(l):idx1(l)) = ...
-                            g{j}{k}(i,idx0(l):idx1(l)) ...
-                                / d{j}{k}{i}(bestl).lvl;
+                    %if 1 || idx0(l) == 1 || isnan(bestk(idx0(l)-1))
+                        
+                    if option.fill || spans(i) == max(spans(1:i))
+                        
+                        if option.fill
+                            nl = option.m;
+                        else
+                            nl = min(option.m,length(best));
+                            bpm{j}{k} = NaN(nl,size(fp{j}{k},2));
+                        end
+                        idx1l = min(idx1(l),size(g{j}{k}(i,:),2));
+                        for h = 1:nl
+                            bpm{j}{k}(h,idx0(l):idx1l) = ...
+                                g{j}{k}(i,idx0(l):idx1l) ...
+                                    / d{j}{k}{i}(best(h)).lvl;
+                        end
                     end
+                            
+                    %else
+                    %    dist = abs(bpm{j}{k}(idx0(l)-1) - ...
+                    %               g{j}{k}(i,idx0(l)) ...
+                    %                    ./ [d{j}{k}{i}.lvl]);
+                    %    [unused bestl] = min(dist);
+                    %    bpm{j}{k}(idx0(l):idx1(l)) = ...
+                    %        g{j}{k}(i,idx0(l):idx1(l)) ...
+                    %            / d{j}{k}{i}(bestl).lvl;
+                    %end
                 end
                 
                 %bpm{j}{k}(idx) = g{j}{k}(i,idx) / d{j}{k}{i}(best).lvl;
+                
+                bestlvl = d{j}{k}{i}(best(1)).lvl;
+                for l = 1:length(d{j}{k}{i})
+                    d{j}{k}{i}(l).lvl = d{j}{k}{i}(l).lvl / bestlvl;
+                end
             end
         end 
     end
     t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
     t = modif(t,postoption);
+    p = set(p,'Data',d);
     o = {t,p};
     return
 end
@@ -599,12 +762,66 @@ else
     t = mirscalar(p,'Data',bpm,'Title','Tempo','Unit','bpm');
     t = modif(t,postoption);
 end
-o = {t,p};                   
+o = {t,p};
 
 
-function r = resonance(bpm)
+function s = score(d,sd,l)
+if 1
+    s = sd(l);
+else
+    s = 0;
+    n = 0;
+    for l2 = 1:length(d)
+        if ~mod(d(l2).lvl,d(l).lvl)
+            s = s + sd(l2);
+            n = n + 1;
+        end
+    end
+    s = s / n;
+end
+
+
+function metstr2 = recurs1(metstr1,d,sd,i)
+metstr2 = {};
+for j = i-1:-1:1
+    if ~mod(d(i).lvl,d(j).lvl)
+        metstr3 = metstr1;
+        metstr3(end+1).lvl = d(j).lvl;
+        metstr3(end).score = score(d,sd,j);
+        metstr3(end).indx = j;
+        metstr2 = [metstr2 recurs1(metstr3,d,sd,j)];
+    end
+end
+if isempty(metstr2)
+    metstr2 = {metstr1};
+end
+
+
+function metstr2 = recurs2(metstr1,d,sd,i)
+metstr2 = {};
+for j = i+1:length(d)
+    if ~mod(d(j).lvl,d(i).lvl)
+        metstr3 = metstr1;
+        for k = 1:length(metstr3)
+            metstr3{k}(end+1).lvl = d(j).lvl;
+            metstr3{k}(end).score = score(d,sd,j);
+            metstr3{k}(end).indx = j;
+        end
+        metstr2 = [metstr2 recurs2(metstr3,d,sd,j)];
+    end
+end
+if isempty(metstr2)
+    metstr2 = metstr1;
+end
+
+
+function r = resonance(bpm,type)
 if bpm > 120
-    bpm = 240 - bpm;
+    if strcmpi(type,'New')
+        bpm = (360 - bpm)/2;
+    else
+        bpm = 240 - bpm;
+    end
 end
 r = max(1 - 0.25*(log2(max(60/bpm,1e-12)/.5)).^2, 0);
                             

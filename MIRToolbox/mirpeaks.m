@@ -146,7 +146,7 @@ function varargout = mirpeaks(orig,varargin)
         graph.key = 'Graph';
         graph.type = 'Integer';
         graph.default = 0;
-        graph.keydefault = .25;
+        graph.keydefault = 1; %.25;
     option.graph = graph;
         
         interpol.key = 'Interpol';
@@ -210,8 +210,9 @@ function varargout = mirpeaks(orig,varargin)
     option.delta = delta;
     
         harmo.key = 'Harmonic';
-        harmo.type = 'Boolean';
+        harmo.type = 'Integer';
         harmo.default = 0;
+        harmo.keydefault = Inf;
     option.harmo = harmo;
     
         mem.key = 'TrackMem';
@@ -685,7 +686,7 @@ for i = 1:length(d) % For each audio file,...
                     
                     [maxk idx] = max(myk);
                     
-                    if maxk < .7
+                    if 0 %maxk < .7
                         continue
                     end
                     
@@ -705,7 +706,7 @@ for i = 1:length(d) % For each audio file,...
                         if idx
                             idxr = [];
                             for n = 1:idx-1
-                                if myk(n)/myk(idx) < .9
+                                if 0 %myk(n)/myk(idx) < .9
                                     continue
                                 end
                                 harmo = mod(txk(idx)/txk(n),1);
@@ -772,7 +773,7 @@ for i = 1:length(d) % For each audio file,...
                         %end
                         %ser;
 
-                        mxl(1,k) = mxk(idx);
+                        mxl(1,k) = mxk(idx)-1;
                         txl(1,k) = txk(idx);
                         myl(1,k) = myk(idx);
                     end
@@ -783,8 +784,9 @@ for i = 1:length(d) % For each audio file,...
                         end
                         harmo = mod(txk(n)/txl(1,k),1);
                         rk = round(txk(n)/txl(1,k));
-                        if (size(mxl,1) < rk || myk(n) > myl(rk,k)) && ...
-                                harmo <.25 || harmo > .75
+                        if ((size(mxl,1) < rk || myk(n) > myl(rk,k)) && ...
+                                harmo <.25 || harmo > .75) && ...
+                                rk <= option.harmo
                             if rk > size(mxl,1)
                                 mxl(size(mxl)+1:rk,:) = NaN;
                                 txl(size(mxl)+1:rk,:) = NaN;
@@ -1093,10 +1095,13 @@ for i = 1:length(d) % For each audio file,...
                         waitbar(k/(nc-1),wait);
                     end
                     mxk = mx{1,k,l}; % Peaks in current frame
-                    for j = k-1:-1:max(1,k-100) % Recent frames
+                    for j = k-1:-1:max(1,k-10) % Recent frames
                         mxj = mx{1,j,l};        % Peaks in one recent frame
                         for kk = 1:length(mxk)
                             mxkk = mxk(kk);     % For each of current peaks
+                            if mxkk < 10
+                                continue
+                            end
                             for jj = 1:length(mxj)
                                 mxjj = mxj(jj); % For each of recent peaks
                                 sco = k-j - abs(mxkk-mxjj);
@@ -1190,6 +1195,10 @@ for i = 1:length(d) % For each audio file,...
                     end
                 end
                 [scob{i}{h} IX] = sort(scob{i}{h},'descend');
+                if length(IX) > option.m
+                    scob{i}{h} = scob{i}{h}(1:option.m);
+                    IX = IX(1:option.m);
+                end
                     % Branch are ordered from best score to lowest
                 br{i}{h} = br{i}{h}(IX);
                 if wait
@@ -1199,21 +1208,23 @@ for i = 1:length(d) % For each audio file,...
                 end
             end
         end
-        for l = 1:np % Orders the peaks and select the best ones
-            for k = 1:nc
-                mxk = mx{1,k,l};
-                if length(mxk) > option.m 
-                    [unused,idx] = sort(dht(mxk,k,l),'descend');
-                    idx = idx(1:option.m);
-                elseif strcmpi(option.order,'Amplitude')
-                    [unused,idx] = sort(dht(mxk,k,l),'descend');
-                else
-                    idx = 1:length(dht(mxk,k,l));
-                end
-                if strcmpi(option.order,'Abscissa')
-                    mx{1,k,l} = sort(mxk(idx));
-                elseif strcmpi(option.order,'Amplitude')
-                    mx{1,k,l} = mxk(idx);
+        if ~option.graph
+            for l = 1:np % Orders the peaks and select the best ones
+                for k = 1:nc
+                    mxk = mx{1,k,l};
+                    if length(mxk) > option.m 
+                        [unused,idx] = sort(dht(mxk,k,l),'descend');
+                        idx = idx(1:option.m);
+                    elseif strcmpi(option.order,'Amplitude')
+                        [unused,idx] = sort(dht(mxk,k,l),'descend');
+                    else
+                        idx = 1:length(dht(mxk,k,l));
+                    end
+                    if strcmpi(option.order,'Abscissa')
+                        mx{1,k,l} = sort(mxk(idx));
+                    elseif strcmpi(option.order,'Amplitude')
+                        mx{1,k,l} = mxk(idx);
+                    end
                 end
             end
         end

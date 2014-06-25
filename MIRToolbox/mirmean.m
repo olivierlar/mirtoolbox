@@ -57,7 +57,13 @@ for i = 1:l
         m{i} = cell(1,length(dd));
         fpi = cell(1,length(dd));
         for j = 1:length(dd)
-            m{i}{j} = mean(dd{j},2);
+            m{i}{j} = zeros(size(dd{j},1),1,size(dd{j},3));
+            for h = 1:size(dd{j},3)
+                for k = 1:size(dd{j},1)
+                    dk = dd{j}(k,:,h);
+                    m{i}{j}(k,1,h) = mean(dk(not(isnan(dk))));
+                end
+            end
             fpi{j} = [fp{i}{j}(1);fp{i}{j}(end)];
         end
         fp{i} = fpi;

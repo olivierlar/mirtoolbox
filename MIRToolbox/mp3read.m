@@ -106,7 +106,7 @@ if ischar(N)
   N = 0;
 end
 
-if length(N) == 1
+if length(N) == 1 && N
   % Specified N was upper limit
   N = [1 N];
 end
@@ -271,7 +271,7 @@ else
   
   if decblk > 0 && length(Y) < decblk*smpspfrm/downsamp
     % This will happen if the selected block range includes >1 bad block
-    disp(['Warn: requested ', num2str(decblk*smpspfrm/downsamp),' frames, returned ',num2str(length(Y))]);
+    %disp(['Warn: requested ', num2str(decblk*smpspfrm/downsamp),' frames, returned ',num2str(length(Y))]);
   end
   
   % Delete tmp file
