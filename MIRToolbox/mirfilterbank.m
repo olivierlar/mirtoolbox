@@ -164,7 +164,8 @@ else
     output = cell(1,length(d));
     nch = cell(1,length(d));
     for i = 1:length(d)
-        if isempty(tmp) && i == 1
+        if isempty(tmp)
+            %% Determination of the filterbank specifications
             if strcmpi(option.filtertype,'Gammatone')
                 if not(Ch)
                     Ch = 1:nCh;
