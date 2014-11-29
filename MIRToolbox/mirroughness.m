@@ -120,11 +120,10 @@ r = {r,p};
 function pd = plomp(f1, f2)
 % returns the dissonance of two pure tones at frequencies f1 & f2 Hz
 % according to the Plomp-Levelt curve (see Sethares)
-    b1 = 3.51;
-    b2 = 5.75;
-    xstar = .24;
-    s1 = .0207;
-    s2 = 18.96;
-    s = tril(xstar ./ (s1 * min(f1,f2) + s2 ));
-    pd = exp(-b1*s.*abs(f2-f1)) - exp(-b2*s.*abs(f2-f1));
-return
+b1 = 3.51;
+b2 = 5.75;
+xstar = .24;
+s1 = .0207;
+s2 = 18.96;
+s = tril(xstar ./ (s1 * min(f1,f2) + s2 ));
+pd = exp(-b1*s.*abs(f2-f1)) - exp(-b2*s.*abs(f2-f1));

@@ -1,5 +1,5 @@
 function varargout = mirsum(orig,varargin)
-%   s = mirsum(f) sums the envelope of the multi-channel object f.
+%   s = mirsum(f) sums the channels together
 %
 %   Optional arguments:
 %       mirsum(f,'Centered') centers the resulting envelope.

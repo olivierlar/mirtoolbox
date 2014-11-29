@@ -172,6 +172,12 @@ function varargout = mirenvelope(orig,varargin)
         terhardt.default = 0;
     option.terhardt = terhardt;
     
+        frame.key = 'Frame';
+        frame.type = 'Integer';
+        frame.number = 2;
+        frame.default = [.1 .1];
+    option.frame = frame;
+
 %% Options related to all methods:
     
         sampling.key = 'Sampling';
@@ -275,13 +281,7 @@ function varargout = mirenvelope(orig,varargin)
         presel.choice = {'Klapuri06'};
         presel.default = 0;
     option.presel = presel;    
-    
-        frame.key = 'Frame';
-        frame.type = 'Integer';
-        frame.number = 2;
-        frame.default = [.1 .1];
-    option.frame = frame;
-        
+            
 specif.option = option;
 
 specif.eachchunk = 'Normal';
@@ -518,7 +518,7 @@ else
             %td{k} = round(option.tau*sr{k}*1.5); 
         end
     end
-    e = set(e,'Data',d,'Pos',x,'Sampling',sr); %,'ToDelete',td
+    e = set(e,'Data',d,'Pos',x,'Sampling',sr);
     if length(sig)==1
         e = settmp(e,state);
     end

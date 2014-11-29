@@ -386,7 +386,7 @@ y = sum( (max(mj,mk2) - mi) .* (mj>mi).* (mk>mi));
 %y = sum(y); %.*mj0);
 
 
-function d = Cosine(r,s,inc)
+function d = Cosine(r,s,inc) % inc does not work here!
 nr = sqrt(r'*r);
 ns = sqrt(s'*s);
 if or(nr == 0, ns == 0);

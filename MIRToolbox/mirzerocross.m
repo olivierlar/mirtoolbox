@@ -56,8 +56,6 @@ for h = 1:length(d)
     v{h} = cell(1,length(d{h}));
     for i = 1:length(d{h})
         di = d{h}{i};
-        nc = size(di,2);
-        nf = size(di,3);
         nl = size(di,1);
         zc = sum( di(2:end,:,:).*di(1:(end-1),:,:) < 0 ) /nl;
         if strcmp(option.per,'Second')
