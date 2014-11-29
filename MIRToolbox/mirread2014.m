@@ -1,4 +1,4 @@
-function [d,tp,fp,f,l,b,n,ch] = mirread(extract,orig,load,folder,verbose)
+function [d,tp,fp,f,l,b,n,ch] = mirread2014(extract,orig,load,folder,verbose)
 % Read the audio file ORIG, at temporal position indicated by EXTRACT. If
 % EXTRACT is empty, all the audio file is loaded.
 %   If LOAD is set to 0, just the meta-data is collected, and the actual
@@ -20,13 +20,6 @@ function [d,tp,fp,f,l,b,n,ch] = mirread(extract,orig,load,folder,verbose)
 if nargin < 5
     verbose = 0;
 end
-
-p = ver('MATLAB');
-if str2num(p.Version) >= 8.3
-    [d,tp,fp,f,l,b,n,ch] = mirread2014(extract,orig,load,folder,verbose);
-    return
-end
-
 d = {};
 f = {};
 l = {};
@@ -35,33 +28,48 @@ tp = {};
 fp = {};
 n = {};
 ch = {};
+
+if strcmp(orig,'.') || strcmp(orig,'..')
+    return
+end
+
 try
-    [d,f,l,b,tp,fp,n,ch] = audioread(extract,@wavread,orig,load,verbose,folder);
+    [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@audioread,orig,load,verbose,folder);
 catch
-    err.wav = lasterr;
+    if folder
+        return
+    end
+    warning('Did you specify the file extension? This will be required in future versions of Matlab.');
+    warning('off','MATLAB:audiovideo:wavread:functionToBeRemoved');
+    warning('off','MATLAB:audiovideo:auread:functionToBeRemoved');
     try
-       [d,f,l,b,tp,fp,n,ch] = audioread(extract,@auread,orig,load,verbose,folder);
+        [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@wavread,orig,load,verbose,folder);
     catch
-        err.au = lasterr;
+        err.wav = lasterr;
         try
-            [d,f,l,b,tp,fp,n,ch] = audioread(extract,@mp3read,orig,load,verbose,folder);
+           [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@auread,orig,load,verbose,folder);
         catch
-            err.mp3 = lasterr;
+            err.au = lasterr;
             try
-                [d,f,l,b,tp,fp,n,ch] = audioread(extract,@aiffread,orig,load,verbose,folder);
+                [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@mp3read,orig,load,verbose,folder);
             catch
-                err.aiff = lasterr;
-                if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
-                    try
-                       [d,f,l,b,tp,fp,n,ch] = audioread(extract,@bdfread,orig,load,verbose,folder);
-                    catch
+                err.mp3 = lasterr;
+                try
+                    [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@aiffread,orig,load,verbose,folder);
+                catch
+                    err.aiff = lasterr;
+                    if length(orig)>4 && strcmpi(orig(end-3:end),'.bdf')
+                        try
+                           [d,f,l,b,tp,fp,n,ch] = audioreader(extract,@bdfread,orig,load,verbose,folder);
+                        catch
+                            if not(strcmp(err.wav(1:11),'Error using') && folder)
+                                misread(orig, err);
+                            end
+                        end
+                    else
                         if not(strcmp(err.wav(1:11),'Error using') && folder)
                             misread(orig, err);
                         end
-                    end
-                else
-                    if not(strcmp(err.wav(1:11),'Error using') && folder)
-                        misread(orig, err);
                     end
                 end
             end
@@ -70,17 +78,30 @@ catch
 end
 
         
-function [d,f,l,b,tp,fp,n,ch] = audioread(extract,reader,file,load,verbose,folder)
+function [d,f,l,b,tp,fp,n,ch] = audioreader(extract,reader,file,load,verbose,folder)
 n = file;
 if folder
     file = ['./',file];
 end
 if load
     if isempty(extract)
-        [s,f,b] = reader(file);
+        if isequal(reader,@audioread)
+            [s,f] = audioread(file);
+            i = audioinfo(file);
+            b = i.BitsPerSample;
+        else
+            [s,f,b] = reader(file);
+        end
     else
-        [unused,f,b] = reader(file,1);
-        s = reader(file,extract(1:2));
+        if isequal(reader,@audioread)
+            i = audioinfo(file);
+            f = i.SampleRate;
+            b = i.BitsPerSample;
+            s = audioread(file,extract(1:2));
+        else
+            [unused,f,b] = reader(file,1);
+            s = reader(file,extract(1:2));
+        end
         if length(extract) > 2
             s = s(:,extract(3));
         end
@@ -102,17 +123,25 @@ if load
         fp{1} = tp{1}([1 end]);
     end
 else
-    if isequal(reader,@mp3read)
-        [dsize,f,b] = reader(file,'size');
+    if isequal(reader,@audioread)
+        i = audioinfo(file);
+        d = i.TotalSamples;
+        f = i.SampleRate;
+        b = i.BitsPerSample;
+        ch = i.NumChannels;
     else
-        [unused,f,b] = reader(file,1);
-        dsize = reader(file,'size');
+        if isequal(reader,@mp3read)
+            [dsize,f,b] = reader(file,'size');
+        else
+            [unused,f,b] = reader(file,1);
+            dsize = reader(file,'size');
+        end
+        d = dsize(1);
+        ch = dsize(2);
     end
-    d = dsize(1);
     l = d/f;
     tp = {};
     fp = {};
-    ch = dsize(2);
 end
 
 
