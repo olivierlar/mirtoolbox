@@ -2,7 +2,7 @@ function demo6curves(file)
 % Example of use of curve analysis tools, such as moment estimations.
 
 if nargin == 0
-    file = 'trumpet';
+    file = 'trumpet.wav';
 end
 
 s = mirspectrum(file)
@@ -56,7 +56,7 @@ pause
 close all
 
 if nargin == 0
-    file = 'czardas';
+    file = 'czardas.wav';
 end
 t = mirtempo(file,'Periodicity','Frame')
 h = mirhisto(t)

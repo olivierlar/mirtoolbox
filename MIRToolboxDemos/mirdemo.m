@@ -1,17 +1,17 @@
 %%%% SEGMENTATION
 
-m = mirmfcc('valse_triste_happy','Rank',2:10,'Frame',0.05,1)
+m = mirmfcc('valse_triste_happy.wav','Rank',2:10,'Frame',0.05,1)
 sim = mirsimatrix(m)
 n = mirnovelty(sim,'KernelSize',150)
 p = mirpeaks(n,'Contrast',.1,'Total',Inf,'NoBegin','NoEnd')
-seg = mirsegment('valse_triste_happy',p)
+seg = mirsegment('valse_triste_happy.wav',p)
 mirplay(seg)
 
 display('Strike any key to continue...');
 pause
 close all
 
-[seg p m a] = mirsegment('valse_triste_happy','MFCC',2:10,...
+[seg p m a] = mirsegment('valse_triste_happy.wav','MFCC',2:10,...
                                 'KernelSize',150,'Contrast',.1)
        
 display('Strike any key to continue...');
@@ -20,7 +20,7 @@ close all
                                 
 %%%% TEMPO
                                 
-fb = mirfilterbank('czardas')
+fb = mirfilterbank('czardas.wav')
 %mirplay(fb)
 e = mirenvelope(fb) 
 de = mirenvelope(e,'Diff','Halfwave')
@@ -34,7 +34,7 @@ display('Strike any key to continue...');
 pause
 close all
 
-[t,p] = mirtempo('czardas','Periodicity','Frame')
+[t,p] = mirtempo('czardas.wav','Periodicity','Frame')
 h = mirhisto(t)
 
 display('Strike any key to continue...');
@@ -43,8 +43,8 @@ close all
 
 %%%% TONALITY
 
-c = mirchromagram('vivaldi','Frame',2) 
+c = mirchromagram('vivaldi.wav','Frame',2) 
 k = mirkeystrength(c) 
 p = mirpeaks(k,'Total',1) 
 
-[k,p] = mirkey('vivaldi','Frame',1)
+[k,p] = mirkey('vivaldi.wav','Frame',1)

@@ -3,7 +3,7 @@ function demo4segmentation
 % using MIRtoolbox. 
  
 % 1. Load an audio file (for instance, guitar.wav). 
-a = miraudio('guitar');
+a = miraudio('guitar.wav');
 
 % 2. We will perform the segmentation strategy as proposed in (Foote &
 % Cooper, 2003). First, decompose the file into successive frames of 50 ms 
@@ -134,11 +134,11 @@ close all
 % first ten MFCC for instance.
 help mirsegment
 % The segment function can simply be called as follows:
-sc = mirsegment('czardas','Novelty','MFCC','Rank',1:10)
+sc = mirsegment('czardas.wav','Novelty','MFCC','Rank',1:10)
 clear sc
 
 % Here are some other examples of use:
-[ssp p m b] = mirsegment('valse_triste_happy','Spectrum',...
+[ssp p m b] = mirsegment('valse_triste_happy.wav','Spectrum',...
                                 'KernelSize',150,'Contrast',.1)
 clear p m b
 mirplay(ssp)
@@ -148,7 +148,7 @@ display('Strike any key to continue...');
 pause
 close all
 
-[smfcc2 p m a] = mirsegment('valse_triste_happy','MFCC',2:10,...
+[smfcc2 p m a] = mirsegment('valse_triste_happy.wav','MFCC',2:10,...
                                 'KernelSize',150,'Contrast',.1)
 clear p m a
 mirplay(smfcc2)

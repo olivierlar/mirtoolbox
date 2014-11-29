@@ -1,7 +1,7 @@
 function mirtest(audio)
 
 if not(nargin)
-    audio = 'ragtime';
+    audio = 'ragtime.wav';
 end
 
 %% Version 1.0
@@ -117,7 +117,7 @@ mirkurtosis(p)
 p = mirpitch(audio,'frame')
 mirpitch(p,'median')
 mirauditory(audio)
-mirroughness('ragtime')
+mirroughness('ragtime.wav')
 
 %%
 %pause

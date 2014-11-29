@@ -1,7 +1,7 @@
 function demo9retrieval(query)
 
 if nargin<1
-    query = 'vivaldi';
+    query = 'vivaldi.wav';
 end
 
 %%
@@ -15,7 +15,7 @@ cl = mircluster(cc,16);
 
 d1 = mirdist(cl0,cl)
 mirquery(cl0,cl)
-mirplay(ans,'Sequence',1:6)
+mirplay(ans,'Sequence',1:3)
 
 pause
 
@@ -27,7 +27,7 @@ bs = mirbeatspectrum('Folder');
 
 d2 = mirdist(bs0,bs)
 mirquery(bs0,bs)
-mirplay(ans,'Sequence',1:6)
+mirplay(ans,'Sequence',1:3)
 
     % Variant
     
@@ -37,7 +37,7 @@ mirplay(ans,'Sequence',1:6)
     ac = purgedata(ac);
     d2bis = mirdist(ac0,ac)
     mirquery(ac0,ac)
-    mirplay(ans,'Sequence',1:6)
+    mirplay(ans,'Sequence',1:3)
 
 pause
     
@@ -49,7 +49,7 @@ pk = mirpeaks(mirnovelty('Folder'));
 
 d3 = mirdist(pk0,pk)
 mirquery(pk0,pk)
-mirplay(ans,'Sequence',1:6)
+mirplay(ans,'Sequence',1:3)
 
 pause
 
@@ -58,8 +58,8 @@ pause
 
 d = d1*.6 + d2*.3 + d3*.1
 mirquery(d)
-mirplay(ans,'Sequence',1:6)
+mirplay(ans,'Sequence',1:3)
 
 dbis = d1*.6 + d2bis*.3+ d3*.1
 mirquery(dbis)
-mirplay(ans,'Sequence',1:6)
+mirplay(ans,'Sequence',1:3)

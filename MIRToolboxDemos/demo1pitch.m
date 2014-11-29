@@ -8,7 +8,7 @@ function demo1pitch
 %% 1. Analyis of a single chord
 
 % Load the audio file 'Amin3.wav'.
-a = miraudio('Amin3')
+a = miraudio('Amin3.wav')
 %and play it:
 mirplay(a)
 
@@ -96,7 +96,7 @@ pause, close all
 %% 5. Frame-based analysis
 
 % Let?s analyze a longer musical sequence, such as ragtime.wav:
-a = miraudio('ragtime');
+a = miraudio('ragtime.wav');
 mirplay(a)
 
 % A direct analysis of the recording using the previous command
@@ -137,10 +137,10 @@ pause, close all
 %% 7. Monody analysis
 
 % Conclude with the analysis of a Finnish folk song, Läksin minä kesäyönä, whose excerpt is recorded in the file ?laksin.wav?. As the melody is sung by one voice only, you can use the ?Mono? option in mirpitch.
-mirplay('laksin')
-o = mironsets('laksin','Attacks','Contrast',.1)
+mirplay('laksin.wav')
+o = mironsets('laksin.wav','Attacks','Contrast',.1)
 mirplay(o)
-sg = mirsegment('laksin',o)
+sg = mirsegment('laksin.wav',o)
 mirplay(sg)
 p = mirpitch(sg,'mono')
 mirgetdata(p)

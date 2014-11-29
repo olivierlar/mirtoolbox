@@ -4,7 +4,7 @@ function demo3tempo
 
 % 1. Let's investigate the different stages needed for tempo estimation. 
  
-d = miraudio('ragtime')
+d = miraudio('ragtime.wav')
 mirenvelope(d)
 e = mirenvelope(d,'Halfwavediff')
 
@@ -17,7 +17,7 @@ ee = mirenvelope(f,'HalfwaveDiff')
 % Sum the frequency channels.ok
 s = mirsum(ee,'Centered') 
 
-d2 = miraudio('vivaldi')
+d2 = miraudio('vivaldi.wav')
 f2 = mirfilterbank(d2)
 ee2 = mirenvelope(f2,'HalfwaveDiff')
 s2 = mirsum(ee2,'Centered') 
@@ -43,13 +43,13 @@ close all
 help mirtempo
 
 % For instance, we can simply write:
-[t,ac] = mirtempo('ragtime')
+[t,ac] = mirtempo('ragtime.wav')
 
 % As you can see in the help, the resonance is integrated by default in the
 % tempo function. To toggle off the use of the resonance function, type:
-[t,ac] = mirtempo('ragtime','Resonance',0)
+[t,ac] = mirtempo('ragtime.wav','Resonance',0)
 
-[t,ac] = mirtempo('ragtime','total',5)
+[t,ac] = mirtempo('ragtime.wav','total',5)
 
 display('Strike any key to continue...');
 pause
@@ -58,8 +58,8 @@ close all
 % 3. The excerpt 'laksin' and 'czardas' have variable tempi. Use frame-
 % based tempo analysis to estimate the variation of the tempi. 
 % Apply to this end the tempo command with the 'frame' option. 
-[t1,p1] = mirtempo('laksin','Frame')
-[t2,p2] = mirtempo('czardas','Frame')
+[t1,p1] = mirtempo('laksin.wav','Frame')
+[t2,p2] = mirtempo('czardas.wav','Frame')
 
 % What is the range of variation of tempi?
 help mirhisto
