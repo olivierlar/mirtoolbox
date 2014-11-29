@@ -309,7 +309,8 @@ if isstruct(option)
 end
 if not(isempty(postoption))
     if not(strcmpi(postoption.band,'Freq') && isempty(postoption.msum) ...
-            || isempty(postoption.mprod)) || postoption.log || postoption.db ...
+            && isempty(postoption.mprod)) ...
+            || postoption.log || postoption.db ...
             || postoption.pow || postoption.mask || postoption.collapsed ...
             || postoption.aver || postoption.gauss
         option.phase = 0;
@@ -425,7 +426,7 @@ else
                 end
                 B = floor(log(f_max/f_min) / log(r)); % number of bins
                 N0 = round(Q*fsi/f_min); % maximum Nkcq
-                j2piQn = -j*2*pi*Q*(0:N0-1)';
+                j2piQn = -1i*2*pi*Q*(0:N0-1)';
 
                 fj = f_min * r.^(0:B-1)';
                 transf = NaN(B,size(dj,2),size(dj,3));
@@ -596,31 +597,16 @@ if any(option.mprod)
     s = set(s,'Title','Spectral product');
 end
 if any(option.msum)
-    %dac = get(ac,'Data');
-    %fac = get(ac,'Pos');
     for h = 1:length(m)
         for l = 1:length(m{k})
             z0 = m{h}{l};
-            %fl = f{h}{l};
             z1 = z0;
-            %mac = max(max(dac{1}{1}));
-            %mz = max(max(z1));
             for k = 1:length(option.msum)
                 mpr = option.msum(k);
                 if mpr
                     zi = ones(size(z0));
                     zi(1:floor(end/mpr),:,:) = z0(mpr:mpr:end,:,:);
                     z1 = z1+zi;
-                    
-                    %%% New version under construction:
-                    %flim = find(fl(:,1)>fl(end,1)/mpr,1);
-                    %for i = 1:flim
-                    %    [unused fk] = min(abs(fl(i,1)*mpr-fl(:,1)));
-                    %    %[unused fack] = min(abs(fl(i,1)-fac{h}{l}(:,1)));
-                    %    %nz = find(...z0(i,:)>mz/25 & ...
-                    %    %          dac{h}{l}(fack,:)>mac/10);
-                    %    z1(i,:) = z1(i,:)+z0(fk,:);
-                    %end
                 end
             end
             m{h}{l} = z1;
@@ -679,8 +665,9 @@ if option.reso
                     1 - 0.25*(log2(max(1./max(f{k}{l},1e-12),1e-12)/0.5)).^2);
             elseif strcmpi(option.reso,'Fluctuation')
                 w1 = f{k}{l} / 4; % ascending part of the fluctuation curve;
-                w2 = 1 - 0.3 * (f{k}{l} - 4)/6; % descending part;
+                w2 = 1 - 0.3 * (f{k}{l} - 4)/6; % descending part; %%% Negative!
                 w = min(w1,w2);
+                w = max(0,w);
             end
             if max(w) == 0
                 warning('The resonance curve, not defined for this range of delays, will not be applied.')
