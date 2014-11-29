@@ -52,7 +52,7 @@ function varargout = mirplay(a,varargin)
 
         burst.key = 'Burst';
         burst.type = 'Boolean';
-        burst.default = 1;
+        burst.default = 0; %1;
     option.burst = burst;
 
 specif.option = option;
@@ -137,7 +137,8 @@ if not(isempty(order))
                 if isa(a,'miraudio')
                     for j = 1:size(di,2)
                         tic
-                        sound(di(:,j,l),f{k});
+                        pl = audioplayer(di(:,j,l),f{k});
+                        playblocking(pl);
                         % We should scale, in order to avoid clipping 
                         % (when reading AIF files for instance).
                         % But global scaling across segments, to avoid
@@ -206,10 +207,12 @@ if not(isempty(order))
                             end
                         end
                     end
-                    soundsc(synth,44100);
+                    pl = audioplayer(synth,44100);
+                    playblocking(pl);
                 end
                 if option.burst && sgk(end)>1
-                    sound(rand(1,10))
+                    pl = audioplayer(rand(1,10),8192);
+                    playblocking(pl);
                 end
             end
         end
