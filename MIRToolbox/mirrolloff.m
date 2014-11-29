@@ -58,11 +58,11 @@ thr = cs(end,:,:)*p;   % threshold corresponding to the rolloff point
 v = zeros(1,size(cs,2),size(cs,3));
 for l = 1:size(cs,3)
     for k = 1:size(cs,2)
-        fthr = find(cs(:,k,l) >= thr(1,k,l)); % find the location of the threshold
+        fthr = find(cs(:,k,l) >= thr(1,k,l),1); % find the location of the threshold
         if isempty(fthr)
             v(1,k,l) = NaN;
         else
-            v(1,k,l) = f(fthr(1));
+            v(1,k,l) = f(fthr);
         end
     end
 end
