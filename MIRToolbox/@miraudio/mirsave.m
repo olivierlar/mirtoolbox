@@ -1,5 +1,8 @@
 function mirsave(a,f,separate)
 
+verml = ver('MATLAB');
+verml = str2num(verml.Version);
+
 ext = 0;    % Specified new extension
 if nargin < 2
     f = '.mir';
@@ -61,12 +64,19 @@ for i = 1:nf
                 if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
                     n = [n '.wav'];
                 end
-                wavwrite(out,fsi,nbi,n)
+                if verml < 8.3
+                    wavwrite(out,fsi,nbi,n)
+                end
             elseif strcmp(ext,'.au')
                 if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
                     n = [n '.au'];
                 end
-                auwrite(out,fsi,nbi,'linear',n)
+                if verml < 8.3
+                    auwrite(out,fsi,nbi,'linear',n)
+                end
+            end
+            if verml >= 8.3
+                audiowrite(n,out,fsi,'BitsPerSample',nbi)
             end
             disp([n,' saved.']);
         end
@@ -94,12 +104,19 @@ for i = 1:nf
                 if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
                     n = [n '.wav'];
                 end
-                wavwrite(out,fsi,nbi,n)
+                if verml < 8.3
+                    wavwrite(out,fsi,nbi,n)
+                end
             elseif strcmp(ext,'.au')
                 if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
                     n = [n '.au'];
                 end
-                auwrite(out,fsi,nbi,'linear',n)
+                if verml < 8.3
+                    auwrite(out,fsi,nbi,'linear',n)
+                end
+            end
+            if verml >= 8.3
+                audiowrite(n,out,fsi,'BitsPerSample',nbi)
             end
             disp([n,' saved.']);
         else
@@ -115,12 +132,19 @@ for i = 1:nf
                     if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
                         n = [n '.wav'];
                     end
-                    wavwrite(out(:,j),fsi,nbi,n)
+                    if verml < 8.3
+                        wavwrite(out(:,j),fsi,nbi,n)
+                    end
                 elseif strcmp(ext,'.au')
                     if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
                         n = [n '.au'];
                     end
-                    auwrite(out(:,j),fsi,nbi,'linear',n)
+                    if verml < 8.3
+                        auwrite(out(:,j),fsi,nbi,'linear',n)
+                    end
+                end
+                if verml >= 8.3
+                    audiowrite(n,out(:,j),fsi,'BitsPerSample',nbi)
                 end
                 disp([n,' saved.']);
             end
