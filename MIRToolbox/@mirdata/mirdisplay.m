@@ -81,6 +81,9 @@ else
                 cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i},axis);
             if flag
                 fig = get(0,'CurrentFigure');
+                if isa(fig,'matlab.ui.Figure')
+                    fig = fig.Number;
+                end
                 disp(['Its content is displayed in Figure ',num2str(fig),'.']);
                 if nargin>4 && ~isempty(suffix)
                     saveas(fig,[n{i},suffix],'psc2');
