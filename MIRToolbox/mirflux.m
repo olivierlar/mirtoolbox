@@ -294,7 +294,7 @@ else
                         end
                     end
                 end
-                if strcmpi(option.bs,'Goto')
+                if option.complex || strcmpi(option.bs,'Goto')
                     fp{h}{i} = fpi(:,2:end-1);
                 else
                     fp{h}{i} = fpi(:,2:end);
