@@ -385,6 +385,9 @@ for song = 1:length(songs)  %For each audio file
             legend(legnd,'Location','Best')
         end
         fig = get(0,'CurrentFigure');
+        if isa(fig,'matlab.ui.Figure')
+            fig = fig.Number;
+        end
         disp(['The ',t,' related to file ',n{i},...
             ' is displayed in Figure ',num2str(fig),'.']);
         if nargin>3

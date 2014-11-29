@@ -181,7 +181,7 @@ elseif isempty(option.arg2)
         if mirwaitbar
             handle = waitbar(0,'Computing dissimilarity matrix...');
         else
-            handle = 0;
+            handle = [];
         end
         if not(iscell(vk))
             vk = {vk};
@@ -317,7 +317,7 @@ elseif isempty(option.arg2)
             end
         end
         d{k} = dk;
-        if handle
+        if ~isempty(handle)
             delete(handle)
         end
     end

@@ -221,6 +221,9 @@ else
             end
         end
         fig = get(0,'CurrentFigure');
+        if isa(fig,'matlab.ui.Figure')
+            fig = fig.Number;
+        end
         disp(['The ',t,' related to file ',nam{i},' is displayed in Figure ',num2str(fig),'.']);
     end
 end

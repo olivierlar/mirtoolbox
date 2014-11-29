@@ -128,7 +128,6 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             tmpname = [f '.mirtmp'];
             d.tmpfile.fid = fopen(tmpname,'w');
         end
-        tmpfile = [];
         if not(d.ascending)
             chunks = fliplr(chunks);
         end
@@ -201,7 +200,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             y = combinechunk_noframe(y,ss,sg,i,d2,chunks,single);
 
             clear ss
-            if h
+            if isa(h,'matlab.ui.Figure')
                 if not(d.ascending)
                     close(h)
                     h = waitbar((chunks(1,i)-chunks(1,end))/chunks(2,1),...
@@ -234,7 +233,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 (isempty(d.frame) || isfield(d.frame,'dontchunk'))
             y = evalbranches(d,y);
         end
-        if h
+        if isa(h,'matlab.ui.Figure')
             close(h)
         end
         drawnow
@@ -290,7 +289,7 @@ else
             end
             
             y = combinechunk_frame(y,res,d2,fri);
-            if h
+            if ~isempty(h)
                 waitbar(chunks(2,fri)/chunks(end),h);
             end
         end
@@ -302,7 +301,7 @@ else
         if isa(d,'mirstruct') && get(d,'Stat') 
             y = mirstat(y);
         end
-        if h
+        if ~isempty(h)
             close(h)
         end
     else
