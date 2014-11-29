@@ -1325,7 +1325,7 @@ for i = 1:length(d) % For each audio file,...
                     for j = 1:length(mxlk)
                         mj = mxlk(j); % Current values
                         if strcmpi(option.interpol,'quadratic')
-                            if mj>2 && mj<length(dhu)-1
+                            if mj>2 && mj<size(dhu,1)-1
                                 % More precise peak position
                                 y0 = dhu(mj,k,l);
                                 ym = dhu(mj-1,k,l);
