@@ -25,7 +25,7 @@ allabs = struct;
 for i = 1:l
     sl = strfind(n{i},'/');
     if isempty(sl)
-        mirerror('mirclassify','...');
+        mirerror('mirclassify','There should not be audio files in the main folder. They should be all in subfolders corresponding to the different classes.');
     end
     lab{i} = n{i}(1:sl(end)-1);
     if i == 1
