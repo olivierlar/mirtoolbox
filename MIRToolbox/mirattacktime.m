@@ -79,6 +79,7 @@ end
 po = sort(po{1});
 pa = sort(pa{1});
 at = po-pa;
+at = at';
 if strcmpi(sc,'Log')
     at = log10(at);
 end
