@@ -241,6 +241,7 @@ if curve
             axes('Position',[pos(1)-.05 pos(2)+pos(4)/2 .01 .01],'Visible','off');
             text(0,0,num2str(num),'FontSize',12,'Color','r')
         end
+        axis tight
     end
 else
     % 2-dimensional image
