@@ -884,11 +884,11 @@ if not(ischar(d)) && not(iscell(d))
             d2.chunkdecomposed = 1;
             [tmp d] = evalnow(d2);
             d0 = set(d0,'AcrossChunks',tmp);
-            if h
+            if isa(h,'matlab.ui.Figure')
                 waitbar(chend/lsz,h)
             end
         end
-        if h
+        if isa(h,'matlab.ui.Figure')
             close(h);
         end
         drawnow

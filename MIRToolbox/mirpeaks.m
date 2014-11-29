@@ -531,7 +531,7 @@ for i = 1:length(d) % For each audio file,...
                         bufmax = dht(mxkj,k,l);
                         oldbufmin = min(dht(1:mxk(1)-1,k,l));
                         while jj <= length(mxk)
-                            if wait && not(mod(jj,5000))
+                            if isa(wait,'matlab.ui.Figure') && not(mod(jj,5000))
                                 waitbar(jj/length(mxk),wait,['Selecting peaks... (',num2str(length(finalmxk)),' out of ',num2str(jj),')']);
                             end
                             bufmin = min(bufmin, ...
@@ -579,7 +579,7 @@ for i = 1:length(d) % For each audio file,...
                             % The last peak candidate is OK and stored
                             finalmxk(end+1) = mxk(j);
                         end
-                        if wait
+                        if isa(wait,'matlab.ui.Figure')
                             waitbar(1,wait);
                             close(wait);
                             drawnow

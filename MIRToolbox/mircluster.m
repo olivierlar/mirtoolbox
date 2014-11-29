@@ -135,11 +135,11 @@ else
                     ii = ii+1;
                 end
             end
-            if handle
+            if isa(handle,'matlab.ui.Figure')
                 waitbar(j/lva,handle);
             end
         end
-        if handle
+        if isa(handle,'matlab.ui.Figure')
            delete(handle)
         end
         a = set(a,'Clusters',c);

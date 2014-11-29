@@ -44,6 +44,9 @@ for i = 1:length(w)
             end
         end
     end
+    if isa(fig,'matlab.ui.Figure')
+        fig = fig.Number;
+    end
     disp(['The key som related to file ',n{i},...
                 ' is displayed in Figure ',num2str(fig),'.']);
 end

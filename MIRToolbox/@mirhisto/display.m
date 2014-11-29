@@ -36,6 +36,9 @@ for i = 1:length(d)
         legend(l,'Location','Best')
     end
     fig = get(0,'CurrentFigure');
+    if isa(fig,'matlab.ui.Figure')
+        fig = fig.Number;
+    end
     va = inputname(1);
     if isempty(va)
         va = 'ans';
