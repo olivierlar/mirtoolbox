@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.5.2 11-November-2014
+% Version 1.6 30-November-2014
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -32,7 +32,9 @@
 % mironsets        - Note onset positions and characteristics
 % mirattacktime    - Duration of note attacks
 % mirattackslope   - Average slope of note attacks
+% mirdecreaseslope - Note release phase description
 % mirattackleap    - Change of amplitude in note attacks
+% mirduration      - Note duration from attack to release
 % mireventdensity  - Average frequency of events
 %
 %RHYTHM
