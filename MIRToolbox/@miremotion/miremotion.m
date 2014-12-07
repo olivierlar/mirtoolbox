@@ -374,7 +374,7 @@ function e = initialise(rm)
 e = [];
 
       
-function e = activity(e,rm,fpv,sc,ss,se) % without the box-cox transformation, revised coefficients
+function [e af] = activity(e,rm,fpv,sc,ss,se) % without the box-cox transformation, revised coefficients
 af = zeros(5,1);
 af(1) = 0.6664* ((mean(rm) - 0.0559)/0.0337); % 
 af(2) =  0.6099 * ((mean(fpv{1}) - 13270.1836)/10790.655);
@@ -383,9 +383,8 @@ af(4) = -0.4639*((mean(cell2mat(ss)) - 250.5574)./205.3147);
 af(5) = 0.7056*((mean(se) - 0.954)./0.0258);
 af(isnan(af)) = [];
 e(end+1,:) = sum(af)+5.4861;
-e = {e af};
 
-function e = valence(e,rm,fpv,kc,mo,ns) % without the box-cox transformation, revised coefficients
+function [e vf] = valence(e,rm,fpv,kc,mo,ns) % without the box-cox transformation, revised coefficients
 vf = zeros(5,1);
 vf(1) = -0.3161 * ((std(rm) - 0.024254)./0.015667);
 vf(2) =  0.6099 * ((mean(fpv{1}) - 13270.1836)/10790.655);
@@ -395,9 +394,8 @@ ns(isnan(ns)) = [];
 vf(5) = 0.4015 * ((mean(ns) - 131.9503)./47.6463);
 vf(isnan(vf)) = [];
 e(end+1,:) = sum(vf)+5.2749;
-e = {e vf};
 
-function e = tension(e,rm,fpv,kc,hc,nr)
+function [e tf] = tension(e,rm,fpv,kc,hc,nr)
 tf = zeros(5,1);
 tf(1) = 0.5382 * ((std(rm) - 0.024254)./0.015667);
 tf(2) =  -0.5406 * ((mean(fpv{1}) - 13270.1836)/10790.655);
@@ -406,12 +404,11 @@ tf(4) = 0.8629 * ((mean(hc) - 0.2962)./0.0459);
 tf(5) = -0.5958 * ((mean(nr) - 71.8426)./46.9246);
 tf(isnan(tf)) = [];
 e(end+1,:) = sum(tf)+5.4679;
-e = {e tf};
 
 
 % BASIC EMOTION PREDICTORS
 
-function e = happy(e,fpv,ss,cp,kc,mo)
+function [e ha_f] = happy(e,fpv,ss,cp,kc,mo)
 ha_f = zeros(5,1);
 ha_f(1) = 0.7438*((mean(cell2mat(fpv)) - 13270.1836)./10790.655);
 ha_f(2) = -0.3965*((mean(cell2mat(ss)) - 250.5574)./205.3147);
@@ -420,9 +417,8 @@ ha_f(4) = 0.7780*((mean(kc) - 0.5124)./0.092);
 ha_f(5) = 0.6220*((mean(mo) - -0.002)./0.0487);
 ha_f(isnan(ha_f)) = [];
 e(end+1,:) = sum(ha_f)+2.6166;
-e = {e ha_f};
 
-function e = sad(e,ss,cp,mo,hc,nt)
+function [e sa_f] = sad(e,ss,cp,mo,hc,nt)
 sa_f = zeros(5,1);
 sa_f(1) = 0.4324*((mean(cell2mat(ss)) - 250.5574)./205.3147);
 sa_f(2) = -0.3137*((std(cell2mat(cp)) - 8.5321)./2.5899);
@@ -431,9 +427,8 @@ sa_f(4) = -0.6017*((mean(hc) - 0.2962)./0.0459);
 sa_f(5) = 0.4493*((mean(nt) - 42.2022)./36.7782);
 sa_f(isnan(sa_f)) = [];
 e(end+1,:) = sum(sa_f)+2.9756;
-e = {e sa_f};
 
-function e = tender(e,sc,rg,kc,hc,ns)
+function [e te_f] = tender(e,sc,rg,kc,hc,ns)
 te_f = zeros(5,1);
 te_f(1) = -0.2709*((mean(cell2mat(sc)) - 1677.7106)./570.3432);
 te_f(2) = -0.4904*((std(rg) - 85.9387)./106.0767);
@@ -442,9 +437,8 @@ te_f(4) = -0.3995*((mean(hc) - 0.2962)./0.0459);
 te_f(5) = 0.3391*((mean(ns) - 131.9503)./47.6463);
 te_f(isnan(te_f)) = [];
 e(end+1,:) = sum(te_f)+2.9756;
-e = {e te_f};
 
-function e = anger(e,rg,kc,se,nr) % 
+function [e an_f] = anger(e,rg,kc,se,nr) % 
 an_f = zeros(5,1);
 %an_f(1) = -0.2353*((mean(pc) - 0.1462)./.1113);
 an_f(2) = 0.5517*((mean(rg) - 85.9387)./106.0767);
@@ -453,9 +447,8 @@ an_f(4) = .2821*((mean(se) - 0.954)./0.0258);
 an_f(5) = -.2971*((mean(nr) - 71.8426)./46.9246);
 an_f(isnan(an_f)) = [];
 e(end+1,:) = sum(an_f)+1.9767;
-e = {e an_f};
 
-function e = fear(e,rm,at,fpv,kc,mo)
+function [e fe_f] = fear(e,rm,at,fpv,kc,mo)
 fe_f = zeros(5,1);
 fe_f(1) = 0.4069*((std(rm) - 0.0243)./0.0157);
 fe_f(2) = -0.6388*((mean(at) - 0.0707)./0.015689218536423);
@@ -464,7 +457,6 @@ fe_f(4) = -0.9860*((mean(kc) - 0.5124)./0.0920);
 fe_f(5) = -0.3144*((mean(mo) - -0.0019958)./0.048663550639094);
 fe_f(isnan(fe_f)) = [];
 e(end+1,:) = sum(fe_f)+2.7847;
-e = {e fe_f};
 
 function fp = noframe(fp)
 fp = [fp(1);fp(end)];
