@@ -85,9 +85,19 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             chunks = floor(sg(1:end-1)*sr)+1;
             chunks(2,:) = min( floor(sg(2:end)*sr)-1,lsz-1)+1;
         else
-            error('Fatal error. This mirsegment option is not available anymore.');
+            % The following is used only for miremotion
             chunks = floor(sg*sr);
             chunks(1,:) = chunks(1,:)+1;
+            
+            % Code below by Ming-Hsu Chang
+            chunks = chunks'; %%%
+            chunks(2, 1:size(chunks,2)-1) = chunks(1, 2:size(chunks,2)) + (sg(2,1)/fr.hop.val - sg(2,1))*sr; %%%
+            if chunks(2, size(chunks,2)-1) > len %%%
+                chunks = chunks(:, 1:size(chunks,2)-2);
+            else
+                chunks = chunks(:, 1:size(chunks,2)-1);
+            end
+            
         end
     elseif not(isfield(specif,'eachchunk')) ...
             || d.nochunk ...
@@ -991,17 +1001,33 @@ if isa(old,'miremotion')
     tdn = get(new,'TenderFactors');
     agn = get(new,'AngerFactors');
     ffn = get(new,'FearFactors');
-    y = set(y,'DimData',{[deo{1},den{1}{1}]},...
-            'ClassData',{[ceo{1},cen{1}{1}]},...
-            'ActivityFactors',{[afo{1},afn{1}{1}]},...
-            'ValenceFactors',{[vfo{1},vfn{1}{1}]},...
-            'TensionFactors',{[tfo{1},tfn{1}{1}]},...
-            'HappyFactors',{[hfo{1},hfn{1}{1}]},...
-            'SadFactors',{[sfo{1},sfn{1}{1}]},...
-            'TenderFactors',{[tdo{1},tdn{1}{1}]},...
-            'AngerFactors',{[ago{1},agn{1}{1}]},...
-            'FearFactors',{[ffo{1},ffn{1}{1}]}...
-        );
+    y = set(y,'DimData',{[deo{1},den{1}{1}]},'ClassData',{[ceo{1},cen{1}{1}]});
+    
+    % Code improved by Ming-Hsu Chang
+    if iscell(afo)
+       y = set(y, 'ActivityFactors',{[afo{1},afn{1}{1}]});
+    end
+    if iscell(vfo)
+       y = set(y, 'ValenceFactors',{[vfo{1},vfn{1}{1}]});
+    end
+    if iscell(tfo)
+       y = set(y, 'TensionFactors',{[tfo{1},tfn{1}{1}]});
+    end
+    if iscell(hfo)
+       y = set(y, 'HappyFactors',{[hfo{1},hfn{1}{1}]});
+    end
+    if iscell(sfo)
+       y = set(y, 'SadFactors',{[sfo{1},sfn{1}{1}]});
+    end
+    if iscell(tdo)
+       y = set(y, 'TenderFactors',{[tdo{1},tdn{1}{1}]});
+    end
+    if iscell(ago)
+       y = set(y, 'AngerFactors',{[ago{1},agn{1}{1}]});
+    end
+    if iscell(ffo)
+       y = set(y, 'FearFactors',{[ffo{1},ffn{1}{1}]});
+    end
 end
  
 
