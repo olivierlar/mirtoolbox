@@ -839,6 +839,11 @@ if option.change
     d = get(t,'Data');
     for i = 1:length(d)
         for j = 1:length(d{i})
+            if iscell(d{i}{j})
+                % 'Metre' option not used here. 'Change' should not be
+                % performed.
+                return
+            end
             d{i}{j} = [NaN diff(log2(d{i}{j}))];
         end
     end
