@@ -384,7 +384,7 @@ af(2) =  0.6099 * ((mean(tmp(~isnan(tmp))) - 13270.1836)/10790.655);
 tmp = cell2mat(sc);
 af(3) = 0.4486*((mean(tmp(~isnan(tmp))) - 1677.7)./570.34);
 tmp = cell2mat(ss);
-af(4) = -0.4639*((mean(tmp(~isnan(tmp))) - 250.5574)./205.3147);
+af(4) = -0.4639*((mean(tmp(~isnan(tmp))) - (250.5574*22.88))./(205.3147*22.88)); % New normalisation proposed by Ming-Hsu Chang
 af(5) = 0.7056*((mean(se(~isnan(se))) - 0.954)./0.0258);
 
 af(isnan(af)) = [];
