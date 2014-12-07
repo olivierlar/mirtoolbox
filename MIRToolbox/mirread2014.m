@@ -88,7 +88,13 @@ if load
         if isequal(reader,@audioread)
             [s,f] = audioread(file);
             i = audioinfo(file);
-            b = i.BitRate;
+            if isfield(i,'BitsPerSample')
+                b = i.BitsPerSample;
+            elseif isfield(i,'BitRate')
+                b = i.BitRate;
+            else
+                b = NaN;
+            end
         else
             [s,f,b] = reader(file);
         end
@@ -96,7 +102,13 @@ if load
         if isequal(reader,@audioread)
             i = audioinfo(file);
             f = i.SampleRate;
-            b = i.BitRate;
+            if isfield(i,'BitsPerSample')
+                b = i.BitsPerSample;
+            elseif isfield(i,'BitRate')
+                b = i.BitRate;
+            else
+                b = NaN;
+            end
             s = audioread(file,extract(1:2));
         else
             [unused,f,b] = reader(file,1);
@@ -127,7 +139,13 @@ else
         i = audioinfo(file);
         d = i.TotalSamples;
         f = i.SampleRate;
-        b = i.BitRate;
+        if isfield(i,'BitsPerSample')
+            b = i.BitsPerSample;
+        elseif isfield(i,'BitRate')
+            b = i.BitRate;
+        else
+            b = NaN;
+        end
         ch = i.NumChannels;
     else
         if isequal(reader,@mp3read)
