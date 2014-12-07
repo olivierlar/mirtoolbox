@@ -638,7 +638,7 @@ if option.nl
 end
 if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where spectrum already along bands
     % Code taken from Pampalk's MA Toolbox
-    for h = 1:length(m)
+    for k = 1:length(m)
         for l = 1:length(m{k})
             W_Adb = zeros(size(f{k}{l}));
             W_Adb(2:size(f{k}{l},1),:,:) = ...
@@ -646,7 +646,7 @@ if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where
                 + 6.5 * exp(-0.6 * (f{k}{l}(2:end,:,:)/1000 - 3.3).^2) ...
                 - 0.001*(f{k}{l}(2:end,:,:)/1000).^4)/20);
             W_Adb = W_Adb.^2;
-            m{h}{l} = m{h}{l}.*W_Adb;
+            m{k}{l} = m{k}{l}.*W_Adb;
         end
     end
 end
