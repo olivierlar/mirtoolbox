@@ -376,11 +376,17 @@ e = [];
       
 function [e af] = activity(e,rm,fpv,sc,ss,se) % without the box-cox transformation, revised coefficients
 af = zeros(5,1);
-af(1) = 0.6664* ((mean(rm) - 0.0559)/0.0337); % 
-af(2) =  0.6099 * ((mean(fpv{1}) - 13270.1836)/10790.655);
-af(3) = 0.4486*((mean(cell2mat(sc)) - 1677.7)./570.34);
-af(4) = -0.4639*((mean(cell2mat(ss)) - 250.5574)./205.3147);
-af(5) = 0.7056*((mean(se) - 0.954)./0.0258);
+
+% In the code below, removal of nan values added by Ming-Hsu Chang
+af(1) = 0.6664* ((mean(rm(~isnan(rm))) - 0.0559)/0.0337);
+tmp = fpv{1};
+af(2) =  0.6099 * ((mean(tmp(~isnan(tmp))) - 13270.1836)/10790.655);
+tmp = cell2mat(sc);
+af(3) = 0.4486*((mean(tmp(~isnan(tmp))) - 1677.7)./570.34);
+tmp = cell2mat(ss);
+af(4) = -0.4639*((mean(tmp(~isnan(tmp))) - 250.5574)./205.3147);
+af(5) = 0.7056*((mean(se(~isnan(se))) - 0.954)./0.0258);
+
 af(isnan(af)) = [];
 e(end+1,:) = sum(af)+5.4861;
 
