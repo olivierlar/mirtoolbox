@@ -442,9 +442,10 @@ for i = 1:length(d) % For each audio file,...
         state = warning('query','MATLAB:divideByZero');
         warning('off','MATLAB:divideByZero');
         
-        for l = 1:nd0 
-            [unused lowc] = find(max(dht(:,:,:,l))<option.thr);
-            dht(:,lowc,1,l) = 0;
+        for l = 1:nd0
+            mht = shiftdim(max(dht(:,:,:,l)),1);
+            [low1,low2] = find(mht<option.thr);
+            dht(:,low1,low2,l) = 0;
         end
         
         if strcmpi(option.normal,'Local')
@@ -1087,7 +1088,7 @@ for i = 1:length(d) % For each audio file,...
             scob{i}{h} = [];
                 % Score related to each branch
             for l = 1:np
-                wait = waitbar(0,['Creating peaks graph...']);
+                wait =0 % waitbar(0,['Creating peaks graph...']);
                 for k = 1:nc
                     g{i}{h}{1,k,l} = cell(size(mx{1,k,l}));
                     scog{i}{h}{1,k,l} = zeros(size(mx{1,k,l}));
