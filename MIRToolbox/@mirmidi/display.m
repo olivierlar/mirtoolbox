@@ -8,6 +8,9 @@ n = get(m,'Name');
 for i = 1:length(d)
     pianoroll(d{i});
     fig = get(0,'CurrentFigure');
+    if isa(fig,'matlab.ui.Figure')
+        fig = fig.Number;
+    end
     va = inputname(1);
     if isempty(va)
         va = 'ans';
