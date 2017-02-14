@@ -397,7 +397,7 @@ for song = 1:length(songs)  %For each audio file
         axis tight
         axis 'auto y'
     end
-    if nargin>1 && ischar(ax)
+    if nargin>1 && isa(ax,'matlab.graphics.axis.Axes')
         print(ax)
     end
 end
