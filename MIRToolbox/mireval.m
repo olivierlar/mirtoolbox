@@ -392,7 +392,10 @@ for i = 1:length(dn)      % Each file name is considered
         nn{i}{end+1} = tmp;
     end
 end
-dd = sortnames(dd,[],nn);
+%initialize an empty struct array with the same fields as in dd
+d2 = dd;
+d2(1:end)=[];
+dd = sortnames(dd,d2,nn);
 for i = 1:length(dd);
     nf = dd(i).name;
     if folders && dd(i).isdir
