@@ -1,4 +1,4 @@
-function mirdisplay(d)
+function mirdisplay(d,va)
 % MIRDATA/DISPLAY display of a MIR data
 
 disp(' ');
@@ -72,7 +72,7 @@ else
                 cha = [];
             end
             flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i},axis);
+                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i});
             if flag
                 fig = get(0,'CurrentFigure');
                 if isa(fig,'matlab.ui.Figure')
