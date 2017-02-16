@@ -1,15 +1,11 @@
-function mov = display(k,filename)
+function mov = display(k)
 % KEYSOM/DISPLAY display of key som
 
 mov = [];
 load keysomaudiodata; 
 w = get(k,'Weight');
 n = get(k,'Name');
-if nargin>1
-    mov = avifile(filename);
-%elseif and(nargout>0,size(w)>0)
-%    mov = moviein(size(w{1}{1},2)); %no longer needed as of MATLAB Release 11 (5.3).
-end
+
 for i = 1:length(w)
     wi = w{i};
     fig = figure;
@@ -49,9 +45,5 @@ for i = 1:length(w)
     end
     disp(['The key som related to file ',n{i},...
                 ' is displayed in Figure ',num2str(fig),'.']);
-end
-if nargin>1
-    mov = close(mov);
-    disp(['Data exported to file ',filename,'.']);
 end
 disp(' ');

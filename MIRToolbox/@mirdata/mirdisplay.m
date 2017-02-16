@@ -1,4 +1,4 @@
-function mirdisplay(d,va,axis,songs,suffix)
+function mirdisplay(d)
 % MIRDATA/DISPLAY display of a MIR data
 
 disp(' ');
@@ -35,13 +35,7 @@ end
 if ld == 0
     disp('No data.');
 else
-    if nargin<4 || isempty(songs)
-        songs=1:length(v);
-    end
-    
-    for song = 1:length(songs)  %For each audio file
-        i=songs(song);
-        
+    for i = 1:length(v)  %For each audio file        
         if nargin < 2
             va = inputname(1);
         end
@@ -85,10 +79,6 @@ else
                     fig = fig.Number;
                 end
                 disp(['Its content is displayed in Figure ',num2str(fig),'.']);
-                if nargin>4 && ~isempty(suffix)
-                    saveas(fig,[n{i},suffix],'psc2');
-                    disp(['and is saved in file ',n{i},suffix]);
-                end
             else
                 disp('It does not contain any data.');
             end

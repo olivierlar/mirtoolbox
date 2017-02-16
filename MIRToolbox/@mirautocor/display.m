@@ -1,6 +1,6 @@
-function display(a,varargin)
+function display(a)
 
-display(mirdata(a),varargin{:});
+display(mirdata(a));
 
 ph = get(a,'Phase');
 if ~isempty(ph)

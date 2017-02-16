@@ -1,4 +1,4 @@
-function display(s,ax,songs,suffix)
+function display(s)
 % SCALAR/DISPLAY display the values of a scalar object
 
 ST = dbstack;
@@ -21,13 +21,7 @@ leg = get(s,'Legend');
 legm = get(s,'MultiData');
 cha = get(s,'Channels');
 
-if nargin<3 || isempty(songs)
-    songs=1:length(v);
-end
-
-for song = 1:length(songs)  %For each audio file
-    i=songs(song);
-
+for i = 1:length(v)  %For each audio file
     vi = v{i};
     if isempty(m)
         mi = [];
@@ -114,11 +108,7 @@ for song = 1:length(songs)  %For each audio file
     else
         %Graphical display
         
-        if nargin<2 || isempty(ax) || ischar(ax)
-            figure
-        else
-            axes(ax)
-        end
+        figure
         
         if not(iscell(vi))
             vi = {vi};
@@ -390,15 +380,8 @@ for song = 1:length(songs)  %For each audio file
         end
         disp(['The ',t,' related to file ',n{i},...
             ' is displayed in Figure ',num2str(fig),'.']);
-        if nargin>3
-            saveas(fig,[n{i},suffix],'psc2');
-            disp(['and is saved in file ',n{i},suffix]);
-        end
         axis tight
         axis 'auto y'
-    end
-    if nargin>1 && isa(ax,'matlab.graphics.axis.Axes')
-        print(ax)
     end
 end
 disp(' ');

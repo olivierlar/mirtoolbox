@@ -1,4 +1,4 @@
-function display(m,ax,songs)
+function display(m)
 % DISSIMATRIX/DISPLAY display of a dissimilarity matrix
 disp(' ');
 d = get(m,'Data');
@@ -61,18 +61,9 @@ if isnan(get(m,'DiagWidth'))    % Similarity matrix between 2 files
     disp(['The ',t,' between files ',nam{1},' and ',nam{2},...
         ' is displayed in Figure ',num2str(fig),'.']);
 else
-    if nargin<3 || isempty(songs)
-        songs=1:length(d);
-    end
-    
-    for song = 1:length(songs)  %For each audio file
-        i=songs(song);
-        
-        if nargin<2 || isempty(ax)
-            figure
-        else
-            axes(ax)
-        end
+    for i = 1:length(d)  %For each audio file
+       
+        figure
         
         if iscell(d{i})
             d{i} = d{i}{1};
