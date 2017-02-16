@@ -306,6 +306,9 @@ if add
 else
     fid = fopen(filename,'wt');
 end
+if fid == -1
+    mirerror('MIREXPORT','Cannot open file')
+end
 for i = 1:size(m,1)
     for j = 1:size(m,2)
         if ischar(m{i,j})
