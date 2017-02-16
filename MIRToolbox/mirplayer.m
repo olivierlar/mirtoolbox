@@ -1,41 +1,70 @@
-function mirplayer(arg,select)
-%Usage:
-%MIRplayer(arg,select)
-%where
-%arg = features extracted with mirtoolbox
-%select = songs indices to display
-%------
+function mirplayer(FEATURES,SELECT)
+%MIRPLAYER is a graphical player interface MIRtoolbox objects
+%   MIRPLAYER(FEATURES) displays the interface. FEATURES is a mirtoolbox object
+%   such as mirstruct or mirscalar, or a nested MATLAB structure of mirtoolbox
+%   objects.
+%
+%   MIRPLAYER(FEATURES,SELECT) displays only songs specified by an array 
+%   of song indices SELECT.
+%
+%   Examples:
+%
+%   The examples assume that the folder MIRtoolboxX.X.X/MIRToolboxDemos
+%   is in the MATLAB path.
+%   
+%   Display a feature
+%   FEATURES = mirbrightness('ragtime','Frame');
+%   MIRPLAYER(FEATURES)
+%
+%   Display a multiple features
+%   clear FEATURES;
+%   FEATURES.brightness = mirbrightness('ragtime','Frame');
+%   FEATURES.filterbank = mirfilterbank('ragtime');
+%   MIRPLAYER(FEATURES)
+%
+%   or
+%   FEATURES = mirfeatures('ragtime');
+%   MIRPLAYER(f)
+%
+%   Display audio file
+%   a = miraudio('ragtime');
+%   MIRPLAYER(a)
+%
+%   Display feature(s) computed for multiple audio files
+%   cd MIRToolboxDemos/; % specify here any folder that contains audio files
+%   FEATURES = mirbrightness('Folder','Frame');
+%   MIRPLAYER(FEATURES)
+%
+%   or display only the first and the fifth audio file
+%   SELECT = [1,5];
+%   MIRPLAYER(FEATURES,SELECT)
+%
+%Certain limitations in the functionality:
+%- Not optimized for displaying song level features (such as those 
+%   extracted without the 'Frame' parameter).
+%
+%   See also MIRPLAY.
 
-%TODO
-% implement in OOP
-% display seconds of the playback
-% display frame length and hop factor of the feature
-% possibility to add more axes/delete axes, select an axis on which to put a feature
-% save settings (axes, selected features, colors)
-% display help in a toolbar
-% visualize multidimensional data: mfcc, tempo, chromagram
-% print the current figure in a file (good for presentations)
 
-
-if ischar(arg) %session data given in a file
-    if (exist(strcat(arg,'/featureInfo.mat'),'file') ~=2) || ~exist(strcat(arg,'/1.wav'),'file')
+if ischar(FEATURES) %session data given in a file
+    if (exist(strcat(FEATURES,'/featureInfo.mat'),'file') ~=2) || ~exist(strcat(FEATURES,'/1.wav'),'file')
         error('Session data file not found in a MATLAB file.');
     end
     disp('Loading the session. Please wait...');
-    load(strcat(arg,'/featureInfo.mat'));
-    if ~exist('features','var') || ~exist('songNames','var') || ~exist('xlims','var') || ~exist('songSampling','var')
+    load(strcat(FEATURES,'/featureInfo.mat'));
+    if ~exist('feat_info','var') || ~exist('songNames','var') || ~exist('xlims','var') || ~exist('songSampling','var')
         error('Session feature data file is not compatible with MIRplayer');
     end
-    nBins=size(features.distribution,2);
+    nBins=size(feat_info.distribution,2);
     songs=1:length(songNames);
 else
     %the first argument should be the feature set
-    if ~isstruct(arg) && ~iscell(arg) && ~isa(arg,'mirdata')
+    if ~isstruct(FEATURES) && ~iscell(FEATURES) && ~isa(FEATURES,'mirdata')
         error('The first input argument should be struct or mirdata variable.');
     end
     
-    if nargin>2
-        songs=int8(unique(select));
+    if nargin==2
+        songs=int8(unique(SELECT));
         
         %if any(songs)<1 || any(songs)>length(songNames)
         %    error('The second input argument should be an integer array of songs to be included in the analysis.');
@@ -46,12 +75,11 @@ else
     
     nBins=100; %resolution of the feature distributions (for visualization)
     smoothingFactor=2;%round(max(3,nBins/10)); %for median filtering the distribution
-    features=getFeatureInfo(arg, nBins,smoothingFactor,songs);
-    %clear('arg');
+    feat_info=getFeatureInfo(FEATURES, nBins,smoothingFactor,songs);
     
     %TODO: Audio could also be shown without features. Just to be able to check
     %out the songs before extracting features.
-    if isempty(features)
+    if isempty(feat_info)
         error('Please provide a feature set with at least one mirscalar type of feature.');
     end
     
@@ -92,9 +120,9 @@ pointOnSlider=[];
 
 %mirchunklim=5000000;
 
-nFeatures=length(features.names);
+nFeatures=length(feat_info.names);
 
-guiColor=[.9,.9,.9];
+guiColor=[.93,.93,.93];
 pointerColor1='k'; %Black
 %peakColor='r'; %Red
 %featureColors=[0,0,0;guiColor;0,.6,0;.9,.7,0;0,0,.9;.8,0,0];%0,.5,0;.9,.6,0;0,0,.8;.6,0,0]; %available rgb values for plotting the features
@@ -164,50 +192,45 @@ fig    =   figure(...       % the main GUI figure
     'NumberTitle','off', ...
     'WindowButtonDownFcn', @startDragFcn, ...
     'Color', guiColor);
-menuItems = uimenu('Parent',fig,'Label','File');
+%menuItems = uimenu('Parent',fig,'Label','File');
 %uimenu(menuItems,'Label','Print','Callback','printpreview');
-uimenu(menuItems,'Label','Save session','Callback',@saveSession);
-uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Callback',@quitSession);
+%uimenu(menuItems,'Label','Save session','Callback',@saveSession);
+%uimenu(menuItems,'Label','Quit session','Separator','on','Accelerator','Q','Callback',@quitSession);
 
-    function saveSession(hObject,eventdata)
-        folderName=inputdlg('Folder name','Save session');
-        if isempty(folderName{1})
-            return
-        else
-            mkdir(folderName{1});
-            save(strcat(folderName{1},'/featureInfo'), 'features','songNames','xlims','songSampling');
-        end
-        
-        for i=1:length(songs)
-            ind=songs(i);
-            %if withMiraudio
-            %    wavwrite(songData{ind}{1},songSampling{ind},16,strcat(folderName{1},'/',num2str(i),'.wav'));
-            %else
-            %    copyfile(strcat(a,'/',num2str(ind),'.wav'), strcat(folderName{1},'/',num2str(i),'.wav'));
-            %end
-        end
-        
-        
-    end
+%     function saveSession(hObject,eventdata)
+%         folderName=inputdlg('Folder name','Save session');
+%         if isempty(folderName{1})
+%             return
+%         else
+%             mkdir(folderName{1});
+%             save(strcat(folderName{1},'/featureInfo'), 'feat_info','songNames','xlims','songSampling');
+%         end
+%         
+%         for i=1:length(songs)
+%             ind=songs(i);
+%         end
+%         
+%         
+%     end
 
-    function quitSession(hObject,eventdata)
-        quitting = questdlg('Save session before quitting?','Quit','Don''t save','Cancel','Save', 'Save');
-        if isempty(quitting) || isequal(quitting,'Cancel')
-            return;
-        elseif isequal(quitting,'Save')
-            java.lang.Runtime.getRuntime.gc; %Java garbage collection
-            saveSession;
-            if ishandle(fig)
-                close(fig);
-            end
-        else
-            if ishandle(fig)
-                close(fig);
-            end
-        end
-    end
+%     function quitSession(hObject,eventdata)
+%         quitting = questdlg('Save session before quitting?','Quit','Don''t save','Cancel','Save', 'Save');
+%         if isempty(quitting) || isequal(quitting,'Cancel')
+%             return;
+%         elseif isequal(quitting,'Save')
+%             java.lang.Runtime.getRuntime.gc; %Java garbage collection
+%             saveSession;
+%             if ishandle(fig)
+%                 close(fig);
+%             end
+%         else
+%             if ishandle(fig)
+%                 close(fig);
+%             end
+%         end
+%     end
 
-mainPanelPos=[.16,.08,.8,.72];
+mainPanelPos=[.16,.0,.8,.8];
 MainPanel = uipanel(...
     'Parent', fig, ...
     'Units', 'normalized', ...
@@ -223,7 +246,6 @@ ControlPanel = uipanel(...
     'Title', 'SELECT A SONG', ...
     'TitlePosition','centertop', ...
     'FontSize', 10, ...
-    'FontUnits', 'normalized', ...
     'Clipping', 'off', ...
     'HandleVisibility', 'callback', ...
     'Position',[.16,.82,.8,.16], ...
@@ -233,26 +255,24 @@ ControlPanel = uipanel(...
 FeaturePanel = uipanel(...
     'Parent', fig, ...
     'Title', 'SELECT FEATURES', ...
-    'FontUnits', 'normalized', ...
     'Units', 'normalized', ...
     'Clipping', 'on', ...
     'HandleVisibility', 'callback', ...
-    'Position',[.01, 0.23, mainPanelPos(1)-.05, 0.77], ...
+    'Position',[.01, 0.1, mainPanelPos(1)-.05, 0.9], ...
     'BorderType','none', ...
     'BackGroundColor', guiColor, ...
     'Visible','on');
-DistPanel = uipanel(...
-    'Parent', fig, ...
-    'Title', 'FEATURE DISTRIBUTION', ...
-    'FontSize', 8, ...
-    'FontUnits', 'normalized', ...
-    'Units', 'normalized', ...
-    'Clipping', 'off', ...
-    'HandleVisibility', 'callback', ...
-    'Position',[.01,.08,mainPanelPos(1)-.05,.14], ...
-    'BackGroundColor', guiColor, ...
-    'BorderType','none', ...
-    'Visible','on');
+% DistPanel = uipanel(...
+%     'Parent', fig, ...
+%     'Title', 'FEATURE DISTRIBUTION', ...
+%     'FontSize', 8, ...
+%     'Units', 'normalized', ...
+%     'Clipping', 'off', ...
+%     'HandleVisibility', 'callback', ...
+%     'Position',[.01,.08,mainPanelPos(1)-.05,.14], ...
+%     'BackGroundColor', guiColor, ...
+%     'BorderType','none', ...
+%     'Visible','on');
 outerPos=get(fig,'OuterPosition');
 ratioPos=outerPos(3)*mainPanelPos(3)/(outerPos(4)*mainPanelPos(4));
 aH      =   axes(...         % the axes for plotting
@@ -260,7 +280,8 @@ aH      =   axes(...         % the axes for plotting
     'Units', 'normalized', ...
     'HandleVisibility','callback', ...
     'Visible','off', ...
-    'Position',[0 0 1 1]);
+    'Clipping', 'on', ...    
+    'Position',[0.05 0.1 0.95 0.9]);
 xlabel(aH,'Time (s)');
 ylabel(aH,'Feature value');
 PPSsize=[.15,.3];
@@ -271,7 +292,7 @@ PlayPauseButton  =   uicontrol(...
     'CData',playIcon, ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[0,.4,.05 .5], ...%[.1,0.85,buttonSize],...
+    'Position',[0,0.6,0.04,0.4], ...%[0,0.4,.05 .5], ...%[.1,0.85,buttonSize],...
     'Tag','play', ...
     'CallBack',@playPausePlayer);
 StopButton  =   uicontrol(...
@@ -280,7 +301,7 @@ StopButton  =   uicontrol(...
     'CData',stopIcon, ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[.06,.4,.05 .5],...
+    'Position',[0.04,0.6,0.04,0.4], ...%[.06,.4,.05 .5],...
     'Tag','stop', ...
     'CallBack',@stopPlayer);
 audioPopupmenuH=   uicontrol(...    % list of available audio
@@ -289,7 +310,7 @@ audioPopupmenuH=   uicontrol(...    % list of available audio
     'Position',[.25 .7 .5 .1],...
     'Callback', @selectSong, ...
     'HandleVisibility','callback', ...
-    'String',features.songNames,...
+    'String',feat_info.songNames,...
     'TooltipString','Available audio files', ...
     'Style','popupmenu');
 
@@ -324,7 +345,7 @@ zoomInButton  =   uicontrol(...
     'Style','PushButton', ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[.943 .5 .03 .5], ...%[.1,0.85,buttonSize],...
+    'Position',[.944 .55 .027 .45], ...%[.1,0.85,buttonSize],...
     'CData',zoomInIcon, ...
     'Tag', 'in', ...
     'TooltipString','Horizontally zoom in the feature axes', ...
@@ -334,7 +355,7 @@ zoomOutButton  =   uicontrol(...
     'Style','PushButton', ...
     'Units','normalized',...
     'HandleVisibility','callback', ...
-    'Position',[.973 .5 .03 .5], ...%[.1,0.85,buttonSize],...
+    'Position',[.974 .55 .027 .45], ...%[.1,0.85,buttonSize],...
     'CData',zoomOutIcon, ...
     'Tag', 'out', ...
     'TooltipString','Horizontally zoom out the feature axes', ...
@@ -348,7 +369,7 @@ sliderAxes  =   axes(...
     'YTick',[], ...
     'Xlim',[0,1], ...
     'Ylim', [0,1], ...
-    'Position',[0,0,1,.5]);%, ...
+    'Position',[0.05,0,0.95,.5]);%, ...
 %'Visible', 'off', ...);
 sliderH=patch( ...
     'Parent',sliderAxes, ...
@@ -367,7 +388,8 @@ followPointerButton  =   uicontrol(...
     'HandleVisibility','callback', ...
     'String', 'Follow playhead', ...
     'TooltipString','Follow playhead position when playing', ...
-    'Position',[.82 .5 .12 .5], ...
+    'Position',[.82 .55 .12 .5], ...
+    'BackGroundColor',guiColor, ...
     'CallBack', @followPointer);%, ...
 
 loopingButton  =   uicontrol(...
@@ -377,7 +399,8 @@ loopingButton  =   uicontrol(...
     'HandleVisibility','callback', ...
     'String', 'Looping', ...
     'TooltipString','Loop play in the selected time limits', ...
-    'Position',[.70 .5 .12 .5], ...
+    'Position',[.70 .55 .12 .5], ...
+    'BackGroundColor',guiColor, ...
     'CallBack',@setLooping);
 songThumbnailH=line( ...
     'Parent',sliderAxes, ...
@@ -393,64 +416,61 @@ smallPointerH=line( ...
 z=zoom(aH);
 setAxesZoomMotion(z,aH,'horizontal');
 
-distAxes=axes(...
-    'Parent',DistPanel, ...
-    'Units','normalized',...
-    'Position', [-.01,0,1,.95], ...
-    'Xlim',[0,1], ...
-    'Ylim',[0,1], ...
-    'Xtick',[], ...
-    'Ytick',[], ...
-    'LineWidth', .00001, ...
-    'Color', guiColor);
-featureDistPatch=patch(...
-    'Parent',distAxes, ...
-    'YData',zeros(1,nBins+2), ...
-    'XData',[0:1/(nBins-1):1,1,0], ...
-    'FaceAlpha',.2, ...
-    'EdgeAlpha',.4, ...
-    'FaceColor','r', ...
-    'EdgeColor','r');
-songDistPatch=patch(...
-    'Parent',distAxes, ...
-    'YData',[0,0], ...
-    'XData',[0:1/(nBins-1):1,1,0], ...
-    'FaceAlpha',.2, ...
-    'EdgeAlpha',.4, ...
-    'FaceColor','g', ...
-    'EdgeColor','g');
-
-text('Parent',distAxes, ...
-    'String','song', ...
-    'FontSize',8, ...
-    'FontUnits','normalized',...
-    'Units','normalized', ...
-    'Position', [0,-.2], ...
-    'Color', [0,.5,0]);
-text('Parent',distAxes, ...
-    'String','all songs', ...
-    'FontSize',8, ...
-    'FontUnits','normalized',...
-    'Units','normalized', ...
-    'Position', [.2,-.2], ...
-    'Color', [.5,0,0]);
-noDataText=text('Parent',distAxes, ...
-    'String','NO SONG DATA', ...
-    'Units','normalized', ...
-    'Position',[.5,.5], ...
-    'HorizontalAlignment', 'center', ...
-    'VerticalAlignment','Middle', ...
-    'FontSize',12, ...
-    'FontUnits', 'normalized', ...
-    'FontWeight', 'bold', ...
-    'Color',[0,.5,0], ...
-    'Visible', 'off');
+% distAxes=axes(...
+%     'Parent',DistPanel, ...
+%     'Units','normalized',...
+%     'Position', [.2,0.2,0.7,.8], ...
+%     'Xlim',[0,1], ...
+%     'Ylim',[0,1], ...
+%     'Xtick',[], ...
+%     'Ytick',[], ...
+%     'LineWidth', .00001, ...
+%     'Color', guiColor);
+% featureDistPatch=patch(...
+%     'Parent',distAxes, ...
+%     'YData',zeros(1,nBins+2), ...
+%     'XData',[0:1/(nBins-1):1,1,0], ...
+%     'FaceAlpha',.2, ...
+%     'EdgeAlpha',.4, ...
+%     'FaceColor','r', ...
+%     'EdgeColor','r');
+% songDistPatch=patch(...
+%     'Parent',distAxes, ...
+%     'YData',[0,0], ...
+%     'XData',[0:1/(nBins-1):1,1,0], ...
+%     'FaceAlpha',.2, ...
+%     'EdgeAlpha',.4, ...
+%     'FaceColor','g', ...
+%     'EdgeColor','g');
+% 
+% text('Parent',distAxes, ...
+%     'String','song', ...
+%     'FontSize',8, ...
+%     'Units','normalized', ...
+%     'Position', [0,-.2], ...
+%     'Color', [0,.5,0]);
+% text('Parent',distAxes, ...
+%     'String','all songs', ...
+%     'FontSize',8, ...
+%     'Units','normalized', ...
+%     'Position', [.2,-.2], ...
+%     'Color', [.5,0,0]);
+% noDataText=text('Parent',distAxes, ...
+%     'String','NO SONG DATA', ...
+%     'Units','normalized', ...
+%     'Position',[.5,.5], ...
+%     'HorizontalAlignment', 'center', ...
+%     'VerticalAlignment','Middle', ...
+%     'FontSize',12, ...
+%     'FontWeight', 'bold', ...
+%     'Color',[0,.5,0], ...
+%     'Visible', 'off');
 
 
 
-vertRect=[.1,.15;.9,.15;.9,.85;.1,.85];
+%vertRect=[.1,.15;.9,.15;.9,.85;.1,.85];
 
-vrCreate=[0;1;1;0];
+%vrCreate=[0;1;1;0];
 
 for featureInd=1:nFeatures
     selectFeatureButton{featureInd}  =   uicontrol(...
@@ -458,12 +478,13 @@ for featureInd=1:nFeatures
         'Style','CheckBox', ...
         'Units','normalized',...
         'HandleVisibility','callback', ...
-        'TooltipString',[sprintf('%s/',features.fields{featureInd}{1:(end-1)}),regexprep(features.names{featureInd},'.*/','')], ...
+        'TooltipString',[sprintf('%s/',feat_info.fields{featureInd}{1:(end-1)}),regexprep(feat_info.names{featureInd},'.*/','')], ...
         'CallBack', @selectFeatureCallback, ...
-        'String',features.names{featureInd}, ...
+        'String',feat_info.names{featureInd}, ...
         'Tag',num2str(featureInd), ...
+        'BackGroundColor',guiColor, ...
         'Position',[0 (nFeatures-featureInd)/nFeatures 1 1]);%, ...
-    if features.isSongLevel(featureInd), set(selectFeatureButton{featureInd},'ForegroundColor',[.5,.5,.5], ...
+    if feat_info.isSongLevel(featureInd), set(selectFeatureButton{featureInd},'ForegroundColor',[.5,.5,.5], ...
             'TooltipString',[get(selectFeatureButton{featureInd},'TooltipString'), ' (song-level feature, only distribution shown)']); end %,'Enable','off'); end
     
     extent=get(selectFeatureButton{featureInd},'Extent');
@@ -523,8 +544,7 @@ end
         for i=1:length(featureAxes)
             set(featureAxes{i},'Xlim',xlim(1)+sliderHLim(1:2)*(xlim(2)-xlim(1)));
         end
-        
-        CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
+
         drawnow
     end
 
@@ -776,7 +796,7 @@ end
         end
         
         %prevent distracting pushes of buttons
-        for fi=selectFeatureButton(features.isSongLevel==0)
+        for fi=selectFeatureButton(feat_info.isSongLevel==0)
             set(fi{1},'Enable','off');
         end
         
@@ -790,7 +810,7 @@ end
         end
         
         songInd=get(audioPopupmenuH, 'Value');
-        song = miraudio(features.songNames{songInd});
+        song = miraudio(feat_info.songNames{songInd});
         
         %start and end in seconds
         xlim=get(song,'Pos');
@@ -842,12 +862,12 @@ end
         for selectedFeature=selectedFeatures
             selectFeature(songInd,selectedFeature);
         end
-        if length(selectedFeatures)>0
-            showFeatureStats(selectedFeatures(end));
-        end
+        %if length(selectedFeatures)>0
+        %    showFeatureStats(selectedFeatures(end));
+        %end
         
         %prevent distracting pushes of buttons
-        for fi=selectFeatureButton(features.isSongLevel==0)
+        for fi=selectFeatureButton(feat_info.isSongLevel==0)
             set(fi{1},'Enable','on');
         end
         
@@ -862,19 +882,24 @@ end
         songInd=get(audioPopupmenuH, 'Value');
         featureState=get(hObject,'Value');
         selectedFeature=str2double(get(hObject,'Tag'));
-        if features.isSongLevel(selectedFeature), set(hObject,'Value',false); end
+        if feat_info.isSongLevel(selectedFeature), set(hObject,'Value',false); end
         if featureState
-            if features.isSongLevel(selectedFeature)==0,
-                selectedFeatures=[selectedFeatures,selectedFeature];
+            if feat_info.isSongLevel(selectedFeature)==0,
+                selectedFeatures=[selectedFeatures,repmat(selectedFeature,1,feat_info.numAxes(selectedFeature))];
                 selectFeature(songInd, selectedFeature);
             end
-            showFeatureStats(selectedFeature);
+            %showFeatureStats(selectedFeature);
         else
             %remove feature
-            if features.isSongLevel(selectedFeature)==0
+            if feat_info.isSongLevel(selectedFeature)==0
                 removed=find(selectedFeatures==selectedFeature);
-                cla(featureAxes{removed});
-                set(featureAxes{removed},'Visible','off');
+                for r = removed
+                    cla(featureAxes{r});
+                    set(featureAxes{r},'Visible','off');
+                end
+                for i = 1:(length(featureAxes))
+                    set(get(featureAxes{i},'XLabel'),'visible','off');                    
+                end
                 %set(playheads{removed},'Visible','off');
                 featureAxes(removed)=[];
                 framePos(removed)=[];
@@ -887,7 +912,7 @@ end
                 scaleAxes(length(selectedFeatures));
                 if ~isempty(selectedFeatures)
                     set(get(featureAxes{end},'XLabel'),'visible','on');
-                end
+                end                
             end
         end
         
@@ -900,6 +925,81 @@ end
 
     function selectFeature(songInd, selectedFeature)
         
+        %TODO
+        %incorporate everything within this if statement into a more
+        %general approach of handling multi-axis features.
+        if feat_info.numAxes(selectedFeature)>1 && feat_info.cellinds(selectedFeature)==0
+            tmp=['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end})];
+            if strcmp(tmp(end),'.'), tmp=tmp(1:(end-1)); end
+            display(eval(tmp));%,featureAxes{nAxes},songInd);            
+            disp_figure = gcf;
+            set(gcf,'visible','off');
+            if ~isa(eval(tmp),'mirtemporal')
+                    framePos_tmp=get(eval(tmp),'FramePos');
+             else
+                framePos_tmp=get(eval(tmp),'Time');
+                framePos_tmp{songInd}{1} = [framePos_tmp{songInd}{1}';framePos_tmp{songInd}{1}'];
+            end
+            axis_children = get(disp_figure ,'Children');
+            print_title=true;
+            for i = 1:size(axis_children)
+                axis_child = axis_children(i);
+                ch = get(axis_child,'Children');
+                %this might change in the future
+                if isa(ch,'matlab.graphics.primitive.Text')
+                   feat_sub_number = get(ch,'String');
+                else
+                    featureAxes{length(featureAxes)+1}=copy(handle(aH));
+                    nAxes=length(featureAxes);
+                    set(featureAxes{nAxes},'Parent',get(aH,'Parent'));
+                    scaleAxes(nAxes);
+                    axes(featureAxes{nAxes});
+                    set(ch,'Parent',featureAxes{nAxes})
+                    %set(featureAxes{nAxes},'Children',get(axis_child,'Children'))
+                    
+                    set(featureAxes{nAxes},'Visible','on','Xlim',get(aH,'Xlim'));%,'ButtonDownFcn', @startDragFcn);
+                    if print_title
+                        set(get(featureAxes{nAxes},'Title'),'String',feat_info.titles{selectedFeature});                                                            
+                        print_title=false;
+                    end
+                    set(get(featureAxes{nAxes},'YLabel'),'String',feat_sub_number);
+                    
+                    if length(framePos_tmp{songInd})>1 %|| isequal(features.types{selectedFeature},'miraudio')
+                        framePos(nAxes)={[NaN;NaN]};
+                    elseif iscell(framePos_tmp{songInd})
+                        framePos(nAxes)=framePos_tmp{songInd};
+                    else
+                        framePos(nAxes)=framePos_tmp(songInd);
+                    end
+                    
+                    %set(get(featureAxes{nAxes},'Children'),'AlphaData',.5)
+                    ttl=get(featureAxes{nAxes},'Title');
+                    set(ttl,'String',regexprep(get(ttl,'String'),',.*',''));
+                    xlab = get(featureAxes{nAxes},'xlabel');
+                    set(xlab,'String',get(xlab,'String'));
+                    playheads{nAxes}=copy(handle(pointerH));
+                    ydata=get(featureAxes{nAxes},'ylim');
+                    set(playheads{nAxes},'Parent',featureAxes{nAxes},'YData',getydata(ydata));
+                    set(featureAxes{nAxes},'ylim',ydata);
+                    
+                    frameSummary(nAxes,1:size(framePos{nAxes},2))=mean(framePos{nAxes});
+                    frameSummary(frameSummary==0)=inf;
+                    CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
+                    %if ~strcmp(feat_info.types{selectedFeature},'miraudio') && ~strcmp(feat_info.types{selectedFeature},'mirenvelope')
+                    %    set(playheads{nAxes},'XData',getxdata(framePos{nAxes}(:,CurrentFrame(nAxes))),'Visible','on');
+                    %else
+                    %    set(playheads{nAxes},'Visible','off');
+                    %end
+                    drawnow                    
+                end
+            end
+            %%if play button is activated
+            if strcmp(get(PlayPauseButton,'Tag'),'pause')            
+                play(player,CurrentSample);
+            end
+            close(disp_figure);
+            return
+        end
         
         if not(ishandle(fig))
             return
@@ -913,23 +1013,27 @@ end
         %create new axis and place the feature
         featureAxes{length(featureAxes)+1}=copy(handle(aH));
         nAxes=length(featureAxes);
+        set(featureAxes{nAxes},'Parent',get(aH,'Parent'));
         scaleAxes(nAxes);
         axes(featureAxes{nAxes});
-        if features.cellinds(selectedFeature)>0
-            display(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
-            framePos_tmp=get(eval(['arg',sprintf('.%s',features.fields{selectedFeature}{1:end}),'{',num2str(features.cellinds(selectedFeature)),'}']),'FramePos');
-        elseif features.cellinds(selectedFeature)==0
-            tmp=['arg',sprintf('.%s',features.fields{selectedFeature}{1:end})];
+        if feat_info.cellinds(selectedFeature)>0
+            display(eval(['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end}),'{',num2str(feat_info.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
+            framePos_tmp=get(eval(['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end}),'{',num2str(feat_info.cellinds(selectedFeature)),'}']),'FramePos');
+        elseif feat_info.cellinds(selectedFeature)==0
+            tmp=['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end})];
             if strcmp(tmp(end),'.'), tmp=tmp(1:(end-1)); end
             
             
-            if features.isMirdata(selectedFeature)
-            display(eval(tmp),featureAxes{nAxes},songInd);
-            framePos_tmp=get(eval(tmp),'FramePos');
-            else
-                
-                
-                
+            if feat_info.isMirdata(selectedFeature)
+                display(eval(tmp),featureAxes{nAxes},songInd);
+                %framePos_tmp=get(eval(tmp),'FramePos');
+                if ~isa(eval(tmp),'mirtemporal')
+                    framePos_tmp=get(eval(tmp),'FramePos');
+                else
+                    framePos_tmp=get(eval(tmp),'Time');
+                    framePos_tmp{songInd}{1} = [framePos_tmp{songInd}{1}';framePos_tmp{songInd}{1}'];
+                end
+            else                
                 %display(eval(tmp),featureAxes{nAxes},songInd);
                 framePos_tmp=eval([tmp,'.framepos']);
                 plot(mean(framePos_tmp{songInd}),eval([tmp,'.data{songInd}']));
@@ -940,7 +1044,7 @@ end
         if length(framePos_tmp{songInd})>1 %|| isequal(features.types{selectedFeature},'miraudio')
             framePos(nAxes)={[NaN;NaN]};
         elseif iscell(framePos_tmp{songInd})
-        framePos(nAxes)=framePos_tmp{songInd};
+            framePos(nAxes)=framePos_tmp{songInd};
         else
             framePos(nAxes)=framePos_tmp(songInd);
         end
@@ -949,24 +1053,27 @@ end
         %set(get(featureAxes{nAxes},'Children'),'AlphaData',.5)
         ttl=get(featureAxes{nAxes},'Title');
         set(ttl,'String',regexprep(get(ttl,'String'),',.*',''));
+        xlab = get(featureAxes{nAxes},'xlabel');
+        set(xlab,'String',get(xlab,'String'));
         playheads{nAxes}=copy(handle(pointerH));
         ydata=get(featureAxes{nAxes},'ylim');
         set(playheads{nAxes},'Parent',featureAxes{nAxes},'YData',getydata(ydata));
-        
-        
-        
-        
+        set(featureAxes{nAxes},'ylim',ydata);
         frameSummary(nAxes,1:size(framePos{nAxes},2))=mean(framePos{nAxes});
         frameSummary(frameSummary==0)=inf;
         CurrentFrame=max(1,sum(frameSummary<(xlim(1)+CurrentSample/Fs),2));
-        set(playheads{nAxes},'XData',getxdata(framePos{nAxes}(:,CurrentFrame(nAxes))),'Visible','on');
+        
+        %if ~strcmp(feat_info.types{selectedFeature},'miraudio') && ~strcmp(feat_info.types{selectedFeature},'mirenvelope')
+        %    set(playheads{nAxes},'XData',getxdata(framePos{nAxes}(:,CurrentFrame(nAxes))),'Visible','on');
+        %else
+        %    set(playheads{nAxes},'Visible','off');
+        %end
+        
         drawnow
         %%if play button is activated
-        if strcmp(get(PlayPauseButton,'Tag'),'pause')
-            
+        if strcmp(get(PlayPauseButton,'Tag'),'pause')            
             play(player,CurrentSample);
         end
-        
     end
 
 
@@ -983,9 +1090,10 @@ end
     function scaleAxes(nAxes)
         apos=get(aH,'Position');
         scaling=(1.5./(1+nAxes))^.25;
+        scaling2 = 1.005-0.005*nAxes;
         for axisInd=1:nAxes;
             
-            set(featureAxes{axisInd},'Position',[apos(1), apos(2)+(nAxes-axisInd)/(nAxes),apos(3),scaling*apos(4)*1/nAxes]);
+            set(featureAxes{axisInd},'Position',[apos(1), apos(2)+scaling2*(nAxes-axisInd)/(nAxes),apos(3),scaling2*scaling*apos(4)*1/nAxes]);
             if axisInd<nAxes,
                 xl=get(featureAxes{axisInd},'XLabel');
                 set(xl,'visible','off');
@@ -1001,37 +1109,37 @@ end
     end
 
 
-    function showFeatureStats(featureInd_stats)
-        songInd=get(audioPopupmenuH, 'Value');
-        
-        
-        ticklabels{1}=num2str(features.valueRange(featureInd_stats,1));
-        ticklabels{2}=num2str(mean(features.valueRange(featureInd_stats,:)));
-        ticklabels{3}=num2str(features.valueRange(featureInd_stats,2));
-        
-        if length(ticklabels{1})>4
-            ticklabels{1}=num2str(features.valueRange(featureInd_stats,1),'%1.2e');
-        end
-        if length(ticklabels{2})>4
-            ticklabels{2}=num2str(mean(features.valueRange(featureInd_stats,:)),'%1.2e');
-        end
-        if length(ticklabels{3})>4
-            ticklabels{3}=num2str(features.valueRange(featureInd_stats,2),'%1.2e');
-        end
-        
-        if features.emptysong(songInd)
-            set(noDataText,'Visible','on')
-        else
-            set(noDataText,'Visible','off')
-        end
-        set(DistPanel,'Title',upper(regexprep(features.names{featureInd_stats},'.*/','')));
-        set(distAxes,'Xtick',[0,.5,1],'XTickLabel',ticklabels);
-        set(featureDistPatch,'YData',[features.distribution(featureInd_stats,:),0,0]);
-        if ~isempty(features.songDistributions{featureInd_stats})
-            set(songDistPatch,'YData',[features.songDistributions{featureInd_stats}(songInd,:),0,0]/2);
-        end
-        drawnow
-    end
+%     function showFeatureStats(featureInd_stats)
+%         songInd=get(audioPopupmenuH, 'Value');
+%         
+%         
+%         ticklabels{1}=num2str(feat_info.valueRange(featureInd_stats,1));
+%         ticklabels{2}=num2str(mean(feat_info.valueRange(featureInd_stats,:)));
+%         ticklabels{3}=num2str(feat_info.valueRange(featureInd_stats,2));
+%         
+%         if length(ticklabels{1})>4
+%             ticklabels{1}=num2str(feat_info.valueRange(featureInd_stats,1),'%1.2e');
+%         end
+%         if length(ticklabels{2})>4
+%             ticklabels{2}=num2str(mean(feat_info.valueRange(featureInd_stats,:)),'%1.2e');
+%         end
+%         if length(ticklabels{3})>4
+%             ticklabels{3}=num2str(feat_info.valueRange(featureInd_stats,2),'%1.2e');
+%         end
+%         
+%         if feat_info.emptysong(songInd)
+%             set(noDataText,'Visible','on')
+%         else
+%             set(noDataText,'Visible','off')
+%         end
+%         set(DistPanel,'Title',upper(regexprep(feat_info.names{featureInd_stats},'.*/','')));
+%         set(distAxes,'Xtick',[0,.5,1],'XTickLabel',ticklabels);
+%         set(featureDistPatch,'YData',[feat_info.distribution(featureInd_stats,:),0,0]);
+%         if ~isempty(feat_info.songDistributions{featureInd_stats})
+%             set(songDistPatch,'YData',[feat_info.songDistributions{featureInd_stats}(songInd,:),0,0]/2);
+%         end
+%         drawnow
+%     end
 
     function fixException(exception)
         message=exception.getReport('basic');
