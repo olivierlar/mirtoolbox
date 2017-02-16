@@ -12,7 +12,7 @@ if isempty(y)
 end
 manychannels = 0;
 y1 = y{1};
-if length(y) == 1 
+if length(y) == 1
     y = y{1};
     if length(x) == 1
         x = x{1};
@@ -41,7 +41,7 @@ l = size(y1,3);     % Number of channels
 il = (1-0.15)/l;
 
 if iscell(y)
-    if size(y{1},3) > 1 && size(y{1},1) == 1  
+    if size(y{1},3) > 1 && size(y{1},1) == 1
         for j = 1:c
             y{j} = reshape(y{j},size(y{j},2),size(y{j},3));
             y{j} = y{j}';
@@ -81,8 +81,8 @@ if not(iscell(y)) && l > 20
     end
 end
 curve = (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
-        ...%(iscell(y) && size(y{1}) == 1) || ...
-        c == 1 || (strcmp(xlab,'time (s)') && not(manychannels));
+    ...%(iscell(y) && size(y{1}) == 1) || ...
+    c == 1 || (strcmp(xlab,'time (s)') && not(manychannels));
 if curve
     for i = 1:l
         if l>1
@@ -141,8 +141,8 @@ if curve
                 if isempty(cl)% || isempty(cl{1}) ... this because of a bug..
                     %|| isempty(cl{i})
                     colr = h;
-                %elseif iscell(cl{i})
-                %    colr = cl{i}(h);
+                    %elseif iscell(cl{i})
+                    %    colr = cl{i}(h);
                 elseif length(cl) == 1
                     colr = cl;
                 else
@@ -154,12 +154,12 @@ if curve
                     yhi(isinf(yhi)) = [];
                     if ~isempty(yhi)
                         rectangle('Position',[x{h}(1),...
-                                              min(min(yhi)),...
-                                              x{h}(end)-x{h}(1),...
-                                              max(max(yhi))-...
-                                              min(min(yhi))]+1e-16,...
-                                  'EdgeColor',num2col(colr),...
-                                  'Curvature',.1,'LineWidth',1)
+                            min(min(yhi)),...
+                            x{h}(end)-x{h}(1),...
+                            max(max(yhi))-...
+                            min(min(yhi))]+1e-16,...
+                            'EdgeColor',num2col(colr),...
+                            'Curvature',.1,'LineWidth',1)
                     end
                 end
             end
@@ -186,9 +186,9 @@ if curve
                                 pmj = pm{h}{1,j,i}(order);
                                 [R C] = find(pmj==k);
                                 if iscell(xj)
-                                    plot(ppj(R,C)-1,yk(ppj(R,C)),'or') 
+                                    plot(ppj(R,C)-1,yk(ppj(R,C)),'or')
                                 else
-                                    plot(xj(ppj(R,C)),yk(ppj(R,C)),'or') 
+                                    plot(xj(ppj(R,C)),yk(ppj(R,C)),'or')
                                 end
                             else
                                 if lk > 1
@@ -201,22 +201,22 @@ if curve
                             if not(isempty(ap)) && not(isempty(ap{h}))
                                 apj = ap{h}{1,j,i};
                                 if ~isempty(apj)
-                                    plot(xj(apj),yk(apj),'dr') 
+                                    plot(xj(apj),yk(apj),'dr')
                                     for g = 1:length(ppj)
                                         line([xj(ppj(g)),xj(apj(g))],...
-                                             [yk(ppj(g)),yk(apj(g))],...
-                                             'Color','r')
+                                            [yk(ppj(g)),yk(apj(g))],...
+                                            'Color','r')
                                     end
                                 end
                             end
                             if not(isempty(rp)) && not(isempty(rp{h}))
                                 rpj = rp{h}{1,j,i};
                                 if ~isempty(rpj)
-                                    plot(xj(rpj(1,:)),yk(rpj(1,:)),'dr') 
+                                    plot(xj(rpj(1,:)),yk(rpj(1,:)),'dr')
                                     for g = 1:size(rpj,2)
                                         line([xj(rpj(1,g)),xj(rpj(2,g))],...
-                                             [yk(rpj(1,g)),yk(rpj(2,g))],...
-                                             'Color','r')
+                                            [yk(rpj(1,g)),yk(rpj(2,g))],...
+                                            'Color','r')
                                     end
                                 end
                             end
@@ -250,8 +250,8 @@ else
         if size(y,4) > 1 || size(y,1) > size(x,1)
             ticky = 0.5:23.5;
             tickylab = {'CM','C#M','DM','D#M','EM','FM','F#M',...
-            'GM','G#M','AM','A#M','BM','Cm','C#m','Dm','D#m','Em',...
-            'Fm','F#m','Gm','G#m','Am','A#m','Bm'};
+                'GM','G#M','AM','A#M','BM','Cm','C#m','Dm','D#m','Em',...
+                'Fm','F#m','Gm','G#m','Am','A#m','Bm'};
         else
             ticky = (1:size(x,1))';
             tickylab = x;
@@ -262,8 +262,8 @@ else
         if size(y{1},4) > 1
             ticky = 0.5:23.5;
             tickylab = {'CM','C#M','DM','D#M','EM','FM','F#M',...
-            'GM','G#M','AM','A#M','BM','Cm','C#m','Dm','D#m','Em',...
-            'Fm','F#m','Gm','G#m','Am','A#m','Bm'};
+                'GM','G#M','AM','A#M','BM','Cm','C#m','Dm','D#m','Em',...
+                'Fm','F#m','Gm','G#m','Am','A#m','Bm'};
         else
             ticky = (1:size(x{1},1))';
             tickylab = x{1};
@@ -280,7 +280,7 @@ else
         for i = 1:l
             if l>1
                 subplot(l,1,l-i+1,'align');
-%                subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
+                %                subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
             end
             hold on
             %surfplot(segt,x{1},repmat(x{1}/x{1}(end)*.1,[1,length(segt)]));
@@ -305,15 +305,15 @@ else
                     end
                     if size(y{j},4) == 1 && not(mel)
                         xxx = [1.5*xx(1,1)-0.5*xx(2,1);...
-                                    (xx(1:end-1)+xx(2:end))/2;...
-                                    1.5*xx(end,1)-0.5*xx(end-1,1)];
+                            (xx(1:end-1)+xx(2:end))/2;...
+                            1.5*xx(end,1)-0.5*xx(end-1,1)];
                     else
                         xxx = (0:size(yy,1))';
                     end
                     if size(fp{j},2) > 1
                         segt = [fp{j}(1,1),...
-                                mean([fp{j}(2,1:end-1);fp{j}(1,2:end)]),...
-                                fp{j}(2,end)];
+                            mean([fp{j}(2,1:end-1);fp{j}(1,2:end)]),...
+                            fp{j}(2,end)];
                     else
                         segt = fp{j}';
                     end
@@ -411,12 +411,32 @@ else
                 ttt = [fp(1,:) 2*fp(1,end)-fp(1,end-1)];
                 if size(y,4) == 1 && not(mel)
                     xxx = [1.5*xx(1)-0.5*xx(2);...
-                           (xx(1:end-1)+xx(2:end))/2;...
-                           1.5*xx(end)-0.5*xx(end-1)];
+                        (xx(1:end-1)+xx(2:end))/2;...
+                        1.5*xx(end)-0.5*xx(end-1)];
                 else
                     xxx = (0:size(yy,1))';
                 end
                 %colormap('gray')
+                %%%% PS: Added 29 March 2016 to handle overlapping frame
+                %%%% positions
+                ttt = unique(round(fp(:),4)); % rounding to 4 decimals due to a strange numerical precision of frame positions
+                ttt_dif = [ttt(1:end-1),ttt(2:end)];
+                yy_intersect = zeros(size(yy,1),size(ttt_dif,1));
+                for ttt_dif_i = 1:size(ttt_dif,1)
+                    
+                    ilens = 0;
+                    for fp_j = 1:size(fp,2)
+                        %intersection length btw a frame and a segment
+                        ilen = max(min(fp(2,fp_j), ttt_dif(ttt_dif_i,2)) - max(fp(1,fp_j), ttt_dif(ttt_dif_i,1)),0);
+                        yy_intersect(:,ttt_dif_i) = yy_intersect(:,ttt_dif_i) + yy(:,fp_j) * ilen;
+                        ilens = ilens + ilen;                       
+                    end
+                    yy_intersect(:,ttt_dif_i) = yy_intersect(:,ttt_dif_i)/ilens;
+                end
+                yy = yy_intersect;
+                ttt = ttt';
+                %%%%
+                
                 surfplot(ttt,xxx,yy);
                 if not(isempty(ticky))
                     set(gca,'ytick',ticky);
@@ -445,20 +465,20 @@ else
                                     continue
                                 end
                                 plot([(ttt(prej)+ttt(prej+1))/2,...
-                                      (ttt(j)+ttt(j+1))/2],...
-                                     [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
-                                      (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
-                                     'k','LineWidth',1)
+                                    (ttt(j)+ttt(j+1))/2],...
+                                    [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
+                                    (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
+                                    'k','LineWidth',1)
                                 plot([(ttt(prej)+ttt(prej+1))/2,...
-                                      (ttt(j)+ttt(j+1))/2],...
-                                     [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
-                                      (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
-                                     'w+','MarkerSize',10)
+                                    (ttt(j)+ttt(j+1))/2],...
+                                    [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
+                                    (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
+                                    'w+','MarkerSize',10)
                                 plot([(ttt(prej)+ttt(prej+1))/2,...
-                                      (ttt(j)+ttt(j+1))/2],...
-                                     [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
-                                      (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
-                                     'kx','MarkerSize',10)
+                                    (ttt(j)+ttt(j+1))/2],...
+                                    [(xxx(tp(k,prej))+xxx(tp(k,prej)+1))/2,...
+                                    (xxx(tp(k,j))+xxx(tp(k,j)+1))/2],...
+                                    'kx','MarkerSize',10)
                             end
                             prej = j;
                         end
@@ -537,7 +557,7 @@ if l == 1
         %if (exist('dbv') == 1) && dbv
         %    ylabel([ylab ' (logarithmic scale)']);
         %else
-            ylabel(ylab);
+        ylabel(ylab);
         %end
     elseif manychannels
         ylabel('Channels');
