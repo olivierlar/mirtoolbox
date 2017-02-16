@@ -45,7 +45,6 @@ function h = surfplot(varargin)
 
 % Parse possible Axes input
 [cax,args,nargs] = axescheck(varargin{:});
-error(nargchk(1,4,nargs))
 
 cax = newplot(cax);
 hold_state = ishold(cax);
