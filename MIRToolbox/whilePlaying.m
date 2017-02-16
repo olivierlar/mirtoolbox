@@ -18,19 +18,19 @@ global frameSummary
 global loopingButton
 
 
-
 if not(ishandle(fig))
-   return
+    return
 end
 CurrentSample=get(player,'CurrentSample');
 
+
 %fprintf('Current time: %s\n',num2str(CurrentSample/Fs));
 %if CurrentSample<1 || CurrentSample>player.TotalSamples
-    %set(PlayPauseButton,'Tag','play','cdata',playIcon);
-    %stop(player);
-    %CurrentSample=1;
-    %CurrentFrame(1:end)=1;
-    
+%set(PlayPauseButton,'Tag','play','cdata',playIcon);
+%stop(player);
+%CurrentSample=1;
+%CurrentFrame(1:end)=1;
+
 if  CurrentSample>1
     
     set(smallPointerH,'XData',(CurrentSample-1)/player.TotalSamples*[1,1]);
@@ -41,28 +41,26 @@ if  CurrentSample>1
     CurrentFrame=CurrentFrame_tmp;
     
     
-     for plInd=1:length(gothru)   
-             x=framePos{gothru(plInd)}(:,CurrentFrame(gothru(plInd)));
-             set(playheads{gothru(plInd)},'xdata',getxdata(x));
-     end
+    for plInd=1:length(gothru)
+        x=framePos{gothru(plInd)}(:,CurrentFrame(gothru(plInd)));
+        set(playheads{gothru(plInd)},'xdata',getxdata(x));
+    end
     
     drawnow
-    
     
     sliderHLim=get(sliderH,'XData');
     sliderWidth=sliderHLim(2)-sliderHLim(1);
     
     if get(loopingButton,'Value')
-    
-    CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
-    CurrentSelection(1)=max(1,CurrentSelection(1));
-    CurrentSelection(2)=min(player.TotalSamples,CurrentSelection(2));
-    
-    if CurrentSample>=CurrentSelection(2)
-        pause(player);
-        play(player,CurrentSelection(1));
-    end
-    
+        
+        CurrentSelection=round(sliderHLim([1,2])*player.TotalSamples);
+        CurrentSelection(1)=max(1,CurrentSelection(1));
+        CurrentSelection(2)=min(player.TotalSamples,CurrentSelection(2));        
+        if CurrentSample>=(CurrentSelection(2)-player.TimerPeriod*player.SampleRate)        
+            pause(player);
+            play(player,CurrentSelection(1));
+        end
+        
     end
     
     

@@ -14,6 +14,11 @@ function features=getFeatureInfo(f,nBins,smoothingFactor, songs)
 %    'isSongLevel',[]);
 features={};
 
+if nargin<4, songs=[]; end
+if nargin<3, smoothingFactor=2; end
+if nargin<2, nBins=100; end
+
+
 fieldBranch={};
 fieldInd=0;
 nFeatures=0;
@@ -115,9 +120,6 @@ end
             featureData_tmp=featureData_tmp(songs);
         end
         
-        
-        
-        
         %read the branch of fieldnames to get summarized
         fieldBranch{fieldInd}=fieldName;
         featureName='';
@@ -158,10 +160,12 @@ end
         
         
         features.fields{nFeatures}=fieldBranch;
+        features.titles{nFeatures}=get(scalarFeature,'Title');
         features.names{nFeatures}=featureName;
         features.cellinds(nFeatures)=ci;
         features.types{nFeatures}=class(scalarFeature);
         features.isMirdata(nFeatures)=isMirdata;
+        features.numAxes(nFeatures) = size(featureData_tmp{1}{1},3);
         
         %peaks...
         %peakPos=get(scalarFeature,'PeakPos');
@@ -183,10 +187,10 @@ end
         for song=1:length(featureData_tmp)
             tmp = featureData_tmp{song};
             if iscell(tmp)
-            tmp = tmp{1};
+                tmp = tmp{1};
             end
             if iscell(tmp)
-            tmp = tmp{1};
+                tmp = tmp{1};
             end
             if iscell(tmp)
                 tmp2 = [];
@@ -195,7 +199,6 @@ end
                 end
                 featureData_tmp{song}{1} = tmp2;
             end
-            
             if ~isempty(tmp) && ~all(isnan(tmp(:)))
                 features.minsong(nFeatures,song) = min(tmp(:));
                 minValue = min(tmp(:));
@@ -228,7 +231,14 @@ end
             features.songDistributions{nFeatures} = [];
         else
             for song=1:length(featureData_tmp)
-                %compute distribution of in one song, related to
+                tmp = featureData_tmp{song};
+                if iscell(tmp)
+                    tmp = tmp{1};
+                end
+                if iscell(tmp)
+                    tmp = tmp{1};
+                end
+                %compute distribution in one song, related to
                 %the featureValueRange
                 features.songDistributions{nFeatures}(song,1:nBins)=medfilt1(histc((tmp(:)-features.valueRange(nFeatures,1))/(features.valueRange(nFeatures,2)-features.valueRange(nFeatures,1)),binEdges),smoothingFactor); %histogram, values related to the featureValueRange
                 
@@ -248,7 +258,7 @@ end
         
         %features.data{nFeatures}=featureData_tmp;
         if isMirdata
-        framePos=get(scalarFeature,'FramePos');
+            framePos=get(scalarFeature,'FramePos');
         else
             framePos=scalarFeature.framepos;
         end
@@ -256,9 +266,9 @@ end
             framePos = framePos(songs);
         end
         
-        if iscell(framePos{1}) && length(framePos{1})==1 && size(framePos{1}{1},2) == 1 && ~isa(scalarFeature,'miraudio')
+        if iscell(framePos{1}) && length(framePos{1})==1 && size(framePos{1}{1},2) == 1 && ~isa(scalarFeature,'miraudio') && ~isa(scalarFeature,'mirenvelope')
             features.isSongLevel(nFeatures)=1;
-        elseif ~iscell(framePos{1}) && size(framePos{1},2) == 1 && ~isa(scalarFeature,'miraudio')
+        elseif ~iscell(framePos{1}) && size(framePos{1},2) == 1 && ~isa(scalarFeature,'miraudio') && ~isa(scalarFeature,'mirenvelope')
             features.isSongLevel(nFeatures)=1;
         end
         %features.framePos{nFeatures}=framePos;
