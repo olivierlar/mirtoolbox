@@ -131,7 +131,7 @@ if curve
                         end
                         hold on
                         axis tight
-                        axis 'auto y'
+%                         axis 'auto y'
                     end
                 end
             end
