@@ -13,7 +13,7 @@ if nargin
         try
             matlabpool size;
         catch
-            mirerror('mirparallel','Are you sure Parallel Processing Toolbox is installed?');
+            mirerror('mirparallel','mirparallel does not work for Matlab 2013b and more recent. If you would like MIRtoolbox to be developed for parallel processing or for other purposes, and if you have any funding to suggest, please contact us.')
         end
     end
     mir_parallel = s;
