@@ -1,4 +1,4 @@
-function res = displot(x,y,xlab,ylab,t,fp,pp,tp,tv,ch,multidata,pm,ap,rp,cl)
+function res = displot(x,y,xlab,ylab,t,fp,pp,tp,tv,ch,multidata,pm,ap,rp,cl,ax)
 % graphical display of any data (except mirscalar data) computed by MIRToolbox
 
 %opengl('OpenGLWobbleTesselatorBug',1)
@@ -30,7 +30,9 @@ if isstruct(cl)
     y = cl.centr(:,cl.index);
 end
 
-figure
+if isempty(ax)
+    figure
+end
 
 fp2 = uncell(fp);
 c = size(y,2);

@@ -1,6 +1,9 @@
-function mirdisplay(d,va)
+function mirdisplay(d,va,axis,songs)
 % MIRDATA/DISPLAY display of a MIR data
 
+if nargin<3
+    axis = [];
+end
 disp(' ');
 v = d.data;
 f = d.sr;
@@ -35,7 +38,12 @@ end
 if ld == 0
     disp('No data.');
 else
-    for i = 1:length(v)  %For each audio file        
+    if nargin<4 || isempty(songs) 	
+        songs=1:length(v);
+    end
+    
+    for song = 1:length(songs)  %For each audio file
+        i=songs(song);
         if nargin < 2
             va = inputname(1);
         end
@@ -72,7 +80,7 @@ else
                 cha = [];
             end
             flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i});
+                cha,d.multidata,pm{i},ap{i},rp{i},d.clusters{i},axis);
             if flag
                 fig = get(0,'CurrentFigure');
                 if isa(fig,'matlab.ui.Figure')

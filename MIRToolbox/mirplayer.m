@@ -492,7 +492,7 @@ for featureInd=1:nFeatures
 end
 
 selectSong();
-uistack(fig,'top');
+% uistack(fig,'top');
 
 if exist('logo','var')
     
@@ -929,9 +929,11 @@ end
         %incorporate everything within this if statement into a more
         %general approach of handling multi-axis features.
         if feat_info.numAxes(selectedFeature)>1 && feat_info.cellinds(selectedFeature)==0
+            return
+            
             tmp=['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end})];
             if strcmp(tmp(end),'.'), tmp=tmp(1:(end-1)); end
-            display(eval(tmp));%,featureAxes{nAxes},songInd);            
+            displayer(eval(tmp),featureAxes{nAxes},songInd);            
             disp_figure = gcf;
             set(gcf,'visible','off');
             if ~isa(eval(tmp),'mirtemporal')
@@ -1017,7 +1019,7 @@ end
         scaleAxes(nAxes);
         axes(featureAxes{nAxes});
         if feat_info.cellinds(selectedFeature)>0
-            display(eval(['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end}),'{',num2str(feat_info.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
+            displayer(eval(['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end}),'{',num2str(feat_info.cellinds(selectedFeature)),'}']),featureAxes{nAxes},songInd);
             framePos_tmp=get(eval(['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end}),'{',num2str(feat_info.cellinds(selectedFeature)),'}']),'FramePos');
         elseif feat_info.cellinds(selectedFeature)==0
             tmp=['FEATURES',sprintf('.%s',feat_info.fields{selectedFeature}{1:end})];
@@ -1025,7 +1027,7 @@ end
             
             
             if feat_info.isMirdata(selectedFeature)
-                display(eval(tmp),featureAxes{nAxes},songInd);
+                displayer(eval(tmp),featureAxes{nAxes},songInd);
                 %framePos_tmp=get(eval(tmp),'FramePos');
                 if ~isa(eval(tmp),'mirtemporal')
                     framePos_tmp=get(eval(tmp),'FramePos');
@@ -1034,7 +1036,7 @@ end
                     framePos_tmp{songInd}{1} = [framePos_tmp{songInd}{1}';framePos_tmp{songInd}{1}'];
                 end
             else                
-                %display(eval(tmp),featureAxes{nAxes},songInd);
+                %displayer(eval(tmp),featureAxes{nAxes},songInd);
                 framePos_tmp=eval([tmp,'.framepos']);
                 plot(mean(framePos_tmp{songInd}),eval([tmp,'.data{songInd}']));
             end
