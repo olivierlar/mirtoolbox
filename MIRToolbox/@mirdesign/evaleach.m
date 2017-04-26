@@ -76,6 +76,37 @@ elseif d.chunkdecomposed && isempty(d.tmpfile)
     
     [y d2] = evalnow(d);  
     
+elseif iscell(a)
+    %d.argin = a{2};
+            a{2}.size = w;
+            a{2}.chunk = d.chunk;
+            a{2}.file = d.file;
+            a{2}.channel = d.channel;
+            a{2}.scale = d.scale;
+            a{2}.eval = 1;
+            a{2}.interchunk = d.interchunk;
+            a{2}.sampling = d.sampling;
+            if isstruct(d.frame) && isfield(d.frame,'decomposition') ...
+                                 && not(isempty(d.frame.decomposition))
+                a{2}.chunkdecomposed = 1;
+            else
+                a{2}.chunkdecomposed = d.chunkdecomposed;
+            end
+            if not(isempty(d.frame)) && ...
+               not(strcmp(func2str(d.method),'mirframe'))
+                a{2}.frame = d.frame;
+            end
+            a{2}.ready = 1;
+            a{2}.acrosschunks = d.acrosschunks;
+            a{2}.index = d.index;
+    
+    aux = evaleach(a{2},single,name);
+    if iscell(aux)
+        aux = aux{1};
+    end
+    d.postoption.new = aux;
+    d.argin = a{1};
+    [y d2] = evaleach(d,single,name);
 elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     % Absence of frame decomposition or presence of segment decomposition in the design to evaluate
     % (Or particular frame decomposition, where chunks are not distributed to children (frnochunk).)
