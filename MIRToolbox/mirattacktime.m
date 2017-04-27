@@ -54,7 +54,7 @@ if iscell(o)
     o = o{1};
 end
 po = get(o,'PeakPosUnit');
-pa = get(o,'AttackPosUnit');
+pa = get(o,'OnsetPosUnit');
 at = mircompute(@algo,po,pa,option.scale);
 fp = mircompute(@frampose,pa,po);
 at = mirscalar(o,'Data',at,'FramePos',fp,'Title','Attack Time');

@@ -18,7 +18,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.clusters = orig.clusters;
     d.multidata = orig.multidata;
     d.peak = orig.peak;
-    d.attack = orig.attack;
+    d.onset = orig.onset;
     d.release = orig.release;
     d.track = orig.track;
     d.title = orig.title;
@@ -51,7 +51,7 @@ else
     d.peak.precisepos = {};
     d.peak.preciseval = {};
     d.peak.mode = {};
-    d.attack = {};
+    d.onset = {};
     d.release = {};
     d.track = {};
     d.title = 'Unspecified data';

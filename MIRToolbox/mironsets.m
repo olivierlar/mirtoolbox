@@ -689,7 +689,7 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             'Valleys','Order','Abscissa','NoBegin','NoEnd',noend);
     end
     nop = cell(size(get(o,'Data')));
-    o = set(o,'AttackPos',nop,'ReleasePos',nop);
+    o = set(o,'OnsetPos',nop,'ReleasePos',nop);
 end
 if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
         (isfield(postoption,'release') && not(isequal(postoption.release,0)))
@@ -733,7 +733,7 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
         rl = mircompute(@endrelease,d,pp,rl);
         o = set(o,'ReleasePos',rl);
     end
-    o = set(o,'AttackPos',st,'PeakPos',pp);
+    o = set(o,'OnsetPos',st,'PeakPos',pp);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))

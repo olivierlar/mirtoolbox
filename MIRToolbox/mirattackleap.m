@@ -45,9 +45,9 @@ if iscell(o)
     o = o{1};
 end
 po = get(o,'PeakPos');
-pa = get(o,'AttackPos');
+pa = get(o,'OnsetPos');
 pou = get(o,'PeakPosUnit');
-pau = get(o,'AttackPosUnit');
+pau = get(o,'OnsetPosUnit');
 d = get(o,'Data');
 sl = mircompute(@algo,po,pa,d);
 fp = mircompute(@frampose,pau,pou);

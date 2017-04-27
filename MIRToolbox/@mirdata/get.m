@@ -35,12 +35,12 @@ switch propName
         val = a.multidata;
     case 'PeakPos'
         val = a.peak.pos;
-    case {'PeakPosUnit','AttackPosUnit','ReleasePosUnit'}
+    case {'PeakPosUnit','OnsetPosUnit','ReleasePosUnit'}
         switch propName
             case 'PeakPosUnit'
                 pp = a.peak.pos;
-            case 'AttackPosUnit'
-                pp = a.attack.pos;
+            case 'OnsetPosUnit'
+                pp = a.onset.pos;
             case 'ReleasePosUnit'
                 pp = a.release.pos;
         end
@@ -121,11 +121,11 @@ switch propName
         end
     case 'PeakMode'
         val = a.peak.mode;
-    case 'AttackPos'
-        if isempty(a.attack)
+    case 'OnsetPos'
+        if isempty(a.onset)
             val = [];
         else
-            val = a.attack.pos;
+            val = a.onset.pos;
         end
     case 'ReleasePos'
         if isempty(a.release)

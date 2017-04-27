@@ -45,7 +45,7 @@ transcript = 0;
 if iscell(x)
     o = x{1};
     do = get(o,'PeakVal');
-    da = get(o,'AttackPosUnit');
+    da = get(o,'OnsetPosUnit');
     dr = get(o,'ReleasePosUnit');
     a = x{2};
     s = mirsegment(a,o);
@@ -64,7 +64,7 @@ else
             transcript = 1;
         end
     else
-        da = get(x,'AttackPosUnit');
+        da = get(x,'OnsetPosUnit');
         dr = get(x,'ReleasePosUnit');
     end
 end

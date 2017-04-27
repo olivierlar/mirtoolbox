@@ -67,9 +67,9 @@ if iscell(o)
     o = o{1};
 end
 po = get(o,'PeakPos');
-pa = get(o,'AttackPos');
+pa = get(o,'OnsetPos');
 pou = get(o,'PeakPosUnit');
-pau = get(o,'AttackPosUnit');
+pau = get(o,'OnsetPosUnit');
 sr = get(o,'Sampling');
 d = get(o,'Data');
 sl = mircompute(@algo,po,pa,pou,pau,d,option.meth,sr);

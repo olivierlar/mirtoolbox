@@ -43,7 +43,7 @@ function du = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-pa = get(o,'AttackPos');
+pa = get(o,'OnsetPos');
 pr = get(o,'ReleasePos');
 d = get(o,'Data');
 t = get(o,'Pos');
