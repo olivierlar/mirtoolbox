@@ -17,7 +17,7 @@ if nargin
     chunklim = lim;
 else
     if isempty(chunklim)
-        chunklim = 5e5;
+        chunklim = 5e6;
     end
 end
 
