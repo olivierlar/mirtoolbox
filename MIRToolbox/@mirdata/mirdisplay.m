@@ -23,6 +23,11 @@ if isempty(d.onset)
 else
     op = d.onset.pos;
 end
+if isempty(d.attack)
+    ap = cell(ld);
+else
+    ap = d.attack.pos;
+end
 if isempty(d.release)
     rp = cell(ld);
 else
@@ -80,7 +85,7 @@ else
                 cha = [];
             end
             flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                cha,d.multidata,pm{i},op{i},rp{i},d.clusters{i},axis);
+                cha,d.multidata,pm{i},op{i},ap{i},rp{i},d.clusters{i},axis);
             if flag
                 fig = get(0,'CurrentFigure');
                 if isa(fig,'matlab.ui.Figure')

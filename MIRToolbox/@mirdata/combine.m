@@ -22,6 +22,7 @@ tv = cell(1,l);
 tpp = cell(1,l);
 tpv = cell(1,l);
 op = cell(1,l);
+ap = cell(1,l);
 rp = cell(1,l);
 if isa(c,'temporal')
     nb = cell(1,l);
@@ -67,6 +68,7 @@ for i = 1:l
     tpp{i} = getargin(argin,'TrackPrecisePos');
     tpv{i} = getargin(argin,'TrackPreciseVal');
     op{i} = getargin(argin,'OnsetPos');
+    ap{i} = getargin(argin,'AttackPos');
     rp{i} = getargin(argin,'ReleasePos');
     if isa(c,'temporal')
         ct = getargin(argin,'Centered');
@@ -97,7 +99,7 @@ c = set(c,'Pos',p,'Data',d,'FramePos',fp,'FrameRate',fr,'Channels',ch,...
           'PeakPrecisePos',ppp,'PeakPreciseVal',ppv,...
           'TrackPos',tp,'TrackVal',tv,...
           'TrackPrecisePos',tpp,'TrackPreciseVal',tpv,...
-          'OnsetPos',op,'ReleasePos',rp);
+          'OnsetPos',op,'AttackPos',ap,'ReleasePos',rp);
 if isa(c,'temporal')
     c = set(c,'Centered',ct,'NBits',nb);
 end

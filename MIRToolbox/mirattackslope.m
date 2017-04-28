@@ -47,7 +47,7 @@ function varargout = mirattackslope(orig,varargin)
 
         envmeth.type = 'String';
         envmeth.choice = {'Filter','Spectro'};
-        envmeth.default = 'Filter';
+        envmeth.default = 'Spectro';
     option.envmeth = envmeth;
 
 specif.option = option;
@@ -66,26 +66,26 @@ function sl = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-po = get(o,'PeakPos');
-pa = get(o,'OnsetPos');
-pou = get(o,'PeakPosUnit');
-pau = get(o,'OnsetPosUnit');
+ap = get(o,'AttackPos');
+op = get(o,'OnsetPos');
+apu = get(o,'AttackPosUnit');
+opu = get(o,'OnsetPosUnit');
 sr = get(o,'Sampling');
 d = get(o,'Data');
-sl = mircompute(@algo,po,pa,pou,pau,d,option.meth,sr);
-fp = mircompute(@frampose,pau,pou);
+sl = mircompute(@algo,op,ap,opu,apu,d,option.meth,sr);
+fp = mircompute(@frampose,opu,apu);
 sl = mirscalar(o,'Data',sl,'FramePos',fp,'Title','Attack Slope');
 sl = {sl,o};
 
 
-function fp = frampose(pa,po)
-if isempty(pa)
+function fp = frampose(op,ap)
+if isempty(op)
     fp = [];
     return
 end
-pa = sort(pa{1});
-po = sort(po{1});
-fp = [pa(:)';po(:)'];
+op = sort(op{1});
+ap = sort(ap{1});
+fp = [op(:)';ap(:)'];
 
 
 function sl = algo(po,pa,pou,pau,d,meth,sr)
@@ -101,12 +101,12 @@ sl = zeros(1,length(pa));
 for i = 1:length(pa)
     switch meth
         case 'Diff'
-            sl(i) = (d(po(i))-d(pa(i)))/(pou(i)-pau(i));
+            sl(i) = (d(pa(i))-d(po(i)))/(pau(i)-pou(i));
         case 'Gauss'
-            l = po(i)-pa(i);
+            l = pa(i)-po(i);
             h = ceil(l/2);
             gauss = exp(-(1-h:l-h).^2/(l/4)^2);
-            dat = diff(d(pa(i):po(i))).*gauss';
+            dat = diff(d(po(i):pa(i))).*gauss';
             sl(i) = mean(dat)*sr;
     end
 end

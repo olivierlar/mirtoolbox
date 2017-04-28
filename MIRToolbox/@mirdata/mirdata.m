@@ -19,6 +19,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.multidata = orig.multidata;
     d.peak = orig.peak;
     d.onset = orig.onset;
+    d.attack = orig.attack;
     d.release = orig.release;
     d.track = orig.track;
     d.title = orig.title;
@@ -52,6 +53,7 @@ else
     d.peak.preciseval = {};
     d.peak.mode = {};
     d.onset = {};
+    d.attack = {};
     d.release = {};
     d.track = {};
     d.title = 'Unspecified data';

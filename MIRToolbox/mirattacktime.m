@@ -45,7 +45,7 @@ varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main)
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
-                'Filter','Normal','AcrossSegments');
+                'Normal','AcrossSegments');
 type = mirtype(x);
 
 
@@ -53,32 +53,32 @@ function at = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-po = get(o,'PeakPosUnit');
-pa = get(o,'OnsetPosUnit');
-at = mircompute(@algo,po,pa,option.scale);
-fp = mircompute(@frampose,pa,po);
+ap = get(o,'AttackPosUnit');
+op = get(o,'OnsetPosUnit');
+at = mircompute(@algo,op,ap,option.scale);
+fp = mircompute(@frampose,op,ap);
 at = mirscalar(o,'Data',at,'FramePos',fp,'Title','Attack Time');
 at = {at,o};
 
 
-function fp = frampose(pa,po)
-if isempty(pa)
+function fp = frampose(op,ap)
+if isempty(op)
     fp = [];
     return
 end
-pa = sort(pa{1});
-po = sort(po{1});
-fp = [pa(:)';po(:)'];
+op = sort(op{1});
+ap = sort(ap{1});
+fp = [op(:)';ap(:)'];
 
 
-function at = algo(po,pa,sc)
-if isempty(pa)
+function at = algo(op,ap,sc)
+if isempty(ap)
     at = [];
     return
 end
-po = sort(po{1});
-pa = sort(pa{1});
-at = po-pa;
+op = sort(op{1});
+ap = sort(ap{1});
+at = ap-op;
 at = at';
 if strcmpi(sc,'Log')
     at = log10(at);

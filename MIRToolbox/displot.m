@@ -1,4 +1,4 @@
-function res = displot(x,y,xlab,ylab,t,fp,pp,tp,tv,ch,multidata,pm,ap,rp,cl,ax)
+function res = displot(x,y,xlab,ylab,t,fp,pp,tp,tv,ch,multidata,pm,op,ap,rp,cl,ax)
 % graphical display of any data (except mirscalar data) computed by MIRToolbox
 
 %opengl('OpenGLWobbleTesselatorBug',1)
@@ -198,14 +198,16 @@ if curve
                                     plot(xj(ppj),yk(ppj),'or')
                                 end
                             end
-                            if not(isempty(ap)) && not(isempty(ap{h}))
+                            if not(isempty(op)) && not(isempty(op{h}))
+                                opj = op{h}{1,j,i};
                                 apj = ap{h}{1,j,i};
-                                if ~isempty(apj)
-                                    plot(xj(apj),yk(apj),'dr') 
-                                    for g = 1:length(ppj)
-                                        line([xj(ppj(g)),xj(apj(g))],...
-                                             [yk(ppj(g)),yk(apj(g))],...
-                                             'Color','r')
+                                if ~isempty(opj)
+                                    plot(xj(opj),yk(opj),'dm') 
+                                    plot(xj(apj),yk(apj),'dm') 
+                                    for g = 1:length(opj)
+                                        line([xj(opj(g)),xj(apj(g))],...
+                                             [yk(opj(g)),yk(apj(g))],...
+                                             'Color','m')
                                     end
                                 end
                             end

@@ -689,7 +689,7 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             'Valleys','Order','Abscissa','NoBegin','NoEnd',noend);
     end
     nop = cell(size(get(o,'Data')));
-    o = set(o,'OnsetPos',nop,'ReleasePos',nop);
+    o = set(o,'OnsetPos',nop,'AttackPos',nop,'ReleasePos',nop);
 end
 if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
         (isfield(postoption,'release') && not(isequal(postoption.release,0)))
@@ -697,17 +697,21 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
     d = get(o,'Data');
     t = get(o,'Time');
     if postoption.attack
-%         if 0 %isequal(postoption.new,0)
-%             x = o;
-%             meth = @startattack;
-%             ppu = [];
-%         else
+        if isequal(postoption.new,0)
+            x = o;
+            meth = @startattack;
+            ppu = [];
+            mirerror('MIRONSETS','''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
+            warning('MIRONSETS: ''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
+            disp('TIP: Call mironsets(...,''Attacks''), mirattacktime, mirattackleap and mirattackslope directly on an audio file or audio waveform.')
+        else
             x = postoption.new;
             meth = @startattack_new;
             ppu = get(o,'PeakPosUnit');
-%         end
+        end
         if isnumeric(x)
             st = {{{}}};
+            ap = {{{}}};
         else
             v = mirpeaks(x,'Total',Inf,'SelectFirst',0,...
                 'Contrast',.1,...postoption.cthr,...
@@ -719,7 +723,7 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
 %             else
                 stu = get(v,'PeakPosUnit');
 %             end
-            [st,pp] = mircompute(meth,d,t,pp,ppu,st,stu);
+            [st,ap] = mircompute(meth,d,t,pp,ppu,st,stu);
         end
     else
         st = {{{}}};
@@ -733,7 +737,7 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
         rl = mircompute(@endrelease,d,pp,rl);
         o = set(o,'ReleasePos',rl);
     end
-    o = set(o,'OnsetPos',st,'PeakPos',pp);
+    o = set(o,'OnsetPos',st,'AttackPos',ap,'PeakPos',pp);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
