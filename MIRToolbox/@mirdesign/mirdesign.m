@@ -22,6 +22,7 @@ if nargin == 0
     d.ascending = 0;
     d.overlap = 0;
     d.separate = 0;
+    d.presilence = 0;
     d.chunk = [];
     d.eval = 0;
     d.interchunk = [];
@@ -33,6 +34,7 @@ if nargin == 0
     d.tmpfile = [];
     d.tmpof = [];
 elseif isa(orig,'mirdesign')
+    error('test')
     d.method = orig.method;
     d.argin = orig.argin;
     d.option = orig.option;
@@ -54,6 +56,7 @@ elseif isa(orig,'mirdesign')
     d.ascending = orig.ascending;
     d.overlap = orig.overlap;
     d.separate = orig.separate;
+    d.presilence = orig.presilence;
     d.chunk = orig.chunk;
     d.eval = orig.eval;
     d.interchunk = orig.interchunk;
@@ -92,6 +95,7 @@ else
         end
         d.overlap = 0;
         d.separate = 0;
+        d.presilence = 0;
     else
         if iscell(argin)
             argin = argin{1};
@@ -150,6 +154,7 @@ else
         end
         d.overlap = argin.overlap;
         d.separate = argin.separate;
+        d.presilence = argin.presilence;
     end
     d.chunk = [];
     d.eval = 0;

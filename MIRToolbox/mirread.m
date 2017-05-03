@@ -21,6 +21,10 @@ if nargin < 5
     verbose = 0;
 end
 
+if ~isempty(extract)
+    extract(1) = max(extract(1),1);
+end
+
 p = ver('MATLAB');
 if str2num(p.Version) >= 8.3
     [d,tp,fp,f,l,b,n,ch] = mirread2014(extract,orig,load,folder,verbose);

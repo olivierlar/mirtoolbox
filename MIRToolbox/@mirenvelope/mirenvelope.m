@@ -177,6 +177,11 @@ function varargout = mirenvelope(orig,varargin)
         frame.number = 2;
         frame.default = [.1 .1];
     option.frame = frame;
+    
+        presilence.key = 'PreSilence';
+        presilence.type = 'Boolean';
+        presilence.default = 0;
+    option.presilence = presilence;
 
 %% Options related to all methods:
     
@@ -313,6 +318,9 @@ if not(isamir(x,'mirenvelope'))
                               'Tau',option.tau,'PreDecim',option.decim);
         end
     elseif strcmpi(option.method,'Spectro')
+        if option.presilence
+            x.presilence = 1;
+        end
         x = mirspectrum(x,'Frame',option.frame.length.val,...
                                   option.frame.length.unit,...
                                   option.frame.hop.val,...

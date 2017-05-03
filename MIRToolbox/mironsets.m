@@ -144,6 +144,11 @@ function varargout = mironsets(x,varargin)
             specframe.default = NaN;
         option.specframe = specframe;
         
+            presilence.key = 'PreSilence';
+            presilence.type = 'Boolean';
+            presilence.default = 0;
+        option.presilence = presilence;
+        
             powerspectrum.key = 'PowerSpectrum';
             powerspectrum.type = 'Boolean';
             powerspectrum.default = 1;
@@ -462,7 +467,7 @@ if isamir(x,'miraudio')
             fb = x;
         end
         if isnan(option.specframe)
-            if option.attack %new
+            if option.attack
                 option.specframe = [.03 .02];
             else
                 option.specframe = [.1 .1];
@@ -477,7 +482,8 @@ if isamir(x,'miraudio')
                           'Mu',option.mu,...
                           'PowerSpectrum',option.powerspectrum,...
                           'TimeSmooth',option.timesmooth,...
-                          'Terhardt',option.terhardt);
+                          'Terhardt',option.terhardt,...
+                          'PreSilence',option.presilence);
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???

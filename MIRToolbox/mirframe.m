@@ -93,7 +93,9 @@ elseif isa(x,'mirdesign')
                 % The phase has already been taken into account in the
                 % chunk decomposition.
             end
-            f = mirframe(e,varargin{:});
+            options = varargin{1};
+            options.presilence = get(x,'PreSilence');
+            f = mirframe(e,options);
         end
     end
 elseif isa(x,'mirdata')
@@ -167,7 +169,11 @@ elseif isa(x,'mirdata')
                         dtj = dtj(1,:)';
                     end
 
-                    n = floor((size(dxj,1)-l-p)/h)+1; % Number of frames
+                    if para.presilence
+                        n = floor((size(dxj,1)-floor(h)-p)/h)+1; % Number of frames
+                    else
+                        n = floor((size(dxj,1)-l-p)/h)+1; % Number of frames
+                    end
                     dx2j = zeros(l,n,size(dxj,3));
                     dt2j = zeros(l,n);
                     fpj = zeros(2,n);
@@ -183,10 +189,18 @@ elseif isa(x,'mirdata')
                     else
                         for i = 1:n % For each frame, ...
                             st = floor((i-1)*h+p+1);
+                            if para.presilence
+                                st = st - l + floor(h);
+                            end
                             stend = st+l-1;
-                            dx2j(:,i,:) = dxj(st:stend,1,:);
-                            dt2j(:,i) = dtj(st:stend);
-                            fpj(:,i) = [dtj(st) dtj(stend)];
+                            if st < 1
+                                dx2j(:,i,:) = [zeros(-st+1,1,size(dxj,3)); dxj(1:stend,1,:)];
+                                dt2j(:,i) = dtj(1:stend-st+1) - (dtj(-st+2) - dtj(1));
+                            else
+                                dx2j(:,i,:) = dxj(st:stend,1,:);
+                                dt2j(:,i) = dtj(st:stend);
+                            end
+                            fpj(:,i) = [dt2j(1,i), dt2j(end,i)];
                         end
                     end
                     dx2k{j} = dx2j;

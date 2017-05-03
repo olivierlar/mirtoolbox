@@ -99,6 +99,7 @@ elseif iscell(a)
             a{2}.ready = 1;
             a{2}.acrosschunks = d.acrosschunks;
             a{2}.index = d.index;
+            a{2}.presilence = d.presilence;
     
     aux = evaleach(a{2},single,name);
     if iscell(aux)
@@ -150,7 +151,8 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             end
         else
             chunks = compute_frames(fr,sr,sr2,w,lsz,...
-                                    CHUNKLIM/d.chunksizefactor,d.overlap);
+                                    CHUNKLIM/d.chunksizefactor,...
+                                    d.overlap,d.presilence);
         end
     end
     
@@ -367,7 +369,7 @@ if iscell(y)
 end
 
 
-function chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,frov)
+function chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,frov,ps)
 if strcmpi(fr.length.unit,'s')
     fl = fr.length.val*sr;
     fl2 = fr.length.val*sr2;
@@ -400,14 +402,27 @@ elseif strcmpi(fr.phase.unit,'/1')
 elseif strcmpi(fr.phase.unit,'%')
     ph = fr.phase.val*h*.01;
 end
-n = floor((lsz-fl-ph)/h)+1;   % Number of frames
+
+% Number of frames
+if ps
+    n = floor((lsz-floor(h)-ph)/h)+1;   
+else
+    n = floor((lsz-fl-ph)/h)+1;
+end
+
 if n < 1
     %warning('WARNING IN MIRFRAME: Frame length longer than total sequence size. No frame decomposition.');
     fp = w;
     fp2 = (w-1)/sr*sr2+1;
 else
     st = floor(((1:n)-1)*h+ph)+w(1);
+    if ps
+        st = st - fl + floor(h);
+    end
     st2 = floor(((1:n)-1)*h2)+w(1)+ph;
+    if ps
+        st2 = st2 - fl + floor(h2);
+    end
     fp = [st; floor(st+fl-1)];
     fp(:,fp(2,:)>w(2)) = [];
     fp2 = [st2; floor(st2+fl2-1)];
@@ -775,6 +790,7 @@ for i = 1:length(argin)
             a.ready = 1;
             a.acrosschunks = d.acrosschunks;
             a.index = d.index;
+            a.presilence = d.presilence;
             argin{i} = a;
         else
             % Variable already calculated

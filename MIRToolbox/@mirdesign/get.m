@@ -140,6 +140,9 @@ if ischar(varargin{1})
         case 'ChunkSizeFactor'
             varargout = {a.chunksizefactor};
             return 
+        case 'PreSilence'
+            varargout = {a.presilence};
+            return 
     end
 end
 
