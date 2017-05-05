@@ -707,18 +707,18 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
     d = get(o,'Data');
     t = get(o,'Time');
     if postoption.attack
-        if isequal(postoption.new,0)
-            x = o;
-            meth = @startattack;
-            ppu = [];
-            mirerror('MIRONSETS','''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
-            warning('MIRONSETS: ''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
-            disp('TIP: Call mironsets(...,''Attacks''), mirattacktime, mirattackleap and mirattackslope directly on an audio file or audio waveform.')
-        else
+%         if isequal(postoption.new,0)
+%             x = o;
+%             meth = @startattack;
+%             ppu = [];
+%             mirerror('MIRONSETS','''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
+%             warning('MIRONSETS: ''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
+%             disp('TIP: Call mironsets(...,''Attacks''), mirattacktime, mirattackleap and mirattackslope directly on an audio file or audio waveform.')
+%         else
             x = postoption.new;
-            meth = @startattack_new;
+%             meth = @startattack_new;
             ppu = get(o,'PeakPosUnit');
-        end
+%         end
         if isnumeric(x)
             st = {{{}}};
             ap = {{{}}};
@@ -733,7 +733,7 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
 %             else
                 stu = get(v,'PeakPosUnit');
 %             end
-            [st,ap] = mircompute(meth,d,t,pp,ppu,st,stu);
+            [st,ap] = mircompute(@startattack_new,d,t,pp,ppu,stu);
         end
     else
         st = {{{}}};
@@ -909,7 +909,7 @@ end
 st = {{st} {pp}};
 
 
-function [st, pp] = startattack_new(d,t,pp,ppu,st,stu)
+function [st, pp] = startattack_new(d,t,pp,ppu,stu)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -917,22 +917,21 @@ if isempty(pp)
     return
 end
 
-st = st{1};
 stu = stu{1};
-if ~isempty(st) && stu(1)>ppu(1)
-    dd = diff(d,1,1);       % d'
-    p = find(dd(pp(1)-2:-1:1)<=0, 1);
-    if isempty(p)
-        st0 = 1;
-    else
-        st0 = ((pp(1)-1)-p)+1;
-    end
-    st = [st0 st];
+if ~isempty(stu) && stu(1)>ppu(1)
+%     dd = diff(d,1,1);       % d'
+%     p = find(dd(pp(1)-2:-1:1)<=0, 1);
+%     if isempty(p)
+%         st0 = 1;
+%     else
+%         st0 = ((pp(1)-1)-p)+1;
+%     end
     stu = [0 stu];
 end
+st = zeros(1,length(stu));
 
 i = 0;
-while i < length(st)
+while i < length(stu)
     if length(ppu) == i
         break
     end
@@ -953,6 +952,12 @@ while i < length(st)
     f0 = find(dd > 0,1);
     if ~isempty(f0)
         st(i) = st(i) + f0 - 1;
+    end
+    
+    dd = diff(d(st(i):pp(i)));
+    f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
+    if ~isempty(f0)
+        st(i) = st(i) + f0(end) - 1;
     end
     
     ppi = find(t >= ppu(i),1);
