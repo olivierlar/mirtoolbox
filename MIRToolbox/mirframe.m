@@ -277,6 +277,7 @@ if not(isempty(v)) && isstruct(v{1})
         para.wlength = v{1};
         para.hop = v{2};
         para.phase = v{3};
+        para.presilence = v{4};
     end
     return
 end

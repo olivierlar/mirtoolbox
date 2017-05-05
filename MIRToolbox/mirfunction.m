@@ -140,7 +140,8 @@ else
                 isstruct(during.frame) && during.frame.auto
             orig = mirframe(orig,during.frame.length,...
                             during.frame.hop,...
-                            during.frame.phase);        
+                            during.frame.phase,...
+                            during.frame.presilence);        
         end
         % The input of the function is not a design flowchart, which
         % the 'init' part of the function could be integrated into.
