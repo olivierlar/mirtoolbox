@@ -551,6 +551,10 @@ type = 'mirenvelope';
 %% MAIN
 
 function o = main(o,option,postoption)
+if iscell(o)
+    postoption.new = o{2};
+    o = o{1};
+end
 if not(isempty(option)) && ischar(option.presel)
     if strcmpi(option.presel,'Scheirer')
         postoption.sampling = 200;
