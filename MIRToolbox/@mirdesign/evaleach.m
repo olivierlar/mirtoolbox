@@ -416,14 +416,16 @@ if n < 1
     fp = w;
     fp2 = (w-1)/sr*sr2+1;
 else
-    st = floor(((1:n)-1)*h+ph)+w(1);
+    st = ((1:n)-1)*h+ph+w(1);
     if ps
-        st = st - fl + floor(h);
+        st = st - fl + h;
     end
-    st2 = floor(((1:n)-1)*h2)+w(1)+ph;
+    st = floor(st);
+    st2 = ((1:n)-1)*h2+w(1)+ph;
     if ps
-        st2 = st2 - fl + floor(h2);
+        st2 = st2 - fl + h2;
     end
+    st2 = floor(st2);
     fp = [st; floor(st+fl-1)];
     fp(:,fp(2,:)>w(2)) = [];
     fp2 = [st2; floor(st2+fl2-1)];
