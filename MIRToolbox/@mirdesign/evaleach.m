@@ -252,6 +252,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                     waitbar((chunks(2,i)-chunks(1))/chunks(end),h)
                 end
             end
+            d2.presilence = 0;
         end
         
         if ~isstruct(y)
