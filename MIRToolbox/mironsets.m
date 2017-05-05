@@ -542,7 +542,7 @@ else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
 if option.attack %new
-    z = mironsets(x);
+    z = mironsets(x,'PreSilence',option.presilence);
     y = {y,z};
 end
 type = 'mirenvelope';
