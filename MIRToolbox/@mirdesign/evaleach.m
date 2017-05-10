@@ -293,7 +293,7 @@ elseif d.nochunk
     [y d2] = evalnow(d);
 else
     % Frame decomposition in the design to be evaluated.
-    chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap);
+    chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap,d.presilence);
     if size(chunks,2)>1
         % The chunk decomposition is performed.
         if mirwaitbar
