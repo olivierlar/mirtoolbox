@@ -201,6 +201,7 @@ function varargout = mirspectrum(orig,varargin)
         reso.type = 'String';
         reso.choice = {'ToiviainenSnyder','Fluctuation','Meter',0,'no','off'};
         reso.default = 0;
+        reso.keydefault = 1;
         reso.when = 'After';
     option.reso = reso;
     
@@ -652,7 +653,7 @@ if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where
 end
 if option.reso
     if not(ischar(option.reso))
-        if strcmp(get(orig,'XScale'),'Mel')
+        if strcmp(get(s,'XScale'),'Mel')
             option.reso = 'Fluctuation';
         else
             option.reso = 'ToiviainenSnyder';
