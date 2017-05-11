@@ -412,12 +412,6 @@ freq = option.fr && not(get(a,'FreqDomain'));
 if isequal(option.e,1)
     option.e = 2:10;
 end
-if max(option.e) > 1
-    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01,'Normalize','Local');
-    va = mirpeaks(a,'Valleys','Contrast',.01,'Normalize','Local');
-    pv = get(pa,'PeakVal');
-    vv = get(va,'PeakVal');
-end
 if option.phase
     x = get(a,'Input');
     d = get(x,'Data');
@@ -477,7 +471,24 @@ for k = 1:length(coeff)
             if option.h
                 c = hwr(c);
             end
-            if max(option.e) > 1
+            coeff{k}{l} = c;
+            lags{k}{l} = t;
+        end
+    end
+end
+a = set(a,'Coeff',coeff,'Delay',lags);
+if max(option.e) > 1
+    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01,'Normalize','Local');
+    va = mirpeaks(a,'Valleys','Contrast',.01,'Normalize','Local');
+    pv = get(pa,'PeakVal');
+    vv = get(va,'PeakVal');
+end
+for k = 1:length(coeff)
+    for l = 1:length(coeff{k})
+        c = coeff{k}{l};  % Coefficients of autocorrelation
+        t = lags{k}{l};   % Delays of autocorrelation
+        if max(option.e) > 1
+            if not(isempty(c))
                 if a.freq
                     freq = 1;
                     for i = 1:size(c,3)
@@ -636,17 +647,6 @@ for k = 1:length(coeff)
             end
             coeff{k}{l} = c;
             lags{k}{l} = t;
-            if 0 %option.ph
-                for g = 1:size(p{k}{l},2)
-                    for i = 1:length(p{k}{l}{1,g})
-                        if t(1)
-                            error('check here');
-                        end
-                        indx = p{k}{l}{1,g}(i);
-                        
-                    end
-                end
-            end
         end
     end
     if option.phase
