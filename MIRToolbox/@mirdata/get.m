@@ -35,12 +35,14 @@ switch propName
         val = a.multidata;
     case 'PeakPos'
         val = a.peak.pos;
-    case {'PeakPosUnit','OnsetPosUnit','AttackPosUnit','ReleasePosUnit'}
+    case {'PeakPosUnit','OnsetPosUnit','OffsetPosUnit','AttackPosUnit','ReleasePosUnit'}
         switch propName
             case 'PeakPosUnit'
                 pp = a.peak.pos;
             case 'OnsetPosUnit'
-                pp = a.onset.pos; 
+                pp = a.onset.pos;      
+            case 'OffsetPosUnit'
+                pp = a.offset.pos; 
             case 'AttackPosUnit'
                 pp = a.attack.pos;
             case 'ReleasePosUnit'
