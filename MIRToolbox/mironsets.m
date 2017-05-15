@@ -383,11 +383,9 @@ function varargout = mironsets(x,varargin)
     option.new = new;
         
         release.key = {'Release','Releases'};
-        release.type = 'String';
-        release.choice = {'Olivier','Valeri',0,'no','off'};
+        release.type = 'Boolean';
         release.default = 0;
-        release.keydefault = 'Olivier';
-        release.when = 'After';
+        release.when = 'Both';
     option.release = release;
     
 %% preselection
@@ -467,7 +465,7 @@ if isamir(x,'miraudio')
             fb = x;
         end
         if isnan(option.specframe)
-            if option.attack
+            if option.attack || option.release
                 option.specframe = [.03 .02];
             else
                 option.specframe = [.1 .1];
@@ -541,7 +539,7 @@ elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
-if option.attack %new
+if option.attack || option.release
     z = mironsets(x,'PreSilence',option.presilence);
     y = {y,z};
 end
@@ -672,7 +670,7 @@ end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
     if isnan(postoption.cthr) || not(postoption.cthr)
-        if postoption.attack
+        if postoption.attack || postoption.release
             postoption.cthr = .05;
         elseif ischar(postoption.detect) || postoption.detect
             postoption.cthr = .01;
@@ -701,24 +699,13 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     nop = cell(size(get(o,'Data')));
     o = set(o,'OnsetPos',nop,'AttackPos',nop,'ReleasePos',nop);
 end
-if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
-        (isfield(postoption,'release') && not(isequal(postoption.release,0)))
+if (isfield(postoption,'attack')) && (postoption.attack || postoption.release)
     pp = get(o,'PeakPos');
     d = get(o,'Data');
     t = get(o,'Time');
     if postoption.attack
-%         if isequal(postoption.new,0)
-%             x = o;
-%             meth = @startattack;
-%             ppu = [];
-%             mirerror('MIRONSETS','''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
-%             warning('MIRONSETS: ''Attacks'' option performed on a mironset object, leading to lesss accurate results.')
-%             disp('TIP: Call mironsets(...,''Attacks''), mirattacktime, mirattackleap and mirattackslope directly on an audio file or audio waveform.')
-%         else
-            x = postoption.new;
-%             meth = @startattack_new;
-            ppu = get(o,'PeakPosUnit');
-%         end
+        x = postoption.new;
+        ppu = get(o,'PeakPosUnit');
         if isnumeric(x)
             st = {{{}}};
             ap = {{{}}};
@@ -727,27 +714,32 @@ if (isfield(postoption,'attack') && not(isequal(postoption.attack,0))) || ...
                 'Contrast',.1,...postoption.cthr,...
                 'Threshold',.5,...
                 'Valleys','Order','Abscissa','NoEnd');
-            st = get(v,'PeakPos');
-%             if isequal(postoption.new,0)
-%                 stu = [];
-%             else
-                stu = get(v,'PeakPosUnit');
-%             end
-            [st,ap] = mircompute(@startattack_new,d,t,pp,ppu,stu);
+            stu = get(v,'PeakPosUnit');
+            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu);
         end
     else
         st = {{{}}};
+        ap = {{{}}};
     end
-    if ischar(postoption.release) && ~strcmpi(postoption.release,'No') ...
-                                  && ~strcmpi(postoption.release,'Off')
-        v = mirpeaks(o,'Total',Inf,'SelectFirst',0,...
-            'Contrast',postoption.cthr,'Threshold',.7,...
-            'Valleys','Order','Abscissa','NoBegin');
-        rl = get(v,'PeakPos');
-        rl = mircompute(@endrelease,d,pp,rl);
-        o = set(o,'ReleasePos',rl);
+    if postoption.release
+        x = postoption.new;
+        ppu = get(o,'PeakPosUnit');
+        if isnumeric(x)
+            rl = {{{}}};
+            en = {{{}}};
+        else
+            v = mirpeaks(x,'Total',Inf,'SelectFirst',0,...
+                'Contrast',.1,...postoption.cthr,
+                'Threshold',.5,...
+                'Valleys','Order','Abscissa','NoBegin');
+            rlu = get(v,'PeakPosUnit');
+            [rl,en] = mircompute(@endrelease,d,t,pp,ppu,rlu);
+        end
+    else
+        rl = {{{}}};
+        en = {{{}}};
     end
-    o = set(o,'OnsetPos',st,'AttackPos',ap,'PeakPos',pp);
+    o = set(o,'OnsetPos',st,'AttackPos',ap,'ReleasePos',rl,'OffsetPos',en,'PeakPos',pp);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
@@ -755,6 +747,7 @@ if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
 end
 
 
+%%
 function [do tmp] = newonset(d,tmp)
 d = d - max(max(max(d)));
 do = zeros(1,size(d,2));
@@ -867,49 +860,8 @@ tmp.inactiv = inactiv;
 tmp.old = old;
 
 
-function [st, pp] = startattack(d,t,pp,ppu,st,stu)
-pp = sort(pp{1});
-if isempty(pp)
-    st = {{} {}};
-    return
-end
-
-st = st{1};
-if ~isempty(st) && st(1)>pp(1)
-    dd = diff(d,1,1);       % d'
-    p = find(dd((pp(1)-1)-1:-1:1)<=0,1);
-    if isempty(p)
-        st0 = 1;
-    else
-        st0 = ((pp(1)-1)-p)+1;
-    end
-    st = [st0 st];
-end
-if length(st)>length(pp)
-    st = st(1:length(pp));
-else
-    pp = pp(1:length(st));
-end
-
-for i = 1:length(st)
-    dd = diff(d(st(i):pp(i)));
-    [mad, mdd] = max(dd);
-    
-    f2 = find(dd(mdd+1:end)<mad/5,1);
-    if ~isempty(f2)
-        pp(i) = st(i) + mdd + f2 - 1;
-    end
-    
-    f1 = find(dd(mdd-1:-1:1)<mad/5,1);
-    if ~isempty(f1)
-        st(i) = st(i) + mdd - f1;
-    end
-end
-
-st = {{st} {pp}};
-
-
-function [st, pp] = startattack_new(d,t,pp,ppu,stu)
+%%
+function [st pp] = startattack(d,t,pp,ppu,stu)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -919,14 +871,7 @@ end
 
 stu = stu{1};
 if ~isempty(stu) && stu(1)>ppu(1)
-%     dd = diff(d,1,1);       % d'
-%     p = find(dd(pp(1)-2:-1:1)<=0, 1);
-%     if isempty(p)
-%         st0 = 1;
-%     else
-%         st0 = ((pp(1)-1)-p)+1;
-%     end
-    stu = [0 stu];
+    stu = [t(1) stu];
 end
 st = zeros(1,length(stu));
 
@@ -936,23 +881,28 @@ while i < length(stu)
         break
     end
     i = i+1;
+    
+    % Removing additional peaks before current onset time stu(i)
     j = find(ppu(i:end) > stu(i),1);
     if j > 1
         ppu(i:i+j-2) = [];
         pp(i:i+j-2) = [];
     end
+    
+    % Taking the latest possible onset time before current peak ppu(i)
     j = find(stu(i:end) > ppu(i),1);
     if j > 2
         st(i:i+j-3) = [];
         stu(i:i+j-3) = [];
     end
+    
     st(i) = find(t >= stu(i),1);
     
     dd = diff(d(st(i):pp(i)));
     f0 = find(dd > 0,1);
-    if ~isempty(f0)
+    %if ~isempty(f0)
         st(i) = st(i) + f0 - 1;
-    end
+    %end
     
     dd = diff(d(st(i):pp(i)));
     f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
@@ -985,89 +935,83 @@ while i < length(stu)
     st(i) = st(i) + f1;
 end
 pp(length(st)+1:end) = [];
-
 st = {{st} {pp}};
 
 
-% function [st, pp] = startattack_new(d,t,pp,ppu,st,stu)
-% pp = sort(pp{1});
-% ppu = sort(ppu{1});
-% if isempty(pp)
-%     st = {{} {}};
-%     return
-% end
-% 
-% st = st{1};
-% stu = stu{1};
-% if ~isempty(st) && stu(1)>ppu(1)
-%     dd = diff(d,1,1);       % d'
-%     p = find(dd((pp(1)-1)-1:-1:1)<=0,1);
-%     if isempty(p)
-%         st0 = 1;
-%     else
-%         st0 = ((pp(1)-1)-p)+1;
-%     end
-%     st = [st0 st];
-%     stu = [0 stu];
-% end
-% 
-% for i = 1:length(st)
-%     j = find(ppu(i:end) > stu(i),1);
-%     ppu(i:i+j-2) = [];
-%     pp(i:i+j-2) = [];
-%     st(i) = find(t >= stu(i),1);
-%     
-%     dd = diff(d(st(i):pp(i)));
-%     ddd = diff(dd);
-%     mdd = find(ddd(1:end-1) > 1e-4 & ddd(2:end) <= 0,1);
-%     mad = dd(mdd);
-%     
-%     f2 = find((((ddd(mdd:end)<0 & dd(mdd+1:end)<mad/3) ...
-%                | dd(mdd+1:end)<mad/5)) ...
-%               & d(st(i)+mdd+1:pp(i))>d(pp(i)) * .5,1);
-%     if ~isempty(f2)
-%         pp(i) = st(i) + mdd + f2 - 1;
-%     end
-%     
-%     f1 = find(dd(mdd-1:-1:1)<mad/5,1);
-%     if ~isempty(f1)
-%         st(i) = st(i) + mdd - f1;
-%     end
-% end
-% pp(length(st)+1:end) = [];
-% 
-% st = {{st} {pp}};
-
-
-function [rt pp] = endrelease(d,pp,rt)
+%%
+function [pp en] = endrelease(d,t,pp,ppu,rlu)
 pp = sort(pp{1});
+ppu = sort(ppu{1});
 if isempty(pp)
-    rt = {{} {}};
+    st = {{} {}};
     return
 end
 
-rt = rt{1};
-if ~isempty(rt) && rt(end)<pp(end)
-    dd = diff(d,1,1);       % d'
-    p = find(dd((pp(end)+1)-1:end)>=0,1);
-    if isempty(p)
-        rte = length(d);
-    else
-        rte = ((pp(end)+1)+p)+1;
-    end
-    rt = [rt rte];
+rlu = rlu{1};
+if ~isempty(rlu) && rlu(end)<ppu(end)
+    rlu = [rlu t(end)];
 end
+en = zeros(1,length(rlu));
 
-%thres = .015;
-for i = 1:length(rt)
-    dd = diff(d(rt(i):-1:pp(i)));
-    [mad mdd] = max(dd);
-    ed = find(dd(mdd+1:end)<mad/5,1);
-    if ~isempty(ed)
-        pp(i) = rt(i) - mdd - ed - 1;
+i = 0;
+while i < length(rlu)
+    if length(ppu) == i
+        break
+    end
+    i = i+1;
+    
+     % Removing additional offset times before current peak ppu(i)
+    j = find(rlu(i:end) > ppu(i),1);
+    if j > 1
+        rlu(i:i+j-2) = [];
+        en(i:i+j-2) = [];
     end
     
-    pp(i + find(pp(i+1:end) <= rt(i))) = [];
+    % Taking the latest possible peak before current offset time rlu(i)
+    j = find(ppu(i:end) > rlu(i),1);
+    if j > 2
+        pp(i:i+j-3) = [];
+        ppu(i:i+j-3) = [];
+    end
+        
+    en(i) = find(t >= rlu(i),1);
+    
+    dd = diff(d(en(i):-1:pp(i)));
+    f0 = find(dd > 0,1);
+    %if ~isempty(f0)
+        en(i) = en(i) - f0 + 1;
+    %end
+    
+    dd = diff(d(en(i):-1:pp(i)));
+    f0 = find(dd < 0 & d(en(i):-1:pp(i)+1) < d(en(i)));
+    if ~isempty(f0)
+        en(i) = en(i) - f0(end) + 1;
+    end
+    
+    ppi = find(t >= ppu(i),1);
+    dd = diff(d(en(i):-1:pp(i)));
+    f0 = find(dd <= 0 & ...
+              d(en(i):-1:pp(i)+1) - d(en(i)) > (d(ppi) - d(en(i))) / 5 ...
+              ,1);
+    if ~isempty(f0)
+        pp(i) = en(i) - f0 + 1;
+    end
+    
+    dd = diff(d(en(i):-1:pp(i)));
+    [mad, mdd] = max(dd);
+    
+    f2 = find(dd(end:-1:mdd+1)>mad/5,1);
+    if isempty(f2)
+        f2 = 1;
+    end
+    pp(i) = en(i) - length(dd) + f2;
+    
+    f1 = find(dd(1:mdd-1)>mad/10,1);
+    if isempty(f1)
+        f1 = 1;
+    end
+    en(i) = en(i) - f1;
 end
+en(length(pp)+1:end) = [];
 
-rt = {{[pp;rt]}};
+pp = {{pp} {en}};

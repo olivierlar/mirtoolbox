@@ -111,7 +111,7 @@ if not(isempty(order))
                 for j = 1:size(di,2)
                     djl = resample(di(:,j,l),11025,round(f{k}));
                     djl = djl/max(djl);
-                    djl = rand(length(djl),1).*djl; %djl(:)?;
+                    djl = rand(length(djl),1).*djl;
                     
                     if ~isempty(pp) && ~isempty(pp{k}{i})
                         pjl = pp{k}{i}{j,l};

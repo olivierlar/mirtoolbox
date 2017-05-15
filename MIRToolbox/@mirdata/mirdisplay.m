@@ -33,6 +33,11 @@ if isempty(d.release)
 else
     rp = d.release.pos;
 end
+if isempty(d.offset)
+    of = cell(ld);
+else
+    of = d.offset.pos;
+end
 if isempty(d.track)
     tp = cell(ld);
     tv = cell(ld);
@@ -85,7 +90,7 @@ else
                 cha = [];
             end
             flag = displot(p{i},v{i},d.abs,d.ord,d.title,fp{i},pp{i},tp{i},tv{i},...
-                cha,d.multidata,pm{i},op{i},ap{i},rp{i},d.clusters{i},axis);
+                cha,d.multidata,pm{i},op{i},ap{i},rp{i},of{i},d.clusters{i},axis);
             if flag
                 fig = get(0,'CurrentFigure');
                 if isa(fig,'matlab.ui.Figure')
