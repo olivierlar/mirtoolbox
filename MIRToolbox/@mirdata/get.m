@@ -141,6 +141,12 @@ switch propName
         else
             val = a.release.pos;
         end
+    case 'OffsetPos'
+        if isempty(a.offset)
+            val = [];
+        else
+            val = a.offset.pos;
+        end
     case 'TrackPos'
         if isempty(a.track)
             val = [];

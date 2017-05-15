@@ -57,6 +57,8 @@ while length(propertyArgIn) >= 2,
            a.peak.mode = val;
        case 'OnsetPos'
            a.onset.pos = val;
+       case 'OffsetPos'
+           a.offset.pos = val;
        case 'AttackPos'
            a.attack.pos = val;
        case 'ReleasePos'
