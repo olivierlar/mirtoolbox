@@ -955,7 +955,7 @@ function [pp en] = endrelease(d,t,pp,ppu,rlu)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
-    st = {{} {}};
+    en = {{} {}};
     return
 end
 
