@@ -42,11 +42,6 @@ function varargout = mirattacktime(orig,varargin)
         presilence.default = 0;
     option.presilence = presilence;
 
-        postsilence.key = 'PostSilence';
-        postsilence.type = 'Boolean';
-        postsilence.default = 0;
-    option.postsilence = postsilence;
-
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
@@ -55,7 +50,7 @@ varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main)
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
-                'Presilence',option.presilence,'PostSilence',option.postsilence,...
+                'Presilence',option.presilence,...
                 'Normal','AcrossSegments');
 type = mirtype(x);
 
