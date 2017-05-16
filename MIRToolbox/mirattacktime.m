@@ -35,7 +35,17 @@ function varargout = mirattacktime(orig,varargin)
         minlog.key = 'MinLog';
         minlog.type = 'Integer';
         minlog.default = 0;
-    option.minlog = minlog;    
+    option.minlog = minlog;
+ 
+        presilence.key = 'PreSilence';
+        presilence.type = 'Boolean';
+        presilence.default = 0;
+    option.presilence = presilence;
+
+        postsilence.key = 'PostSilence';
+        postsilence.type = 'Boolean';
+        postsilence.default = 0;
+    option.postsilence = postsilence;
 
 specif.option = option;
 
@@ -45,6 +55,7 @@ varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main)
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
+                'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal','AcrossSegments');
 type = mirtype(x);
 
@@ -57,7 +68,12 @@ ap = get(o,'AttackPosUnit');
 op = get(o,'OnsetPosUnit');
 at = mircompute(@algo,op,ap,option.scale);
 fp = mircompute(@frampose,op,ap);
-at = mirscalar(o,'Data',at,'FramePos',fp,'Title','Attack Time');
+if strcmpi(option.scale,'Lin')
+    unit = 's.';
+else
+    unit = '';
+end
+at = mirscalar(o,'Data',at,'FramePos',fp,'Title','Attack Time','Unit',unit);
 at = {at,o};
 
 
