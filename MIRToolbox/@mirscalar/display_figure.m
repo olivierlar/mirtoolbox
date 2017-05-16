@@ -40,8 +40,8 @@ for song = 1:length(songs)  %For each audio file
     end
         
     if size(vi,1) == 1 && size(vi,2) == 1 && size(vi,3) == 1 && ...
-            (not(iscell(vi)) || (size(vi{1},1) == 1 && ...
-            size(vi{1},2) == 1 && size(vi{1},3) == 1)) && ...
+            (not(iscell(vi)) || (size(vi{1},1) <= 1 && ...
+            size(vi{1},2) <= 1 && size(vi{1},3) == 1)) && ...
             (not(iscell(vi{1})) || (size(vi{1}{1},1) == 1 && ...
             size(vi{1}{1},2) == 1 && size(vi{1},3) == 1))
         % Simple results, returned directly in the Command Window
@@ -61,7 +61,9 @@ for song = 1:length(songs)  %For each audio file
                 mi = mi{1};
             end
         end
-        if size(vi,1) == 1 && size(vi,3) == 1
+        if isempty(vi)
+            disp(['The ',t,' related to file ',n{i},' is undefined.']);
+        elseif size(vi,1) <= 1 && size(vi,3) == 1
             if isempty(leg)
                 r = num2str(vi);
             else
