@@ -26,7 +26,18 @@ function varargout = mirattackleap(orig,varargin)
         minlog.key = 'MinLog';
         minlog.type = 'Integer';
         minlog.default = 0;
-    option.minlog = minlog;    
+    option.minlog = minlog;  
+  
+        presilence.key = 'PreSilence';
+        presilence.type = 'Boolean';
+        presilence.default = 0;
+    option.presilence = presilence;
+
+        normal.key = 'Normal';
+        normal.type = 'String';
+        normal.choice = {0,1,'AcrossSegments'};
+        normal.default = 'AcrossSegments';
+    option.normal = normal;
 
 specif.option = option;
 
@@ -36,11 +47,12 @@ varargout = mirfunction(@mirattackleap,orig,varargin,nargout,specif,@init,@main)
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
-                'Normal','AcrossSegments');
+                'Presilence',option.presilence,...
+                'Normal',option.normal);
 type = mirtype(x);
 
 
-function sl = main(o,option,postoption)
+function al = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
@@ -49,10 +61,10 @@ op = get(o,'OnsetPos');
 apu = get(o,'AttackPosUnit');
 opu = get(o,'OnsetPosUnit');
 d = get(o,'Data');
-sl = mircompute(@algo,op,ap,d);
+al = mircompute(@algo,op,ap,d);
 fp = mircompute(@frampose,opu,apu);
-sl = mirscalar(o,'Data',sl,'FramePos',fp,'Title','Attack Leap');
-sl = {sl,o};
+al = mirscalar(o,'Data',al,'FramePos',fp,'Title','Attack Leap');
+al = {al,o};
 
 
 function fp = frampose(po,pa)
