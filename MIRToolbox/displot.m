@@ -200,8 +200,8 @@ if curve
                             end
                             if not(isempty(op)) && not(isempty(op{h}))
                                 opj = op{h}{1,j,i};
-                                apj = ap{h}{1,j,i};
                                 if ~isempty(opj)
+                                    apj = ap{h}{1,j,i};
                                     plot(xj(opj),yk(opj),'dm') 
                                     plot(xj(apj),yk(apj),'dm') 
                                     for g = 1:length(opj)
@@ -213,8 +213,8 @@ if curve
                             end
                             if not(isempty(of)) && not(isempty(of{h}))
                                 ofj = of{h}{1,j,i};
-                                rpj = rp{h}{1,j,i};
                                 if ~isempty(ofj)
+                                    rpj = rp{h}{1,j,i};
                                     plot(xj(ofj),yk(ofj),'dm') 
                                     plot(xj(rpj),yk(rpj),'dm') 
                                     for g = 1:length(ofj)
