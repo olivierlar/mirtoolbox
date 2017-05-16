@@ -33,6 +33,11 @@ function varargout = mirattackleap(orig,varargin)
         presilence.default = 0;
     option.presilence = presilence;
 
+        postsilence.key = 'PostSilence';
+        postsilence.type = 'Boolean';
+        postsilence.default = 0;
+    option.postsilence = postsilence;
+
         normal.key = 'Normal';
         normal.type = 'String';
         normal.choice = {0,1,'AcrossSegments'};
@@ -47,7 +52,7 @@ varargout = mirfunction(@mirattackleap,orig,varargin,nargout,specif,@init,@main)
 function [o type] = init(x,option)
 o = mironsets(x,'Attack','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
-                'Presilence',option.presilence,...
+                'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal',option.normal);
 type = mirtype(x);
 
