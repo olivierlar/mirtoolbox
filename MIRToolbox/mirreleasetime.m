@@ -37,6 +37,11 @@ function varargout = mirreleasetime(orig,varargin)
         minlog.default = 0;
     option.minlog = minlog;    
 
+        presilence.key = 'PreSilence';
+        presilence.type = 'Boolean';
+        presilence.default = 0;
+    option.presilence = presilence;
+
         postsilence.key = 'PostSilence';
         postsilence.type = 'Boolean';
         postsilence.default = 0;
@@ -50,7 +55,7 @@ varargout = mirfunction(@mirreleasetime,orig,varargin,nargout,specif,@init,@main
 function [o type] = init(x,option)
 o = mironsets(x,'Release','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
-                'PostSilence',option.postsilence,...
+                'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal','AcrossSegments');
 type = mirtype(x);
 
