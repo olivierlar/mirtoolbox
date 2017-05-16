@@ -169,6 +169,12 @@ while i <= length(varg)
             else
                 frame.presilence = 0;
             end
+            if length(varg) > i && isnumeric(varg{i+1})
+                i = i+1;
+                frame.postsilence = varg{i};
+            else
+                frame.postsilence = 0;
+            end
             
         elseif length(varg) > i && ischar(varg{i+1}) && ...
                strcmpi(varg{i+1},'Hop')

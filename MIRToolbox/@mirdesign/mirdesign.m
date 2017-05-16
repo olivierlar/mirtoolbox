@@ -23,6 +23,7 @@ if nargin == 0
     d.overlap = 0;
     d.separate = 0;
     d.presilence = 0;
+    d.postsilence = 0;
     d.chunk = [];
     d.eval = 0;
     d.interchunk = [];
@@ -57,6 +58,7 @@ elseif isa(orig,'mirdesign')
     d.overlap = orig.overlap;
     d.separate = orig.separate;
     d.presilence = orig.presilence;
+    d.postsilence = orig.postsilence;
     d.chunk = orig.chunk;
     d.eval = orig.eval;
     d.interchunk = orig.interchunk;
@@ -96,6 +98,7 @@ else
         d.overlap = 0;
         d.separate = 0;
         d.presilence = 0;
+        d.postsilence = 0;
     else
         if iscell(argin)
             argin = argin{1};
@@ -155,6 +158,7 @@ else
         d.overlap = argin.overlap;
         d.separate = argin.separate;
         d.presilence = argin.presilence;
+        d.postsilence = argin.postsilence;
     end
     d.chunk = [];
     d.eval = 0;

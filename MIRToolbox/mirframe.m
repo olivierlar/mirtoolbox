@@ -95,6 +95,7 @@ elseif isa(x,'mirdesign')
             end
             options = varargin{1};
             options.presilence = get(x,'PreSilence');
+            options.postsilence = get(x,'PostSilence');
             f = mirframe(e,options);
         end
     end
@@ -169,11 +170,15 @@ elseif isa(x,'mirdata')
                         dtj = dtj(1,:)';
                     end
 
-                    if para.presilence
-                        n = floor((size(dxj,1)-floor(h)-p)/h)+1; % Number of frames
+                     % Number of frames
+                    if para.presilence && para.postsilence
+                        n = floor((size(dxj,1)+l-floor(h)-p)/h)+1;
+                    elseif para.presilence || para.postsilence
+                        n = floor((size(dxj,1)-floor(h)-p)/h)+1;
                     else
-                        n = floor((size(dxj,1)-l-p)/h)+1; % Number of frames
+                        n = floor((size(dxj,1)-l-p)/h)+1;
                     end
+
                     dx2j = zeros(l,n,size(dxj,3));
                     dt2j = zeros(l,n);
                     fpj = zeros(2,n);
@@ -196,6 +201,9 @@ elseif isa(x,'mirdata')
                             if st < 1
                                 dx2j(:,i,:) = [zeros(-st+1,1,size(dxj,3)); dxj(1:stend,1,:)];
                                 dt2j(:,i) = dtj(1:stend-st+1) - (dtj(-st+2) - dtj(1));
+                            elseif stend > size(dtj,1)
+                                dx2j(:,i,:) = [dxj(st:end,1,:); zeros(stend-size(dtj,1),1,size(dxj,3))];
+                                dt2j(:,i) = dtj(1:stend-st+1) + dtj(st) - dtj(1);
                             else
                                 dx2j(:,i,:) = dxj(st:stend,1,:);
                                 dt2j(:,i) = dtj(st:stend);
@@ -278,6 +286,7 @@ if not(isempty(v)) && isstruct(v{1})
         para.hop = v{2};
         para.phase = v{3};
         para.presilence = v{4};
+        para.postsilence = v{5};
     end
     return
 end

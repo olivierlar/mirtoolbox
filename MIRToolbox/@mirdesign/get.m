@@ -142,6 +142,9 @@ if ischar(varargin{1})
             return 
         case 'PreSilence'
             varargout = {a.presilence};
+            return      
+        case 'PostSilence'
+            varargout = {a.postsilence};
             return 
     end
 end

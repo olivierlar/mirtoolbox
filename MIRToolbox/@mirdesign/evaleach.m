@@ -100,6 +100,7 @@ elseif iscell(a)
             a{2}.acrosschunks = d.acrosschunks;
             a{2}.index = d.index;
             a{2}.presilence = d.presilence;
+            a{2}.postsilence = d.postsilence;
     
     aux = evaleach(a{2},single,name);
     if iscell(aux)
@@ -152,7 +153,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         else
             chunks = compute_frames(fr,sr,sr2,w,lsz,...
                                     CHUNKLIM/d.chunksizefactor,...
-                                    d.overlap,d.presilence);
+                                    d.overlap,d.presilence,d.postsilence);
         end
     end
     
@@ -203,6 +204,8 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         d2 = d;
         d2.method = method;
         y = {};
+        posi = d2.postsilence;
+        d2.postsilence = 0;
         for i = 1:size(chunks,2)
             if mirverbose
                 disp([meth,num2str(i),'/',num2str(nch),'...'])
@@ -253,6 +256,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
                 end
             end
             d2.presilence = 0;
+            d2.postsilence = posi;
         end
         
         if ~isstruct(y)
@@ -293,7 +297,7 @@ elseif d.nochunk
     [y d2] = evalnow(d);
 else
     % Frame decomposition in the design to be evaluated.
-    chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap,d.presilence);
+    chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap,d.presilence,d.postsilence);
     if size(chunks,2)>1
         % The chunk decomposition is performed.
         if mirwaitbar
@@ -370,7 +374,7 @@ if iscell(y)
 end
 
 
-function chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,frov,ps)
+function chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,frov,pre,post)
 if strcmpi(fr.length.unit,'s')
     fl = fr.length.val*sr;
     fl2 = fr.length.val*sr2;
@@ -405,7 +409,9 @@ elseif strcmpi(fr.phase.unit,'%')
 end
 
 % Number of frames
-if ps
+if pre && post
+    n = floor((lsz+fl-floor(h)-ph)/h)+1;   
+elseif pre || post
     n = floor((lsz-floor(h)-ph)/h)+1;   
 else
     n = floor((lsz-fl-ph)/h)+1;
@@ -417,12 +423,12 @@ if n < 1
     fp2 = (w-1)/sr*sr2+1;
 else
     st = ((1:n)-1)*h+ph+w(1);
-    if ps
+    if pre
         st = st - fl + h;
     end
     st = floor(st);
     st2 = ((1:n)-1)*h2+w(1)+ph;
-    if ps
+    if pre
         st2 = st2 - fl + h2;
     end
     st2 = floor(st2);
@@ -794,6 +800,7 @@ for i = 1:length(argin)
             a.acrosschunks = d.acrosschunks;
             a.index = d.index;
             a.presilence = d.presilence;
+            a.postsilence = d.postsilence;
             argin{i} = a;
         else
             % Variable already calculated

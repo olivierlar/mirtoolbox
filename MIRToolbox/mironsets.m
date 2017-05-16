@@ -148,6 +148,11 @@ function varargout = mironsets(x,varargin)
             presilence.type = 'Boolean';
             presilence.default = 0;
         option.presilence = presilence;
+
+            postsilence.key = 'PostSilence';
+            postsilence.type = 'Boolean';
+            postsilence.default = 0;
+        option.postsilence = postsilence;
         
             powerspectrum.key = 'PowerSpectrum';
             powerspectrum.type = 'Boolean';
@@ -481,7 +486,8 @@ if isamir(x,'miraudio')
                           'PowerSpectrum',option.powerspectrum,...
                           'TimeSmooth',option.timesmooth,...
                           'Terhardt',option.terhardt,...
-                          'PreSilence',option.presilence);
+                          'PreSilence',option.presilence,...
+                          'PostSilence',option.postsilence);
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???
@@ -540,7 +546,7 @@ else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
 if option.attack || option.release
-    z = mironsets(x,'PreSilence',option.presilence);
+    z = mironsets(x,'PreSilence',option.presilence,'PostSilence',option.postsilence);
     y = {y,z};
 end
 type = 'mirenvelope';
@@ -898,11 +904,17 @@ while i < length(stu)
     
     st(i) = find(t >= stu(i),1);
     
-    dd = diff(d(st(i):pp(i)));
-    f0 = find(dd > 0,1);
-    %if ~isempty(f0)
-        st(i) = st(i) + f0 - 1;
-    %end
+    while true
+        dd = diff(d(st(i):pp(i)));
+        f0 = find(dd > 0,1);
+        if isempty(f0)
+            pp(i) = [];
+            ppu(i) = [];
+        else
+            break
+        end
+    end
+    st(i) = st(i) + f0 - 1;
     
     dd = diff(d(st(i):pp(i)));
     f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
@@ -974,13 +986,19 @@ while i < length(rlu)
         ppu(i:i+j-3) = [];
     end
         
-    en(i) = find(t >= rlu(i),1);
+    en(i) = find(t <= rlu(i),1,'last');
     
-    dd = diff(d(en(i):-1:pp(i)));
-    f0 = find(dd > 0,1);
-    %if ~isempty(f0)
-        en(i) = en(i) - f0 + 1;
-    %end
+    while true
+        dd = diff(d(en(i):-1:pp(i)));
+        f0 = find(dd > 0,1);
+        if isempty(f0)
+            pp(i) = [];
+            ppu(i) = [];
+        else
+            break
+        end
+    end
+    en(i) = en(i) - f0 + 1;
     
     dd = diff(d(en(i):-1:pp(i)));
     f0 = find(dd < 0 & d(en(i):-1:pp(i)+1) < d(en(i)));
@@ -1012,6 +1030,6 @@ while i < length(rlu)
     end
     en(i) = en(i) - f1;
 end
-en(length(pp)+1:end) = [];
+pp(length(en)+1:end) = [];
 
 pp = {{pp} {en}};
