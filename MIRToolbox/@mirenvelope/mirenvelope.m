@@ -312,7 +312,7 @@ end
 if not(isamir(x,'mirenvelope'))
     if strcmpi(option.method,'Filter')
         if isnan(option.zp)
-            if strcmpi(option.filter,'IIR')
+            if strcmpi(option.filter,'IIR') || strcmpi(option.filter,'Butter')
                 option.zp = 1;
             else
                 option.zp = 0;
@@ -320,7 +320,9 @@ if not(isamir(x,'mirenvelope'))
         end
         if option.zp == 1
             x = mirenvelope(x,'ZeroPhase',2,'Down',1,...
-                              'Tau',option.tau,'PreDecim',option.decim);
+                              'Tau',option.tau,'PreDecim',option.decim,...
+                              'Filter','FilterType',option.filter,...
+                              'Hilbert',option.hilb);
         end
     elseif strcmpi(option.method,'Spectro')
         if option.presilence && isa(x,'mirdesign')
@@ -436,7 +438,7 @@ elseif strcmpi(option.method,'Spectro')
     e = post(e,postoption);
 else
     if isnan(option.zp)
-        if strcmpi(option.filter,'IIR')
+        if strcmpi(option.filter,'IIR') || strcmpi(option.filter,'Butter')
             option.zp = 1;
         else
             option.zp = 0;
@@ -477,8 +479,7 @@ else
             b = hann(sr{k}*.4);
             b = b(ceil(length(b)/2):end);
         elseif strcmpi(option.filter,'Butter')
-            % From Timbre Toolbox
-            w = 5 / ( sr{k}/2 );
+            w = 40 / ( sr{k}/2 );
             [b,a] = butter(3, w);
         end
         d{k} = cell(1,length(sig{k}));
@@ -487,7 +488,7 @@ else
             if option.zp == 2
                 sigi = flipdim(sigi,1);
             end
-            if option.hilb
+            if option.hilb && option.zp ~= 1
                 try
                     for h = 1:size(sigi,2)
                         for j = 1:size(sigi,3)
