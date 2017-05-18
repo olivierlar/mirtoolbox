@@ -142,11 +142,11 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         meth = 'Chunk ';
         if isempty(fr)
             if lsz > CHUNKLIM
-            % The required memory exceed the max memory threshold.
-                nch = ceil(lsz/CHUNKLIM); 
-            %%% TAKE INTO CONSIDERATION NUMBER OF CHANNELS; ETC... 
-                chunks = max(0,lsz-CHUNKLIM*(nch:-1:1))+w(1);
-                chunks(2,:) = lsz-CHUNKLIM*(nch-1:-1:0)+w(1)-1;
+                % The required memory exceed the max memory threshold.
+                nch = ceil(lsz/CHUNKLIM);
+                        %%% TAKE INTO CONSIDERATION NUMBER OF CHANNELS; ETC...
+                chunks = max(0,lsz - CHUNKLIM*(nch:-1:1)) +w(1);
+                chunks(2,:) = lsz - max( CHUNKLIM*(nch-1:-1:0)-d.overlap(1), 0) +w(1)-1;
             else
                 chunks = [];
             end
@@ -167,14 +167,14 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         else
             h = 0;
         end
-        if not(isempty(d.tmpfile)) && d.tmpfile.fid == 0
-            % When applicable, a new temporary file is created.
-            tmpname = [f '.mirtmp'];
-            d.tmpfile.fid = fopen(tmpname,'w');
-        end
-        if not(d.ascending)
-            chunks = fliplr(chunks);
-        end
+%         if not(isempty(d.tmpfile)) && d.tmpfile.fid == 0
+%             % When applicable, a new temporary file is created.
+%             tmpname = [f '.mirtmp'];
+%             d.tmpfile.fid = fopen(tmpname,'w');
+%         end
+%         if not(d.ascending)
+%             chunks = fliplr(chunks);
+%         end
 
         afterpostoption = d.postoption; % Used only when:
                         % - eachchunk is set to 'Normal',
@@ -243,17 +243,17 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
             d3.method = method;
             d2 = d3; % This new argument is transfered to d
 
-            y = combinechunk_noframe(y,ss,sg,i,d2,chunks,single);
+            y = combinechunk_noframe(y,ss,sg,i,d2,chunks,single,d.overlap);
 
             clear ss
             if isa(h,'matlab.ui.Figure')
-                if not(d.ascending)
-                    close(h)
-                    h = waitbar((chunks(1,i)-chunks(1,end))/chunks(2,1),...
-                        ['Computing ' func2str(d.method) ' (backward)']);
-                else
+%                 if not(d.ascending)
+%                     close(h)
+%                     h = waitbar((chunks(1,i)-chunks(1,end))/chunks(2,1),...
+%                         ['Computing ' func2str(d.method) ' (backward)']);
+%                 else
                     waitbar((chunks(2,i)-chunks(1))/chunks(end),h)
-                end
+%                 end
             end
             d2.presilence = 0;
             d2.postsilence = posi;
@@ -263,18 +263,18 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         % Final operations to be executed after the chunk decomposition
             if iscombinemethod(d2.specif,'Average')
                 y{1} = divideweightchunk(y{1},lsz);
-            elseif not(isempty(afterpostoption)) && isempty(d2.tmpfile)
+            elseif not(isempty(afterpostoption)) %&& isempty(d2.tmpfile)
                 y{1} = d.method(y{1},[],afterpostoption);
             end
-            if not(isempty(d2.tmpfile))
-                adr = ftell(d2.tmpfile.fid);
-                fclose(d2.tmpfile.fid);
-                ytmpfile.fid = fopen(tmpname);
-                fseek(ytmpfile.fid,adr,'bof');
-                ytmpfile.data = y{1};
-                ytmpfile.layer = 0;
-                y{1} = set(y{1},'TmpFile',ytmpfile);
-            end
+%             if not(isempty(d2.tmpfile))
+%                 adr = ftell(d2.tmpfile.fid);
+%                 fclose(d2.tmpfile.fid);
+%                 ytmpfile.fid = fopen(tmpname);
+%                 fseek(ytmpfile.fid,adr,'bof');
+%                 ytmpfile.data = y{1};
+%                 ytmpfile.layer = 0;
+%                 y{1} = set(y{1},'TmpFile',ytmpfile);
+%             end
         end
                 
         if isa(d,'mirstruct') && ...
@@ -488,7 +488,7 @@ else
 end
 
 
-function res = combinechunk_noframe(old,new,sg,i,d2,chunks,single)
+function res = combinechunk_noframe(old,new,sg,i,d2,chunks,single,overlap)
 if isempty(new)
     res = {};
     return
@@ -536,20 +536,20 @@ if isempty(sg)
         end
     end
     %tmp = get(new{1},'InterChunk');
-    if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
-        % If temporary file is used, chunk results are written
-        % in the file
-        if i < size(chunks,2)
-            ds = get(new{1},'Data');
-            ps = get(new{1},'Pos');
-            %ftell(d2.tmpfile.fid)
-            count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
-            count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
-            %ftell(d2.tmpfile.fid)
-            clear ds ps
-        end
-        res = new;
-    else
+%     if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
+%         % If temporary file is used, chunk results are written
+%         % in the file
+%         if i < size(chunks,2)
+%             ds = get(new{1},'Data');
+%             ps = get(new{1},'Pos');
+%             %ftell(d2.tmpfile.fid)
+%             count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
+%             count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
+%             %ftell(d2.tmpfile.fid)
+%             clear ds ps
+%         end
+%         res = new;
+%     else
         % Else, chunk results are directly combined in active
         % memory
         if i == 1
@@ -572,9 +572,6 @@ if isempty(sg)
                                 dn = get(new{z},'Data');
                                 fpo = get(old{z},'FramePos');
                                 fpn = get(new{z},'FramePos');
-                                if size(fpo{1}{1},2)>1
-                                    error('Fatal error. Please contact Olivier.');
-                                end
                                 if isa(old,'mirscalar')
                                     res{z} = set(old{z},...
                                         'Data',{{[do{1}{1},dn{1}{1}]}},...
@@ -582,17 +579,25 @@ if isempty(sg)
                                 else
                                     to = get(old{z},'Pos');
                                     tn = get(new{z},'Pos');
-                                    if d2.ascending
+%                                     if d2.ascending
+                                    if overlap(1)
+                                        o = overlap(1)/overlap(2);
                                         res{z} = set(old{z},...
-                                            'Data',{{[do{1}{1};dn{1}{1}]}},...
-                                            'Pos',{{[to{1}{1};tn{1}{1}]}},...
+                                            'Data',{{[do{1}{1};dn{1}{1}(o:end)]}},...
+                                            'Pos',{{[to{1}{1};tn{1}{1}(o:end)]}},...
                                             'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                     else
                                         res{z} = set(old{z},...
-                                            'Data',{{[dn{1}{1};do{1}{1}]}},...
-                                            'Pos',{{[tn{1}{1};to{1}{1}]}},...
+                                            'Data',{{[do{1}{1};dn{1}{1}(overlap:end)]}},...
+                                            'Pos',{{[to{1}{1};tn{1}{1}(overlap:end)]}},...
                                             'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                     end
+%                                     else
+%                                         res{z} = set(old{z},...
+%                                             'Data',{{[dn{1}{1};do{1}{1}]}},...
+%                                             'Pos',{{[tn{1}{1};to{1}{1}]}},...
+%                                             'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
+%                                     end
                                 end
                             elseif strcmpi(method{z},'Average') || ...
                                     strcmpi(method{z},'Sum')
@@ -623,7 +628,7 @@ if isempty(sg)
                 end
             end
         end
-    end
+    %end
 else
     if i == 1
         res = new;
@@ -734,9 +739,9 @@ if not(iscell(argin))
 end
 for i = 1:length(argin)
     a = argin{i};
-    if not(d.ascending)
-        a.ascending = 0;
-    end
+%     if not(d.ascending)
+%         a.ascending = 0;
+%     end
     if isa(a,'mirdata')
         % Input already computed
         tmpfile = get(a,'TmpFile');
