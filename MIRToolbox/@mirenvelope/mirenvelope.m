@@ -528,7 +528,7 @@ else
 
             % zero-phase IIR filter for smoothing the envelope
             for c = 1:size(sigi,3)
-                tmp(:,:,c) = filter(b,a,sigi(:,:,c));
+                tmp(:,:,c) = filtfilt(b,a,sigi(:,:,c));
             end
 
 %             % Manual filtfilt
