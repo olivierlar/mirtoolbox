@@ -102,7 +102,7 @@ function varargout = mironsets(x,varargin)
             filter.key = 'FilterType';
             filter.type = 'String';
             filter.choice = {'IIR','HalfHann','Butter'};
-            filter.default = 'IIR';
+            filter.default = NaN;
         option.filter = filter;
 
             tau.key = 'Tau';
@@ -112,7 +112,7 @@ function varargout = mironsets(x,varargin)
 
             fb.key = {'Filterbank','NbChannels'};
             fb.type = 'Integer';
-            fb.default = 40;
+            fb.default = NaN;
         option.fb = fb;
 
             filtertype.key = 'FilterbankType';
@@ -128,7 +128,7 @@ function varargout = mironsets(x,varargin)
 
             hilb.key = {'Hilbert'};
             hilb.type = 'Boolean';
-            hilb.default = 0;
+            hilb.default = NaN;
         option.hilb = hilb;        
         
 %%      options related to 'Spectro':
@@ -464,30 +464,58 @@ end
 if isamir(x,'miraudio')
     y = [];
     if option.env
-        if strcmpi(option.envmeth,'Filter') && option.fb>1
-            fb = mirfilterbank(x,option.filtertype,'NbChannels',option.fb);
-        else
-            fb = x;
-        end
-        if isnan(option.specframe)
-            if option.attack || option.release
-                option.specframe = [.03 .02];
-            else
-                option.specframe = [.1 .1];
+        if strcmpi(option.envmeth,'Filter')
+            if isnan(option.filter)
+                if option.attack || option.release
+                    option.filter = 'Butter';
+                else
+                    option.filter = 'IIR';
+                end
             end
+            if isnan(option.hilb)
+                if option.attack || option.release
+                    option.hilb = 1;
+                else
+                    option.hilb = 0;
+                end
+            end
+            if isnan(option.fb)
+                if option.attack || option.release
+                    option.fb = 0;
+                else
+                    option.fb = 40;
+                end
+            end
+            
+            if option.fb>1
+                fb = mirfilterbank(x,option.filtertype,'NbChannels',option.fb);
+            else
+                fb = x;
+            end
+            y = mirenvelope(fb,'Filter','FilterType',option.filter,...
+                'Hilbert',option.hilb,'Tau',option.tau,...
+                'UpSample',option.up,...
+                'PreDecim',option.decim,'PostDecim',0,...
+                'Mu',option.mu,...
+                'PreSilence',option.presilence,...
+                'PostSilence',option.postsilence);
+        else
+            if isnan(option.specframe)
+                if option.attack || option.release
+                    option.specframe = [.03 .02];
+                else
+                    option.specframe = [.1 .1];
+                end
+            end
+            y = mirenvelope(x,'Spectro',...
+                'Frame',option.specframe(1),option.specframe(2),...
+                'PowerSpectrum',option.powerspectrum,...
+                'TimeSmooth',option.timesmooth,...
+                'Terhardt',option.terhardt,...
+                'PreSilence',option.presilence,...
+                'PostSilence',option.postsilence);
         end
-        y = mirenvelope(fb,option.envmeth,option.band,...
-                          'Frame',option.specframe(1),option.specframe(2),...
-                          'FilterType',option.filter,...
-                          'Hilbert',option.hilb,...
-                          'Tau',option.tau,'UpSample',option.up,...
-                          'PreDecim',option.decim,'PostDecim',0,...
-                          'Mu',option.mu,...
-                          'PowerSpectrum',option.powerspectrum,...
-                          'TimeSmooth',option.timesmooth,...
-                          'Terhardt',option.terhardt,...
-                          'PreSilence',option.presilence,...
-                          'PostSilence',option.postsilence);
+
     end
     if option.flux
         z = mirflux(x,'Inc',option.inc,'Complex',option.complex); %,'Dist','City'); %%%%%%%%%%%%%%%%%???
@@ -546,7 +574,8 @@ else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
 if option.attack || option.release
-    z = mironsets(x,'PreSilence',option.presilence,'PostSilence',option.postsilence);
+    z = mironsets(x,option.envmeth,...
+        'PreSilence',option.presilence,'PostSilence',option.postsilence);
     y = {y,z};
 end
 type = 'mirenvelope';

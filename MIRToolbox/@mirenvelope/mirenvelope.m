@@ -310,6 +310,12 @@ if ischar(option.presel) && strcmpi(option.presel,'Klapuri06')
     option.method = 'Spectro';
 end
 if not(isamir(x,'mirenvelope'))
+    if option.presilence && isa(x,'mirdesign')
+        x.presilence = 1;
+    end
+    if option.postsilence && isa(x,'mirdesign')
+        x.postsilence = 1;
+    end
     if strcmpi(option.method,'Filter')
         if isa(x,'mirdesign')
             if isnan(option.ds)
@@ -335,12 +341,6 @@ if not(isamir(x,'mirenvelope'))
 %                               'Hilbert',option.hilb);
 %         end
     elseif strcmpi(option.method,'Spectro')
-        if option.presilence && isa(x,'mirdesign')
-            x.presilence = 1;
-        end
-        if option.postsilence && isa(x,'mirdesign')
-            x.postsilence = 1;
-        end
         x = mirspectrum(x,'Frame',option.frame.length.val,...
                                   option.frame.length.unit,...
                                   option.frame.hop.val,...
