@@ -991,12 +991,19 @@ while i < length(stu)
             percent_posn_v(p) = find(f_Env_v >= percent_value_v(p),1);
         end
 
+        % === NOTATION
+        % satt: start attack
+        % eatt: end attack
+
         % === PARAMETRES
         param.m1	= 3; % === BORNES pour calcul mean
         param.m2	= 6;
         
         param.s1att	= 1; % === BORNES pour correction satt (start attack)
         param.s2att	= 3;
+        
+        param.e1att	= round(0.5/percent_step); % === BORNES pour correction eatt (end attack)
+		param.e2att	= round(0.9/percent_step);
         
         % === facteur multiplicatif de l'effort
         param.mult	= 3;
@@ -1006,6 +1013,7 @@ while i < length(stu)
         % === M = effort moyen
         M				= mean(dpercent_posn_v(param.m1:param.m2));
         
+        % === 1) START ATTACK
         % === on DEMARRE juste APRES que l'effort à fournir (écart temporal entre percent) soit trop important
         pos2_v			= find(dpercent_posn_v(param.s1att:param.s2att) > param.mult*M);
         if ~isempty(pos2_v)
@@ -1022,6 +1030,25 @@ while i < length(stu)
             [min_value, min_pos]= min(f_Env_v(n-delta:n+delta));
             satt_posn			= min_pos + n-delta-1;
         end
+        
+        % === 2) END ATTACK
+		% === on ARRETE juste AVANT que l'effort à fournir (écart temporal entre percent) soit trop important
+		pos2_v		= find(dpercent_posn_v(param.e1att:param.e2att) > param.mult*M);
+		if ~isempty(pos2_v)
+            result		= pos2_v(1)+param.e1att-1;
+        else
+            result		= param.e2att+1;
+		end
+		eatt_posn	= percent_posn_v(result);
+        
+		% === raffinement: on cherche le maximum local
+		delta	= round(0.25*(percent_posn_v(result)-percent_posn_v(result-1)));
+		n		= percent_posn_v(result);
+		if n+delta <= length(f_Env_v)
+			[max_value, max_pos]	= max(f_Env_v(n-delta:n+delta));
+			eatt_posn				= max_pos + n-delta-1;
+        end
+        pp(i) = st(i) + eatt_posn;
         st(i) = st(i) + satt_posn;
     end
 end
