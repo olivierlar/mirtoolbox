@@ -48,6 +48,8 @@ a = d.argin;
 ch = d.chunk;
 chan = d.channel;
 specif = d.specif;
+pre = d.presilence;
+post = d.postsilence;
 if iscombinemethod(specif,'Average') || iscombinemethod(specif,'Sum')
     specif.eachchunk = 'Normal';
 end
@@ -59,10 +61,10 @@ if ischar(a)
     
     if isempty(ch)
         % No chunk decomposition
-        y = miraudio(f,'Now',[w(:)' chan]);
+        y = miraudio(f,'Now',[w(:)' chan pre post]);
     else
         % Chunk decomposition
-        y = miraudio(f,'Now',[ch(1),ch(2) chan]);
+        y = miraudio(f,'Now',[ch(1),ch(2) chan pre post]);
     end
     if not(isempty(d.postoption)) && d.postoption.mono
         y = miraudio(y,'Mono',1);
@@ -71,7 +73,7 @@ if ischar(a)
     y = set(y,'Extracted',1);
     d2 = d;
     
-elseif d.chunkdecomposed && isempty(d.tmpfile)
+elseif d.chunkdecomposed %&& isempty(d.tmpfile)
     % Already in a chunk decomposition process
     
     [y d2] = evalnow(d);  

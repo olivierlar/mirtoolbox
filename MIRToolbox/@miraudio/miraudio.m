@@ -196,10 +196,25 @@ if iscell(orig)
 end
 if ischar(orig)
     if nargin < 5
+        % When is this used?
         extract = [];
+    else
+        presil = extract(3);
+        postsil = extract(4);
+        extract = extract(1:2);
     end
-    [d{1},tp{1},fp{1},f{1},l{1},b{1},n{1},ch{1}] = mirread(extract,orig,1,0);
+    [d{1},tp{1},fp{1},f{1},l{1},b{1},n{1},ch{1}] = mirread(extract(1:2),orig,1,0);
     l{1}{1} = l{1}{1}*f{1};
+    if presil
+        d{1}{1} = [zeros(2000,1,size(d{1}{1},3));d{1}{1}];
+        tp1 = tp{1}{1};
+        tp{1}{1} = [tp1(1)-(2000:-1:1)'*(tp1(2)-tp1(1));tp1];
+    end
+    if postsil
+        d{1}{1} = [d{1}{1};zeros(2000,1,size(d{1}{1},3))];
+        tp1 = tp{1}{1};
+        tp{1}{1} = [tp1;tp1(end)+(1:2000)'*(tp1(2)-tp1(1))];
+    end
     t = mirtemporal([],'Time',tp,'Data',d,'FramePos',fp,'Sampling',f,...
                        'Name',n,'Label',cell(1,length(d)),...
                        'Clusters',cell(1,length(d)),'Length',l,...
