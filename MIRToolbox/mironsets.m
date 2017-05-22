@@ -250,7 +250,7 @@ function varargout = mironsets(x,varargin)
         else
             ds.default = NaN;
         end
-        ds.when = 'After';
+        ds.when = 'Both';
         ds.chunkcombine = 'During';
     option.ds = ds;
 
@@ -495,7 +495,7 @@ if isamir(x,'miraudio')
             y = mirenvelope(fb,'Filter','FilterType',option.filter,...
                 'Hilbert',option.hilb,'Tau',option.tau,...
                 'UpSample',option.up,...
-                'PreDecim',option.decim,'PostDecim',0,...
+                'PreDecim',option.decim,'PostDecim',[0 option.ds],...
                 'Mu',option.mu,...
                 'PreSilence',option.presilence,...
                 'PostSilence',option.postsilence);
@@ -1017,7 +1017,12 @@ while i < length(rlu)
         
     en(i) = find(t <= rlu(i),1,'last');
     
+    stop = 0;
     while true
+        if pp(i) >= en(i)
+            stop = 1;
+            break
+        end
         dd = diff(d(en(i):-1:pp(i)));
         f0 = find(dd > 0,1);
         if isempty(f0)
@@ -1026,6 +1031,9 @@ while i < length(rlu)
         else
             break
         end
+    end
+    if stop
+        continue
     end
     en(i) = en(i) - f0 + 1;
     

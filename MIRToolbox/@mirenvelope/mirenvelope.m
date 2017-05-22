@@ -318,14 +318,18 @@ if not(isamir(x,'mirenvelope'))
     end
     if strcmpi(option.method,'Filter')
         if isa(x,'mirdesign')
-            if isnan(option.ds)
+            ds = option.ds(end);
+            if isnan(ds)
                 if option.decim
-                    option.ds = 0;
+                    ds = 0;
                 else
-                    option.ds = 16;
+                    ds = 16;
                 end
             end
-            x = set(x,'Overlap',[1600,option.ds]);
+            if ~ds
+                ds = 1;
+            end
+            x = set(x,'Overlap',[1600,ds]);
         end
 %         if isnan(option.zp)
 %             if strcmpi(option.filter,'IIR') || strcmpi(option.filter,'Butter')
@@ -395,11 +399,14 @@ if isfield(option,'presel') && ischar(option.presel) && ...
     postoption.diffhwr = 1;
     postoption.lambda = .8;
 end
-if isfield(postoption,'ds') && isnan(postoption.ds)
-    if option.decim
-        postoption.ds = 0;
-    else
-        postoption.ds = 16;
+if isfield(postoption,'ds') 
+    postoption.ds = postoption.ds(1);
+    if isnan(postoption.ds)
+        if option.decim
+            postoption.ds = 0;
+        else
+            postoption.ds = 16;
+        end
     end
 end
 if not(isfield(option,'filter')) || not(ischar(option.filter))
