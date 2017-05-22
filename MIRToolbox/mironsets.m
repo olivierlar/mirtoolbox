@@ -377,8 +377,10 @@ function varargout = mironsets(x,varargin)
     option.single = single;
 
         attack.key = {'Attack','Attacks'};
-        attack.type = 'Boolean';
+        attack.type = 'String';
+        attack.choice = {'Derivate','Effort'};
         attack.default = 0;
+        attack.keydefault = 'Derivate';
         attack.when = 'Both';
     option.attack = attack;
     
@@ -466,21 +468,21 @@ if isamir(x,'miraudio')
     if option.env
         if strcmpi(option.envmeth,'Filter')
             if isnan(option.filter)
-                if option.attack || option.release
+                if ischar(option.attack) || option.release
                     option.filter = 'Butter';
                 else
                     option.filter = 'IIR';
                 end
             end
             if isnan(option.hilb)
-                if option.attack || option.release
+                if ischar(option.attack) || option.release
                     option.hilb = 1;
                 else
                     option.hilb = 0;
                 end
             end
             if isnan(option.fb)
-                if option.attack || option.release
+                if ischar(option.attack) || option.release
                     option.fb = 0;
                 else
                     option.fb = 40;
@@ -501,7 +503,7 @@ if isamir(x,'miraudio')
                 'PostSilence',option.postsilence);
         else
             if isnan(option.specframe)
-                if option.attack || option.release
+                if ischar(option.attack) || option.release
                     option.specframe = [.03 .02];
                 else
                     option.specframe = [.1 .1];
@@ -573,7 +575,7 @@ elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
-if option.attack || option.release
+if ischar(option.attack) || option.release
     z = mironsets(x,option.envmeth,...
         'PreSilence',option.presilence,'PostSilence',option.postsilence);
     y = {y,z};
@@ -705,7 +707,7 @@ end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
     if isnan(postoption.cthr) || not(postoption.cthr)
-        if postoption.attack || postoption.release
+        if ischar(postoption.attack) || postoption.release
             postoption.cthr = .05;
         elseif ischar(postoption.detect) || postoption.detect
             postoption.cthr = .01;
@@ -734,11 +736,11 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     nop = cell(size(get(o,'Data')));
     o = set(o,'OnsetPos',nop,'AttackPos',nop,'ReleasePos',nop);
 end
-if (isfield(postoption,'attack')) && (postoption.attack || postoption.release)
+if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.release)
     pp = get(o,'PeakPos');
     d = get(o,'Data');
     t = get(o,'Time');
-    if postoption.attack
+    if ischar(postoption.attack)
         x = postoption.new;
         ppu = get(o,'PeakPosUnit');
         if isnumeric(x)
@@ -750,7 +752,7 @@ if (isfield(postoption,'attack')) && (postoption.attack || postoption.release)
                 'Threshold',.5,...
                 'Valleys','Order','Abscissa','NoEnd');
             stu = get(v,'PeakPosUnit');
-            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu);
+            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption.attack);
         end
     else
         st = {{{}}};
@@ -896,7 +898,7 @@ tmp.old = old;
 
 
 %%
-function [st pp] = startattack(d,t,pp,ppu,stu)
+function [st pp] = startattack(d,t,pp,ppu,stu,option)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -945,35 +947,83 @@ while i < length(stu)
     end
     st(i) = st(i) + f0 - 1;
     
-    dd = diff(d(st(i):pp(i)));
-    f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
-    if ~isempty(f0)
-        st(i) = st(i) + f0(end) - 1;
+    if strcmpi(option,'Derivate')
+        dd = diff(d(st(i):pp(i)));
+        f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
+        if ~isempty(f0)
+            st(i) = st(i) + f0(end) - 1;
+        end
+
+        ppi = find(t >= ppu(i),1);
+        dd = diff(d(st(i):pp(i)));
+        f0 = find(dd <= 0 & ...
+                  d(st(i):pp(i)-1) - d(st(i)) > (d(ppi) - d(st(i))) / 5 ...
+                  ,1);
+        if ~isempty(f0)
+            pp(i) = st(i) + f0 - 1;
+        end
+
+        dd = diff(d(st(i):pp(i)));
+        [mad, mdd] = max(dd);
+
+        f2 = find(dd(end:-1:mdd+1)>mad/5,1);
+        if isempty(f2)
+            f2 = 1;
+        end
+        pp(i) = st(i) + length(dd) - f2;
+
+        f1 = find(dd(1:mdd-1)>mad/10,1);
+        if isempty(f1)
+            f1 = 1;
+        end
+        st(i) = st(i) + f1;
+    elseif strcmpi(option,'Effort')
+        % from Timbre Toolbox
+        f_Env_v = d(st(i):pp(i));
+        f_EnvMax = max(f_Env_v);
+        f_Env_v = f_Env_v /f_EnvMax; % normalize by maximum value
+        
+        % === calcul de la pos pour chaque seuil
+        percent_step	= 0.1;
+        percent_value_v = percent_step:percent_step:1;
+        percent_posn_v	= zeros(size(percent_value_v));
+        for p=1:length(percent_value_v)
+            percent_posn_v(p) = find(f_Env_v >= percent_value_v(p),1);
+        end
+
+        % === PARAMETRES
+        param.m1	= 3; % === BORNES pour calcul mean
+        param.m2	= 6;
+        
+        param.s1att	= 1; % === BORNES pour correction satt (start attack)
+        param.s2att	= 3;
+        
+        % === facteur multiplicatif de l'effort
+        param.mult	= 3;
+        
+        % === dpercent_posn_v = effort
+        dpercent_posn_v	= diff(percent_posn_v);
+        % === M = effort moyen
+        M				= mean(dpercent_posn_v(param.m1:param.m2));
+        
+        % === on DEMARRE juste APRES que l'effort à fournir (écart temporal entre percent) soit trop important
+        pos2_v			= find(dpercent_posn_v(param.s1att:param.s2att) > param.mult*M);
+        if ~isempty(pos2_v)
+            result		= pos2_v(end)+param.s1att-1+1;
+        else
+            result		= param.s1att;
+        end
+        satt_posn		= percent_posn_v(result);
+        
+        % === raffinement: on cherche le minimum local
+        delta	= round(0.25*(percent_posn_v(result+1)-percent_posn_v(result)));
+        n		= percent_posn_v(result);
+        if n-delta >= 1
+            [min_value, min_pos]= min(f_Env_v(n-delta:n+delta));
+            satt_posn			= min_pos + n-delta-1;
+        end
+        st(i) = st(i) + satt_posn;
     end
-    
-    ppi = find(t >= ppu(i),1);
-    dd = diff(d(st(i):pp(i)));
-    f0 = find(dd <= 0 & ...
-              d(st(i):pp(i)-1) - d(st(i)) > (d(ppi) - d(st(i))) / 5 ...
-              ,1);
-    if ~isempty(f0)
-        pp(i) = st(i) + f0 - 1;
-    end
-    
-    dd = diff(d(st(i):pp(i)));
-    [mad, mdd] = max(dd);
-    
-    f2 = find(dd(end:-1:mdd+1)>mad/5,1);
-    if isempty(f2)
-        f2 = 1;
-    end
-    pp(i) = st(i) + length(dd) - f2;
-    
-    f1 = find(dd(1:mdd-1)>mad/10,1);
-    if isempty(f1)
-        f1 = 1;
-    end
-    st(i) = st(i) + f1;
 end
 pp(length(st)+1:end) = [];
 st = {{st} {pp}};
