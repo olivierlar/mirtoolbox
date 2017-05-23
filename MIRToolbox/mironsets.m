@@ -389,6 +389,12 @@ function varargout = mironsets(x,varargin)
         attack.when = 'Both';
     option.attack = attack;
     
+        alpha.key = 'Alpha';
+        alpha.type = 'Integer';
+        alpha.default = 3.75;
+        alpha.when = 'After';
+    option.alpha = alpha;  
+    
         new.key = 'New';
         new.default = 0;
         new.when = 'After';
@@ -758,7 +764,7 @@ if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.re
                 'Threshold',.5,...
                 'Valleys','Order','Abscissa','NoEnd');
             stu = get(v,'PeakPosUnit');
-            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption.attack);
+            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption);
         end
     else
         st = {{{}}};
@@ -953,7 +959,7 @@ while i < length(stu)
     end
     st(i) = st(i) + f0 - 1;
     
-    if strcmpi(option,'Derivate')
+    if strcmpi(option.attack,'Derivate')
         dd = diff(d(st(i):pp(i)));
         f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
         if ~isempty(f0)
@@ -983,7 +989,7 @@ while i < length(stu)
             f1 = 1;
         end
         st(i) = st(i) + f1;
-    elseif strcmpi(option,'Effort')
+    elseif strcmpi(option.attack,'Effort')
         % from Timbre Toolbox
         f_Env_v = d(st(i):pp(i));
         f_EnvMax = max(f_Env_v);
@@ -1011,9 +1017,6 @@ while i < length(stu)
         param.e1att	= round(0.5/percent_step); % === BORNES pour correction eatt (end attack)
 		param.e2att	= round(0.9/percent_step);
         
-        % === facteur multiplicatif de l'effort
-        param.mult	= 3;
-        
         % === dpercent_posn_v = effort
         dpercent_posn_v	= diff(percent_posn_v);
         % === M = effort moyen
@@ -1021,7 +1024,7 @@ while i < length(stu)
         
         % === 1) START ATTACK
         % === on DEMARRE juste APRES que l'effort à fournir (écart temporal entre percent) soit trop important
-        pos2_v			= find(dpercent_posn_v(param.s1att:param.s2att) > param.mult*M);
+        pos2_v			= find(dpercent_posn_v(param.s1att:param.s2att) > option.alpha * M);
         if ~isempty(pos2_v)
             result		= pos2_v(end)+param.s1att-1+1;
         else
@@ -1039,7 +1042,7 @@ while i < length(stu)
         
         % === 2) END ATTACK
 		% === on ARRETE juste AVANT que l'effort à fournir (écart temporal entre percent) soit trop important
-		pos2_v		= find(dpercent_posn_v(param.e1att:param.e2att) > param.mult*M);
+		pos2_v		= find(dpercent_posn_v(param.e1att:param.e2att) > option.alpha * M);
 		if ~isempty(pos2_v)
             result		= pos2_v(1)+param.e1att-1;
         else
