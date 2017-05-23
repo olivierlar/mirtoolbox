@@ -455,7 +455,7 @@ if option.diffenv
 end
 if isnan(option.env)
     if option.flux || option.pitch || option.novelty || ...
-            ~isempty(option.sgate)
+            (ischar(option.sgate) && ~isempty(option.sgate))
         option.env = 0;
     else
         option.env = 1;
@@ -553,7 +553,7 @@ if isamir(x,'miraudio')
         else
             y = y+z;
         end
-    elseif ~isempty(option.sgate)
+    elseif ischar(option.sgate) && ~isempty(option.sgate)
         if strcmpi(option.sgate,'Goto')
             x = miraudio(x,'Sampling',22050);
             y = mirspectrum(x,'Frame',.04644,.25);
@@ -576,7 +576,7 @@ elseif (option.pitch && not(isamir(x,'mirscalar'))) ...
         || isamir(x,'mirsimatrix')
     y = mirnovelty(x,'KernelSize',option.kernelsize);
 elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
-        (isamir(x,'mirspectrum') && ~isempty(option.sgate))
+        (isamir(x,'mirspectrum') && ischar(option.sgate) && ~isempty(option.sgate))
     y = x;
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
@@ -650,7 +650,7 @@ if isfield(postoption,'cthr')
             o = mirenvelope(o,'HalfwaveCenter');
         end
     elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux') && ...
-            isempty(postoption.sgate)
+            ischar(postoption.sgate) && ~isempty(postoption.sgate)
         if postoption.median
             o = mirflux(o,'Median',postoption.median(1),postoption.median(2),...
                           'Halfwave',postoption.hw);
@@ -703,7 +703,7 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
-    if postoption.c || ~isempty(postoption.sgate)
+    if postoption.c || (ischar(postoption.sgate) && ~isempty(postoption.sgate))
         o = mirenvelope(o,'Center');
     end
     if isa(o,'mirenvelope') && postoption.minlog
