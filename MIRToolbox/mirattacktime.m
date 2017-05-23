@@ -67,6 +67,11 @@ function varargout = mirattacktime(orig,varargin)
         end
     option.ds = ds;
     
+        cutoff.key = 'CutOff';
+        cutoff.type = 'Integer';
+        cutoff.default = 37;
+    option.cutoff = cutoff;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
@@ -84,7 +89,7 @@ o = mironsets(x,option.envmeth,'Attack',option.attack,'Down',option.ds,...
                 'Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
-                'Normal','AcrossSegments');
+                'Normal','AcrossSegments','CutOff',option.cutoff);
 type = mirtype(x);
 
 
