@@ -110,6 +110,12 @@ function varargout = mirenvelope(orig,varargin)
             tau.default = .02;
     option.tau = tau;
     
+            %% options related to 'Butter': 
+            cutoff.key = 'CutOff';
+            cutoff.type = 'Integer';
+            cutoff.default = 37;
+    option.cutoff = cutoff;
+    
 %         zp.key = 'ZeroPhase'; % internal use: for manual filtfilt
 %         zp.type = 'Boolean';
 %         if isamir(orig,'mirenvelope')
@@ -496,7 +502,7 @@ else
             b = hann(sr{k}*.4);
             b = b(ceil(length(b)/2):end);
         elseif strcmpi(option.filter,'Butter')
-            w = 40 / ( sr{k}/2 );
+            w = option.cutoff / ( sr{k}/2 );
             [b,a] = butter(3, w);
         end
         d{k} = cell(1,length(sig{k}));
