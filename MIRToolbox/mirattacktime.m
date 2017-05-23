@@ -58,13 +58,29 @@ function varargout = mirattacktime(orig,varargin)
         envmeth.default = 'Spectro';
     option.envmeth = envmeth;
     
+        ds.key = {'Down','PostDecim'};
+        ds.type = 'Integer';
+        if isamir(orig,'mirenvelope')
+            ds.default = 1;
+        else
+            ds.default = NaN;
+        end
+    option.ds = ds;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,option.envmeth,'Attack',option.attack,...
+if isnan(option.ds)
+    if strcmpi(option.envmeth,'Spectro')
+        option.ds = 0;
+    else
+        option.ds = 16;
+    end
+end
+o = mironsets(x,option.envmeth,'Attack',option.attack,'Down',option.ds,...
                 'Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
