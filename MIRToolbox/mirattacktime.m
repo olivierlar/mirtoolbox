@@ -53,13 +53,19 @@ function varargout = mirattacktime(orig,varargin)
         attack.default = 'Derivate';
     option.attack = attack;
 
+        envmeth.type = 'String';
+        envmeth.choice = {'Filter','Spectro'};
+        envmeth.default = 'Spectro';
+    option.envmeth = envmeth;
+    
 specif.option = option;
 
 varargout = mirfunction(@mirattacktime,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack',option.attack,'Contrast',option.cthr,'Single',option.single,...
+o = mironsets(x,option.envmeth,'Attack',option.attack,...
+                'Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal','AcrossSegments');
