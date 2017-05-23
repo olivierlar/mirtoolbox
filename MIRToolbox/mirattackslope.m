@@ -71,6 +71,11 @@ function varargout = mirattackslope(orig,varargin)
         normal.choice = {0,1,'AcrossSegments'};
         normal.default = 'AcrossSegments';
     option.normal = normal;
+    
+        envmeth.type = 'String';
+        envmeth.choice = {'Filter','Spectro'};
+        envmeth.default = 'Spectro';
+    option.envmeth = envmeth;
 
 specif.option = option;
 
@@ -78,8 +83,9 @@ varargout = mirfunction(@mirattackslope,orig,varargin,nargout,specif,@init,@main
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack',option.attack,'Contrast',option.cthr,'Single',option.single,...
-                 'Log',option.log,'MinLog',option.minlog,...
+o = mironsets(x,option.envmeth,'Attack',option.attack,...
+                'Contrast',option.cthr,'Single',option.single,...
+                'Log',option.log,'MinLog',option.minlog,...
                  option.envmeth,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal',option.normal);
