@@ -70,7 +70,7 @@ for i = 1:l
     tpv{i} = getargin(argin,'TrackPreciseVal');
     op{i} = getargin(argin,'OnsetPos');
     ap{i} = getargin(argin,'AttackPos');
-    rp{i} = getargin(argin,'ReleasePos');
+    rp{i} = getargin(argin,'DecayPos');
     of{i} = getargin(argin,'OffsetPos');
     if isa(c,'temporal')
         ct = getargin(argin,'Centered');
@@ -101,7 +101,7 @@ c = set(c,'Pos',p,'Data',d,'FramePos',fp,'FrameRate',fr,'Channels',ch,...
           'PeakPrecisePos',ppp,'PeakPreciseVal',ppv,...
           'TrackPos',tp,'TrackVal',tv,...
           'TrackPrecisePos',tpp,'TrackPreciseVal',tpv,...
-          'OnsetPos',op,'AttackPos',ap,'ReleasePos',rp,'OffsetPos',of);
+          'OnsetPos',op,'AttackPos',ap,'DecayPos',rp,'OffsetPos',of);
 if isa(c,'temporal')
     c = set(c,'Centered',ct,'NBits',nb);
 end

@@ -61,8 +61,8 @@ while length(propertyArgIn) >= 2,
            a.offset.pos = val;
        case 'AttackPos'
            a.attack.pos = val;
-       case 'ReleasePos'
-           a.release.pos = val;
+       case 'DecayPos'
+           a.decay.pos = val;
        case 'TrackPos'
            a.track.pos = val;
        case 'TrackVal'

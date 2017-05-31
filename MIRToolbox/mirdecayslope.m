@@ -1,9 +1,9 @@
-function varargout = mirreleaseslope(orig,varargin)
-%   a = mirattackslope(x) estimates the average slope of each note release.
+function varargout = mirdecayslope(orig,varargin)
+%   a = mirattackslope(x) estimates the average slope of each note decay.
 %       Values are expressed in the same scale than the original signal,
 %       but normalised by time in seconds.
 %   Optional arguments:
-%   a = mirreleaseslope(x,m) specifies a method for slope computation.
+%   a = mirdecayslope(x,m) specifies a method for slope computation.
 %       Possible values:
 %           m = 'Diff': ratio between the magnitude difference at the 
 %               beginning and the ending of the attack period, and the
@@ -11,10 +11,10 @@ function varargout = mirreleaseslope(orig,varargin)
 %           m = 'Gauss': average of the slope, weighted by a gaussian
 %               curve that emphasizes values at the middle of the attack
 %               period. (similar to Peeters 2004).
-%   mirreleaseslope(...,'Contrast',c) specifies the 'Contrast' parameter
+%   mirdecayslope(...,'Contrast',c) specifies the 'Contrast' parameter
 %       used in mironsets for event detection through peak picking.
 %       Same default value as in mironsets.
-%   mirreleaseslope(...,'Single') only selects one attack phase in the
+%   mirdecayslope(...,'Single') only selects one attack phase in the
 %       signal (or in each segment).
 %
 % Peeters. G. (2004). A large set of audio features for sound description
@@ -68,11 +68,11 @@ function varargout = mirreleaseslope(orig,varargin)
 
 specif.option = option;
 
-varargout = mirfunction(@mirreleaseslope,orig,varargin,nargout,specif,@init,@main);
+varargout = mirfunction(@mirdecayslope,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Release','Contrast',option.cthr,'Single',option.single,...
+o = mironsets(x,'Decay','Contrast',option.cthr,'Single',option.single,...
                  'Log',option.log,'MinLog',option.minlog,...
                  option.envmeth,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
@@ -84,15 +84,15 @@ function rl = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-rp = get(o,'ReleasePos');
+rp = get(o,'DecayPos');
 op = get(o,'OffsetPos');
-rpu = get(o,'ReleasePosUnit');
+rpu = get(o,'DecayPosUnit');
 opu = get(o,'OffsetPosUnit');
 sr = get(o,'Sampling');
 d = get(o,'Data');
 rl = mircompute(@algo,op,rp,opu,rpu,d,option.meth,sr);
 fp = mircompute(@frampose,opu,rpu);
-rl = mirscalar(o,'Data',rl,'FramePos',fp,'Title','Release Slope');
+rl = mirscalar(o,'Data',rl,'FramePos',fp,'Title','Decay Slope');
 rl = {rl,o};
 
 

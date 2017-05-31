@@ -71,7 +71,7 @@ function varargout = mironsets(x,varargin)
 %               'Threshold' with default value t = 0
 %               'Single' detects only the highest peak.
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
-%       mironsets(...,'Release') (or 'Releases') detects release phases.
+%       mironsets(...,'Decay') (or 'Decays') detects decay phases.
 %       mironsets(...,'Frame',...) decomposes into frames, with default frame
 %           length 3 seconds and hop factor .1
 %   Preselected onset detection models:
@@ -400,11 +400,11 @@ function varargout = mironsets(x,varargin)
         new.when = 'After';
     option.new = new;
         
-        release.key = {'Release','Releases'};
-        release.type = 'Boolean';
-        release.default = 0;
-        release.when = 'Both';
-    option.release = release;
+        decay.key = {'Decay','Decays'};
+        decay.type = 'Boolean';
+        decay.default = 0;
+        decay.when = 'Both';
+    option.decay = decay;
     
 %% preselection
         presel.choice = {'Scheirer','Klapuri99'};
@@ -479,21 +479,21 @@ if isamir(x,'miraudio')
     if option.env
         if strcmpi(option.envmeth,'Filter')
             if isnan(option.filter)
-                if ischar(option.attack) || option.release
+                if ischar(option.attack) || option.decay
                     option.filter = 'Butter';
                 else
                     option.filter = 'IIR';
                 end
             end
             if isnan(option.hilb)
-                if ischar(option.attack) || option.release
+                if ischar(option.attack) || option.decay
                     option.hilb = 1;
                 else
                     option.hilb = 0;
                 end
             end
             if isnan(option.fb)
-                if ischar(option.attack) || option.release
+                if ischar(option.attack) || option.decay
                     option.fb = 0;
                 else
                     option.fb = 40;
@@ -515,7 +515,7 @@ if isamir(x,'miraudio')
                 'PostSilence',option.postsilence);
         else
             if isnan(option.specframe)
-                if ischar(option.attack) || option.release
+                if ischar(option.attack) || option.decay
                     option.specframe = [.03 .02];
                 else
                     option.specframe = [.1 .1];
@@ -587,7 +587,7 @@ elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
-if ischar(option.attack) || option.release
+if ischar(option.attack) || option.decay
     z = mironsets(x,option.envmeth,...
         'PreSilence',option.presilence,'PostSilence',option.postsilence);
     y = {y,z};
@@ -719,7 +719,7 @@ end
 o = mirframenow(o,postoption);
 if isfield(postoption,'detect') && ischar(postoption.detect)
     if isnan(postoption.cthr) || not(postoption.cthr)
-        if ischar(postoption.attack) || postoption.release
+        if ischar(postoption.attack) || postoption.decay
             postoption.cthr = .05;
         elseif ischar(postoption.detect) || postoption.detect
             postoption.cthr = .01;
@@ -746,9 +746,9 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             'Valleys','Order','Abscissa','NoBegin','NoEnd',noend);
     end
     nop = cell(size(get(o,'Data')));
-    o = set(o,'OnsetPos',nop,'AttackPos',nop,'ReleasePos',nop);
+    o = set(o,'OnsetPos',nop,'AttackPos',nop,'DecayPos',nop);
 end
-if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.release)
+if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.decay)
     pp = get(o,'PeakPos');
     d = get(o,'Data');
     t = get(o,'Time');
@@ -770,7 +770,7 @@ if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.re
         st = {{{}}};
         ap = {{{}}};
     end
-    if postoption.release
+    if postoption.decay
         x = postoption.new;
         ppu = get(o,'PeakPosUnit');
         if isnumeric(x)
@@ -782,13 +782,13 @@ if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.re
                 'Threshold',.5,...
                 'Valleys','Order','Abscissa','NoBegin');
             rlu = get(v,'PeakPosUnit');
-            [rl,en] = mircompute(@endrelease,d,t,pp,ppu,rlu);
+            [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu);
         end
     else
         rl = {{{}}};
         en = {{{}}};
     end
-    o = set(o,'OnsetPos',st,'AttackPos',ap,'ReleasePos',rl,'OffsetPos',en,'PeakPos',pp);
+    o = set(o,'OnsetPos',st,'AttackPos',ap,'DecayPos',rl,'OffsetPos',en,'PeakPos',pp);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
@@ -1066,7 +1066,7 @@ st = {{st} {pp}};
 
 
 %%
-function [pp en] = endrelease(d,t,pp,ppu,rlu)
+function [pp en] = enddecay(d,t,pp,ppu,rlu)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)

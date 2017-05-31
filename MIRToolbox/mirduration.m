@@ -4,8 +4,8 @@ function varargout = mirduration(orig,varargin)
 %   mirduration(...,'Contrast',c) specifies the 'Contrast' parameter
 %       used in mironsets for event detection through peak picking.
 %       Same default value as in mironsets.
-%   mirduration(...,'Single') only selects one attack and release phase in
-%       sthe ignal (or in each segment).
+%   mirduration(...,'Single') only selects one attack and decay phase in
+%       the ignal (or in each segment).
     
         cthr.key = 'Contrast';
         cthr.type = 'Integer';
@@ -43,7 +43,7 @@ varargout = mirfunction(@mirduration,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Attack','Release','Contrast',option.cthr,'Single',option.single,...
+o = mironsets(x,'Attack','Decay','Contrast',option.cthr,'Single',option.single,...
                  'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence);
 type = mirtype(x);
@@ -54,7 +54,7 @@ if iscell(o)
     o = o{1};
 end
 pa = get(o,'AttackPos');
-pr = get(o,'ReleasePos');
+pr = get(o,'DecayPos');
 on = get(o,'OnsetPos');
 off = get(o,'OffsetPos');
 d = get(o,'Data');

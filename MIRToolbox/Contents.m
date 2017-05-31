@@ -31,10 +31,12 @@
 % mirenvelope      - Amplitude envelope (global shape of the waveform)
 % mironsets        - Note onset positions and characteristics
 % mirattacktime    - Duration of note attacks
+% mirdecaytime     - Duration of note decays
 % mirattackslope   - Average slope of note attacks
-% mirdecreaseslope - Note release phase description
+% mirdecayslope    - Average slope of note decays
 % mirattackleap    - Change of amplitude in note attacks
-% mirduration      - Note duration from attack to release
+% mirdecayleap     - Change of amplitude in note decays
+% mirduration      - Note duration from attack to decay
 % mireventdensity  - Average frequency of events
 %
 %RHYTHM

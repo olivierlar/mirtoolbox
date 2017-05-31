@@ -898,7 +898,7 @@ ppvo = get(old,'PeakPreciseVal');
 pmo = get(old,'PeakMode');
 opo = get(old,'OnsetPos');
 apo = get(old,'AttackPos');
-rpo = get(old,'ReleasePos');
+rpo = get(old,'DecayPos');
 tpo = get(old,'TrackPos');
 tvo = get(old,'TrackVal');
 
@@ -912,7 +912,7 @@ ppvn = get(new,'PeakPreciseVal');
 pmn = get(new,'PeakMode');
 opn = get(new,'OnsetPos');
 apn = get(new,'AttackPos');
-rpn = get(new,'ReleasePos');
+rpn = get(new,'DecayPos');
 tpn = get(new,'TrackPos');
 tvn = get(new,'TrackVal');
 
@@ -948,7 +948,7 @@ if not(isempty(apn))
 end
 
 if not(isempty(rpn))
-    y = set(y,'ReleasePos',{[rpo{1},rpn{1}{1}]});
+    y = set(y,'DecayPos',{[rpo{1},rpn{1}{1}]});
 end
 
 if not(isempty(tpn))

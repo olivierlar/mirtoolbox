@@ -1,11 +1,11 @@
-function varargout = mirreleasetime(orig,varargin)
-%   a = mirreleasetime(x) returns the duration (in s.) of each note release. 
+function varargout = mirdecaytime(orig,varargin)
+%   a = mirdecaytime(x) returns the duration (in s.) of each note decay. 
 %   Optional arguments:
-%   a = mirreleasetime(x,l) specifies whether to consider the duration in s.
+%   a = mirdecaytime(x,l) specifies whether to consider the duration in s.
 %       (l='Lin') or the logarithm of that duration (l='Log') following the
 %       approach proposed in Krimphoff et al. (1994).
 %       Default value: l='Lin'.
-%   mirreleasetime(...,'Single') only selects one attack phase in the signal
+%   mirdecaytime(...,'Single') only selects one attack phase in the signal
 %       (or in each segment).
 %
 % Krimphoff, J., McAdams, S. & Winsberg, S. (1994), Caractérisation du 
@@ -49,11 +49,11 @@ function varargout = mirreleasetime(orig,varargin)
 
 specif.option = option;
 
-varargout = mirfunction(@mirreleasetime,orig,varargin,nargout,specif,@init,@main);
+varargout = mirfunction(@mirdecaytime,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Release','Contrast',option.cthr,'Single',option.single,...
+o = mironsets(x,'Decay','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal','AcrossSegments');
@@ -64,7 +64,7 @@ function rt = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-rp = get(o,'ReleasePosUnit');
+rp = get(o,'DecayPosUnit');
 op = get(o,'OffsetPosUnit');
 rt = mircompute(@algo,op,rp,option.scale);
 fp = mircompute(@frampose,op,rp);
@@ -73,7 +73,7 @@ if strcmpi(option.scale,'Lin')
 else
     unit = '';
 end
-rt = mirscalar(o,'Data',rt,'FramePos',fp,'Title','Release Time','Unit',unit);
+rt = mirscalar(o,'Data',rt,'FramePos',fp,'Title','Decay Time','Unit',unit);
 rt = {rt,o};
 
 

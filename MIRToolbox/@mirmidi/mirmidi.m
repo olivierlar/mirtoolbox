@@ -13,11 +13,10 @@ option.thr = thr;
     mono.default = 1;
 option.mono = mono;
 
-    release.key = {'Release','Releases'};
-    release.type = 'String';
-    release.choice = {'Olivier','Valeri',0,'no','off'};
-    release.default = 'Valeri';
-option.release = release;
+    decay.key = {'Decay','Decays'};
+    decay.type = 'Boolean';
+    decay.default = 1;
+option.release = decay;
 
 specif.option = option;
 
@@ -34,7 +33,7 @@ if not(isamir(x,'mirmidi')) && not(isamir(x,'mirpitch'))
     if isa(x,'mirdesign') && not(option.mono)
         x = set(x,'SeparateChannels',1);
     end
-    o = mironsets(x,'Attacks','Releases',option.release);
+    o = mironsets(x,'Attacks','Decays',option.decay);
     x = {o x};
 end
 type = 'mirmidi';
@@ -46,7 +45,7 @@ if iscell(x)
     o = x{1};
     do = get(o,'PeakVal');
     da = get(o,'OnsetPosUnit');
-    dr = get(o,'ReleasePosUnit');
+    dr = get(o,'DecayPosUnit');
     a = x{2};
     s = mirsegment(a,o);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
@@ -65,7 +64,7 @@ else
         end
     else
         da = get(x,'OnsetPosUnit');
-        dr = get(x,'ReleasePosUnit');
+        dr = get(x,'DecayPosUnit');
     end
 end
 df = get(x,'FramePos');

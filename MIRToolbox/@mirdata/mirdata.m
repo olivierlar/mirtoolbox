@@ -21,7 +21,7 @@ if nargin > 0 && isa(orig,'mirdata')
     d.onset = orig.onset;
     d.offset = orig.offset;
     d.attack = orig.attack;
-    d.release = orig.release;
+    d.decay = orig.decay;
     d.track = orig.track;
     d.title = orig.title;
     d.abs = orig.abs;
@@ -55,7 +55,7 @@ else
     d.onset = {};
     d.offset = {};
     d.attack = {};
-    d.release = {};
+    d.decay = {};
     d.track = {};
     d.title = 'Unspecified data';
     d.abs = 'Unspecified abscissa';

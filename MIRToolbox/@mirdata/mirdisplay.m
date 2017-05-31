@@ -28,10 +28,10 @@ if isempty(d.attack)
 else
     ap = d.attack.pos;
 end
-if isempty(d.release)
+if isempty(d.decay)
     rp = cell(ld);
 else
-    rp = d.release.pos;
+    rp = d.decay.pos;
 end
 if isempty(d.offset)
     of = cell(ld);

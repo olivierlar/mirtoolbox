@@ -1,5 +1,5 @@
-function varargout = mirreleaseleap(orig,varargin)
-%   a = mirreleaseleap(x) estimates the leap of each note release.
+function varargout = mirdecayleap(orig,varargin)
+%   a = mirdecayleap(x) estimates the leap of each note decay.
 %       Values are expressed in the same scale than the original signal.
 %   Optional arguments:
 %   mirattackleap(...,'Contrast',c) specifies the 'Contrast' parameter
@@ -46,11 +46,11 @@ function varargout = mirreleaseleap(orig,varargin)
 
 specif.option = option;
 
-varargout = mirfunction(@mirreleaseleap,orig,varargin,nargout,specif,@init,@main);
+varargout = mirfunction(@mirdecayleap,orig,varargin,nargout,specif,@init,@main);
 
 
 function [o type] = init(x,option)
-o = mironsets(x,'Release','Contrast',option.cthr,'Single',option.single,...
+o = mironsets(x,'Decay','Contrast',option.cthr,'Single',option.single,...
                 'Log',option.log,'MinLog',option.minlog,...
                 'Presilence',option.presilence,'PostSilence',option.postsilence,...
                 'Normal',option.normal);
@@ -61,14 +61,14 @@ function rl = main(o,option,postoption)
 if iscell(o)
     o = o{1};
 end
-rp = get(o,'ReleasePos');
+rp = get(o,'DecayPos');
 op = get(o,'OffsetPos');
-rpu = get(o,'ReleasePosUnit');
+rpu = get(o,'DecayPosUnit');
 opu = get(o,'OffsetPosUnit');
 d = get(o,'Data');
 rl = mircompute(@algo,op,rp,d);
 fp = mircompute(@frampose,opu,rpu);
-rl = mirscalar(o,'Data',rl,'FramePos',fp,'Title','Release Leap');
+rl = mirscalar(o,'Data',rl,'FramePos',fp,'Title','Decay Leap');
 rl = {rl,o};
 
 
