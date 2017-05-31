@@ -400,7 +400,7 @@ function varargout = mironsets(x,varargin)
         new.when = 'After';
     option.new = new;
         
-        decay.key = {'Decay','Decays'};
+        decay.key = {'Decay','Decays','Release','Releases'};
         decay.type = 'Boolean';
         decay.default = 0;
         decay.when = 'Both';
