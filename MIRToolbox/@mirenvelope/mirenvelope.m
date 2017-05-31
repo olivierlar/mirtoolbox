@@ -115,15 +115,6 @@ function varargout = mirenvelope(orig,varargin)
             cutoff.type = 'Integer';
             cutoff.default = 37;
     option.cutoff = cutoff;
-    
-%         zp.key = 'ZeroPhase'; % internal use: for manual filtfilt
-%         zp.type = 'Boolean';
-%         if isamir(orig,'mirenvelope')
-%             zp.default = 0;
-%         else
-%             zp.default = NaN;
-%         end
-%     option.zp = zp;
 
         ds.key = {'Down','PostDecim'};
         ds.type = 'Integer';
@@ -337,19 +328,6 @@ if not(isamir(x,'mirenvelope'))
             end
             x = set(x,'Overlap',[1600,ds]);
         end
-%         if isnan(option.zp)
-%             if strcmpi(option.filter,'IIR') || strcmpi(option.filter,'Butter')
-%                 option.zp = 1;
-%             else
-%                 option.zp = 0;
-%             end
-%         end
-%         if option.zp == 1
-%             x = mirenvelope(x,'ZeroPhase',2,'Down',1,...
-%                               'Tau',option.tau,'PreDecim',option.decim,...
-%                               'Filter','FilterType',option.filter,...
-%                               'Hilbert',option.hilb);
-%         end
     elseif strcmpi(option.method,'Spectro')
         x = mirspectrum(x,'Frame',option.frame.length.val,...
                                   option.frame.length.unit,...
@@ -460,16 +438,6 @@ elseif strcmpi(option.method,'Spectro')
     postoption.ds = 0;
     e = post(e,postoption);
 else
-%     if isnan(option.zp)
-%         if strcmpi(option.filter,'IIR') || strcmpi(option.filter,'Butter')
-%             option.zp = 1;
-%         else
-%             option.zp = 0;
-%         end
-%     end
-%     if option.zp == 1
-%         option.decim = 0;
-%     end
     e.downsampl = 1;
     e.hwr = 0;
     e.diff = 0;
@@ -508,10 +476,7 @@ else
         d{k} = cell(1,length(sig{k}));
         for i = 1:length(sig{k})
             sigi = sig{k}{i};
-%             if option.zp == 2
-%                 sigi = flipdim(sigi,1);
-%             end
-            if option.hilb %&& option.zp ~= 1
+            if option.hilb
                 try
                     for h = 1:size(sigi,2)
                         for j = 1:size(sigi,3)
@@ -556,9 +521,6 @@ else
 %             end
             
             tmp = max(tmp,0); % For security reason...
-%             if option.zp == 2
-%                 tmp = flipdim(tmp,1);
-%             end
             d{k}{i} = tmp;
             %td{k} = round(option.tau*sr{k}*1.5); 
         end
@@ -567,9 +529,7 @@ else
     if length(sig)==1
         e = settmp(e,state);
     end
-%     if not(option.zp == 2)
-        e = post(e,postoption);
-%     end
+    e = post(e,postoption);
 end
 if isfield(option,'presel') && ischar(option.presel) && ...
         strcmpi(option.presel,'Klapuri06')
