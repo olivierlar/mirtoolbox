@@ -878,7 +878,9 @@ function b = evalbranch(b,d,y)
 % corresponding to the temporary variable (d),
 
 if iscell(b)
-    mirerror('MIREVAL','Sorry, forked branching of temporary variable cannnot be evaluated in current version of MIRtoolbox.');
+    b = evalbranch(b{1},d,y);
+    return
+    %mirerror('MIREVAL','Sorry, forked branching of temporary variable cannnot be evaluated in current version of MIRtoolbox.');
 end
 if isstruct(b)
     % Subtrees are evaluated branch after branch.

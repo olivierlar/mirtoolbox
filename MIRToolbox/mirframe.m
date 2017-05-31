@@ -171,9 +171,9 @@ elseif isa(x,'mirdata')
                     end
 
                      % Number of frames
-                    if para.presilence && para.postsilence
+                    if isfield(para,'presilence') && para.presilence && para.postsilence
                         n = floor((size(dxj,1)+l-floor(h)-p)/h)+1;
-                    elseif para.presilence || para.postsilence
+                    elseif isfield(para,'presilence') && (para.presilence || para.postsilence)
                         n = floor((size(dxj,1)-floor(h)-p)/h)+1;
                     else
                         n = floor((size(dxj,1)-l-p)/h)+1;
@@ -194,7 +194,7 @@ elseif isa(x,'mirdata')
                     else
                         for i = 1:n % For each frame, ...
                             st = floor((i-1)*h+p+1);
-                            if para.presilence
+                            if isfield(para,'presilence') && para.presilence
                                 st = st - l + floor(h);
                             end
                             stend = st+l-1;

@@ -35,7 +35,6 @@ if nargin == 0
 %     d.tmpfile = [];
     d.tmpof = [];
 elseif isa(orig,'mirdesign')
-    error('test')
     d.method = orig.method;
     d.argin = orig.argin;
     d.option = orig.option;
