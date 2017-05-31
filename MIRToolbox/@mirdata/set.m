@@ -79,8 +79,6 @@ while length(propertyArgIn) >= 2,
            a.acrosschunks = val;
        case 'Interpolable'
            a.interpolable = val;
-       case 'TmpFile'
-           a.tmpfile = val;
        case 'Index'
            a.index = val;  
        case 'Extracted'

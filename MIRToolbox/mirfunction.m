@@ -83,15 +83,7 @@ if isa(orig,'mirdesign')
         % During the top-down traversal of the flowchart (evaleach), at the
         % beginning of the evaluation process.
         
-%         if not(isempty(get(orig,'TmpFile'))) && get(orig,'ChunkDecomposed')
-%             orig = evaleach(orig);
-%             if iscell(orig)
-%                 orig = orig{1};
-%             end
-%             x = orig;
-%         else
-            [orig x] = evaleach(orig);
-%         end
+        [orig x] = evaleach(orig);
         
         if not(isequal(method,@nthoutput))
             if iscell(orig)

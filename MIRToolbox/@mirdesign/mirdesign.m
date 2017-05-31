@@ -19,7 +19,6 @@ if nargin == 0
     d.resampling = 0;
     d.chunksizefactor = 0;
     d.nochunk = 0;
-%     d.ascending = 0;
     d.overlap = 0;
     d.separate = 0;
     d.presilence = 0;
@@ -32,7 +31,6 @@ if nargin == 0
     d.struct = [];
     d.stored = [];
     d.index = NaN;
-%     d.tmpfile = [];
     d.tmpof = [];
 elseif isa(orig,'mirdesign')
     d.method = orig.method;
@@ -53,7 +51,6 @@ elseif isa(orig,'mirdesign')
     d.resampling = orig.resampling;
     d.chunksizefactor = orig.chunksizefactor;
     d.nochunk = orig.nochunk;
-%     d.ascending = orig.ascending;
     d.overlap = orig.overlap;
     d.separate = orig.separate;
     d.presilence = orig.presilence;
@@ -66,7 +63,6 @@ elseif isa(orig,'mirdesign')
     d.struct = orig.struct;
     d.stored = orig.stored;
     d.index = orig.index;
-%     d.tmpfile = orig.tmpfile;
     d.tmpof = orig.tmpof;
 else
     d.method = orig;
@@ -88,12 +84,6 @@ else
         d.resampling = 0;
         d.chunksizefactor = 1;
         d.nochunk = 0;
-%         if not(isempty(orig)) && ...
-%                 strcmp(func2str(orig),'mirenvelope') && d.option.zp == 2
-%                 d.ascending = 0;
-%         else
-%             d.ascending = 1;
-%         end
         d.overlap = 0;
         d.separate = 0;
         d.presilence = 0;
@@ -145,15 +135,6 @@ else
             d.nochunk = argin.nochunk;
         end
         d.chunksizefactor = argin.chunksizefactor;
-%         if strcmp(func2str(orig),'mirenvelope')
-%             if d.option.zp == 2
-%                 d.ascending = not(isempty(d.segment));
-%             else
-%                 d.ascending = 1;
-%             end
-%         else
-%             d.ascending = argin.ascending;
-%         end
         d.overlap = argin.overlap;
         d.separate = argin.separate;
         d.presilence = argin.presilence;
@@ -167,13 +148,6 @@ else
     d.struct = [];
     d.stored = [];
     d.index = NaN;
-%     if not(isempty(orig)) && strcmp(func2str(orig),'mirenvelope') && ...
-%                 d.option.zp == 2 && isempty(d.segment)
-%         % Triggers the use of temporary file for the mirenvelope computation
-%         d.tmpfile.fid = 0;
-%     else
-%         d.tmpfile = [];
-%     end
     d.tmpof = [];
 end
 d = class(d,'mirdesign');

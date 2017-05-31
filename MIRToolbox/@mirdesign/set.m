@@ -65,8 +65,6 @@ while length(propertyArgIn) >= 2,
            a.stored = val;
        case 'Index'
            a.index = val;
-       case 'TmpFile'
-           a.tmpfile = val;
        case 'TmpOf'
            a.tmpof = val;
        case 'ChunkDecomposed'

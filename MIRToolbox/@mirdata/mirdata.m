@@ -30,7 +30,6 @@ if nargin > 0 && isa(orig,'mirdata')
     d.tmpidx = orig.tmpidx;
     d.acrosschunks = orig.acrosschunks;
     d.interpolable = orig.interpolable;
-    d.tmpfile = orig.tmpfile;
     d.index = orig.index;
 else
     d.pos = {};
@@ -66,7 +65,6 @@ else
     d.acrosschunks = [];
     d.interpolable = 1;  % If the abscissae axis is non-numeric (0), 
                          % then peak picking has to be done without interpolation.
-    d.tmpfile = [];
     d.index = NaN;
 end
 d = class(d,'mirdata');

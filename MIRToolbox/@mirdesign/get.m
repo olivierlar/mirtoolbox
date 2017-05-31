@@ -119,15 +119,9 @@ if ischar(varargin{1})
         case 'Index'
             varargout = {a.index};
             return            
-%         case 'TmpFile'
-%             varargout = {a.tmpfile};
-%             return     
         case 'TmpOf'
             varargout = {a.tmpof};
             return
-        case 'Ascending'
-            varargout = {a.ascending};
-            return            
         case 'SeparateChannels'
             varargout = {a.separate};
             return            

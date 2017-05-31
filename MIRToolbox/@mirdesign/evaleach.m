@@ -73,36 +73,35 @@ if ischar(a)
     y = set(y,'Extracted',1);
     d2 = d;
     
-elseif d.chunkdecomposed %&& isempty(d.tmpfile)
+elseif d.chunkdecomposed
     % Already in a chunk decomposition process
     
     [y d2] = evalnow(d);  
     
 elseif iscell(a)
-    %d.argin = a{2};
-            a{2}.size = w;
-            a{2}.chunk = d.chunk;
-            a{2}.file = d.file;
-            a{2}.channel = d.channel;
-            a{2}.scale = d.scale;
-            a{2}.eval = 1;
-            a{2}.interchunk = d.interchunk;
-            a{2}.sampling = d.sampling;
-            if isstruct(d.frame) && isfield(d.frame,'decomposition') ...
-                                 && not(isempty(d.frame.decomposition))
-                a{2}.chunkdecomposed = 1;
-            else
-                a{2}.chunkdecomposed = d.chunkdecomposed;
-            end
-            if not(isempty(d.frame)) && ...
-               not(strcmp(func2str(d.method),'mirframe'))
-                a{2}.frame = d.frame;
-            end
-            a{2}.ready = 1;
-            a{2}.acrosschunks = d.acrosschunks;
-            a{2}.index = d.index;
-            a{2}.presilence = d.presilence;
-            a{2}.postsilence = d.postsilence;
+    a{2}.size = w;
+    a{2}.chunk = d.chunk;
+    a{2}.file = d.file;
+    a{2}.channel = d.channel;
+    a{2}.scale = d.scale;
+    a{2}.eval = 1;
+    a{2}.interchunk = d.interchunk;
+    a{2}.sampling = d.sampling;
+    if isstruct(d.frame) && isfield(d.frame,'decomposition') ...
+            && not(isempty(d.frame.decomposition))
+        a{2}.chunkdecomposed = 1;
+    else
+        a{2}.chunkdecomposed = d.chunkdecomposed;
+    end
+    if not(isempty(d.frame)) && ...
+            not(strcmp(func2str(d.method),'mirframe'))
+        a{2}.frame = d.frame;
+    end
+    a{2}.ready = 1;
+    a{2}.acrosschunks = d.acrosschunks;
+    a{2}.index = d.index;
+    a{2}.presilence = d.presilence;
+    a{2}.postsilence = d.postsilence;
     
     aux = evaleach(a{2},single,name);
     if iscell(aux)
@@ -169,14 +168,6 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         else
             h = 0;
         end
-%         if not(isempty(d.tmpfile)) && d.tmpfile.fid == 0
-%             % When applicable, a new temporary file is created.
-%             tmpname = [f '.mirtmp'];
-%             d.tmpfile.fid = fopen(tmpname,'w');
-%         end
-%         if not(d.ascending)
-%             chunks = fliplr(chunks);
-%         end
 
         afterpostoption = d.postoption; % Used only when:
                         % - eachchunk is set to 'Normal',
@@ -249,13 +240,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
 
             clear ss
             if isa(h,'matlab.ui.Figure')
-%                 if not(d.ascending)
-%                     close(h)
-%                     h = waitbar((chunks(1,i)-chunks(1,end))/chunks(2,1),...
-%                         ['Computing ' func2str(d.method) ' (backward)']);
-%                 else
-                    waitbar((chunks(2,i)-chunks(1))/chunks(end),h)
-%                 end
+                waitbar((chunks(2,i)-chunks(1))/chunks(end),h)
             end
             d2.presilence = 0;
             d2.postsilence = posi;
@@ -265,18 +250,9 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
         % Final operations to be executed after the chunk decomposition
             if iscombinemethod(d2.specif,'Average')
                 y{1} = divideweightchunk(y{1},lsz);
-            elseif not(isempty(afterpostoption)) %&& isempty(d2.tmpfile)
+            elseif not(isempty(afterpostoption))
                 y{1} = d.method(y{1},[],afterpostoption);
             end
-%             if not(isempty(d2.tmpfile))
-%                 adr = ftell(d2.tmpfile.fid);
-%                 fclose(d2.tmpfile.fid);
-%                 ytmpfile.fid = fopen(tmpname);
-%                 fseek(ytmpfile.fid,adr,'bof');
-%                 ytmpfile.data = y{1};
-%                 ytmpfile.layer = 0;
-%                 y{1} = set(y{1},'TmpFile',ytmpfile);
-%             end
         end
                 
         if isa(d,'mirstruct') && ...
@@ -537,100 +513,75 @@ if isempty(sg)
             new = set(new1,'Data',dnew);
         end
     end
-    %tmp = get(new{1},'InterChunk');
-%     if not(isempty(d2.tmpfile)) && d2.tmpfile.fid > 0
-%         % If temporary file is used, chunk results are written
-%         % in the file
-%         if i < size(chunks,2)
-%             ds = get(new{1},'Data');
-%             ps = get(new{1},'Pos');
-%             %ftell(d2.tmpfile.fid)
-%             count = fwrite(d2.tmpfile.fid,ds{1}{1},'double');
-%             count = fwrite(d2.tmpfile.fid,ps{1}{1},'double');
-%             %ftell(d2.tmpfile.fid)
-%             clear ds ps
-%         end
-%         res = new;
-%     else
-        % Else, chunk results are directly combined in active
-        % memory
-        if i == 1
-            res = new;
-        else
-            res = cell(1,length(old));
-            if isfield(d2.specif,'combinechunk')
-                if not(iscell(d2.specif.combinechunk))
-                    method = {d2.specif.combinechunk};
+    if i == 1
+        res = new;
+    else
+        res = cell(1,length(old));
+        if isfield(d2.specif,'combinechunk')
+            if not(iscell(d2.specif.combinechunk))
+                method = {d2.specif.combinechunk};
+            else
+                method = d2.specif.combinechunk;
+            end
+            for z = 1:length(old)
+                if isframed(old{z})
+                    res(z) = combineframes(old{z},new{z});
                 else
-                    method = d2.specif.combinechunk;
-                end
-                for z = 1:length(old)
-                    if isframed(old{z})
-                        res(z) = combineframes(old{z},new{z});
-                    else
-                        if ischar(method{z})
-                            if strcmpi(method{z},'Concat')
-                                do = get(old{z},'Data');
-                                dn = get(new{z},'Data');
-                                fpo = get(old{z},'FramePos');
-                                fpn = get(new{z},'FramePos');
-                                if isa(old,'mirscalar')
+                    if ischar(method{z})
+                        if strcmpi(method{z},'Concat')
+                            do = get(old{z},'Data');
+                            dn = get(new{z},'Data');
+                            fpo = get(old{z},'FramePos');
+                            fpn = get(new{z},'FramePos');
+                            if isa(old,'mirscalar')
+                                res{z} = set(old{z},...
+                                    'Data',{{[do{1}{1},dn{1}{1}]}},...
+                                    'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
+                            else
+                                to = get(old{z},'Pos');
+                                tn = get(new{z},'Pos');
+                                if overlap(1)
+                                    o = overlap(1)/overlap(2);
                                     res{z} = set(old{z},...
-                                        'Data',{{[do{1}{1},dn{1}{1}]}},...
+                                        'Data',{{[do{1}{1};dn{1}{1}(o:end)]}},...
+                                        'Pos',{{[to{1}{1};tn{1}{1}(o:end)]}},...
                                         'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                 else
-                                    to = get(old{z},'Pos');
-                                    tn = get(new{z},'Pos');
-%                                     if d2.ascending
-                                    if overlap(1)
-                                        o = overlap(1)/overlap(2);
-                                        res{z} = set(old{z},...
-                                            'Data',{{[do{1}{1};dn{1}{1}(o:end)]}},...
-                                            'Pos',{{[to{1}{1};tn{1}{1}(o:end)]}},...
-                                            'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
-                                    else
-                                        res{z} = set(old{z},...
-                                            'Data',{{[do{1}{1};dn{1}{1}]}},...
-                                            'Pos',{{[to{1}{1};tn{1}{1}]}},...
-                                            'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
-                                    end
-%                                     else
-%                                         res{z} = set(old{z},...
-%                                             'Data',{{[dn{1}{1};do{1}{1}]}},...
-%                                             'Pos',{{[tn{1}{1};to{1}{1}]}},...
-%                                             'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
-%                                     end
+                                    res{z} = set(old{z},...
+                                        'Data',{{[do{1}{1};dn{1}{1}]}},...
+                                        'Pos',{{[to{1}{1};tn{1}{1}]}},...
+                                        'FramePos',{{[fpo{1}{1}(1);fpn{1}{1}(2)]}});
                                 end
-                            elseif strcmpi(method{z},'Average') || ...
-                                    strcmpi(method{z},'Sum')
-                                do = get(old{z},'Data');
-                                dn = get(new{z},'Data');
-                                res{z} = set(old{z},...
-                                            'ChunkData',do{1}{1}+dn{1}{1});
-                            else
-                                error(['SYNTAX ERROR: ',method{z},...
-                            ' is not a known keyword for combinechunk.']);
                             end
+                        elseif strcmpi(method{z},'Average') || ...
+                                strcmpi(method{z},'Sum')
+                            do = get(old{z},'Data');
+                            dn = get(new{z},'Data');
+                            res{z} = set(old{z},...
+                                'ChunkData',do{1}{1}+dn{1}{1});
                         else
-                            res{z} = method{z}(old{z},new{z});
+                            error(['SYNTAX ERROR: ',method{z},...
+                                ' is not a known keyword for combinechunk.']);
                         end
-                        lo = get(old{z},'Length');
-                        ln = get(new{z},'Length');
-                        res{z} = set(res{z},'Length',{{lo{1}{1}+ln{1}{1}}});
-                    end
-                end
-            else
-                for z = 1:length(old)
-                    if isframed(old{z})
-                        res(z) = combineframes(old{z},new{z});
                     else
-                        mirerror('MIREVAL',...
-'Chunk recombination in non-framed mode is not available for all features yet. Please turn off the chunk decomposition.');
+                        res{z} = method{z}(old{z},new{z});
                     end
+                    lo = get(old{z},'Length');
+                    ln = get(new{z},'Length');
+                    res{z} = set(res{z},'Length',{{lo{1}{1}+ln{1}{1}}});
+                end
+            end
+        else
+            for z = 1:length(old)
+                if isframed(old{z})
+                    res(z) = combineframes(old{z},new{z});
+                else
+                    mirerror('MIREVAL',...
+                        'Chunk recombination in non-framed mode is not available for all features yet. Please turn off the chunk decomposition.');
                 end
             end
         end
-    %end
+    end
 else
     if i == 1
         res = new;
@@ -741,46 +692,8 @@ if not(iscell(argin))
 end
 for i = 1:length(argin)
     a = argin{i};
-%     if not(d.ascending)
-%         a.ascending = 0;
-%     end
     if isa(a,'mirdata')
         % Input already computed
-        tmpfile = get(a,'TmpFile');
-        if not(isempty(tmpfile)) && tmpfile.fid > 0
-            % The input can be read from the temporary file
-            ch = get(d,'Chunk');
-            a = tmpfile.data;
-            a = set(a,'InterChunk',get(d,'InterChunk'),'TmpFile',tmpfile);
-            channels = get(a,'Channels');
-            channels = length(channels{1});
-            if not(channels)
-                da = get(a,'Data');
-                channels = size(da{1}{1},3);
-            end
-            sz = (ch(2)-ch(1)+1);
-            current = ftell(tmpfile.fid);
-            origin = current-sz*(channels+1)*8;
-            if origin < 0
-                sz = sz + origin/(channels+1)/8;
-                origin = 0;
-            end
-            fseek(tmpfile.fid,origin,'bof');
-            %ftell(tmpfile.fid)
-            [data count] = fread(tmpfile.fid,[sz,channels],'double');
-            %count
-            data = reshape(data,[sz,1,channels]);
-            [pos count] = fread(tmpfile.fid,sz,'double');
-            %count
-            %ftell(tmpfile.fid)
-            fseek(tmpfile.fid,current-sz*(channels+1)*8,'bof');
-            a = set(a,'Data',{{data}},'Pos',{{pos}});
-            if ch(3)
-                fclose(tmpfile.fid);
-                delete([d.file '.mirtmp']);
-            end
-            argin{i} = a;
-        end
     elseif isa(a,'mirdesign')
         if isempty(a.stored)
             % The design parameters are transfered to the previous component

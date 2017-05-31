@@ -240,8 +240,6 @@ switch propName
         val = a.acrosschunks;
     case 'Interpolable'
         val = a.interpolable;
-    case 'TmpFile'
-        val = a.tmpfile;
     case 'Index'
         val = a.index;
     otherwise
