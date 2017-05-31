@@ -27,7 +27,7 @@ function varargout = mirattacktime(orig,varargin)
         single.default = 0;
     option.single = single;
     
-        log.key = 'LogOnset';
+        log.key = {'LogOnset','LogCurve'};
         log.type = 'Boolean';
         log.default = 0;
     option.log = log;

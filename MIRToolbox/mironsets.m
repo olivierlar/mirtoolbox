@@ -1,6 +1,6 @@
 function varargout = mironsets(x,varargin)
-%   o = mironsets(x) shows a temporal curve where peaks relate to the 
-%       position of note onset times, and estimates those note onset 
+%   o = mironsets(x) shows a temporal curve where peaks relate to the
+%       temporal position of events, and estimates those event time 
 %       positions.
 %   Optional arguments:
 %       mironsets(...,f) selects the strategy for the computation of the
