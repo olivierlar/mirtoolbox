@@ -635,19 +635,19 @@ for k = 1:length(coeff)
                 end
                 phask{l} = ph;
             end
-            if freq
-                if t(1,1) == 0
-                    c = c(2:end,:,:);
-                    t = t(2:end,:,:);
-                end
-                for i = 1:size(c,3)
-                    c(:,:,i) = flipud(c(:,:,i));
-                end
-                t = flipud(1./t);
-            end
-            coeff{k}{l} = c;
-            lags{k}{l} = t;
         end
+        if freq
+            if t(1,1) == 0
+                c = c(2:end,:,:);
+                t = t(2:end,:,:);
+            end
+            for i = 1:size(c,3)
+                c(:,:,i) = flipud(c(:,:,i));
+            end
+            t = flipud(1./t);
+        end
+        coeff{k}{l} = c;
+        lags{k}{l} = t;
     end
     if option.phase
         phas{k} = phask;
