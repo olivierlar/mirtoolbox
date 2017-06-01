@@ -85,7 +85,7 @@ mironsets('ragtime.wav','SpectralFlux','Complex')
 
 %[p s] = mirpulseclarity('ragtime')
 
-mirattacks('ragtime.wav')
+mironsets('ragtime.wav','Attacks')
 mirattacktime('ragtime.wav')
 mirattackslope('ragtime.wav')
 
