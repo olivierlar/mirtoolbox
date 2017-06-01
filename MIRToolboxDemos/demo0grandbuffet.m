@@ -57,7 +57,7 @@ pause, close all
 
 pause, close all
 
-at = mirattacks('ragtime.wav')
+at = mironsets('ragtime.wav','Attacks')
 mirattackslope(at)
 mirbrightness('ragtime.wav','frame')
 mirroughness('ragtime.wav','frame')
