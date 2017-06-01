@@ -392,8 +392,13 @@ for i = 1:length(d) % For each audio file,...
         madi = zeros(1,length(di));
         midi = zeros(1,length(di));
         for h = 1:length(di)
-            madi(h) = max(max(max(max(di{h},[],1),[],2),[],3),[],4);
-            midi(h) = min(min(min(min(di{h},[],1),[],2),[],3),[],4);
+            if isempty(di{h})
+                madi(h) = -Inf;
+                midi(h) = Inf;
+            else
+                madi(h) = max(max(max(max(di{h},[],1),[],2),[],3),[],4);
+                midi(h) = min(min(min(min(di{h},[],1),[],2),[],3),[],4);
+            end
         end
         mad = max(madi);
         mid = min(midi);
@@ -401,6 +406,9 @@ for i = 1:length(d) % For each audio file,...
         
     for h = 1:length(di)    % For each segment,...
         dhu = di{h}; % This copy of the data is kept untransformed and used for output.
+        if isempty(dhu)
+            continue
+        end
         dht = dhu; % This copy of the data will be transformed (normalization, etc.)
         
         [nl0 nc np nd0] = size(dhu);
