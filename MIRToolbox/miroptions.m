@@ -111,6 +111,8 @@ while i <= length(varg)
         frame.hop.unit = '/1';
         frame.phase.unit = '/1';
         frame.phase.atend = 0;
+        frame.presilence = 0;
+        frame.postsilence = 0;
         
         if length(varg) > i && isnumeric(varg{i+1})
             i = i+1;
