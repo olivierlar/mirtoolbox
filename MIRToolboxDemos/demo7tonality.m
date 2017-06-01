@@ -30,7 +30,7 @@ pause, close all
 
 % 1.7. Investigate the chromagram analysis of triad chords
 [ks c] = mirkeystrength('Amin3.wav')
-p = mirpeaks(ks)
+p = mirpeaks(ks,'Total',1)
 mirkey(p)
 
 pause, close all
