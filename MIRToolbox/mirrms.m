@@ -9,6 +9,7 @@ function varargout = mirrms(x,varargin)
     option.notchunking = notchunking;
     
         median.key = 'Median';
+        median.when = 'Both';
         median.type = 'Boolean';
         median.default = 0;
     option.median = median;
@@ -36,33 +37,39 @@ function x = main(x,option,postoption)
 if iscell(x)
     x = x{1};
 end
-if ~isempty(option) && option.median
-    method = @median;
-else
-    method = @mean;
-end
 if ~isamir(x,'mirscalar')
     if option.warning && ~isamir(x,'miraudio')
         warning(['Do you really intend to apply MIRRMS on a ',class(x),'?']);
     end
     d = get(x,'Data');
-    v = mircompute(@algo,d,method);
+    v = mircompute(@algo,d,option.median);
     x = mirscalar(x,'Data',v,'Title','RMS energy');
 end
 if isstruct(postoption) && isfield(postoption,'notchunking') ...
         && postoption.notchunking
-    x = after(x);
+    if ~postoption.median
+        x = after(x);
+    end
+elseif option.median
+    mirerror('MIRRMS','''Median'' option should not be used in chunk decomposition mode. Results will not be reliable. Try mirchunklim(Inf)');
 end
 
 
-function e = algo(d,method)
+function e = algo(d,option_median)
 nc = size(d,2);
 nch = size(d,3);
 e = zeros(1,nc,nch);
-for i = 1:nch
-    for j = 1:nc
-        dj = d(:,j,i).^2;
-        e(1,j,i) = method(dj);
+if option_median
+    for i = 1:nch
+        for j = 1:nc
+            e(1,j,i) = sqrt(median(d(:,j,i).^2));
+        end
+    end
+else
+    for i = 1:nch
+        for j = 1:nc
+            e(1,j,i) = d(:,j,i)'*d(:,j,i);
+        end
     end
 end
 
@@ -73,4 +80,4 @@ x = set(x,'Data',v);
 
     
 function d = afternorm(d,l)
-d = sqrt(d);
+d = sqrt(d/l);
