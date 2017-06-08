@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.6.3.2 5-May-2017
+% Version 1.7 3-June-2017
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
@@ -12,6 +12,7 @@
 % mirframe         - Decomposes into successive frames
 % mirsegment       - Decomposes into successive segments
 % mirlength        - Temporal length
+% mirpeaks         ? Peak picking
 %
 %DATA OUTPUT
 % mirgetdata       - Return result as a Matlab standard structure
