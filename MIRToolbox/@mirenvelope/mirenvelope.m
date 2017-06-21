@@ -326,7 +326,7 @@ if not(isamir(x,'mirenvelope'))
             if ~ds
                 ds = 1;
             end
-            x = set(x,'Overlap',[1600,ds]);
+            x = set(x,'Overlap',[3200,ds]);
         end
     elseif strcmpi(option.method,'Spectro')
         x = mirspectrum(x,'Frame',option.frame.length.val,...
