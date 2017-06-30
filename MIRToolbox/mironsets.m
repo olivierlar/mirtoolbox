@@ -747,48 +747,48 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
     end
     nop = cell(size(get(o,'Data')));
     o = set(o,'OnsetPos',nop,'AttackPos',nop,'DecayPos',nop);
-end
-if (isfield(postoption,'attack')) && (ischar(postoption.attack) || postoption.decay)
-    pp = get(o,'PeakPos');
-    d = get(o,'Data');
-    t = get(o,'Time');
-    if ischar(postoption.attack)
-        x = postoption.new;
-        ppu = get(o,'PeakPosUnit');
-        if isnumeric(x)
+    if isfield(postoption,'attack') && (ischar(postoption.attack) || postoption.decay)
+        pp = get(o,'PeakPos');
+        d = get(o,'Data');
+        t = get(o,'Time');
+        if ischar(postoption.attack)
+            x = postoption.new;
+            ppu = get(o,'PeakPosUnit');
+            if isnumeric(x)
+                st = {{{}}};
+                ap = {{{}}};
+            else
+                v = mirpeaks(x,'Total',total,'SelectFirst',0,...
+                    'Contrast',.1,...postoption.cthr,...
+                    'Threshold',.5,...
+                    'Valleys','Order','Abscissa','NoEnd');
+                stu = get(v,'PeakPosUnit');
+                [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption);
+            end
+        else
             st = {{{}}};
             ap = {{{}}};
-        else
-            v = mirpeaks(x,'Total',total,'SelectFirst',0,...
-                'Contrast',.1,...postoption.cthr,...
-                'Threshold',.5,...
-                'Valleys','Order','Abscissa','NoEnd');
-            stu = get(v,'PeakPosUnit');
-            [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption);
         end
-    else
-        st = {{{}}};
-        ap = {{{}}};
-    end
-    if postoption.decay
-        x = postoption.new;
-        ppu = get(o,'PeakPosUnit');
-        if isnumeric(x)
+        if postoption.decay
+            x = postoption.new;
+            ppu = get(o,'PeakPosUnit');
+            if isnumeric(x)
+                rl = {{{}}};
+                en = {{{}}};
+            else
+                v = mirpeaks(x,'Total',total,'SelectFirst',0,...
+                    'Contrast',.1,...postoption.cthr,
+                    'Threshold',.5,...
+                    'Valleys','Order','Abscissa','NoBegin');
+                rlu = get(v,'PeakPosUnit');
+                [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu);
+            end
+        else
             rl = {{{}}};
             en = {{{}}};
-        else
-            v = mirpeaks(x,'Total',total,'SelectFirst',0,...
-                'Contrast',.1,...postoption.cthr,
-                'Threshold',.5,...
-                'Valleys','Order','Abscissa','NoBegin');
-            rlu = get(v,'PeakPosUnit');
-            [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu);
         end
-    else
-        rl = {{{}}};
-        en = {{{}}};
+        o = set(o,'OnsetPos',st,'AttackPos',ap,'DecayPos',rl,'OffsetPos',en,'PeakPos',pp);
     end
-    o = set(o,'OnsetPos',st,'AttackPos',ap,'DecayPos',rl,'OffsetPos',en,'PeakPos',pp);
 end
 title = get(o,'Title');
 if not(length(title)>11 && strcmp(title(1:11),'Onset curve'))
