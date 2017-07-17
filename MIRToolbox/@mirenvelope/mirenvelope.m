@@ -375,7 +375,7 @@ if isamir(orig,'mirscalar')
     return
 end
 
-if isfield(option,'presel') && ischar(option.presel) && ...
+if isfield(option,'presel') && ischar(option.presel) && ... %% does not work in chunk mode! option is empty afterchunk
         strcmpi(option.presel,'Klapuri06')
     option.method = 'Spectro';
     postoption.up = 2;
@@ -550,14 +550,11 @@ sr = get(e,'Sampling');
 ds = get(e,'DownSampling');
 ph = get(e,'Phase');
 for k = 1:length(d)
-    if isfield(postoption,'sampling')
-        if postoption.sampling
-            newsr = postoption.sampling;
-        elseif isfield(postoption,'ds') && postoption.ds>1
-            newsr = sr{k}/postoption.ds;
-        else
-            newsr = sr{k};
-        end
+    newsr = sr{k};
+    if isfield(postoption,'sampling') && postoption.sampling
+        newsr = postoption.sampling;
+    elseif isfield(postoption,'ds') && postoption.ds>1
+        newsr = sr{k}/postoption.ds;
     end
     if isfield(postoption,'up') && postoption.up
         [z,p,gain] = butter(6,10/newsr/postoption.up*2,'low');
@@ -599,116 +596,123 @@ for k = 1:length(d)
             tp{k}{i} = tp{k}{i}(1:ds:end,:,:); % Downsampling...
             d{k}{i} = d{k}{i}(1:ds:end,:,:);
         end
-        if isfield(postoption,'sampling')
-            if not(strcmpi(e.method,'Spectro')) && postoption.trim 
-                tdk = round(newsr*.1); 
-                d{k}{i}(1:tdk,:,:) = repmat(d{k}{i}(tdk,:,:),[tdk,1,1]); 
-                d{k}{i}(end-tdk+1:end,:,:) = repmat(d{k}{i}(end-tdk,:,:),[tdk,1,1]);
+        if not(strcmpi(e.method,'Spectro')) && isfield(postoption,'trim') && postoption.trim
+            tdk = round(newsr*.1);
+            d{k}{i}(1:tdk,:,:) = repmat(d{k}{i}(tdk,:,:),[tdk,1,1]);
+            d{k}{i}(end-tdk+1:end,:,:) = repmat(d{k}{i}(end-tdk,:,:),[tdk,1,1]);
+        end
+        if isfield(postoption,'log') && postoption.log && ~get(e,'Log')
+            d{k}{i} = log10(d{k}{i});
+        end
+        if isfield(postoption,'mu') && postoption.mu
+            dki = max(0,d{k}{i});
+            mu = postoption.mu;
+            dki = log(1+mu*dki)/log(1+mu);
+            dki(~isfinite(d{k}{i})) = NaN;
+            d{k}{i} = dki;
+        end
+        if isfield(postoption,'power') && postoption.power
+            d{k}{i} = d{k}{i}.^2;
+        end
+        if isfield(postoption,'up') && postoption.up
+            dki = zeros(size(d{k}{i},1).*postoption.up,...
+                size(d{k}{i},2),size(d{k}{i},3));
+            dki(1:postoption.up:end,:,:) = d{k}{i};
+            dki = filter(Hd,[dki;...
+                zeros(6,size(d{k}{i},2),size(d{k}{i},3))]);
+            d{k}{i} = dki(1+ceil(6/2):end-floor(6/2),:,:);
+            tki = zeros(size(tp{k}{i},1).*postoption.up,...
+                size(tp{k}{i},2),...
+                size(tp{k}{i},3));
+            dt = repmat((tp{k}{i}(2)-tp{k}{i}(1))...
+                /postoption.up,...
+                [size(tp{k}{i},1),1,1]);
+            for j = 1:postoption.up
+                tki(j:postoption.up:end,:,:) = tp{k}{i}+dt*(j-1);
             end
-            if postoption.log && ~get(e,'Log')
-                d{k}{i} = log10(d{k}{i});
-            end
-            if postoption.mu
-                dki = max(0,d{k}{i});
-                mu = postoption.mu;
-                dki = log(1+mu*dki)/log(1+mu);
-                dki(~isfinite(d{k}{i})) = NaN;
-                d{k}{i} = dki;
-            end
-            if postoption.power
-                d{k}{i} = d{k}{i}.^2;
-            end
-            if postoption.up
-                dki = zeros(size(d{k}{i},1).*postoption.up,...
-                            size(d{k}{i},2),size(d{k}{i},3));
-                dki(1:postoption.up:end,:,:) = d{k}{i};
-                dki = filter(Hd,[dki;...
-                                zeros(6,size(d{k}{i},2),size(d{k}{i},3))]);
-                d{k}{i} = dki(1+ceil(6/2):end-floor(6/2),:,:);
-                tki = zeros(size(tp{k}{i},1).*postoption.up,...
-                            size(tp{k}{i},2),...
-                            size(tp{k}{i},3));
-                dt = repmat((tp{k}{i}(2)-tp{k}{i}(1))...
-                                /postoption.up,...
-                            [size(tp{k}{i},1),1,1]);
-                for j = 1:postoption.up
-                    tki(j:postoption.up:end,:,:) = tp{k}{i}+dt*(j-1);
-                end
-                tp{k}{i} = tki;
-                newsr = sr{k}*postoption.up;
-            end
-            if (postoption.diffhwr || postoption.diff) && ...
-                    not(get(e,'Diff'))
-                tp{k}{i} = tp{k}{i}(1:end-1,:,:);
-                order = max(postoption.diffhwr,postoption.diff);
-                if postoption.complex
-                    dph = diff(ph{k}{i},2);
-                    dph = dph/(2*pi);% - round(dph/(2*pi));
-                    ddki = sqrt(d{k}{i}(3:end,:,:).^2 + d{k}{i}(2:end-1,:,:).^2 ...
-                                              - 2.*d{k}{i}(3:end,:,:)...
-                                                 .*d{k}{i}(2:end-1,:,:)...
-                                                 .*cos(dph));
-                    d{k}{i} = d{k}{i}(2:end,:,:); 
-                    tp{k}{i} = tp{k}{i}(2:end,:,:);
-                elseif order == 1
-                    ddki = diff(d{k}{i},1,1);
-                else
-                    b = firls(order,[0 0.9],[0 0.9*pi],'differentiator');
-                    ddki = filter(b,1,...
-                        [repmat(d{k}{i}(1,:,:),[order,1,1]);...
-                         d{k}{i};...
-                         repmat(d{k}{i}(end,:,:),[order,1,1])]);
-                    ddki = ddki(order+1:end-order-1,:,:);
-                end
-                if postoption.diffhwr
-                    ddki = hwr(ddki);
-                end
-                d{k}{i} = (1-postoption.lambda)*d{k}{i}(1:end-1,:,:)...
-                            + postoption.lambda*sr{k}/10*ddki;
-            end
-            if postoption.aver
-                y = filter(ones(1,postoption.aver),1,...
-                            [d{k}{i};zeros(postoption.aver,...
-                                           size(d{k}{i},2),...
-                                           size(d{k}{i},3))]);
-                d{k}{i} = y(1+ceil(postoption.aver/2):...
-                             end-floor(postoption.aver/2),:,:);
-            end
-            if postoption.gauss
-                sigma = postoption.gauss;
-                gauss = 1/sigma/2/pi...
-                        *exp(- (-4*sigma:4*sigma).^2 /2/sigma^2);
-                y = filter(gauss,1,[d{k}{i};zeros(4*sigma,1,size(d{k}{i},3))]);
-                y = y(4*sigma:end,:,:);
-                d{k}{i} = y(1:size(d{k}{i},1),:,:);
-            end
-            %if postoption.iir
-            %    a2 = exp(-1/(.4*sr{k}));
-            %    d{k}{i} = filter(1-a2,[1 -a2],d{k}{i});
-            %                 %    [d{k}{i};zeros(postoption.filter,...
-            %                 %                   size(d{k}{i},2),...
-            %                 %                   size(d{k}{i},3))]);
-            %    %d{k}{i} = y(1+ceil(postoption.filter/2):...
-            %    %             end-floor(postoption.filter/2),:,:);
-            %end
-            if postoption.chwr
-                d{k}{i} = center(d{k}{i});
-                d{k}{i} = hwr(d{k}{i});
-            end
-            if postoption.hwr
-                d{k}{i} = hwr(d{k}{i});
-            end
-            if postoption.c
-                d{k}{i} = center(d{k}{i});
-            end  
-            if get(e,'Log')
-                if postoption.minlog
-                    d{k}{i}(d{k}{i} < -postoption.minlog) = NaN;
-                end
+            tp{k}{i} = tki;
+            newsr = sr{k}*postoption.up;
+        end
+        if ((isfield(postoption,'diffhwr') && postoption.diffhwr) || ...
+                (isfield(postoption,'diff') && postoption.diff)) && ...
+                not(get(e,'Diff'))
+            tp{k}{i} = tp{k}{i}(1:end-1,:,:);
+            if ~isfield(postoption,'diffhwr')
+                order = postoption.diff;
+            elseif ~isfield(postoption,'diff')
+                order = postoption.diffhwr;
             else
+                order = max(postoption.diffhwr,postoption.diff);
+            end
+            if isfield(postoption,'complex') && postoption.complex
+                dph = diff(ph{k}{i},2);
+                dph = dph/(2*pi);% - round(dph/(2*pi));
+                ddki = sqrt(d{k}{i}(3:end,:,:).^2 + d{k}{i}(2:end-1,:,:).^2 ...
+                    - 2.*d{k}{i}(3:end,:,:)...
+                    .*d{k}{i}(2:end-1,:,:)...
+                    .*cos(dph));
+                d{k}{i} = d{k}{i}(2:end,:,:);
+                tp{k}{i} = tp{k}{i}(2:end,:,:);
+            elseif order == 1
+                ddki = diff(d{k}{i},1,1);
+            else
+                b = firls(order,[0 0.9],[0 0.9*pi],'differentiator');
+                ddki = filter(b,1,...
+                    [repmat(d{k}{i}(1,:,:),[order,1,1]);...
+                    d{k}{i};...
+                    repmat(d{k}{i}(end,:,:),[order,1,1])]);
+                ddki = ddki(order+1:end-order-1,:,:);
+            end
+            if isfield(postoption,'diffhwr') && postoption.diffhwr
+                ddki = hwr(ddki);
+            end
+            d{k}{i} = (1-postoption.lambda)*d{k}{i}(1:end-1,:,:)...
+                + postoption.lambda*sr{k}/10*ddki;
+        end
+        if isfield(postoption,'aver') && postoption.aver
+            y = filter(ones(1,postoption.aver),1,...
+                [d{k}{i};zeros(postoption.aver,...
+                size(d{k}{i},2),...
+                size(d{k}{i},3))]);
+            d{k}{i} = y(1+ceil(postoption.aver/2):...
+                end-floor(postoption.aver/2),:,:);
+        end
+        if isfield(postoption,'gauss') && postoption.gauss
+            sigma = postoption.gauss;
+            gauss = 1/sigma/2/pi...
+                *exp(- (-4*sigma:4*sigma).^2 /2/sigma^2);
+            y = filter(gauss,1,[d{k}{i};zeros(4*sigma,1,size(d{k}{i},3))]);
+            y = y(4*sigma:end,:,:);
+            d{k}{i} = y(1:size(d{k}{i},1),:,:);
+        end
+        %if postoption.iir
+        %    a2 = exp(-1/(.4*sr{k}));
+        %    d{k}{i} = filter(1-a2,[1 -a2],d{k}{i});
+        %                 %    [d{k}{i};zeros(postoption.filter,...
+        %                 %                   size(d{k}{i},2),...
+        %                 %                   size(d{k}{i},3))]);
+        %    %d{k}{i} = y(1+ceil(postoption.filter/2):...
+        %    %             end-floor(postoption.filter/2),:,:);
+        %end
+        if isfield(postoption,'chwr') && postoption.chwr
+            d{k}{i} = center(d{k}{i});
+            d{k}{i} = hwr(d{k}{i});
+        end
+        if isfield(postoption,'hwr') && postoption.hwr
+            d{k}{i} = hwr(d{k}{i});
+        end
+        if isfield(postoption,'c') && postoption.c
+            d{k}{i} = center(d{k}{i});
+        end
+        if get(e,'Log')
+            if isfield(postoption,'minlog') && postoption.minlog
+                d{k}{i}(d{k}{i} < -postoption.minlog) = NaN;
+            end
+        else
+            if isfield(postoption,'norm')
                 if postoption.norm == 1
                     d{k}{i} = d{k}{i}./repmat(max(abs(d{k}{i})),...
-                                             [size(d{k}{i},1),1,1]);
+                        [size(d{k}{i},1),1,1]);
                 elseif ischar(postoption.norm) && ...
                         strcmpi(postoption.norm,'AcrossSegments')
                     d{k}{i} = d{k}{i}./repmat(mdk,[size(d{k}{i},1),1,1]);
@@ -716,9 +720,7 @@ for k = 1:length(d)
             end
         end
     end
-    if isfield(postoption,'sampling')
-        sr{k} = newsr;
-    end
+    sr{k} = newsr;
 end
 if isfield(postoption,'ds') && postoption.ds>1
     e = set(e,'DownSampling',postoption.ds,'Sampling',sr);
@@ -727,24 +729,22 @@ elseif isfield(postoption,'sampling') && postoption.sampling
 elseif isfield(postoption,'up') && postoption.up
     e = set(e,'Sampling',sr);
 end
-if isfield(postoption,'sampling')
-    if postoption.hwr
-        e = set(e,'Halfwave',1);
-    end
-    if postoption.diff
-        e = set(e,'Diff',1,'Halfwave',0,'Title','Differentiated envelope');
-    end
-    if postoption.diffhwr
-        e = set(e,'Diff',1,'Halfwave',1,'Centered',0);
-    end
-    if postoption.c
-        e = set(e,'Centered',1);
-    end
-    if postoption.chwr
-        e = set(e,'Halfwave',1,'Centered',1);
-    end
-    if postoption.log
-        e = set(e,'Log',1);
-    end
+if isfield(postoption,'hwr') && postoption.hwr
+    e = set(e,'Halfwave',1);
+end
+if isfield(postoption,'diff') && postoption.diff
+    e = set(e,'Diff',1,'Halfwave',0,'Title','Differentiated envelope');
+end
+if isfield(postoption,'diffhwr') && postoption.diffhwr
+    e = set(e,'Diff',1,'Halfwave',1,'Centered',0);
+end
+if isfield(postoption,'c') && postoption.c
+    e = set(e,'Centered',1);
+end
+if isfield(postoption,'chwr') && postoption.chwr
+    e = set(e,'Halfwave',1,'Centered',1);
+end
+if isfield(postoption,'log') && postoption.log
+    e = set(e,'Log',1);
 end
 e = set(e,'Data',d,'Time',tp);
