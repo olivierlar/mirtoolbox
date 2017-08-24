@@ -207,6 +207,7 @@ if not(isempty(order))
                             end
                         end
                     end
+                    synth = synth/max(abs(synth));
                     pl = audioplayer(synth,44100);
                     playblocking(pl);
                 end
