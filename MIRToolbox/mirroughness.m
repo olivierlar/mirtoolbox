@@ -91,15 +91,15 @@ if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
                     v1 = repmat(pvj,[1 length(pvj)]);
                     v2 = repmat(pvj',[length(pvj) 1]);
                     rj = plomp(f1,f2);
-                    if option.min
-                        v12 = min(v1,v2);
-                    else
-                        v12 = v1.*v2;
-                    end
                     if strcmpi(option.meth,'Sethares')
+                        if option.min
+                            v12 = min(v1,v2);
+                        else
+                            v12 = v1.*v2;
+                        end
                         rj = v12.*rj;
                     elseif strcmpi(option.meth,'Vassilakis')
-                        rj = (v1.*v2).^.1.*.5.*(2*v2./(v1+v2)).^3.11.*rj;
+                        rj = (v1.*v2).^.1.*.5.*(2*min(v1,v2)./(v1+v2)).^3.11.*rj;
                     end
                     rg{h}{i}(1,j,k) = sum(sum(rj));
                     if option.normal
