@@ -192,6 +192,12 @@ function varargout = mirpeaks(orig,varargin)
         normal.choice = {'Local','Global'};
         normal.default = 'Global';
     option.normal = normal;
+    
+        localfactor.key = 'LocalFactor';
+        localfactor.type = 'Integer';
+        localfactor.default = 0;
+        localfactor.keydefault = .8;
+    option.localfactor = localfactor;
 
         extract.key = 'Extract';
         extract.type = 'Boolean';
@@ -235,6 +241,11 @@ function varargout = mirpeaks(orig,varargin)
         scan.key = 'ScanForward'; % specific to mironsets(..., 'Klapuri99')
         scan.default = [];
     option.scan = scan;
+    
+%         highest.key = 'Highest';
+%         highest.type = 'Boolean';
+%         highest.default = 0;
+%     option.highest = highest;
     
 specif.option = option;
 
@@ -457,10 +468,19 @@ for i = 1:length(d) % For each audio file,...
         end
         
         if strcmpi(option.normal,'Local')
-            % Normalizing each frame separately:
-            dht = (dht-repmat(min(min(dht,[],1),[],4),[nl0 1 1 nd0]))./... 
-                repmat(max(max(dht,[],1),[],4)...
-                      -min(min(dht,[],1),[],4),[nl0 1 1 nd0]);
+            if option.localfactor
+                maxl = 0;
+                for l = 1:size(dht,2)
+                    maxl = max(maxl*option.localfactor,...
+                               max(max(max(dht(:,l,:,:),[],1),[],3),[],4));
+                    dht(:,l,:,:) = dht(:,l,:,:) / maxl;
+                end
+            else
+                % Normalizing each frame separately:
+                dht = (dht-repmat(min(min(dht,[],1),[],4),[nl0 1 1 nd0]))./... 
+                    repmat(max(max(dht,[],1),[],4)...
+                          -min(min(dht,[],1),[],4),[nl0 1 1 nd0]);
+            end
         end
         warning(state.state,'MATLAB:divideByZero');
 
@@ -1307,6 +1327,45 @@ for i = 1:length(d) % For each audio file,...
         if option.vall
             dhu = -dhu;
         end
+%         if option.highest
+%             for l = 1:np
+%                 prev = [];
+%                 buf = [];
+%                 low = 0;
+%                 for k = 1:nc
+%                     mk = max(mx{1,k,l});
+%                     if isempty(mk)
+%                         if low && k - start < 30
+%                             for g = start:k-1
+%                                 mx{1,g,l} = [];
+%                             end
+%                         end
+%                     else
+%                         if isempty(prev)
+%                             start = k;
+%                         else
+%                             if abs(log2(th(mk,1)/th(prev,1))) > .2
+%                                 if mk > prev
+%                                     if k - start < 30
+%                                         for g = start:k-1
+%                                             mx{1,g,l} = [];
+%                                         end
+%                                     end
+%                                 else
+%                                     low = 1;
+%                                 end
+%                                 start = k;
+%                             end
+%                         end
+%                         mx{1,k,l} = mk;
+%                     end
+%                     if ~isempty(mk)
+%                         buf(end+1) = mk;
+%                     end
+%                     prev = mx{1,k,l};
+%                 end
+%             end
+%         end
         mmx = cell(1,nc,np);
         mmy = cell(1,nc,np);
         mmv = cell(1,nc,np);
