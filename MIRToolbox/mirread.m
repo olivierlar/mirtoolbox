@@ -26,7 +26,10 @@ if ~isempty(extract)
 end
 
 p = ver('MATLAB');
-if str2num(p.Version) >= 8.3
+if str2num(p.Version) >= 8.6
+    [d,tp,fp,f,l,b,n,ch] = mirread2015(extract,orig,load,folder,verbose);
+    return
+elseif str2num(p.Version) >= 8.3
     [d,tp,fp,f,l,b,n,ch] = mirread2014(extract,orig,load,folder,verbose);
     return
 end
