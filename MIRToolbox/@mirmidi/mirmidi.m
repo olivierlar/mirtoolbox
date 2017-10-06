@@ -16,7 +16,7 @@ option.mono = mono;
     decay.key = {'Decay','Decays'};
     decay.type = 'Boolean';
     decay.default = 1;
-option.release = decay;
+option.decay = decay;
 
 specif.option = option;
 
