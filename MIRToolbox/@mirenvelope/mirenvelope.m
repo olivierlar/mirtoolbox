@@ -405,7 +405,7 @@ elseif strcmpi(option.method,'Spectro')
         sr{h} = 0;
         for i = 1:length(d{h})
             if size(d{h}{i},3)>1 % Already in bands (channels in 3d dim)
-                d{h}{i} = permute(sum(d{h}{i}),[2 1 3]);
+                d{h}{i} = permute(sum(d{h}{i},1),[2 1 3]);
                 if ~isempty(ph)
                     ph{h}{i} = permute(ph{h}{i},[2 1 3]);
                 end
