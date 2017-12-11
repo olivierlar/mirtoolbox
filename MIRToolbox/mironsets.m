@@ -399,12 +399,36 @@ function varargout = mironsets(x,varargin)
         new.default = 0;
         new.when = 'After';
     option.new = new;
+    
+        onsetthres.key = 'OnsetThreshold';
+        onsetthres.type = 'Integer';
+        onsetthres.default = .1;
+        onsetthres.when = 'After';
+    option.onsetthres = onsetthres;  
+    
+        attackthres.key = 'AttackThreshold';
+        attackthres.type = 'Integer';
+        attackthres.default = .075;
+        attackthres.when = 'After';
+    option.attackthres = attackthres;  
         
         decay.key = {'Decay','Decays','Release','Releases'};
         decay.type = 'Boolean';
         decay.default = 0;
         decay.when = 'Both';
-    option.decay = decay;
+    option.decay = decay; 
+    
+        decaythres.key = 'DecayThreshold';
+        decaythres.type = 'Integer';
+        decaythres.default = .2;
+        decaythres.when = 'After';
+    option.decaythres = decaythres;  
+        
+        offsetthres.key = 'OffsetThreshold';
+        offsetthres.type = 'Integer';
+        offsetthres.default = .1;
+        offsetthres.when = 'After';
+    option.offsetthres = offsetthres; 
     
 %% preselection
         presel.choice = {'Scheirer','Klapuri99'};
@@ -759,7 +783,7 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
                 ap = {{{}}};
             else
                 v = mirpeaks(x,'Total',total,'SelectFirst',0,...
-                    'Contrast',.1,...postoption.cthr,...
+                    'Contrast',postoption.cthr,...
                     'Threshold',.5,...
                     'Valleys','Order','Abscissa','NoEnd');
                 stu = get(v,'PeakPosUnit');
@@ -777,11 +801,11 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
                 en = {{{}}};
             else
                 v = mirpeaks(x,'Total',total,'SelectFirst',0,...
-                    'Contrast',.1,...postoption.cthr,
+                    'Contrast',postoption.cthr,...
                     'Threshold',.5,...
                     'Valleys','Order','Abscissa','NoBegin');
                 rlu = get(v,'PeakPosUnit');
-                [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu);
+                [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu,postoption);
             end
         else
             rl = {{{}}};
@@ -927,6 +951,7 @@ st = zeros(1,length(stu));
 i = 0;
 while i < length(stu)
     if length(ppu) == i
+        st(i:end) = [];
         break
     end
     i = i+1;
@@ -947,15 +972,23 @@ while i < length(stu)
     
     st(i) = find(t >= stu(i),1);
     
+    stop = false;
     while true
         dd = diff(d(st(i):pp(i)));
         f0 = find(dd > 0,1);
         if isempty(f0)
             pp(i) = [];
             ppu(i) = [];
+            if length(pp) < i
+                stop = true;
+                break
+            end
         else
             break
         end
+    end
+    if stop
+        break
     end
     st(i) = st(i) + f0 - 1;
     
@@ -978,13 +1011,13 @@ while i < length(stu)
         dd = diff(d(st(i):pp(i)));
         [mad, mdd] = max(dd);
 
-        f2 = find(dd(end:-1:mdd+1)>mad/5,1);
+        f2 = find(dd(end:-1:mdd+1) > mad * option.attackthres,1);
         if isempty(f2)
             f2 = 1;
         end
         pp(i) = st(i) + length(dd) - f2;
 
-        f1 = find(dd(1:mdd-1)>mad/10,1);
+        f1 = find(dd(1:mdd-1) > mad * option.onsetthres,1);
         if isempty(f1)
             f1 = 1;
         end
@@ -1023,7 +1056,7 @@ while i < length(stu)
         M				= mean(dpercent_posn_v(param.m1:param.m2));
         
         % === 1) START ATTACK
-        % === on DEMARRE juste APRES que l'effort à fournir (écart temporal entre percent) soit trop important
+        % === on DEMARRE juste APRES que l'effort ? fournir (?cart temporal entre percent) soit trop important
         pos2_v			= find(dpercent_posn_v(param.s1att:param.s2att) > option.alpha * M);
         if ~isempty(pos2_v)
             result		= pos2_v(end)+param.s1att-1+1;
@@ -1041,7 +1074,7 @@ while i < length(stu)
         end
         
         % === 2) END ATTACK
-		% === on ARRETE juste AVANT que l'effort à fournir (écart temporal entre percent) soit trop important
+		% === on ARRETE juste AVANT que l'effort ? fournir (?cart temporal entre percent) soit trop important
 		pos2_v		= find(dpercent_posn_v(param.e1att:param.e2att) > option.alpha * M);
 		if ~isempty(pos2_v)
             result		= pos2_v(1)+param.e1att-1;
@@ -1066,7 +1099,7 @@ st = {{st} {pp}};
 
 
 %%
-function [pp en] = enddecay(d,t,pp,ppu,rlu)
+function [pp en] = enddecay(d,t,pp,ppu,rlu,option)
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -1083,6 +1116,7 @@ en = zeros(1,length(rlu));
 i = 0;
 while i < length(rlu)
     if length(ppu) == i
+        en(i:end) = [];
         break
     end
     i = i+1;
@@ -1104,6 +1138,7 @@ while i < length(rlu)
     en(i) = find(t <= rlu(i),1,'last');
     
     stop = 0;
+    stop2 = false;
     while true
         if pp(i) >= en(i)
             stop = 1;
@@ -1114,9 +1149,16 @@ while i < length(rlu)
         if isempty(f0)
             pp(i) = [];
             ppu(i) = [];
+            if length(pp) < i
+                stop2 = true;
+                break
+            end
         else
             break
         end
+    end
+    if stop2
+        break
     end
     if stop
         continue
@@ -1141,13 +1183,13 @@ while i < length(rlu)
     dd = diff(d(en(i):-1:pp(i)));
     [mad, mdd] = max(dd);
     
-    f2 = find(dd(end:-1:mdd+1)>mad/5,1);
+    f2 = find(dd(end:-1:mdd+1) > mad * option.decaythres,1);
     if isempty(f2)
         f2 = 1;
     end
     pp(i) = en(i) - length(dd) + f2;
     
-    f1 = find(dd(1:mdd-1)>mad/10,1);
+    f1 = find(dd(1:mdd-1) > mad * option.offsetthres,1);
     if isempty(f1)
         f1 = 1;
     end
