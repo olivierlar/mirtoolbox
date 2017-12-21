@@ -131,6 +131,9 @@ if isempty(op)
 end
 op = sort(op{1});
 ap = sort(ap{1});
+if length(op) > length(ap)
+    op(length(ap)+1:end) = [];
+end
 fp = [op(:)';ap(:)'];
 
 

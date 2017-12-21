@@ -8,7 +8,7 @@ function varargout = mirattacktime(orig,varargin)
 %   mirattacktime(...,'Single') only selects one attack phase in the signal
 %       (or in each segment).
 %
-% Krimphoff, J., McAdams, S. & Winsberg, S. (1994), Caractérisation du 
+% Krimphoff, J., McAdams, S. & Winsberg, S. (1994), Caract?risation du 
 % timbre des sons complexes. II : Analyses acoustiques et quantification 
 % psychophysique. Journal de Physique, 4(C5), 625-628.
 
@@ -117,6 +117,9 @@ if isempty(op)
 end
 op = sort(op{1});
 ap = sort(ap{1});
+if length(op) > length(ap)
+    op(length(ap)+1:end) = [];
+end
 fp = [op(:)';ap(:)'];
 
 
@@ -127,6 +130,9 @@ if isempty(ap)
 end
 op = sort(op{1});
 ap = sort(ap{1});
+if length(op) > length(ap)
+    op(length(ap)+1:end) = [];
+end
 at = ap-op;
 at = at';
 if strcmpi(sc,'Log')
