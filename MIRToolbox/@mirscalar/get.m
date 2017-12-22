@@ -45,8 +45,7 @@ switch propName
 %                 end
                 val{k}{i} = cell(size(ppi));
                 for h = 1:size(ppi,3)
-                    j = 1;
-%                     for j = 1:size(ppi,2)
+                    for j = 1:size(ppi,2)
 %                         if size(poi,3) > 1 && size(poi,1) == 1
 %                             val{k}{i}{1,j,h} = ppi{1,j,h};
 %                         else
@@ -55,7 +54,7 @@ switch propName
                                     poi(:,ppi{1,j,h}(x));
                             end
 %                         end
-%                     end
+                    end
                 end
             end
         end
