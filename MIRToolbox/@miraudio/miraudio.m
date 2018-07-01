@@ -49,8 +49,6 @@ function varargout = miraudio(orig,varargin)
 %           index l. If l=0, the audio signal(s) are labelled using the
 %           whole file name.
 
-% MP3 behave badly!
-
 
 if isempty(orig)
     varargout = {{}};
@@ -136,17 +134,17 @@ end
    %     segment.when = 'After';
    % option.segment = segment;
 
-        reverse.key = 'Reverse';
-        reverse.type = 'Boolean';
-        reverse.default = 0;
-        reverse.when = 'After';
-    option.reverse = reverse;
-
         mono.key = 'Mono';
         mono.type = 'Boolean';
         mono.default = NaN;
         mono.when = 'After';
-    option.mono = mono;    
+    option.mono = mono; 
+    
+        fwr.key = 'FWR';
+        fwr.type = 'Boolean';
+        fwr.default = 0;
+        fwr.when = 'After';
+    option.fwr = fwr; 
 
         separate.key = 'SeparateChannels';
         separate.type = 'Boolean';
@@ -363,6 +361,9 @@ for h = 1:length(d)
                             /para.sampling + tk(1,:,:);
             end
             f{k} = para.sampling;
+        end
+        if isfield(para,'fwr') && para.fwr
+            dk = abs(dk);
         end
         d{h}{k} = dk;
         t{h}{k} = tk;
