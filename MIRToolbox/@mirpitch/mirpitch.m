@@ -130,16 +130,21 @@ function varargout = mirpitch(orig,varargin)
             db.default = 0;
             db.keydefault = Inf;
         option.db = db;
+    
+            norm.key = 'Normal';
+            norm.type = 'Boolean';
+            norm.default = 0;
+        option.norm = norm;
+
+            terhardt.key = 'Terhardt';
+            terhardt.type = 'Boolean';
+            terhardt.default = 0;
+        option.terhardt = terhardt;
         
         ce.key = 'Cepstrum';
         ce.type = 'Boolean';
         ce.default = 0;
     option.ce = ce;
-
-        comb.key = 'Comb';
-        comb.type = 'Boolean';
-        comb.default = 0;
-    option.comb = comb;
     
 %% peak picking options
 
@@ -190,11 +195,18 @@ function varargout = mirpitch(orig,varargin)
         reso.default = 0;
     option.reso = reso;
         
-        track.key = 'Track';        % Not used yet
-        track.type = 'Boolean';
-        track.default = 0;
-    option.track = track;
-
+        normal.key = 'Normalize';
+        normal.type = 'String';
+        normal.choice = {'Local','Global','No'};
+        normal.default = 'Global';
+    option.normal = normal;
+    
+        localfactor.key = 'LocalFactor';
+        localfactor.type = 'Integer';
+        localfactor.default = 0;
+        localfactor.keydefault = .99;
+    option.localfactor = localfactor;
+    
 %% post-processing options
         
         cent.key = 'Cent';
@@ -203,9 +215,11 @@ function varargout = mirpitch(orig,varargin)
     option.cent = cent;
     
         segm.key = 'Segment';
-        segm.type = 'Boolean';
+        segm.type = 'String';
+        segm.choice = {'Lartillot','Nymoen'};
         segm.when = 'Both';
-        segm.default = 0;
+        segm.default = '';
+        segm.keydefault = 'Lartillot';
     option.segm = segm;
 
             segmin.key = 'SegMinLength';
@@ -256,7 +270,7 @@ function varargout = mirpitch(orig,varargin)
         frame.default = [0 0];
         frame.keydefault = [NaN NaN];
     option.frame = frame;
-    
+   
 %% preset model
 
         tolo.key = 'Tolonen';
@@ -305,7 +319,7 @@ end
 if not(option.ac) && not(option.as) && not(option.ce) && not(option.s)
     option.ac = 1;
 end
-if option.segm && option.frame.length.val==0
+if ~isempty(option.segm) && option.frame.length.val==0
     option.frame.length.val = NaN;
     option.frame.hop.val = NaN;
 end
@@ -360,11 +374,11 @@ else
         end
         if option.as || option.ce || option.s
             x = mirframenow(orig,option);
-            if option.comb
-                y = mirspectrum(x,'Min',option.mi,'Max',2000,'Res',1);%,'Sum');
-            elseif option.s
+            if option.s
                 s = mirspectrum(x,'Min',option.mi,'Max',option.ma,...
-                                  'Res',option.res,'dB',option.db);
+                                  'Res',option.res,'dB',option.db,...
+                                  'Normal',option.norm,...
+                                  'Terhardt',option.terhardt);
                 if option.ac
                     y = y*s;
                 else
@@ -399,10 +413,7 @@ type = {'mirpitch',mirtype(y)};
     
 
 function o = main(x,option,postoption)
-if option.comb == 2
-    option.m = Inf;
-    option.order = 'Abscissa';
-elseif option.multi && option.m == 1
+if option.multi && option.m == 1
     option.m = Inf;
 elseif (option.mono && option.m == Inf) %|| option.segm
     option.m = 1;
@@ -420,46 +431,6 @@ else
     x2 = [];
 end
 
-if option.comb == 1
-    d = get(x,'Data');
-    pos = get(x,'Pos');
-    cb = cell(1,length(d));
-    for i = 1:length(d)
-        cb{i} = cell(1,length(d{i}));
-        for j = 1:length(d{i})
-            cb{i}{j} = zeros(size(d{i}{j},1),...
-                             size(d{i}{j},2),...
-                             size(d{i}{j},3));
-            dij = d{i}{j}/max(max(max(d{i}{j})));
-            for h = 1:size(d{i}{j},1)
-                ph = pos{i}{j}(h,1,1);
-                ip = h;
-                for k = 2:size(d{i}{j},1)
-                    [unused mp] = min(abs(pos{i}{j}(ip(end)+1:end,1,1) ...
-                                          - ph * k));
-                    if isempty(mp)
-                        break
-                    end
-                    ip(end+1) = ip(end) + mp;
-                end
-                if length(ip) == 1
-                    break
-                end
-                cbh = sum(dij(ip,:,:));
-                for k = 1:length(ip)
-                    cbh = cbh .* ...
-                        (.5 * (2 - ...
-                               exp(-(max(dij(ip(1:k),:,:),[],1).^2 * 5000))));
-                end
-                cb{i}{j}(h,:,:) = cbh;
-            end
-            cb{i}{j}(h+1:end,:,:) = [];
-            pos{i}{j}(h+1:end,:,:) = [];
-        end
-    end
-    x = set(x,'Data',cb,'Pos',pos,'Title','Spectral Comb');
-end
-
 if isa(x,'mirpitch')
     pf = get(x,'Data');
     pa = get(x,'Amplitude');
@@ -475,10 +446,12 @@ if isa(x,'mirpitch')
     end
 else
     if not(isa(x,'mirpitch') || isa(x,'mirmidi'))
-        x = mirpeaks(x,'Total',option.m,'Track',option.track,...
+        x = mirpeaks(x,'Total',option.m,...,
                        'Contrast',option.cthr,'Threshold',option.thr,...
                        'Reso',option.reso,'NoBegin','NoEnd',...
-                       'Order',option.order,'Harmonic',option.harmonic);
+                       'Order',option.order,'Harmonic',option.harmonic,...
+                       'Normalize',option.normal,...
+                       'LocalFactor',option.localfactor);
     end
     if isa(x,'mirscalar')
         pf = get(x,'Data');
@@ -495,60 +468,7 @@ fp = get(x,'FramePos');
 
 punit = 'Hz';
 
-if option.comb == 2
-    pp = get(x,'PeakPos');
-    pv = get(x,'PeakVal');
-    pm = get(x,'PeakMode');
-    f = get(x,'Pos');
-    for i = 1:length(pf)
-        for j = 1:length(pf{i})
-            maxf = f{i}{j}(end,1);
-            for h = 1:length(pf{i}{j})
-                sco = zeros(length(pf{i}{j}{h}),1);
-                for k = 1:length(pf{i}{j}{h})
-                    fk = pf{i}{j}{h}(k);
-                    if fk > option.ma
-                        break
-                    end
-                    ws = zeros(round(maxf / fk) ,1);
-                    %err = mod(pf{i}{j}{h}/fk,1);
-                    %err = min(err,1-err);
-                    ws(1) = pa{i}{j}{h}(k);
-                    for l = k+1:length(pf{i}{j}{h})
-                        r = round(pf{i}{j}{h}(l) / fk);
-                        if r == 1
-                            continue
-                        end
-                        err = mod(pf{i}{j}{h}(l) / fk ,1);
-                        err = min(err,1-err);
-                        ws(r) = max(ws(r),pa{i}{j}{h}(l).*exp(-err^2*50));
-                    end
-                    
-                    sco(k) = sum(ws);
-                    if length(ws)>3 && ws(3)<.5
-                        sco(k) = sco(k)/2;
-                    end
-                    %if length(ws)>5 && ws(5)<.5
-                    %    sco(k) = sco(k)/2;
-                    %end
-                        %/(1+length(find(ws(2:end-1)<.01)));
-                    %sco(k) = sum(pa{i}{j}{h}.*exp(-err));
-                end
-                %pa{i}{j}{h} = sco;
-                [unused b] = max(sco);
-                pf{i}{j}{h} = pf{i}{j}{h}(b);
-                pa{i}{j}{h} = pa{i}{j}{h}(b);
-                pp{i}{j}{h} = pp{i}{j}{h}(b);
-                pv{i}{j}{h} = pv{i}{j}{h}(b);
-                pm{i}{j}{h} = pm{i}{j}{h}(b);
-            end
-        end
-    end
-    x = set(x,'PeakPrecisePos',pf,'PeakPreciseVal',pa,...
-              'PeakPos',pp,'PeakVal',pv,'PeakMode',pm);
-end
-
-if (option.cent || option.segm) && ...
+if (option.cent || strcmpi(option.segm,'Lartillot')) && ...
         (~isa(x,'mirpitch') || strcmp(get(x,'Unit'),'Hz'))
     punit = 'cents';
     for i = 1:length(pf)
@@ -562,7 +482,7 @@ if (option.cent || option.segm) && ...
     end
 end
 
-if option.segm
+if strcmpi(option.segm,'Lartillot')
     scale = [];
     for i = 1:length(pf)
         for j = 1:length(pf{i})
@@ -855,6 +775,107 @@ if option.segm
             end
         end
     end
+elseif strcmpi(option.segm,'Nymoen')
+    %% Code from pitchExtract.m by Kristian Nymoen
+    %% https://github.com/krisny/MusicMocapMatlab/blob/master/soundanalysis/pitchExtract.m
+    fundamental = 1;
+    medianFilterLength1 = 15;
+    derivTreshold1 = 1;
+    medianFilterLength2 = 21;
+    derivTreshold2 = 5;
+    toneLengthTreshold = 25; %10;
+    rmsThreshold = 0.005;
+    for i = 1:length(pf)
+        for j = 1:length(pf{i})
+            for g = 1:size(pf{i}{j},3)
+                pitches = zeros(1,length(pf{i}{j}));
+                for k = 1:length(pf{i}{j})
+                    pfk = pf{i}{j}{k};
+                    if isempty(pfk)
+                        pitches(k) = NaN;
+                    else
+                        pitches(k) = pfk;
+                    end
+                end
+                
+%                 figure, hold on
+%                 plot(pitches,'+')
+                smoothpitches = medfilt1(pitches,medianFilterLength1,'omitnan','truncate');
+%                 plot(smoothpitches,'+')
+                smoothpitches(isnan(pitches)) = nan;
+%                 plot(smoothpitches,'+')
+
+%               Variant, by Olivier
+%                 smoothpitches = NaN(1,length(pitches));
+%                 buff = [];
+%                 for k = 1:length(pitches)
+%                     if isnan(pitches(k))
+%                         buff = [];
+%                         continue
+%                     end
+%                     if length(buff) == medianFilterLength1
+%                         buff(1) = [];
+%                     end
+%                     buff(end+1) = pitches(k);
+%                     if length(buff) == medianFilterLength1
+%                         smoothpitches(k) = mean(buff);
+%                     end
+%                 end
+                
+                %Derivate the pitch curve. If the pitch derivative is larger than
+                %threshold, remove pitch information (in effect: segment curve)
+                smoothderiv = [0 diff(smoothpitches)];
+                smoothpitches(abs(smoothderiv)>derivTreshold1) = nan;
+%                 plot(smoothpitches,'o')
+                
+                %If the RMS energy is lower than threshold, remove pitch information
+%                 smoothpitches(rmss < rmsThreshold) = nan;
+                
+                %Another round of filtering, derivation and thresholding.
+                smoothpitches = medfilt1(smoothpitches,medianFilterLength2,'omitnan','truncate');
+%                 smoothpitches(rmss < rmsThreshold) = nan;
+                smoothderiv = [0 diff(smoothpitches)];
+                smoothpitches(abs(smoothderiv)>derivTreshold2) = nan;
+%                 plot(smoothpitches,'x')
+                
+                h = 1;
+                l = [0 0];
+                startp = [];
+                endp = [];
+                stabl = [];
+                
+                tones = {};
+                startp = [];
+                endp = [];
+                %Identify tones.
+                % If the pitch curve is nan, and the following non-nan period is longer
+                % than toneLengthThreshold, then identify a new tone.
+                for k = 1:length(smoothpitches)
+                    if isnan(smoothpitches(k))
+                        if l(2) > 0 && l(1)-l(2) > toneLengthTreshold
+                            tones{h} = smoothpitches(l(2)+1:l(1));
+                            startp(h) = l(2);
+                            endp(h) = l(1);
+                            h = h+1;
+                        end
+                        l(2) = k;
+                    end
+                    l(1) = k;
+                end
+                
+                %pitch of each tone is the median of all underlying pitches
+                meanp = zeros(1,length(tones));
+                for k = 1:length(tones)
+                    meanp(k) = median(tones{k})/fundamental;
+                end
+                ps{i}{j}{g} = startp;
+                pe{i}{j}{g} = endp;
+                pm{i}{j}{g} = meanp;
+                stb{i}{j}{g} = stabl;
+                dg = {}; 
+            end
+        end
+    end
 elseif isa(x,'mirpitch')
     ps = get(x,'Start');
     pe = get(x,'End');
@@ -929,6 +950,7 @@ if option.median
         end
     end
 end
+
 if 0 %isa(x,'mirscalar')
     p.amplitude = 0;
 else
@@ -942,6 +964,16 @@ p.stable = stb;
 s = mirscalar(x,'Data',pf,'Title','Pitch','Unit',punit);
 p = class(p,'mirpitch',s);
 o = {p,x};
+
+% nn = length(startp);
+% nmat = zeros(nn,7);
+% for i = 1:nn
+%     tim = fp{1}{1}(1,startp(i));
+%     dur = fp{1}{1}(2,endp(i)) - tim;
+%     pit = 60 + round(12 * log2(meanp(i) / 261.626));
+%     nmat(i,:) = [tim dur 1 pit 100 tim dur];
+% end
+% writemidi(nmat,'transcription.mid');
 
 
 function [deg ref] = cent2deg(cent,ref)
