@@ -1,5 +1,8 @@
 function mirsave(e,f)
 
+verml = ver('MATLAB');
+verml = str2num(verml.Version);
+
 ext = 0;    % Specified new extension
 if nargin == 1
     f = '.envelope.mir';
@@ -55,12 +58,19 @@ for i = 1:nf
         if length(n)<4 || not(strcmpi(n(end-3:end),'.wav'))
             n = [n '.wav'];
         end
-        wavwrite(di,11025,32,n)
+        if verml < 8.3
+            wavwrite(di,11025,32,n)
+        end
     elseif strcmp(ext,'.au')
         if length(n)<3 || not(strcmpi(n(end-2:end),'.au'))
             n = [n '.au'];
         end
-        auwrite(di,11025,32,'linear',n)
+        if verml < 8.3
+            auwrite(di,11025,32,'linear',n)
+        end
+    end
+    if verml >= 8.3
+        audiowrite(n,di,11025);
     end
     disp([n,' saved.']);
 end
