@@ -76,7 +76,7 @@ for i = 1:nf
                 end
             end
             if verml >= 8.3
-                audiowrite(n,out,fsi,'BitsPerSample',nbi)
+                audiowrite(n,out,fsi)%,'BitsPerSample',nbi)
             end
             disp([n,' saved.']);
         end
@@ -116,7 +116,7 @@ for i = 1:nf
                 end
             end
             if verml >= 8.3
-                audiowrite(n,out,fsi,'BitsPerSample',nbi)
+                audiowrite(n,out,fsi)%,'BitsPerSample',nbi)
             end
             disp([n,' saved.']);
         else
@@ -144,7 +144,7 @@ for i = 1:nf
                     end
                 end
                 if verml >= 8.3
-                    audiowrite(n,out(:,j),fsi,'BitsPerSample',nbi)
+                    audiowrite(n,out(:,j),fsi)%,'BitsPerSample',nbi)
                 end
                 disp([n,' saved.']);
             end
