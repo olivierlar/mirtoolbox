@@ -166,7 +166,7 @@ if not(isempty(order))
                         enp = enp{k}{i}{1};
                         mep = mep{k}{i}{1};
                         for j = 1:length(mep)
-                            fj = 2^(mep(j)/1200);
+                            fj = mep(j); %2^(mep(j)/1200);
                             k1 = floor((fp{k}{i}(1,stp(j))-fp{k}{i}(1))*44100)+1;
                             k2 = floor((fp{k}{i}(2,enp(j))-fp{k}{i}(1))*44100)+1;
                             ampj = ones(1,k2-k1+1);
