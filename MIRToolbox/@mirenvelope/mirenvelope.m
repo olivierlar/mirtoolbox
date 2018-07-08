@@ -415,7 +415,7 @@ elseif strcmpi(option.method,'Spectro')
                     ph{h}{i} = permute(ph{h}{i},[2 3 1]);
                 end
             end
-            p{h}{i} = mean(fp{h}{i})';
+            p{h}{i} = mean(fp{h}{i})'; %fp{h}{i}(2,:)'; 
             if not(sr{h}) && size(fp{h}{i},2)>1
                 sr{h} = 1/(fp{h}{i}(1,2)-fp{h}{i}(1,1));
             end

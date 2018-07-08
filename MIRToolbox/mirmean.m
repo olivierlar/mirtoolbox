@@ -58,6 +58,9 @@ for i = 1:l
         fpi = cell(1,length(dd));
         for j = 1:length(dd)
             m{i}{j} = zeros(size(dd{j},1),1,size(dd{j},3));
+            if isempty(m{i}{j})
+                continue
+            end
             for h = 1:size(dd{j},3)
                 for k = 1:size(dd{j},1)
                     dk = dd{j}(k,:,h);

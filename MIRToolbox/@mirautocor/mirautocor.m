@@ -365,6 +365,7 @@ else
                         ss = abs(fft(sl(:,i,j)));
                         ss = ss.^option.gener;
                         cc = ifft(ss);
+                        % We forgot the normalization!!
                         ll = (0:masp-1);
                         c(:,i,j) = cc(ll+1);
                     end

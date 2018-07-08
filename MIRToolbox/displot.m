@@ -1,11 +1,6 @@
 function res = displot(x,y,xlab,ylab,t,fp,pp,tp,tv,ch,multidata,pm,op,ap,rp,of,cl,ax)
 % graphical display of any data (except mirscalar data) computed by MIRToolbox
 
-%opengl('OpenGLWobbleTesselatorBug',1)
-% Rendering complex patch object may cause segmentation violation and
-% return a tesselator error message in the stack trace. This command
-% enables a workaround of that bug that might work sometimes...
-
 if isempty(y)
     res = 0;
     return
@@ -18,9 +13,7 @@ if length(y) == 1
         x = x{1};
     end
 end
-if 0% iscell(y)
-    y = y{1};
-end
+
 if isempty(y)
     res = 0;
     return
@@ -81,7 +74,6 @@ if not(iscell(y)) && l > 20
     end
 end
 curve = (not(iscell(y)) && not(isequal(fp2,0)) && size(fp2,2)==1) || ...
-        ...%(iscell(y) && size(y{1}) == 1) || ...
         c == 1 || (strcmp(xlab,'time (s)') && not(manychannels));
 if curve
     for i = 1:l
@@ -138,15 +130,13 @@ if curve
                 end
             end
             if length(y) > 1
-                if isempty(cl)% || isempty(cl{1}) ... this because of a bug..
-                    %|| isempty(cl{i})
+                if isempty(cl)
                     colr = h;
-                %elseif iscell(cl{i})
-                %    colr = cl{i}(h);
+
                 elseif length(cl) == 1
                     colr = cl;
                 else
-                    colr = cl(h); %cl{i}(h);
+                    colr = cl(h);
                 end
                 if not(isempty(x{h}))
                     yhi = y{h}(:,:,i);
@@ -284,10 +274,8 @@ else
         for i = 1:l
             if l>1
                 subplot(l,1,l-i+1,'align');
-%                subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
             end
             hold on
-            %surfplot(segt,x{1},repmat(x{1}/x{1}(end)*.1,[1,length(segt)]));
             if length(x)==1 && length(y)>1
                 for k = 2:length(y)
                     x{k} = x{1};
@@ -301,7 +289,7 @@ else
                     else
                         mel = 0;
                     end
-                    xx = zeros(size(x{j},1)*size(y{j},4),1); %,size(x{j},2));
+                    xx = zeros(size(x{j},1)*size(y{j},4),1);
                     yy = zeros(size(y{j},1)*size(y{j},4),size(y{j},2));
                     for k = 1:size(y{j},4)
                         xx((k-1)*size(x{j},1)+1:k*size(x{j},1),1) = x{j}(:,1);
@@ -335,10 +323,6 @@ else
                                     ppj(:,:,1) = ppj(:,:,1) + (ppj(:,:,2)-1)*size(x,1);
                                     ppj(:,:,2) = [];
                                     plot(mean(fp{j}(:,k)),ppj-.5,'+w')
-                                elseif 0 %(exist('pm') == 1) && not(isempty(pm))
-                                    pmj = pm{k}{1,1,i};
-                                    ppj(:,:) = ppj(:,:) + (pmj(:,:)-1)*size(x,1);
-                                    plot(mean(fp{j}(:,k)),ppj-.5,'+w') % fp shows segmentation points
                                 elseif not(isempty(ppj))
                                     plot(mean(fp{j}(:,k)),xx(ppj),'+k')
                                 end
@@ -387,7 +371,7 @@ else
             if l>1
                 subplot('Position',[0.1 (i-1)*il+0.1 0.89 il-0.02])
             end
-            xx = zeros(size(x,1)*size(y,4),1); %,size(x,2));
+            xx = zeros(size(x,1)*size(y,4),1);
             yy = zeros(size(y,1)*size(y,4),size(y,2));
             for k = 1:size(y,4)
                 xx((k-1)*size(x,1)+1:k*size(x,1),1) = x(:,1);
@@ -429,12 +413,7 @@ else
                 set(gca,'YDir','normal');
             end
             hold on
-            %if iscell(pp)
-            %    pp = uncell(pp);
-            %    if iscell(pm)
-            %        pm = uncell(pm);
-            %    end
-            %end
+
             if (exist('tp') == 1) && not(isempty(tp))
                 tp = tp{i}{1};
                 tv = tv{i}{1};
@@ -442,10 +421,9 @@ else
                     prej = 0;
                     for j = 1:size(tp,2)
                         if ~isnan(tv(k,j)) && tv(k,j)
-                            if prej && prej == j-1% && not(isempty(tp(k,j)))
+                            if prej && prej == j-1
                                 if tp(k,j) == size(xxx,1) || ...
                                         tp(k,prej) == size(xxx,1)
-                                    %display('warning')
                                     continue
                                 end
                                 plot([(ttt(prej)+ttt(prej+1))/2,...
@@ -493,8 +471,7 @@ else
                                 ppj(:,:,:) = ppj(:,:,:) + (pmj(:,:,:)-1)*size(x,1);
                             end
                             if not(isempty(ppj))
-                                %plot((segt(j)+segt(j+1))/2,xx(ppj),'+k','MarkerSize',10)
-                                plot((ttt(j)+ttt(j+1))/2,(xxx(ppj)+xxx(ppj+1))/2,'+k','MarkerSize',10)
+                                plot((ttt(j)+ttt(j+1))/2,(xxx(ppj)+xxx(ppj+1))/2,'+w','MarkerSize',10)
                             end
                         end
                     end
@@ -507,7 +484,6 @@ else
                             pmj = [];
                         end
                         if not(isempty(ppj))
-                            %plot((segt(j)+segt(j+1))/2,xx(ppj),'+k','MarkerSize',10)
                             plot((ttt(ppj)+ttt(ppj+1))/2,(xxx(j)+xxx(j+1))/2,'+k','MarkerSize',10)
                         end
                     end
@@ -538,11 +514,7 @@ else
 end
 if l == 1
     if curve
-        %if (exist('dbv') == 1) && dbv
-        %    ylabel([ylab ' (logarithmic scale)']);
-        %else
-            ylabel(ylab);
-        %end
+        ylabel(ylab);
     elseif manychannels
         ylabel('Channels');
     else

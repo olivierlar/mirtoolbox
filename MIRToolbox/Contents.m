@@ -12,7 +12,7 @@
 % mirframe         - Decomposes into successive frames
 % mirsegment       - Decomposes into successive segments
 % mirlength        - Temporal length
-% mirpeaks         ? Peak picking
+% mirpeaks         - Peak picking
 %
 %DATA OUTPUT
 % mirgetdata       - Return result as a Matlab standard structure
