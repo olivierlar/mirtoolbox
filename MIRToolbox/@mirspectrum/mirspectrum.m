@@ -270,11 +270,13 @@ function varargout = mirspectrum(orig,varargin)
         timesmooth.when = 'After';
     option.timesmooth = timesmooth;
     
-        rapid.key = 'Rapid';
-        rapid.type = 'Boolean';
-        rapid.default = 0;
-    option.rapid = rapid;
-
+        diff.key = 'Diff';
+        diff.type = 'Integer';
+        diff.default = 0;
+        diff.keydefault = 10;
+        diff.when = 'After';
+    option.diff = diff;
+    
         phase.key = 'Phase';
         phase.type = 'Boolean';
         phase.default = 1;
@@ -558,7 +560,7 @@ if option.timesmooth
     [state s] = gettmp(s);
     B = ones(1,option.timesmooth)/option.timesmooth;
     for h = 1:length(m)
-        for l = 1:length(m{k})
+        for l = 1:length(m{h})
             [m{h}{l} state] = filter(B,1,m{h}{l},state,2);
             %mhl = m{h}{l};
             %for i = 1:size(m{h}{l},2)
@@ -568,6 +570,15 @@ if option.timesmooth
         end
     end
     s = settmp(s,state);
+end
+if option.diff
+    for h = 1:length(m)
+        for l = 1:length(m{h})
+            m{h}{l} = [zeros(size(m{h}{l},1),option.diff),...
+                       max(0,m{h}{l}(:,1+option.diff:end) - ...
+                             m{h}{l}(:,1:end-option.diff))];
+        end
+    end
 end
 if get(s,'Power') == 1 && ...
         (option.pow || any(option.mprod) || any(option.msum)) 
@@ -581,7 +592,7 @@ if get(s,'Power') == 1 && ...
 end
 if any(option.mprod)
     for h = 1:length(m)
-        for l = 1:length(m{k})
+        for l = 1:length(m{h})
             z0 = m{h}{l};
             z1 = z0;
             for k = 1:length(option.mprod)
@@ -599,7 +610,7 @@ if any(option.mprod)
 end
 if any(option.msum)
     for h = 1:length(m)
-        for l = 1:length(m{k})
+        for l = 1:length(m{h})
             z0 = m{h}{l};
             z1 = z0;
             for k = 1:length(option.msum)
@@ -951,7 +962,8 @@ if not(win == 0)
             disp('Signal Processing Toolbox does not seem to be installed. Recompute the hamming window manually.');
             w = 0.54 - 0.46 * cos(2*pi*(0:N-1)'/(N-1));
         else
-            error(['ERROR in MIRSPECTRUM: Unknown windowing function ',win,' (maybe Signal Processing Toolbox is not installed).']);
+            warning(['WARNING in MIRSPECTRUM: Unknown windowing function ',win,' (maybe Signal Processing Toolbox is not installed).']);
+            return
         end
     end
     kw = repmat(w,[1,size(dj,2),size(dj,3)]);
