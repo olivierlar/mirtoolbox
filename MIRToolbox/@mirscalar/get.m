@@ -28,21 +28,21 @@ switch propName
             end
             for i = 1:nseg
                 ppi = pp{k}{i};
-%                 if isempty(po)
-%                     poi = (1:size(d{k}{i},2))';
-%                 elseif iscell(po{k})
-%                     if isempty(po{k})
-%                         poi = mean(a.framepos{k}{1})';
-%                     elseif ischar(po{k}{1})
-%                         poi = (1:length(po{k}))';
-%                     else
+                if isempty(po)
+                    poi = (1:size(d{k}{i},2))';
+                elseif iscell(po{k})
+                    if isempty(po{k})
+                        poi = mean(a.framepos{k}{1})';
+                    elseif ischar(po{k}{1})
+                        poi = (1:length(po{k}))';
+                    else
                         poi = po{k}{i};
-%                     end
-%                 else
-%                     for j = 1:size(po,3)
-%                         poi(:,:,j) = po{k}(:,:,j)';
-%                     end
-%                 end
+                    end
+                else
+                    for j = 1:size(po,3)
+                        poi(:,:,j) = po{k}(:,:,j)';
+                    end
+                end
                 val{k}{i} = cell(size(ppi));
                 for h = 1:size(ppi,3)
                     for j = 1:size(ppi,2)
