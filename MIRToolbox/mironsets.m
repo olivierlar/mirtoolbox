@@ -161,7 +161,7 @@ function varargout = mironsets(x,varargin)
         
             powerspectrum.key = 'PowerSpectrum';
             powerspectrum.type = 'Boolean';
-            powerspectrum.default = 1;
+            powerspectrum.default = NaN;
         option.powerspectrum = powerspectrum;        
 
             timesmooth.key = 'TimeSmooth';
@@ -354,6 +354,7 @@ function varargout = mironsets(x,varargin)
         nomodif.default = 0;
     option.nomodif = nomodif;
 
+    
 %% options related to event detection
         detect.key = 'Detect';
         detect.type = 'String';
@@ -368,12 +369,25 @@ function varargout = mironsets(x,varargin)
         cthr.default = NaN;
         cthr.when = 'After';
     option.cthr = cthr;
-
+    
         thr.key = 'Threshold';
         thr.type = 'Integer';
         thr.default = 0;
         thr.when = 'After';
     option.thr = thr;
+
+        first.key = 'SelectFirst';
+        first.type = 'Boolean';
+        first.default = 0;
+        first.when = 'After';
+    option.first = first;
+    
+        normalize.key = 'Normalize';
+        normalize.type = 'String';
+        normalize.choice = {'Local','Global','No',0};
+        normalize.default = 'Global';
+        normalize.when = 'After';
+    option.normalize = normalize;
     
         single.key = 'Single';
         single.type = 'Boolean';
@@ -545,6 +559,13 @@ if isamir(x,'miraudio')
                     option.specframe = [.1 .1];
                 end
             end
+            if isnan(option.powerspectrum)
+                if ischar(option.attack) || option.decay
+                    option.powerspectrum = 0;
+                else
+                    option.powerspectrum = 1;
+                end
+            end
             y = mirenvelope(x,'Spectro',...
                 'Frame',option.specframe(1),option.specframe(2),...
                 'PowerSpectrum',option.powerspectrum,...
@@ -613,7 +634,7 @@ else
 end
 if ischar(option.attack) || option.decay
     z = mironsets(x,option.envmeth,...
-        'PreSilence',option.presilence,'PostSilence',option.postsilence);
+        'PreSilence',option.presilence,'PostSilence',option.postsilence,'Detect',0);
     y = {y,z};
 end
 type = 'mirenvelope';
@@ -761,20 +782,23 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
         noend = 1;
     end
     if strcmpi(postoption.detect,'Peaks')
-        o = mirpeaks(o,'Total',total,'SelectFirst',0,...
+        o = mirpeaks(o,'Total',total,'SelectFirst',postoption.first,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
+            'Normalize',postoption.normalize,...
             'Order','Abscissa','NoBegin','NoEnd',noend);
     elseif strcmpi(postoption.detect,'Valleys')
         o = mirpeaks(o,'Total',total,'SelectFirst',0,...
             'Threshold',postoption.thr,'Contrast',postoption.cthr,...
             'Valleys','Order','Abscissa','NoBegin','NoEnd',noend);
     end
+    
     nop = cell(size(get(o,'Data')));
     o = set(o,'OnsetPos',nop,'AttackPos',nop,'DecayPos',nop);
     if isfield(postoption,'attack') && (ischar(postoption.attack) || postoption.decay)
         pp = get(o,'PeakPos');
         d = get(o,'Data');
         t = get(o,'Time');
+        
         if ischar(postoption.attack)
             x = postoption.new;
             ppu = get(o,'PeakPosUnit');
@@ -1171,6 +1195,7 @@ while i < length(rlu)
         en(i) = en(i) - f0(end) + 1;
     end
     
+    % This part causes trouble!
     ppi = find(t >= ppu(i),1);
     dd = diff(d(en(i):-1:pp(i)));
     f0 = find(dd <= 0 & ...
