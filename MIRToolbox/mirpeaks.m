@@ -126,7 +126,7 @@ function varargout = mirpeaks(orig,varargin)
         cthr.type = 'Integer';
         cthr.default = .1;
     option.cthr = cthr;
-        
+    
         first.key = 'SelectFirst';
         first.type = 'Integer';
         first.default = 0;
@@ -189,7 +189,7 @@ function varargout = mirpeaks(orig,varargin)
         
         normal.key = 'Normalize';
         normal.type = 'String';
-        normal.choice = {'Local','Global'};
+        normal.choice = {'Local','Global','No',0};
         normal.default = 'Global';
     option.normal = normal;
     
@@ -532,11 +532,17 @@ for i = 1:length(d) % For each audio file,...
             dl = dht(2:end-1,:,l);
             for k = 1:nc
                 dk = dl(:,k);
-                mx{1,k,l} = find(and(and(dk >= option.cthr, ...
-                                         dk >= option.thr),...     
-                                         ... dk <= option.lthr)),
-                                     and(ddh(1:(end-1),k,l) > 0, ...
-                                         ddh(2:end,k,l) <= 0)))+1;
+                if isequal(option.normal, 0) || strcmpi(option.normal,'No')
+                    mx{1,k,l} = find(and(dk >= option.thr,...     
+                                         and(ddh(1:(end-1),k,l) > 0, ...
+                                             ddh(2:end,k,l) <= 0)))+1;
+                else
+                    mx{1,k,l} = find(and(and(dk >= option.cthr, ...
+                                             dk >= option.thr),...     
+                                             ... dk <= option.lthr)),
+                                         and(ddh(1:(end-1),k,l) > 0, ...
+                                             ddh(2:end,k,l) <= 0)))+1;
+                end
             end
         end
         if option.cthr
