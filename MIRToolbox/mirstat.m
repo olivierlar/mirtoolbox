@@ -251,7 +251,7 @@ if not(isempty(nonan))
     if not(isnan(s))
         if s
             dk = (dn-m)/s;
-            tk = linspace(0,1,size(d,2));
+            tk = linspace(0,1,size(d,2)) - 0.5;
             sl = dk(:)'/tk(nonan);
         elseif size(s,2) == 1
             s = NaN;
