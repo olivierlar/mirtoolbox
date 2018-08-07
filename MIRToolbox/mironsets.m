@@ -701,7 +701,7 @@ if isfield(postoption,'cthr')
             o = mirenvelope(o,'HalfwaveCenter');
         end
     elseif isa(o,'mirscalar') && strcmp(get(o,'Title'),'Spectral flux') && ...
-            ischar(postoption.sgate) && ~isempty(postoption.sgate)
+            (isempty(postoption.sgate) || ~ischar(postoption.sgate))
         if postoption.median
             o = mirflux(o,'Median',postoption.median(1),postoption.median(2),...
                           'Halfwave',postoption.hw);
