@@ -116,6 +116,13 @@ end
         trimthreshold.default = .06;
         trimthreshold.when = 'After';
     option.trimthreshold = trimthreshold;
+    
+        smoothborder.key = 'SmoothBorder';
+        smoothborder.type = 'Integer';
+        smoothborder.default = 0;
+        smoothborder.keydefault = 1;
+        smoothborder.when = 'After';
+    option.smoothborder = smoothborder;
         
         label.key = 'Label';
         label.default = '';
@@ -350,6 +357,16 @@ for h = 1:length(d)
             end
             tk = tk(n1:n2);
             dk = dk(n1:n2,1,:);
+        end
+        if isfield(para,'smoothborder') && para.smoothborder
+            [Lx,Ly,Lz] = size(dk);
+            Lw = para.smoothborder / 1000 * f{k};
+            w = ones(size(dk));
+            l = min(floor(Lx/2),Lw);
+            hw = hann(l*2);
+            w(1:l,:,:) = repmat(hw(1:l),[1,Ly,Lz]);
+            w(Lx-l+1:Lx,:,:) = repmat(flipud(hw(1:l)),[1,Ly,Lz]);
+            dk = dk .* w;
         end
         if isfield(para,'sampling') && para.sampling
             if and(f{k}, not(f{k} == para.sampling))
