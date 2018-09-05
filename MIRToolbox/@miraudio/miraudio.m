@@ -90,8 +90,9 @@ end
     option.center = center;
         
         normal.key = 'Normal';
-        normal.type = 'Boolean';
+        normal.type = 'String';
         normal.default = 0;
+        normal.keydefault = 'RMS';
         normal.when = 'After';
     option.normal = normal;
     
@@ -304,20 +305,32 @@ for h = 1:length(d)
             dk = center(dk);
             a = set(a,'Centered',1);
         end
-        if isfield(para,'normal') && para.normal
+        if isfield(para,'normal') && not(isequal(para.normal,0))
             nl = size(dk,1);
+            nf = size(dk,2);
             nc = size(dk,3);
             if isempty(ac)
-                ee = 0;
-                for j = 1:nc
-                    ee = ee+sum(dk(:,:,j).^2);
+                % Not working with Frame and Chunks!
+                if strcmpi(para.normal,'RMS')
+                    ee = 0;
+                    for j = 1:nc
+                        for i = 1:nf
+                            ee = ee+sum(dk(:,i,j).^2);
+                        end
+                    end
+                    ee = sqrt(ee/nl/nc/nf);
+                elseif strcmpi(para.normal,'Max')
+                    ee = max(max(max(dk,[],1),[],2),[],3);
+                else
+                    mirerror('MIRAUDIO','Incorrect parameter for ''Normal'' option');
                 end
-                ee = sqrt(ee/nl/nc);
-            else
+            elseif strcmpi(para.normal,'RMS')
                 ee = sqrt(sum(ac.sqrsum.^2)/ac.samples);
+            elseif strcmpi(para.normal,'Max')
+                ee = ac.max;
             end
             if ee
-                dk = dk./repmat(ee,[nl,1,nc]);
+                dk = dk./repmat(ee,[nl,nf,nc]);
             end
         end
         if isfield(para,'trim') && not(isequal(para.trim,0)) ... %%%% NOT A POST OPERATION!!
@@ -427,16 +440,19 @@ old = get(orig,'AcrossChunks');
 if isempty(old)
     old.sqrsum = 0;
     old.samples = 0;
+    old.max = 0;
 end
 new = mircompute(@crossum,d);
 new = new{1}{1};
 new.sqrsum = old.sqrsum + new.sqrsum;
 new.samples = old.samples + new.samples;
+new.max = max(old.max,new.max);
 
 
 function s = crossum(d)
 s.sqrsum = sum(d.^2);
 s.samples = length(d);
+s.max = max(abs(d));
 
 
 function [y orig] = eachchunk(orig,option,missing)
