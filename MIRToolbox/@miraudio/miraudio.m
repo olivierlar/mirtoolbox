@@ -91,6 +91,7 @@ end
         
         normal.key = 'Normal';
         normal.type = 'String';
+        normal.choice = {'RMS','Max'};
         normal.default = 0;
         normal.keydefault = 'RMS';
         normal.when = 'After';
