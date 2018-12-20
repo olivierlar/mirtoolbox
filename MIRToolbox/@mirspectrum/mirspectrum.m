@@ -916,7 +916,8 @@ if option.log || option.db
     if option.db>0 && option.db < Inf
         for k = 1:length(m)
             for l = 1:length(m{k})
-                m{k}{l} = m{k}{l}-repmat(max(m{k}{l}),[size(m{k}{l},1) 1 1]);
+%                 m{k}{l} = m{k}{l}-repmat(max(m{k}{l}),[size(m{k}{l},1) 1 1]);
+               m{k}{l} = m{k}{l}-max(max(m{k}{l}));
                 m{k}{l} = option.db + max(-option.db,m{k}{l});
             end
         end
