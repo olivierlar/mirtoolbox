@@ -35,7 +35,6 @@ v = cell(1,length(d));
 for h = 1:length(d)
     v{h} = cell(1,length(d{h}));
     for i = 1:length(d{h})
-        di = d{h}{i};
         v{h}{i} = size(d{h}{i},1);
         if strcmp(option.unit,'Second')
             v{h}{i} = v{h}{i}/f{h};
