@@ -151,7 +151,7 @@ function varargout = mironsets(x,varargin)
         
             presilence.key = 'PreSilence';
             presilence.type = 'Boolean';
-            presilence.default = 0;
+            presilence.default = 1;
         option.presilence = presilence;
 
             postsilence.key = 'PostSilence';
