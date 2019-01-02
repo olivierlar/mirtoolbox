@@ -60,7 +60,7 @@ function varargout = mirmetre(orig,varargin)
         
         ma.key = 'Max';
         ma.type = 'Integer';
-        ma.default = 1000; %500
+        ma.default = 1000; %500;
     option.ma = ma;
     
         tol.key = 'Tolerance';
@@ -176,22 +176,27 @@ for j = 1:length(pt)
                     if ptl(i) < option.mi
                         continue
                     end
-                      
+                                          
                     if ~find(pos > pos(i)*1.95 & pos < pos(i)*2.05)
                         continue
                     end
                     
+%                     % New:
+%                     if isempty(find(ampli(pos(i)-1:-1:1) < 0, 1))
+%                         continue
+%                     end
+                    
                     ptli = ptl(i);
-                    delta1 = find(ampli(pos(i)+1:end) < 0,1);
-                    if isempty(delta1)
-                        delta1 = length(ampli) - pos(i);
-                    end
-                    delta2 = find(ampli(pos(i)-1:-1:1) < 0,1);
-                    if isempty(delta2)
-                        delta2 = pos(i) - 1;
-                    end
-                    ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
-                    ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
+%                     delta1 = find(ampli(pos(i)+1:end) < 0,1);
+%                     if isempty(delta1)
+%                         delta1 = length(ampli) - pos(i);
+%                     end
+%                     delta2 = find(ampli(pos(i)-1:-1:1) < 0,1);
+%                     if isempty(delta2)
+%                         delta2 = pos(i) - 1;
+%                     end
+%                     ptli1 = getbpm(p,pp{j}{k}(pos(i)+delta1,l));
+%                     ptli2 = getbpm(p,pp{j}{k}(pos(i)-delta2,l));
                     
                     %thri = (1-(pv{j}{k}{l}(i) - mipv)/(mapv - mipv))^2/10 ...
                     %       + .1;
@@ -217,24 +222,6 @@ for j = 1:length(pt)
                                                 
                         dist2 = dist1;
 
-                        if 0 % This short-cut has been toggled off, why?
-                            for i3 = 1:length(mk{i2})
-                                if isempty(mk{i2}(i3).function)
-                                    dist1(i3) = NaN;
-                                end
-                            end
-
-                            [disti1 indx1] = min(dist1);
-                            if disti1 < thri && ...
-                                    abs(log2(ptli / bpm2(indx1))) < .2
-                                dist(i2) = disti1;
-                                indx(i2) = indx1;
-                                i2 = i2+1;
-                                new = 0;
-                                continue
-                            end
-                        end
-                        
                         [disti2 indx2] = min(dist2);
                         
                         dist3 = NaN(1,length(mk{i2}));
@@ -261,7 +248,11 @@ for j = 1:length(pt)
                         end
                         
                         if ~foundk(i2)
-                            if abs(log2(ptli / bpm2(indx(i2)))) > .2 %.1
+                            if abs(log2(ptli / bpm2(indx(i2)))) > .2 %.1 <<<<<<<<<<<<<<<<<<<<<<<
+                                % peak too distant from local bpm predicted by
+                                % global bpm
+                                % But what difference with dist1 =
+                                % abs(60/ptli - 60./bpm2)?
                                 dist(i2) = Inf;
                                 indx(i2) = 0;
                                 new = 1; % New hierarchy (?)
@@ -286,7 +277,7 @@ for j = 1:length(pt)
                         %else
                         %    thri2 = min(thri,.1);
                         %end
-                        thri2 = .07; %.01; %.07;
+                        thri2 = .07; %.01; <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                         
                         if isnan(dist(i2)) || dist(i2) > thri2
                             continue
@@ -310,7 +301,7 @@ for j = 1:length(pt)
                                 
                                 if isempty(mk{i2}(indx(i2)).function)
                                     if isempty(find(foundk,1)) && ...
-                                            mk{i2}(indx(i2)).score(end) > .15 %.3 %.15
+                                            mk{i2}(indx(i2)).score(end) > .15 %.3 %.15  <<<<<<<<<<<<<
                                         i3 = find([mk{i2}.lvl] == ...
                                                   mk{i2}(indx(i2)).ref,1);
                                         if ~isempty(mk{i2}(i3).function)
@@ -369,11 +360,11 @@ for j = 1:length(pt)
                             fo = size(orbpms,2)+1;
                         end
 
-                        % Stored levels slower than candidate
+                        % Stored levels faster than candidate
                         slower = [];
                         i3 = fo-1;
                         err = Inf;
-                        while i3 > 0
+                        while i3 > 0                            
                             if l - mk{i2}(ord(i3)).timidx(end) > 10 || ...
                                     ...mk{i2}(ord(i3)).score(end) < .1 || ... %%%%% To toggle off sometimes? (cf. level 1/6 in the paper)
                                     ~isempty(mk{i2}(ord(i3)).complex)
@@ -395,12 +386,16 @@ for j = 1:length(pt)
                             end
                                 
                             rdiv = round(ptli / bpm3);
+                            
+                            % NEW:
                             if rdiv == 1
                                 i3 = i3-1;
                                 continue
                             end
                             
                             lvl = mk{i2}(ord(i3)).lvl / rdiv;
+                            
+                            % NEW:
                             if ~isempty(find(lvl == [mk{i2}.lvl],1))
                                 i3 = i3-1;
                                 continue
@@ -425,12 +420,14 @@ for j = 1:length(pt)
                                 newerr = min(mod(div,1),1-mod(div,1));
                             %end
                             if ~foundk(i2)
-                                thr = .02;
+                                thr = .02; % <<<<<<<<<<<<<<<<<<<<<<
                             else
                                 thr = option.tol;
                             end
                             
                             if newerr > thr
+                                % Distance between peak and theoretical new
+                                % level is too big
                                 i3 = i3-1;
                                 continue
                             end
@@ -451,14 +448,14 @@ for j = 1:length(pt)
                                     slower.bpm = orbpms(i3);
                                     slower.score = mk{i2}(ord(i3)).score(end);
                                     slower.rdiv = rdiv;
-                                    rptli1 = orbpms(i3) * (rdiv - .4);
-                                    if ptli1 < rptli1
-                                        ptli1 = rptli1;
-                                    end
-                                    rptli2 = orbpms(i3) * (rdiv + .4);
-                                    if ptli2 > rptli2
-                                        ptli2 = rptli2;
-                                    end
+%                                     rptli1 = orbpms(i3) * (rdiv - .4);
+%                                     if ptli1 < rptli1
+%                                         ptli1 = rptli1;
+%                                     end
+%                                     rptli2 = orbpms(i3) * (rdiv + .4);
+%                                     if ptli2 > rptli2
+%                                         ptli2 = rptli2;
+%                                     end
                                     %ptli = mean([ptli1,ptli2]);
                                     err = newerr;
                                     %break
@@ -475,7 +472,7 @@ for j = 1:length(pt)
                             i3 = i3 - 1;
                         end
 
-                        % Stored levels faster than candidate
+                        % Stored levels slower than candidate
                         faster = [];
                         if ~found(i2)
                             i3 = fo;
@@ -494,13 +491,16 @@ for j = 1:length(pt)
                                 %end
 
                                 bpm3 = globpm(i2,end) / mk{i2}(ord(i3)).lvl;
-                                                                
+                                                              
+                                % SIMPLIFIED:
                                 %if ~foundk(i2)
                                     div = bpm3 ./ [ptli ptli];
                                 %else
                                 %    div = bpm3 ./ [ptli2;ptli1];
                                 %end
                                 rdiv = round(bpm3 / ptli);
+                                
+                                % NEW:
                                 if rdiv == 1
                                     i3 = i3+1;
                                     continue
@@ -510,6 +510,8 @@ for j = 1:length(pt)
                                     i3 = i3+1;
                                     continue
                                 end
+                                
+                                % MODIFIED:
                                 if rdiv <= 1 || ...
                                         abs(60/ptli - ...
                                             60/(globpm(i2,end) / lvl)) ...
@@ -525,40 +527,48 @@ for j = 1:length(pt)
                                              min(1-mod(div,1)));
                                 end
                                 if ~foundk(i2)
-                                    thr = .1; %.01;
+                                    thr = .1; %.01; <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                                 else
                                     thr = option.tol;
                                 end
-                                if newerr < thr
-                                    % Candidate level can be
-                                    % integrated in this metrical
-                                    % hierarchy
-                                    if newerr < err
-                                        if isempty(faster)
-                                            faster.ref = ord(i3);
-                                            faster.lvl = lvl;
-                                            faster.bpm = orbpms(i3);
-                                            faster.score = mk{i2}(ord(i3)).score(end);
-                                            faster.rdiv = rdiv;
-                                            rptli1 = orbpms(i3) / (rdiv + .4);
-                                            if ptli1 < rptli1
-                                                ptli1 = rptli1;
-                                            end
-                                            rptli2 = orbpms(i3) / (rdiv - .4);
-                                            if ptli2 > rptli2
-                                                ptli2 = rptli2;
-                                            end
-                                            %ptli = mean([ptli1,ptli2]);
-                                            err = newerr;
-                                            %break
-                                        elseif mk{i2}(ord(i3)).lvl * rdiv ...
-                                                ~= faster.lvl
-                                            faster.ref = ord(i3);
-                                            faster.lvl = lvl;
-                                            faster.rdiv = rdiv;
-                                            %faster = [];
-                                            %break
-                                        end
+                                if newerr > thr
+                                    % Distance between peak and theoretical new
+                                    % level is too big
+                                    i3 = i3+1;
+                                    continue
+                                end
+                                
+                                % Candidate level can be
+                                % integrated in this metrical
+                                % hierarchy
+                                if newerr < err
+                                    if isempty(faster)
+                                        faster.ref = ord(i3);
+                                        faster.lvl = lvl;
+                                        faster.bpm = orbpms(i3);
+                                        faster.score = mk{i2}(ord(i3)).score(end);
+                                        faster.rdiv = rdiv;
+%                                         rptli1 = orbpms(i3) / (rdiv + .4);
+%                                         if ptli1 < rptli1
+%                                             ptli1 = rptli1;
+%                                         end
+%                                         rptli2 = orbpms(i3) / (rdiv - .4);
+%                                         if ptli2 > rptli2
+%                                             ptli2 = rptli2;
+%                                         end
+                                        
+                                        % REMOVED:
+                                        %ptli = mean([ptli1,ptli2]);
+                                        
+                                        err = newerr;
+                                        %break
+                                    elseif mk{i2}(ord(i3)).lvl * rdiv ...
+                                            ~= faster.lvl
+                                        faster.ref = ord(i3);
+                                        faster.lvl = lvl;
+                                        faster.rdiv = rdiv;
+                                        %faster = [];
+                                        %break
                                     end
                                 end
                                 i3 = i3 + 1;
@@ -697,7 +707,8 @@ for j = 1:length(pt)
                     if i == 1 && (new || ...
                                 ~isempty(find(found == -1)) || ...
                                 isempty(find(found))) && ...
-                                d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .1 %.15)
+                                ptl(i) < 300 && ...
+                                d{j}{k}(ppp{j}{k}{1,l,h}(i),l,h) > .1 %.15)  % <<<<<<<<<<<<<<<<<<<<<<<<<<
                         % New metrical hierarchy
                         mk{end+1}.lvl = 1;
                         mk{end}.function = [0;1];
@@ -748,11 +759,10 @@ for j = 1:length(pt)
                     %    continue
                     %end
                     
-                    %% Should we reactivate that test?
+                    % REMOVED:
                     %if ~mk{i}(1).active
                     %    continue
                     %end
-                    %%
                     
                     for i2 = 1:length(mk{i})
                         if isempty(mk{i}(i2).function) || ...
@@ -885,6 +895,8 @@ for j = 1:length(pt)
                     if mk{i}(1).locked
                         continue
                     end
+                    
+                    % ADDITIONAL CONDITION:
                     if ~mk{i}(1).active || ~activestruct(i)
                         continue
                     end
@@ -899,6 +911,8 @@ for j = 1:length(pt)
                         end
                         if mk{i}(i3).score(end) > score1
                             score1 = mk{i}(i3).score(end);
+                            % Alternative:
+                            % score1 = score1 + mk{i}(i3).score(end);
                         end
                     end
                     
@@ -917,7 +931,7 @@ for j = 1:length(pt)
                                 nbpms2a = globpm(i3,l)/ mk{i3}(i2).lvl;
                                 nbpms2b = mk{i3}(i2).lastbpm;
                                 %lvl2 = mk{i3}(i2).lvl;
-                                if abs(60/nbpms1a - 60./nbpms2a) < .01 || ...
+                                if abs(60/nbpms1a - 60./nbpms2a) < .01 || ... <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                                         0 %abs(60/nbpms1b - 60./nbpms2b) < .01
                                     included = i2;
                                     element2 = i2;
@@ -925,6 +939,8 @@ for j = 1:length(pt)
                             end
                             if mk{i3}(i2).score(end) > score2
                                 score2 = mk{i3}(i2).score(end);
+                                % Alternative:
+                                % score2 = score2 + mk{i3}(i2).score(end);
                             end
                         end
                         
