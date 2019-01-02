@@ -164,6 +164,11 @@ function varargout = mirautocor(orig,varargin)
         phase.when = 'Both';
         phase.default = 0;
     option.phase = phase;
+    
+%         order.key = 'Order';
+%         order.type = 'Integer';
+%         order.default = 1;
+%     option.order = order;
 
 specif.option = option;
 
@@ -180,6 +185,9 @@ varargout = mirfunction(@mirautocor,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
+% if option.order == 2
+%     x = mirautocor(x,'Min', option.min,'Max',option.max,'NormalWindow',0,'Extend');
+% end
 type = 'mirautocor';
 
 
@@ -187,7 +195,7 @@ function a = main(orig,option,postoption)
 if iscell(orig)
     orig = orig{1};
 end
-if isa(orig,'mirautocor')
+if isa(orig,'mirautocor') %&& option.order == 1
     a = orig;
     if not(isempty(option)) && ...
             (option.min || iscell(option.max) || option.max < Inf)
@@ -401,6 +409,9 @@ else
     if not(isempty(postoption))
         a = post(a,postoption);
     end
+%     if option.order == 2
+%         a = mirtimes(a,orig);
+%     end
 end
 
 
