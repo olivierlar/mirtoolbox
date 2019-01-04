@@ -1,12 +1,12 @@
-function res = mirfdtf(filename,method,order)
+function res = mirfdw(filename,method,order)
 %   res = mirfdtf(method,filename,order) computes spectral sub-band
-% features using Filter Dependent Temporal Framing (FDTF).
+% features using Filter Dependent Windowing (FDW).
 %
 % Input:
 % - filename is the name of the audio file used as input
 % - method is the method applied to each channel after the filterbank
 % decomposition. By default, method = @mirflux
-% - order is the filter order used as option in mirfilterbank(?, ?Manual?). 
+% - order is the filter order used as option in mirfilterbank(..., 'Manual'). 
 % Default value: order = 4
 %
 % Initial algorithm developed by Fabi Prezja, University of Jyvaskyla, 2018
