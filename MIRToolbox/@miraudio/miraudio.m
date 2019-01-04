@@ -321,7 +321,7 @@ for h = 1:length(d)
                     end
                     ee = sqrt(ee/nl/nc/nf);
                 elseif strcmpi(para.normal,'Max')
-                    ee = max(max(max(dk,[],1),[],2),[],3);
+                    ee = max(max(max(abs(dk),[],1),[],2),[],3);
                 else
                     mirerror('MIRAUDIO','Incorrect parameter for ''Normal'' option');
                 end
