@@ -326,7 +326,7 @@ for h = 1:length(d)
                     mirerror('MIRAUDIO','Incorrect parameter for ''Normal'' option');
                 end
             elseif strcmpi(para.normal,'RMS')
-                ee = sqrt(sum(ac.sqrsum.^2)/ac.samples);
+                ee = sqrt(sum(ac.sqrsum)/ac.samples);
             elseif strcmpi(para.normal,'Max')
                 ee = ac.max;
             end
@@ -451,9 +451,9 @@ new.max = max(old.max,new.max);
 
 
 function s = crossum(d)
-s.sqrsum = sum(d.^2);
-s.samples = length(d);
-s.max = max(abs(d));
+s.sqrsum = sum(sum(d.^2));
+s.samples = numel(d);
+s.max = max(max(abs(d)));
 
 
 function [y orig] = eachchunk(orig,option,missing)

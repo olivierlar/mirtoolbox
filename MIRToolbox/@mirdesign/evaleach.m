@@ -872,6 +872,7 @@ if not(ischar(d)) && not(iscell(d))
             d2.postoption = {chend-lsz};
             d2.chunkdecomposed = 1;
             [tmp d] = evalnow(d2);
+            d = set(d,'AcrossChunks',tmp);
             d0 = set(d0,'AcrossChunks',tmp);
             if isa(h,'matlab.ui.Figure')
                 waitbar(chend/lsz,h)
