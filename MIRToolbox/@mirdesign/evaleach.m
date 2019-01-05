@@ -869,7 +869,7 @@ if not(ischar(d)) && not(iscell(d))
             d2 = set(d,'Size',d0.size,'File',d0.file,...
                        'Chunk',[chbeg+w(1) min(chend,lsz-1)+w(1)]);
             d2.method = specif.beforechunk{1};
-            d2.postoption = {chend-lsz};
+%             d2.postoption = {chend-lsz};
             d2.chunkdecomposed = 1;
             [tmp d] = evalnow(d2);
             d = set(d,'AcrossChunks',tmp);

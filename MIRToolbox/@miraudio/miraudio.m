@@ -433,7 +433,7 @@ if isfield(para,'label')
 end
 
 
-function [new orig] = beforechunk(orig,option,missing)
+function [new orig] = beforechunk(orig,option,postoption)
 option.normal = 0;
 a = miraudio(orig,option);
 d = get(a,'Data');
@@ -443,14 +443,17 @@ if isempty(old)
     old.samples = 0;
     old.max = 0;
 end
-new = mircompute(@crossum,d);
+new = mircompute(@crossum,d,postoption.mono);
 new = new{1}{1};
 new.sqrsum = old.sqrsum + new.sqrsum;
 new.samples = old.samples + new.samples;
 new.max = max(old.max,new.max);
 
 
-function s = crossum(d)
+function s = crossum(d,mono)
+if isnan(mono) || mono
+    d = mean(d,3);
+end
 s.sqrsum = sum(sum(d.^2));
 s.samples = numel(d);
 s.max = max(max(abs(d)));
