@@ -137,6 +137,11 @@ function varargout = mirspectrum(orig,varargin)
         wr.default = 0;
     option.wr = wr;
     
+        pow2.key = 'Power2';
+        pow2.type = 'Boolean';
+        pow2.default = 1;
+    option.pow2 = pow2;
+    
         octave.key = 'OctaveRatio';
         octave.type = 'Boolean';
         octave.default = 0;
@@ -485,7 +490,9 @@ else
                             end                
                             N = max(N,fsi/option.mr);
                         end
-                        N = 2^nextpow2(N);
+                        if option.pow2
+                            N = 2^nextpow2(N);
+                        end
                     else
                         N = ceil(fsi/option.res);
                     end
