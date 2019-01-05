@@ -311,7 +311,6 @@ for h = 1:length(d)
             nf = size(dk,2);
             nc = size(dk,3);
             if isempty(ac)
-                % Not working with Frame and Chunks!
                 if strcmpi(para.normal,'RMS')
                     ee = 0;
                     for j = 1:nc
@@ -454,9 +453,9 @@ function s = crossum(d,mono)
 if isnan(mono) || mono
     d = mean(d,3);
 end
-s.sqrsum = sum(sum(d.^2));
+s.sqrsum = sum(sum(sum(d.^2)));
 s.samples = numel(d);
-s.max = max(max(abs(d)));
+s.max = max(max(max(abs(d))));
 
 
 function [y orig] = eachchunk(orig,option,missing)

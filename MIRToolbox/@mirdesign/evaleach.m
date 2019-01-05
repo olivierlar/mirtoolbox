@@ -161,7 +161,7 @@ elseif isempty(fr) || frnochunk || not(isempty(sg)) %% WHAT ABOUT CHANNELS?
     if not(isempty(chunks))
         % The chunk decomposition is performed.
         nch = size(chunks,2);
-        d = callbeforechunk(d,d,w,lsz); % Some optional initialisation
+        d = callbeforechunk(d,d,w,lsz); % If miraudio('Norm') is used: Scans through whole signal to find max
         tmp = [];
         if mirwaitbar
             h = waitbar(0,['Computing ' name]);
@@ -277,6 +277,8 @@ else
     % Frame decomposition in the design to be evaluated.
     chunks = compute_frames(fr,sr,sr2,w,lsz,CHUNKLIM,d.overlap,d.presilence,d.postsilence);
     if size(chunks,2)>1
+        d = callbeforechunk(d,d,w,lsz); % If miraudio('Norm') is used: Scans through whole signal to find max
+        
         % The chunk decomposition is performed.
         if mirwaitbar
             h = waitbar(0,['Computing ' name]);
@@ -847,7 +849,7 @@ res = isfield(specif,'combinechunk') && ...
 function d0 = callbeforechunk(d0,d,w,lsz)
 % If necessary, the chunk decomposition is performed a first time for
 % initialisation purposes.
-% Currently used only for miraudio(...,'Normal')
+% Used only for miraudio(...,'Normal')
 if not(ischar(d)) && not(iscell(d))
     specif = d.specif;
     CHUNKLIM = mirchunklim;
@@ -869,7 +871,6 @@ if not(ischar(d)) && not(iscell(d))
             d2 = set(d,'Size',d0.size,'File',d0.file,...
                        'Chunk',[chbeg+w(1) min(chend,lsz-1)+w(1)]);
             d2.method = specif.beforechunk{1};
-%             d2.postoption = {chend-lsz};
             d2.chunkdecomposed = 1;
             [tmp d] = evalnow(d2);
             d = set(d,'AcrossChunks',tmp);
