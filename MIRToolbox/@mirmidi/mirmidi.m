@@ -41,13 +41,12 @@ type = 'mirmidi';
 
 function m = main(x,option,postoption)
 transcript = 0;
-if iscell(x)
-    o = x{1};
-    do = get(o,'PeakVal');
-    da = get(o,'OnsetPosUnit');
-    dr = get(o,'DecayPosUnit');
-    a = x{2};
-    s = mirsegment(a,o);
+if isstruct(postoption) && isfield(postoption,'new')
+    a = postoption.new;
+    do = get(x,'PeakVal');
+    da = get(x,'OnsetPosUnit');
+    dr = get(x,'DecayPosUnit');
+    s = mirsegment(a,x);
     x = mirpitch(s,'Contrast',option.thr,'Sum',0);
     % x = mircentroid(s);
     dp = get(x,'Data');
