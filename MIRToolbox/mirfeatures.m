@@ -45,7 +45,7 @@ r.dynamics.rms = mirrms(a,'Frame');
 r.fluctuation = mirstruct;
 r.fluctuation.tmp.f = mirfluctuation(a,'Summary');
 r.fluctuation.peak = mirpeaks(r.fluctuation.tmp.f,'Total',1);%only one?
-r.fluctuation.centroid = mircentroid(r.fluctuation.tmp.f);
+r.fluctuation.centroid = mircentroid(r.fluctuation.tmp.f,'MaxEntropy',0);
 
 r.rhythm = mirstruct;
 r.rhythm.tmp.onsets = mironsets(a);
