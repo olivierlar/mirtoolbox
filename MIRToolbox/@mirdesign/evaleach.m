@@ -78,7 +78,7 @@ elseif d.chunkdecomposed
     
     [y d2] = evalnow(d);  
     
-elseif iscell(a)
+elseif iscell(a) && length(a) == 2
     a{2}.size = w;
     a{2}.chunk = d.chunk;
     a{2}.file = d.file;
