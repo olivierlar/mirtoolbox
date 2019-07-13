@@ -176,3 +176,6 @@ f.tonal.hcdf{:}
 close all
 
 mirfeatures('Folder')
+
+miremotion('ragtime.wav')
+miremotion('ragtime.wav','frame')
