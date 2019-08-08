@@ -666,8 +666,12 @@ for k = 1:length(d)
             if isfield(postoption,'diffhwr') && postoption.diffhwr
                 ddki = hwr(ddki);
             end
-            d{k}{i} = (1-postoption.lambda)*d{k}{i}(1:end-1,:,:)...
-                + postoption.lambda*sr{k}/10*ddki;
+            if postoption.lambda == 1
+                d{k}{i} = ddki;
+            else
+                d{k}{i} = (1-postoption.lambda)*d{k}{i}(1:end-1,:,:)...
+                    + postoption.lambda*sr{k}/10*ddki;
+            end
         end
         if isfield(postoption,'aver') && postoption.aver
             y = filter(ones(1,postoption.aver),1,...
