@@ -506,9 +506,11 @@ else
                 len = floor(N/2+1);
                 fj = fsi/2 * linspace(0,1,len)';
                 if option.max
-                    maxf = find(fj>=option.max,1);
+                    maxf = find(fj>option.max,1);
                     if isempty(maxf)
                         maxf = len;
+                    else
+                        maxf = maxf - 1;
                     end
                 else
                     maxf = len;
