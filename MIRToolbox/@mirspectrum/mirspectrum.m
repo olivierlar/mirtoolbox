@@ -504,7 +504,11 @@ else
                 transf = fft(dj,N); %/(length(dj));
 
                 len = floor(N/2+1);
-                fj = fsi/2 * linspace(0,1,len)';
+                
+%                 fj = fsi/2 * linspace(0,1,len)';
+                
+                fj = fsi * (N-1)/N * linspace(0,1,N)';
+
                 if option.max
                     maxf = find(fj>option.max,1);
                     if isempty(maxf)
