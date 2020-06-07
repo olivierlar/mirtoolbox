@@ -22,7 +22,7 @@ try
     predics = import(predics_ref);
 catch err
     mirerror('MIRMAP',['Cannot load properly the predictors file ' ...
-                       prefics_ref '. Check MIRtoolbox User''s Manual']);
+                       predics_ref '. Check MIRtoolbox User''s Manual']);
 end    
 
 try
