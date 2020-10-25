@@ -508,6 +508,7 @@ else
 %                 fj = fsi/2 * linspace(0,1,len)';
                 
                 fj = fsi * (N-1)/N * linspace(0,1,N)';
+                fj = fj(1:len);
 
                 if option.max
                     maxf = find(fj>option.max,1);
