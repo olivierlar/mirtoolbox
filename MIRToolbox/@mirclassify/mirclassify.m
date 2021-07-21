@@ -157,10 +157,10 @@ for h = 1:nfolds
                     c.nbparam = c.nbparam + ...
                         length(mix{i}.centres(:)) + length(mix{i}.covars(:));
                 catch
-                    %err = lasterr;
-                    %warning('WARNING IN CLASSIFY: Problem when calling GMMEM:');
-                    %disp(err);
-                    %disp('Let us try again...');
+                    err = lasterr;
+                    warning('WARNING IN CLASSIFY: Problem when calling GMMEM:');
+                    disp(err);
+                    disp('Let us try again...');
                     OK = 0;
                 end
             end    
