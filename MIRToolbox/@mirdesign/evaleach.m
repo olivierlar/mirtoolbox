@@ -317,7 +317,7 @@ else
             end
             
             y = combinechunk_frame(y,res,d2,fri);
-            if ~isempty(h)
+            if ~isempty(h) && mirwaitbar
                 waitbar(chunks(2,fri)/chunks(end),h);
             end
         end
@@ -329,7 +329,7 @@ else
         if isa(d,'mirstruct') && get(d,'Stat') 
             y = mirstat(y);
         end
-        if ~isempty(h)
+        if ~isempty(h) && mirwaitbar
             close(h)
         end
     else
