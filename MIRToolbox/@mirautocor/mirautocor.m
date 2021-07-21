@@ -136,7 +136,33 @@ function varargout = mirautocor(orig,varargin)
         e.keydefault = 2:10;
         e.when = 'After';
     option.e = e;
-        
+
+        extract.key = 'ExtractPeaks';
+        extract.type = 'Integer';
+        extract.default = 0;
+        extract.keydefault = 3;
+        extract.when = 'After';
+    option.extract = extract;
+
+        cutlow.key = 'CutLow';
+        cutlow.type = 'Boolean';
+        cutlow.default = 0;
+        cutlow.when = 'After';
+    option.cutlow = cutlow;
+    
+        highpass.key = 'HighPass';
+        highpass.type = 'Integer';
+        highpass.default = 0;
+        highpass.keydefault = .01;
+        highpass.when = 'After';
+    option.highpass = highpass;
+    
+        gauss.key = 'Gauss';
+        gauss.type = 'Boolean';
+        gauss.default = 0;
+        gauss.when = 'After';
+    option.gauss = gauss;
+
         fr.key = 'Freq';
         fr.type = 'Boolean';
         fr.default = 0;
@@ -494,6 +520,9 @@ if max(option.e) > 1
     va = mirpeaks(a,'Valleys','Contrast',.01,'Normalize','Local');
     pv = get(pa,'PeakVal');
     vv = get(va,'PeakVal');
+elseif option.extract
+    pa = mirpeaks(a,'NoBegin','NoEnd','Contrast',.01,'Normalize','Local');
+    pp = get(pa,'PeakPos');
 end
 for k = 1:length(coeff)
     for l = 1:length(coeff{k})
@@ -519,8 +548,8 @@ for k = 1:length(coeff)
                                 mp = min(pvk); %Lowest peak
                                 vvv = vv{k}{l}{1,g,h}; %Valleys
                                 mv = vvv(find(vvv<mp,1,'last'));
-                                    %Highest valley below the lowest peak
-
+                                %Highest valley below the lowest peak
+                                
                                 if not(isempty(mv))
                                     cgh = cgh-mv;
                                 end
@@ -531,17 +560,17 @@ for k = 1:length(coeff)
                             tcoef = tgh2(2)-tgh2(1);
                             deter = 0;
                             inter = 0;
-
+                            
                             repet = find(not(diff(tgh2)));  % Avoid bug if repeated x-values
                             if repet
                                 warning('WARNING in MIRAUTOCOR: Two successive samples have exactly same temporal position.');
                                 tgh2(repet+1) = tgh2(repet)+1e-12;
                             end
-
+                            
                             if coef < 0
                                 % initial descending slope removed
                                 deter = find(diff(cgh2)>0,1)-1;
-                                    % number of removed points
+                                % number of removed points
                                 if isempty(deter)
                                     deter = 0;
                                 end
@@ -549,56 +578,56 @@ for k = 1:length(coeff)
                                 tgh2(1:deter) = [];
                                 coef = cgh2(2)-cgh2(1);
                             end
-
+                            
                             if coef > 0
                                 % initial ascending slope prolonged to the left
                                 % until it reaches the x-axis
                                 while cgh2(1) > 0
                                     coef = coef*1.1;
-                                        % the further to the left, ...
-                                        % the more ascending is the slope
-                                        % (not sure it always works, though...)
+                                    % the further to the left, ...
+                                    % the more ascending is the slope
+                                    % (not sure it always works, though...)
                                     inter = inter+1;
-                                        % number of added points
+                                    % number of added points
                                     cgh2 = [cgh2(1)-coef; cgh2];
                                     tgh2 = [tgh2(1)-tcoef; tgh2];
                                 end
                                 cgh2(1) = 0;
                             end
-
+                            
                             for i = option.e  % Enhancing procedure
                                 % option.e is the list of scaling factors
                                 % i is the scaling factor
                                 if i
                                     be = find(tgh2 & tgh2/i >= tgh2(1),1);
-                                        % starting point of the substraction
-                                        % on the X-axis
-
+                                    % starting point of the substraction
+                                    % on the X-axis
+                                    
                                     if not(isempty(be))
                                         ic = interp1(tgh2,cgh2,tgh2/i);
-                                            % The scaled autocorrelation
+                                        % The scaled autocorrelation
                                         ic(1:be-1) = 0;
                                         ic(find(isnan(ic))) = Inf;
-                                            % All the NaN values are changed
-                                            % into 0 in the resulting curve
+                                        % All the NaN values are changed
+                                        % into 0 in the resulting curve
                                         ic = max(ic,0);
-
+                                        
                                         if debug
-                                           hold off,plot(tgh2,cgh2)
+                                            hold off,plot(tgh2,cgh2)
                                         end
-
-                                        cgh2 = cgh2 - ic;       
-                                            % The scaled autocorrelation
-                                            % is substracted to the initial one
-
+                                        
+                                        cgh2 = cgh2 - ic;
+                                        % The scaled autocorrelation
+                                        % is substracted to the initial one
+                                        
                                         cgh2 = max(cgh2,0);
-                                            % Half-wave rectification
-
+                                        % Half-wave rectification
+                                        
                                         if debug
-                                           hold on,plot(tgh2,ic,'r')
-                                           hold on,plot(tgh2,cgh2,'g')
-                                           drawnow
-                                           figure
+                                            hold on,plot(tgh2,ic,'r')
+                                            hold on,plot(tgh2,cgh2,'g')
+                                            drawnow
+                                            figure
                                         end
                                     end
                                 end
@@ -607,16 +636,16 @@ for k = 1:length(coeff)
                             if 0 %~isempty(mv)
                                 cgh2 = max(cgh2 + mv,0);
                             end
-
+                            
                             % The  temporary modifications are
                             % removed from the final curve
                             if inter>=deter
                                 c(:,g,h) = cgh2(inter-deter+1:end);
-                                if not(isempty(mv))
-                                    c(:,g,h) = c(:,g,h) + mv;
-                                end
                             else
                                 c(:,g,h) = [zeros(deter-inter,1);cgh2];
+                            end
+                            if not(isempty(mv))
+                                c(:,g,h) = c(:,g,h) + mv;
                             end
                         end
                     end
@@ -646,6 +675,53 @@ for k = 1:length(coeff)
                     end
                 end
                 phask{l} = ph;
+            end
+        elseif option.extract
+            minc = min(min(min(c)));
+            for g = 1:size(c,2)
+                for h = 1:size(c,3)
+                    cgh = c(:,g,h);
+                    if length(cgh)>1
+                        ppk = pp{k}{l}{1,g,h};
+                        extract = zeros(1,length(cgh));
+                        for i = ppk
+                            extract(max(1,i-option.extract):...
+                                min(length(cgh),i+option.extract)) = 1;
+                        end
+                        c(~extract,g,h) = minc;
+                    end
+                end
+            end
+        elseif option.cutlow
+            for g = 1:size(c,2)
+                for h = 1:size(c,3)
+                    cgh = c(:,g,h);
+                    if length(cgh)>1
+                        mcgh = cgh(1);
+                        deter = 1;
+                        for i = 2:length(cgh)
+                            if cgh(i) > mcgh + .01
+                                break
+                            end
+                            deter = i;
+                            mcgh = min(mcgh,cgh(i));
+                        end
+                        c(1:deter,g,h) = 0;
+                    end
+                end
+            end
+        elseif option.highpass
+            c = highpass(c,option.highpass);
+        elseif option.gauss
+            for g = 1:size(c,2)
+                for h = 1:size(c,3)
+                    cgh = c(:,g,h);
+                    sigma = 10;
+                    gauss = 1/sigma/2/pi...
+                        *exp(- (-4*sigma:4*sigma).^2 /2/sigma^2);
+                    y = filter(gauss,1,[cgh;zeros(4*sigma,1)]);
+                    c(:,g,h) = y(4*sigma:end-1);
+                end
             end
         end
         if freq
