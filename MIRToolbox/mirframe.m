@@ -200,10 +200,10 @@ elseif isa(x,'mirdata')
                             stend = st+l-1;
                             if st < 1
                                 dx2j(:,i,:) = [zeros(-st+1,1,size(dxj,3)); dxj(1:stend,1,:)];
-                                dt2j(:,i) = dtj(1:stend-st+1) - (dtj(-st+2) - dtj(1));
+                                dt2j(:,i) = dtj(1:l) - (dtj(-st+2) - dtj(1));
                             elseif stend > size(dtj,1)
                                 dx2j(:,i,:) = [dxj(st:end,1,:); zeros(stend-size(dtj,1),1,size(dxj,3))];
-                                dt2j(:,i) = dtj(1:stend-st+1) + dtj(st) - dtj(1);
+                                dt2j(:,i) = dtj(1:l) + dtj(st) - dtj(1);
                             else
                                 dx2j(:,i,:) = dxj(st:stend,1,:);
                                 dt2j(:,i) = dtj(st:stend);
