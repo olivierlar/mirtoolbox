@@ -188,30 +188,30 @@ if curve
                                     plot(xj(ppj),yk(ppj),'or')
                                 end
                             end
-                            if not(isempty(op)) && not(isempty(op{h}))
-                                opj = op{h}{1,j,i};
-                                if ~isempty(opj)
-                                    apj = ap{h}{1,j,i};
-                                    plot(xj(opj),yk(opj),'dm') 
-                                    plot(xj(apj),yk(apj),'dm') 
-                                    for g = 1:length(opj)
-                                        line([xj(opj(g)),xj(apj(g))],...
-                                             [yk(opj(g)),yk(apj(g))],...
-                                             'Color','m')
-                                    end
+                        end
+                        if not(isempty(op)) && not(isempty(op{h}))
+                            opj = op{h}{1,j,i};
+                            if ~isempty(opj)
+                                apj = ap{h}{1,j,i};
+                                plot(xj(opj),yk(opj),'dm')
+                                plot(xj(apj),yk(apj),'dm')
+                                for g = 1:length(opj)
+                                    line([xj(opj(g)),xj(apj(g))],...
+                                        [yk(opj(g)),yk(apj(g))],...
+                                        'Color','m')
                                 end
                             end
-                            if not(isempty(of)) && not(isempty(of{h}))
-                                ofj = of{h}{1,j,i};
-                                if ~isempty(ofj)
-                                    rpj = rp{h}{1,j,i};
-                                    plot(xj(ofj),yk(ofj),'dm') 
-                                    plot(xj(rpj),yk(rpj),'dm') 
-                                    for g = 1:length(ofj)
-                                        line([xj(rpj(g)),xj(ofj(g))],...
-                                             [yk(rpj(g)),yk(ofj(g))],...
-                                             'Color','m')
-                                    end
+                        end
+                        if not(isempty(of)) && not(isempty(of{h}))
+                            ofj = of{h}{1,j,i};
+                            if ~isempty(ofj)
+                                rpj = rp{h}{1,j,i};
+                                plot(xj(ofj),yk(ofj),'dm')
+                                plot(xj(rpj),yk(rpj),'dm')
+                                for g = 1:length(ofj)
+                                    line([xj(rpj(g)),xj(ofj(g))],...
+                                        [yk(rpj(g)),yk(ofj(g))],...
+                                        'Color','m')
                                 end
                             end
                         end
