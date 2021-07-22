@@ -56,7 +56,7 @@ function varargout = mirflux(orig,varargin)
         bs.type = 'String';
         bs.choice = {'Goto','Lartillot'};
         bs.default = '';
-        bs.keydefault = 'Goto';%'Lartillot';%'Goto';%
+        bs.keydefault = 'Goto';
     option.bs = bs;
     
         complex.key = 'Complex';
@@ -96,6 +96,12 @@ function varargout = mirflux(orig,varargin)
         frame.number = 2;
         frame.default = [.05 .5];
     option.frame = frame;
+    
+        norm.key = 'Normal';
+        norm.type = 'Integer';
+        norm.default = 0;
+        norm.keydefault = .03;
+    option.norm = norm;
     
 specif.option = option;
      
@@ -232,12 +238,12 @@ else
                             else
                                 l = round(17/res); 
                             end
-                            memo = 4;%; 50;
+                            memo = 4;
                             if isempty(tmp)
                                 tmp = -Inf(size(mi,1),memo-1,np);
                             end
                             mi = [tmp mi];
-                            mi2 = mi;
+                            mi2 = mi; % Transformed spectrogram where filtering along frequencies will be applied (only for 'Lartillot')
                             if 0
                                 bk = zeros(size(mi));
                                 bs = zeros(size(mi));
@@ -299,6 +305,13 @@ else
                 else
                     fp{h}{i} = fpi(:,2:end);
                 end
+                
+                if option.norm
+                    sm = sum(mi(:,2:end));
+                    fl(sm<max(sm)*option.norm) = NaN;
+                    fl = fl./sm;
+                end
+                
                 ff{h}{i} = fl;
             end
         end
