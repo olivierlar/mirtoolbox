@@ -170,9 +170,10 @@ function varargout = mirspectrum(orig,varargin)
     option.nl = nl;
     
         norm.key = 'Normal';
-        norm.type = 'Integer';
+        norm.type = 'String';
+        norm.choice = {'Local','Global',0,'no','off'};
         norm.default = 0;
-        norm.keydefault = 1;
+        norm.keydefault = 'Local';
         norm.when = 'After';
     option.norm = norm;
     
@@ -286,6 +287,12 @@ function varargout = mirspectrum(orig,varargin)
         phase.type = 'Boolean';
         phase.default = 1;
     option.phase = phase;
+    
+        mingate.key = 'MinGate';
+        mingate.type = 'Integer';
+        mingate.default = 0;
+        mingate.when = 'After';
+    option.mingate = mingate;
 
 specif.option = option;
 
@@ -640,17 +647,27 @@ if any(option.msum)
     end
     s = set(s,'Title','Spectral sum');
 end
-if option.norm
-    for k = 1:length(m)
-        for l = 1:length(m{k})
-            mkl = m{k}{l};
-            nkl = zeros(1,size(mkl,2),size(mkl,3));
-            for kk = 1:size(mkl,2)
-                for ll = 1:size(mkl,3)
-                    nkl(1,kk,l) = norm(mkl(:,kk,ll));
+if ischar(option.norm)
+    if strcmpi(option.norm,'Local')
+        for k = 1:length(m)
+            for l = 1:length(m{k})
+                mkl = m{k}{l};
+                nkl = zeros(1,size(mkl,2),size(mkl,3));
+                for kk = 1:size(mkl,2)
+                    for ll = 1:size(mkl,3)
+                        nkl(1,kk,l) = norm(mkl(:,kk,ll));
+                    end
                 end
+                m{k}{l} = mkl./repmat(nkl,[size(m{k}{k},1),1,1]);
             end
-            m{k}{l} = mkl./repmat(nkl,[size(m{k}{k},1),1,1]);
+        end
+    elseif strcmpi(option.norm,'Global')
+        for k = 1:length(m)
+            for l = 1:length(m{k})
+                mkl = m{k}{l};
+                nkl = max(max(max(mkl)));
+                m{k}{l} = mkl/nkl;
+            end
         end
     end
 end
@@ -676,7 +693,9 @@ if option.terhardt && not(isempty(find(f{1}{1}))) % This excludes the case where
         end
     end
 end
-if option.reso
+if ~isequal(option.reso,0) && ...
+        ~(ischar(option.reso) && ...
+            (strcmpi(option.reso,'off') || strcmpi(option.reso,'no'))) 
     if not(ischar(option.reso))
         if strcmp(get(s,'XScale'),'Mel')
             option.reso = 'Fluctuation';
@@ -958,6 +977,19 @@ if option.gauss
         end
     end
     s = set(s,'Phase',[]);
+end
+if option.mingate
+    for k = 1:length(m)
+        for i = 1:length(m{k})
+            if s.log
+                thres = max(max(m{k}{i})) - option.mingate;
+                m{k}{i}(m{k}{i} < thres) = -Inf;
+            else
+                thres = max(max(m{k}{i})) * option.mingate;
+                m{k}{i}(m{k}{i} < thres) = 0;
+            end
+        end
+    end
 end
 s = set(s,'Magnitude',m,'Frequency',f);
 
