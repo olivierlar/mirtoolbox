@@ -860,7 +860,9 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             rl = {{{}}};
             en = {{{}}};
         end
-%         pp = [];
+        if postoption.waveform
+            pp = [];
+        end
         o = set(o,'OnsetPos',st,'AttackPos',ap,'DecayPos',rl,'OffsetPos',en,'PeakPos',pp);
     end
 end
