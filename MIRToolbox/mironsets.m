@@ -353,7 +353,7 @@ function varargout = mironsets(x,varargin)
         nomodif.type = 'Boolean';
         nomodif.default = 0;
     option.nomodif = nomodif;
-
+    
     
 %% options related to event detection
         detect.key = 'Detect';
@@ -392,7 +392,7 @@ function varargout = mironsets(x,varargin)
         single.key = 'Single';
         single.type = 'Boolean';
         single.default = 0;
-        single.when = 'After';
+        single.when = 'Both';
     option.single = single;
 
         attack.key = {'Attack','Attacks'};
@@ -444,6 +444,18 @@ function varargout = mironsets(x,varargin)
         offsetthres.when = 'After';
     option.offsetthres = offsetthres; 
     
+        waveform.key = 'Waveform';
+        waveform.type = 'Boolean';
+        waveform.default = 0;
+        waveform.when = 'Both';
+    option.waveform = waveform;
+
+        wavethres.key = 'WaveformThreshold';
+        wavethres.type = 'Integer';
+        wavethres.default = .01;
+        wavethres.when = 'After';
+    option.wavethres = wavethres; 
+    
 %% preselection
         presel.choice = {'Scheirer','Klapuri99'};
         presel.type = 'String';
@@ -493,6 +505,9 @@ if ischar(option.presel)
         option.decim = 180;
         option.mu = 100;
     end
+end
+if option.waveform
+    option.env = 0;
 end
 if option.diffenv
     option.env = 1;
@@ -608,7 +623,7 @@ if isamir(x,'miraudio')
         if strcmpi(option.sgate,'Goto')
             x = miraudio(x,'Sampling',22050);
             y = mirspectrum(x,'Frame',.04644,.25);
-        else
+        else % 'Lartillot'
             y = mirspectrum(x,'Frame',.05,.2,....
                             'MinRes',option.minres,'dB','max',5000);
             if option.minres < 1 && isa(y,'mirdesign')
@@ -632,7 +647,10 @@ elseif isamir(x,'mirscalar') || isamir(x,'mirenvelope') || ...
 else
     y = mirflux(x,'Inc',option.inc,'Complex',option.complex); %Not used...
 end
-if ischar(option.attack) || option.decay
+if isempty(y)  % For the 'Waveform' method
+    y = miraudio(x,'FWR');
+end
+if (ischar(option.attack) || option.decay) && ~option.single
     z = mironsets(x,option.envmeth,...
         'PreSilence',option.presilence,'PostSilence',option.postsilence,'Detect',0);
     y = {y,z};
@@ -754,7 +772,9 @@ if isfield(option,'presel') && ...
     o = mirenvelope(o,'Smooth',12);
 end
 if isfield(postoption,'detect')
-    if postoption.c || (ischar(postoption.sgate) && ~isempty(postoption.sgate))
+    if ischar(postoption.sgate) && ~isempty(postoption.sgate)
+        o = mirenvelope(o,'HalfwaveCenter');
+    elseif postoption.c
         o = mirenvelope(o,'Center');
     end
     if isa(o,'mirenvelope') && postoption.minlog
@@ -802,16 +822,21 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
         if ischar(postoption.attack)
             x = postoption.new;
             ppu = get(o,'PeakPosUnit');
-            if isnumeric(x)
+            if ~postoption.single && isnumeric(x) %% when can it be numeric??
                 st = {{{}}};
                 ap = {{{}}};
             else
-                v = mirpeaks(x,'Total',total,'SelectFirst',0,...
-                    'Contrast',postoption.cthr,...
-                    'Threshold',.5,...
-                    'Valleys','Order','Abscissa','NoEnd');
-                stu = get(v,'PeakPosUnit');
-                [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption);
+                if ~postoption.single
+                    v = mirpeaks(x,'Total',total,'SelectFirst',0,...
+                        'Contrast',postoption.cthr,...
+                        'Threshold',.5,...
+                        'Valleys','Order','Abscissa','NoBegin','NoEnd');
+                    stu = get(v,'PeakPosUnit');
+                else
+                    stu = [];
+                end
+                sr = get(o,'Sampling');
+                [st,ap] = mircompute(@startattack,d,t,pp,ppu,stu,postoption,sr);
             end
         else
             st = {{{}}};
@@ -827,7 +852,7 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
                 v = mirpeaks(x,'Total',total,'SelectFirst',0,...
                     'Contrast',postoption.cthr,...
                     'Threshold',.5,...
-                    'Valleys','Order','Abscissa','NoBegin');
+                    'Valleys','Order','Abscissa','NoBegin','NoEnd');
                 rlu = get(v,'PeakPosUnit');
                 [rl,en] = mircompute(@enddecay,d,t,pp,ppu,rlu,postoption);
             end
@@ -835,6 +860,7 @@ if isfield(postoption,'detect') && ischar(postoption.detect)
             rl = {{{}}};
             en = {{{}}};
         end
+%         pp = [];
         o = set(o,'OnsetPos',st,'AttackPos',ap,'DecayPos',rl,'OffsetPos',en,'PeakPos',pp);
     end
 end
@@ -958,7 +984,16 @@ tmp.old = old;
 
 
 %%
-function [st pp] = startattack(d,t,pp,ppu,stu,option)
+function [st pp] = startattack(d,t,pp,ppu,stu,option,sr)
+% d: signal waveform
+% t: temporal position of each signal sample
+% pp: peak indices (in #sample)
+% ppu: peak positions in seconds
+% stu: position of the start of the onset time, i.e., start of the attack
+% phase, in seconds (detected through valley picking)
+
+% minimal duration (in samples) of pseudo-silence
+
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -966,18 +1001,20 @@ if isempty(pp)
     return
 end
 
-stu = stu{1};
-if ~isempty(stu) && stu(1)>ppu(1)
-    stu = [t(1) stu];
+if ~isempty(stu)
+    stu = stu{1};
 end
-st = zeros(1,length(stu));
+stu = [t(1) stu t(end)];
+
+st = zeros(1,length(stu)-1);
 
 i = 0;
-while i < length(stu)
+while i < length(stu)-1
     if length(ppu) == i
-        st(i:end) = [];
+        st(i+1:end) = [];
         break
     end
+    
     i = i+1;
     
     % Removing additional peaks before current onset time stu(i)
@@ -995,10 +1032,19 @@ while i < length(stu)
     end
     
     st(i) = find(t >= stu(i),1);
+%     if i == length(stu)
+%         right = length(d);
+%     else
+        right = find(t >= stu(i+1),1);
+%     end
+    [unused,peaki] = max(d(st(i):right));
+    peaki = st(i) + peaki - 1;
     
+    % Remove peaks that are not preceded by ascending phase? (How is this
+    % possible??)
     stop = false;
     while true
-        dd = diff(d(st(i):pp(i)));
+        dd = diff(d(st(i):peaki));
         f0 = find(dd > 0,1);
         if isempty(f0)
             pp(i) = [];
@@ -1016,14 +1062,104 @@ while i < length(stu)
     end
     st(i) = st(i) + f0 - 1;
     
-    if strcmpi(option.attack,'Derivate')
+    if option.waveform
+        
+        minlowduration = 100;  % 1000 %%%%%%%%%%%%%%%%%%%%%%
+
+        % Pre-pickup filtering: starts after the last long pseudo-silence
+        % (defined by at least minlowwidth samples below wavethres).
+        di = d(st(i):peaki);
+        di = di/max(di);
+        f0 = find(abs(di) < option.wavethres);
+        if ~isempty(f0)
+            % Starting the attack phase after pseudo-silence of sufficient
+            % duration
+            df1 = find(diff(f0) > 1);
+            if isempty(df1)
+                f0 = f0(end);
+            else
+                df1 = df1';
+                df1 = [1,df1+1;df1,length(f0)];
+                ddf1 = find(diff(df1) >= minlowduration);
+                if isempty(ddf1)
+                    f0 = df1(2,1);
+                else
+                    f0 = f0(df1(2,ddf1(end)));
+                end
+            end
+            st(i) = st(i) + f0 - 1;
+        end
+
+        di = d(st(i):peaki);
+        di = di/max(di);
+        ddi = diff(di);
+        
+        % Detecting the local peaks
+        fd = find(ddi(1:end-1) > 0 & ddi(2:end) <= 0);
+        fd = fd + 1;
+        fd(end+1) = length(di);
+        
+        d0 = di(1);
+        sl0 = 0;
+        pk = 1;
+        for j = 1:length(fd)
+            if di(fd(j)) < di(pk)
+                % Local peaks lower than previous peaks are discarded
+                continue
+            end
+            sl = (di(fd(j)) - d0) / fd(j);
+            if sl > sl0*.8 || di(fd(j)) > di(pk) * 2
+                % New peak replace stored one if slope not decreasing more
+                % than 80% or if amplitude more than double
+                pk = fd(j);
+                sl0 = sl;
+            end
+        end
+        pp(i) = st(i) + pk - 1;
+        
+        % Refinement of onset time determination   
+        % Start of attack phase (i.e., onset) temporal position moved to
+        % the lowest intersection between attack line and audio signal
+%         slope = (d(pp(i)) - d(st(i))) / (pp(i) - st(i));
+%         j = st(i);
+%         onslope = d(j);
+
+%         situation = slope - (d(j+1) - d(j));
+        % situation < 0: d increases faster than slope around j, so as we 
+        % move left, d dives below the attack line.
+        % situation > 0: d increases slower than slope around j, so as we 
+        % move left, d rises above the attack line.
+        
+%         while onslope > 0 && j > 1
+%             j = j - 1;
+%             onslope = onslope - slope;
+%             if (d(j) - onslope) * situation < 0
+                % d has crossed the attack line around j
+%                 situation = slope - (d(j+1) - d(j));
+%                 st(i) = j;
+%             end
+%         end
+        
+        % Construction of a continuous envelope curve, with time constant
+        % adapted to the attack duration
+        
+%         di = d(st(i)-100:pp(i)+100);
+%         a = miraudio(di,sr);
+%         l = mirlength(a);
+%         l = mirgetdata(l);
+%         o = mironsets(a,'Attacks','SpectroFrame',l/3,.1,'Single');
+        
+        
+    elseif strcmpi(option.attack,'Derivate')
+        % Shifting the starting point later if necessary
         dd = diff(d(st(i):pp(i)));
         f0 = find(dd < 0 & d(st(i):pp(i)-1) < d(st(i)));
         if ~isempty(f0)
             st(i) = st(i) + f0(end) - 1;
         end
 
-        ppi = find(t >= ppu(i),1);
+        % Shifting the peak point earlier if necessary
+        ppi = find(t >= ppu(i),1); % peak index
         dd = diff(d(st(i):pp(i)));
         f0 = find(dd <= 0 & ...
                   d(st(i):pp(i)-1) - d(st(i)) > (d(ppi) - d(st(i))) / 5 ...
@@ -1039,13 +1175,13 @@ while i < length(stu)
         if isempty(f2)
             f2 = 1;
         end
-        pp(i) = st(i) + length(dd) - f2;
+        pp(i) = st(i) + length(dd) - f2 + 1;
 
         f1 = find(dd(1:mdd-1) > mad * option.onsetthres,1);
         if isempty(f1)
             f1 = 1;
         end
-        st(i) = st(i) + f1;
+        st(i) = st(i) + f1 - 1;
     elseif strcmpi(option.attack,'Effort')
         % from Timbre Toolbox
         f_Env_v = d(st(i):pp(i));
@@ -1124,6 +1260,9 @@ st = {{st} {pp}};
 
 %%
 function [pp en] = enddecay(d,t,pp,ppu,rlu,option)
+
+minlowwidth = 1000;
+
 pp = sort(pp{1});
 ppu = sort(ppu{1});
 if isempty(pp)
@@ -1132,35 +1271,37 @@ if isempty(pp)
 end
 
 rlu = rlu{1};
-if ~isempty(rlu) && rlu(end)<ppu(end)
-    rlu = [rlu t(end)];
-end
-en = zeros(1,length(rlu));
+rlu = [t(1) rlu t(end)];
+
+en = zeros(1,length(rlu)-1);
 
 i = 0;
-while i < length(rlu)
+while i < length(rlu)-1
     if length(ppu) == i
-        en(i:end) = [];
+        en(i+1:end) = [];
         break
     end
     i = i+1;
     
      % Removing additional offset times before current peak ppu(i)
-    j = find(rlu(i:end) > ppu(i),1);
+    j = find(rlu(i+1:end) > ppu(i),1);
     if j > 1
-        rlu(i:i+j-2) = [];
+        rlu(i+1:i+j-1) = [];
         en(i:i+j-2) = [];
     end
     
-    % Taking the latest possible peak before current offset time rlu(i)
-    j = find(ppu(i:end) > rlu(i),1);
+    % Taking the latest possible peak before current offset time rlu(i+1)
+    j = find(ppu(i:end) > rlu(i+1),1);
     if j > 2
         pp(i:i+j-3) = [];
         ppu(i:i+j-3) = [];
     end
         
-    en(i) = find(t <= rlu(i),1,'last');
-    
+    en(i) = find(t <= rlu(i+1),1,'last');
+    left = find(t <= rlu(i),1,'last');
+    [unused,peaki] = max(d(en(i):-1:left));
+    peaki = en(i) - peaki + 1;
+
     stop = 0;
     stop2 = false;
     while true
@@ -1168,7 +1309,7 @@ while i < length(rlu)
             stop = 1;
             break
         end
-        dd = diff(d(en(i):-1:pp(i)));
+        dd = diff(d(en(i):-1:peaki));
         f0 = find(dd > 0,1);
         if isempty(f0)
             pp(i) = [];
@@ -1189,36 +1330,93 @@ while i < length(rlu)
     end
     en(i) = en(i) - f0 + 1;
     
-    dd = diff(d(en(i):-1:pp(i)));
-    f0 = find(dd < 0 & d(en(i):-1:pp(i)+1) < d(en(i)));
-    if ~isempty(f0)
-        en(i) = en(i) - f0(end) + 1;
+    if option.waveform
+        di = d(en(i):-1:peaki);
+        di = di/max(di);
+        f0 = find(abs(di) < option.wavethres);
+        if ~isempty(f0)
+            df1 = find(diff(f0) > 1);
+            if isempty(df1)
+                f0 = f0(end);
+            else
+                df1 = df1';
+                df1 = [1,df1+1;df1,length(f0)];
+                ddf1 = find(diff(df1) >= minlowwidth);
+                if isempty(ddf1)
+                    f0 = df1(2,1);
+                else
+                    f0 = f0(df1(2,ddf1(end)));
+                end
+            end
+            en(i) = en(i) - f0(end) + 1;
+        end
+        
+        di = d(en(i):-1:peaki);
+        di = di/max(di);
+        ddi = diff(di);
+        fd = find(ddi(1:end-1) > 0 & ddi(2:end) <= 0);
+        fd = fd + 1;
+        fd(end+1) = length(di);
+        d0 = di(1);
+        t0 = 0;
+        sl0 = 0;
+        pk = 1;
+        for j = 1:length(fd)
+            if di(fd(j)) < di(pk)
+                continue
+            end
+            sl = (di(fd(j)) - d0) / (fd(j) - t0);
+            if sl > sl0*.8 || di(fd(j)) > di(pk) * 2
+                pk = fd(j);
+                sl0 = sl;
+            end
+        end
+        pp(i) = en(i) - pk + 1;
+        
+        slope = (d(pp(i)) - d(en(i))) / (pp(i) - en(i));
+        j = en(i);
+        onslope = d(j);
+        situation = slope - (d(j) - d(j-1));
+        while onslope > 0 && j < length(d)
+            j = j + 1;
+            onslope = onslope + slope;
+            if (onslope - d(j)) * situation < 0
+                situation = slope - (d(j) - d(j-1));
+                en(i) = j;
+            end
+        end
+    else
+        dd = diff(d(en(i):-1:pp(i)));
+        f0 = find(dd < 0 & d(en(i):-1:pp(i)+1) < d(en(i)));
+        if ~isempty(f0)
+            en(i) = en(i) - f0(end) + 1;
+        end
+
+        % This part causes trouble!
+        ppi = find(t >= ppu(i),1);
+        dd = diff(d(en(i):-1:pp(i)));
+        f0 = find(dd <= 0 & ...
+                  d(en(i):-1:pp(i)+1) - d(en(i)) > (d(ppi) - d(en(i))) / 5 ...
+                  ,1);
+        if ~isempty(f0)
+            pp(i) = en(i) - f0 + 1;
+        end
+
+        dd = diff(d(en(i):-1:pp(i)));
+        [mad, mdd] = max(dd);
+
+        f2 = find(dd(end:-1:mdd+1) > mad * option.decaythres,1);
+        if isempty(f2)
+            f2 = 1;
+        end
+        pp(i) = en(i) - length(dd) + f2;
+
+        f1 = find(dd(1:mdd-1) > mad * option.offsetthres,1);
+        if isempty(f1)
+            f1 = 1;
+        end
+        en(i) = en(i) - f1;
     end
-    
-    % This part causes trouble!
-    ppi = find(t >= ppu(i),1);
-    dd = diff(d(en(i):-1:pp(i)));
-    f0 = find(dd <= 0 & ...
-              d(en(i):-1:pp(i)+1) - d(en(i)) > (d(ppi) - d(en(i))) / 5 ...
-              ,1);
-    if ~isempty(f0)
-        pp(i) = en(i) - f0 + 1;
-    end
-    
-    dd = diff(d(en(i):-1:pp(i)));
-    [mad, mdd] = max(dd);
-    
-    f2 = find(dd(end:-1:mdd+1) > mad * option.decaythres,1);
-    if isempty(f2)
-        f2 = 1;
-    end
-    pp(i) = en(i) - length(dd) + f2;
-    
-    f1 = find(dd(1:mdd-1) > mad * option.offsetthres,1);
-    if isempty(f1)
-        f1 = 1;
-    end
-    en(i) = en(i) - f1;
 end
 pp(length(en)+1:end) = [];
 
