@@ -71,6 +71,7 @@ function varargout = mironsets(x,varargin)
 %               'Threshold' with default value t = 0
 %               'Single' detects only the highest peak.
 %       mironsets(...,'Attack') (or 'Attacks') detects attack phases.
+%           Possible methods: 'Derivate', 'Effort' and 'Waveform'
 %       mironsets(...,'Decay') (or 'Decays') detects decay phases.
 %       mironsets(...,'Frame',...) decomposes into frames, with default frame
 %           length 3 seconds and hop factor .1

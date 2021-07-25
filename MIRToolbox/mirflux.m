@@ -36,6 +36,7 @@ function varargout = mirflux(orig,varargin)
 %           (Alonso, David, Richard, 2004). To ensure accurate detection,
 %           the length l of the median filter must be longer than the
 %           average width of the peaks of the detection function.
+%       f = mirflux(...,'Normal') normalises with respect to dynamics.
 %
 %   (Bello et al, 2004) Juan P. Bello, Chris Duxbury, Mike Davies, and Mark
 %   Sandler, On the Use of Phase and Energy for Musical Onset Detection in

@@ -19,6 +19,7 @@ function varargout = mirroughness(x,varargin)
 %                   of their amplitudes.
 %           mirroughness(...,'Vassilakis'): variant of 'Sethares' model
 %               with a more complex weighting (Vassilakis, 2001, Eq. 6.23).
+%       mirroughness(...,'Normal'): normalises with respect to dynamics.
 
         meth.type = 'String';
         meth.choice = {'Sethares','Vassilakis'};
