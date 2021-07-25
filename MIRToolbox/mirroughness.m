@@ -40,15 +40,20 @@ function varargout = mirroughness(x,varargin)
         normal.default = 0;
     option.normal = normal;
 
+        normalthres.key = 'NormalThreshold';
+        normalthres.type = 'Integer';
+        normalthres.default = .1;
+    option.normalthres = normalthres;
+
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
-        frame.default = [.05 .5];
+        frame.default = [.05 .1];
     option.frame = frame;
     
 specif.option = option;
 specif.defaultframelength = .05;
-specif.defaultframehop = .5;
+specif.defaultframehop = .1;
 
 
 varargout = mirfunction(@mirroughness,x,varargin,nargout,specif,@init,@main);
@@ -60,7 +65,7 @@ if isamir(x,'miraudio') && not(isframed(x))
 end
 x = mirspectrum(x);
 if not(haspeaks(x))
-    x = mirpeaks(x,'Contrast',option.cthr);
+    x = mirpeaks(x,'Contrast',option.cthr,'Order','Abscissa');
 end
 type = {'mirscalar','mirspectrum'};
 
@@ -90,30 +95,52 @@ if strcmpi(option.meth,'Sethares') || strcmpi(option.meth,'Vassilakis')
                     f2 = repmat(pfj',[length(pfj) 1]);
                     v1 = repmat(pvj,[1 length(pvj)]);
                     v2 = repmat(pvj',[length(pvj) 1]);
-                    rj = plomp(f1,f2);
+                    pl = plomp(f1,f2);
                     if strcmpi(option.meth,'Sethares')
                         if option.min
-                            v12 = min(v1,v2);
+                            v12{j} = min(v1,v2);
+                            expo = 1;
                         else
-                            v12 = v1.*v2;
+                            v12{j} = v1.*v2;
+                            expo = 2;
                         end
-                        rj = v12.*rj;
                     elseif strcmpi(option.meth,'Vassilakis')
-                        rj = (v1.*v2).^.1.*.5.*(2*min(v1,v2)./(v1+v2)).^3.11.*rj;
+                        v12{j} = (v1.*v2).^.1.*.5.*(2*min(v1,v2)./(v1+v2)).^3.11;
+                        expo = .2;
                     end
+                    rj = v12{j}.*pl;
                     rg{h}{i}(1,j,k) = sum(sum(rj));
-                    if option.normal
-                        rg{h}{i}(1,j,k) = rg{h}{i}(1,j,k) ...
-                            / sum(d{h}{i}(:,j,k).^2);
-                            .../ sum(sum(triu(v1.*v2,1)));
-                    end
+                end
+                if option.normal %== 1
+                    normcurve = sum(d{h}{i}(:,:,k));
+                    normcurvexpo = sum(d{h}{i}(:,:,k).^expo);
+                    normcurvexpo(normcurve < max(normcurve)*option.normalthres) = NaN;
+                    rg{h}{i}(1,:,k) = rg{h}{i}(1,:,k) ./ normcurvexpo;
+%                 elseif option.normal == 2
+%                     for j = 1:size(pfi,2)
+%                         v12j = tril(v12{j},-1); % We also retain the amplitude-product values that were actually taken into consideration in the computation.
+%                         rg{h}{i}(1,j,k) = rg{h}{i}(1,j,k) / sum(sum(v12j));
+%                     end
                 end
             end
         end
     end
 else
-end    
-r = mirscalar(p,'Data',rg,'Title','Roughness');
+end
+model = 'Roughness';
+if strcmpi(option.meth,'Sethares')
+    if option.min
+        model = [model, ' (Sethares, Min variant)'];
+    else
+        model = [model, ' (Sethares)'];
+    end
+else
+    model = [model, ' (Vassilakis)'];
+end
+if option.normal
+    model = [model, ' (Normalised)'];
+end
+r = mirscalar(p,'Data',rg,'Title',model);
 r = {r,p};
 
 
