@@ -1,5 +1,5 @@
 % MIRtoolbox
-% Version 1.8 25-July-2021
+% Version 1.8.1 30-July-2021
 %
 % A more detailed documentation of each function is available using the
 % help command. For instance, type help miraudio.
