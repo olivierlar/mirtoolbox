@@ -10,7 +10,7 @@ function varargout = mirflux(orig,varargin)
 %           not already decomposed into frames. Default values are frame 
 %           length of .2 seconds and hop factor of 1.3.
 %       f = mirflux(x,'Dist',d) specifies the distance between 
-%           successive  frames:                 (IF 'COMPLEX': DISTANCE = 'CITY' ALWAYS)
+%           successive  frames:
 %           d = 'Euclidian': Euclidian distance (Default)
 %           d = 'City': City-block distance
 %           d = 'Cosine': Cosine distance (or normalized correlation)
@@ -18,6 +18,10 @@ function varargout = mirflux(orig,varargin)
 %           summed, in order to focus on increase of energy solely.
 %       f = mirflux(...,'Complex'), for spectral flux, combines use of
 %           energy and phase information (Bello et al, 2004).
+%       f = mirflux(..., ‘SubBand’) decomposes first the input waveform
+%           using a 10-channel filterbank of octave-scaled second-order
+%           elliptical filters, with frequency cut of the first (low-pass)
+%           filter at 50 Hz.
 %       f = mirflux(...,'Halfwave'): performs a half-wave  rectification on
 %           the result.
 %       f = mirflux(...,'Median',l,C): removes small spurious peaks by
@@ -37,20 +41,28 @@ function varargout = mirflux(orig,varargin)
 %           the length l of the median filter must be longer than the
 %           average width of the peaks of the detection function.
 %       f = mirflux(...,'Normal') normalises with respect to dynamics.
+%       f = mirflux(..., ‘Buzzing’) tailors the computation of spectral 
+%           flux with the view to unveil salient aspects of sonic
+%           unsteadiness (Lartillot and Weisser, 2021).
 %
 %   (Bello et al, 2004) Juan P. Bello, Chris Duxbury, Mike Davies, and Mark
 %   Sandler, On the Use of Phase and Energy for Musical Onset Detection in
 %   the Complex Domain, IEEE SIGNAL PROCESSING LETTERS, VOL. 11, NO. 6,
 %   JUNE 2004
+%   Lartillot, O. & Weisser, S. (2021). Roughness, Crackliness,
+%   Buzzingness, ...: Characterizations of Sonic Unsteadiness and
+%   Application to the Analysis of Traditional Music from Ethiopia, Kenya,
+%   Morocco and India. 16th International Conference on Music Perception
+%   and Cognition (ICMPC) & the 11th triennial conference of ESCOM
 
         dist.key = 'Dist';
         dist.type = 'String';
-        dist.default = 'Euclidean';
+        dist.default = NaN;
     option.dist = dist;
     
         inc.key = 'Inc';
         inc.type = 'Boolean';
-        inc.default = 0;
+        inc.default = NaN;
     option.inc = inc;
 
         bs.key = 'BackSmooth';
@@ -95,14 +107,41 @@ function varargout = mirflux(orig,varargin)
         frame.key = 'Frame';
         frame.type = 'Integer';
         frame.number = 2;
-        frame.default = [.05 .5];
+        frame.default = [.05 NaN];
     option.frame = frame;
     
         norm.key = 'Normal';
         norm.type = 'Integer';
-        norm.default = 0;
+        norm.default = NaN;
         norm.keydefault = .03;
     option.norm = norm;
+    
+        min.key = 'Min';
+        min.type = 'Integer';
+        min.default = NaN;
+    option.min = min;
+    
+        max.key = 'Max';
+        max.type = 'Integer';
+        max.default = NaN;
+    option.max = max;
+    
+        mingate.key = 'MinGate';
+        mingate.type = 'Integer';
+        mingate.default = NaN;
+    option.mingate = mingate;
+    
+        normspec.key = 'NormalSpectrum';
+        normspec.type = 'String';
+        normspec.choice = {'Local','Global',0,'no','off'};
+        normspec.default = NaN;
+        normspec.keydefault = 1;
+    option.normspec = normspec;
+    
+        buzz.key = 'Buzzing';
+        buzz.type = 'Boolean';
+        buzz.default = 0;
+    option.buzz = buzz;
     
 specif.option = option;
      
@@ -110,18 +149,66 @@ varargout = mirfunction(@mirflux,orig,varargin,nargout,specif,@init,@main);
 
 
 function [x type] = init(x,option)
-if ~isempty(option.sb)
-    if strcmpi(option.sb,'Manual')
-        x = mirfilterbank(x,'Manual',[-Inf 50*2.^(0:1:8) Inf],'Order',2);
-    else
-        x = mirfilterbank(x,option.sb);
+if isamir(x,'miraudio')
+    if isnan(option.frame.hop.val)
+        if option.buzz
+            option.frame.hop.val = .1;
+        else
+            option.frame.hop.val = .5;
+        end
     end
-end
-if isamir(x,'miraudio') 
+    if isnan(option.min)
+        if option.buzz
+            option.min = 500;
+        else
+            option.min = 0;
+        end
+    end
+    if isnan(option.max)
+        if option.buzz
+            option.max = 20000;
+        else
+            option.max = Inf;
+        end
+    end
+    if isnan(option.mingate)
+        if option.buzz
+            option.mingate = .01;
+        else
+            option.mingate = 0;
+        end
+    end
+    if isnan(option.normspec)
+        if option.buzz
+            option.normspec = 'Global';
+        else
+            option.normspec = 0;
+        end
+    elseif isequal(option.normspec,1)
+        if option.buzz
+            option.normspec = 'Global';
+        else
+            option.normspec = 'Local';
+        end
+    end
+    
+    if ~isempty(option.sb)
+        if strcmpi(option.sb,'Manual')
+            x = mirfilterbank(x,'Manual',[-Inf 50*2.^(0:1:8) Inf],'Order',2);
+        else
+            x = mirfilterbank(x,option.sb);
+        end
+    end
+
     if isframed(x)
-        x = mirspectrum(x);
+        x = mirspectrum(x,'Min',option.min,'Max',option.max,...
+                          'MinGate',option.mingate,...
+                          'Normal',option.normspec);
     else
-        x = mirspectrum(x,'Frame',option.frame.length.val,...
+        x = mirspectrum(x,'Min',option.min,'Max',option.max,...
+                          'MinGate',option.mingate,...
+                          'Normal',option.normspec,...
+                          'Frame',option.frame.length.val,...
                                   option.frame.length.unit,...
                                   option.frame.hop.val,...
                                   option.frame.hop.unit,...
@@ -163,6 +250,29 @@ else
         end
         ph = get(s,'Phase');
     end
+    
+    if isnan(option.inc)
+        if option.buzz
+            option.inc = 1;
+        else
+            option.inc = 0;
+        end
+    end
+    if isnan(option.dist)
+        if option.buzz
+            option.dist = 'City';
+        else
+            option.dist = 'Euclidean';
+        end
+    end
+    if isnan(option.norm)
+        if option.buzz
+            option.norm = .03;
+        else
+            option.norm = 0;
+        end
+    end
+    
     param.complex = option.complex;
     param.inc = option.inc;
     fp = get(s,'FramePos');
