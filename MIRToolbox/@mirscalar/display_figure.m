@@ -382,9 +382,9 @@ for song = 1:length(songs)  %For each audio file
         end
         disp(['The ',t,' related to file ',n{i},...
             ' is displayed in Figure ',num2str(fig),'.']);
+        drawnow
         axis tight
         axis 'auto y'
     end
 end
 disp(' ');
-drawnow
