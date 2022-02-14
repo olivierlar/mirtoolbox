@@ -1043,26 +1043,16 @@ while i < length(stu)-1
     [unused,peaki] = max(d(st(i):right));
     peaki = st(i) + peaki - 1;
     
-    % Remove peaks that are not preceded by ascending phase? (How is this
-    % possible??)
-    stop = false;
-    while true
-        dd = diff(d(st(i):peaki));
-        f0 = find(dd > 0,1);
-        if isempty(f0)
-            pp(i) = [];
-            ppu(i) = [];
-            if length(pp) < i
-                stop = true;
-                break
-            end
-        else
-            break
-        end
+    % Remove attack phases that are actually not increasing...
+    dd = diff(d(st(i):peaki));
+    f0 = find(dd > 0,1);
+    if isempty(f0)
+        st(i) = [];
+        stu(i) = [];
+        i = i-1;
+        continue
     end
-    if stop
-        break
-    end
+
     st(i) = st(i) + f0 - 1;
     
     if option.waveform
@@ -1305,32 +1295,15 @@ while i < length(rlu)-1
     [unused,peaki] = max(d(en(i):-1:left));
     peaki = en(i) - peaki + 1;
 
-    stop = 0;
-    stop2 = false;
-    while true
-        if pp(i) >= en(i)
-            stop = 1;
-            break
-        end
-        dd = diff(d(en(i):-1:peaki));
-        f0 = find(dd > 0,1);
-        if isempty(f0)
-            pp(i) = [];
-            ppu(i) = [];
-            if length(pp) < i
-                stop2 = true;
-                break
-            end
-        else
-            break
-        end
-    end
-    if stop2
-        break
-    end
-    if stop
+    dd = diff(d(en(i):-1:peaki));
+    f0 = find(dd > 0,1);
+    if isempty(f0)
+        en(i) = [];
+        rlu(i) = [];
+        i = i-1;
         continue
     end
+
     en(i) = en(i) - f0 + 1;
     
     if option.waveform
