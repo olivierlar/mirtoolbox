@@ -6,3 +6,6 @@ Each feature extraction method can accept as argument an audio file, or any prel
 
 Memory management mechanisms allow the analysis of large-scale corpus, through the integration of automated chunk decomposition mechanisms and of distinctive processes for flowchart design and evaluation. A set of meta-functions have been designed that enable the integration of user-defined algorithms with the help of simple templates.
 
+# authors
+
+Olivier Lartillot, Petri Toiviainen, Pasi Saari and Tuomas Eerola were members of the Finnish Centre of Excellence in Interdisciplinary Music Research, University of Jyväskylä, Finland.
