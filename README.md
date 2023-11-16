@@ -1,3 +1,5 @@
+NOTE: The official MIRtoolbox webpage was until November 2023 hosted at the University of Jyväskylä. Since November 14th, 2023, the GitHub repository has become public.
+
 # mirtoolbox
 
 MIRtoolbox is a Matlab toolbox dedicated to the extraction of musical features from audio files, including routines for statistical analysis, segmentation and clustering. MIRtoolbox integrates a user-friendly syntax that enables to easily combine low and high-level operators into complex flowcharts. The modular design of MIRtoolbox is guided by a philosophy of expertise capitalization: techniques developed for certain domains of music analysis are turned into general operators that could be used for different analytical purposes.
